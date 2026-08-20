@@ -6,9 +6,12 @@ This file is the running record of scanner defects found and resolved.
 
 - Real packaging, glare, low-light and physical checkout-belt accuracy are not validated. The first proof of concept uses curated sample scenes only.
 - Barbora exposes protein and total sugars for the selected catalog, but not numeric fiber. Products without an independently verified fiber value must remain unrated.
+- Saved options are device-local in the proof of concept and do not sync across browsers or phones.
 
 ## Resolved
 
+- **2026-08-20: moving between the shelf and checkout demo required closing the scanner.** Sample results now include a visible `Shelf / Checkout` switch that changes the full scene in place.
+- **2026-08-20: checkout said to save an alternative for next time but had no save action.** Products and similar options can now be saved or removed, persist after reload in browser storage and appear in a dedicated `Saved options` list.
 - **2026-08-20: checkout looked like an artificial single-product animation.** Checkout now uses the same one-frame multi-product recognition contract as the shelf and returns four detections over one full-belt scene.
 - **2026-08-20: the numeric Sugar.no Match was difficult to interpret.** The primary UI now shows a Sugar.no badge with separate Protein, Fiber and Sugar states. The internal number remains only for deterministic ranking.
 - **2026-08-20: colored detection labels overlapped on narrow product boxes.** Overlay labels are constrained to each box and use compact `Strong`, `Middle` and `Lower` wording; full explanations remain in the product card.

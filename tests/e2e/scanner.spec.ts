@@ -64,6 +64,43 @@ test("checkout photo uses one multi-product scan instead of an animated product"
   await page.screenshot({ path: "docs/screenshots/checkout-mobile.png", fullPage: true });
 });
 
+test("sample scenes switch in place and saved products persist for the next shop", async ({ page }) => {
+  await unlock(page);
+  await page.getByRole("button", { name: /Shelf photo/ }).click();
+  await expect(page.getByRole("status")).toContainText("4 supported products found");
+
+  const sceneSwitch = page.getByLabel("Sample scene");
+  await sceneSwitch.getByRole("button", { name: "Checkout", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("4 supported products found on checkout");
+  await expect(sceneSwitch.getByRole("button", { name: "Checkout", exact: true })).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByRole("button", { name: "Save for next shop" }).click();
+  await expect(page.getByText("Saved for your next shop")).toBeVisible();
+  await page.getByRole("button", { name: "Close scanner" }).click();
+  await expect(page.getByRole("heading", { name: "Saved options" })).toBeVisible();
+  await expect(page.getByText("Saved privately in this browser. No account needed for the demo.")).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Saved options" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /View/ }).first()).toHaveAttribute("href", /^https:\/\/barbora\.lv\/produkti\//);
+  await page.screenshot({ path: "docs/screenshots/saved-next-shop-mobile.png", fullPage: true });
+});
+
+test("saved flow remains usable with reduced motion, dark mode and enlarged text", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "sugarno.saved-products.v1",
+      JSON.stringify(["prot-bat-sal-riekst-saldin-barebells-55-g"])
+    );
+  });
+  await unlock(page);
+  await page.addStyleTag({ content: "html { font-size: 125%; }" });
+  await expect(page.getByRole("heading", { name: "Saved options" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /View/ })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
 test("scanner remains operable at narrow portrait and phone landscape sizes", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await unlock(page);
@@ -97,6 +134,17 @@ test("sample response and analytics reject raw image storage", async ({ page }) 
   });
   expect(unsafeEvent.status()).toBe(400);
   expect(await unsafeEvent.json()).toEqual({ error: "unsafe_event_metadata" });
+
+  const savedEvent = await page.request.post("/api/events", {
+    data: {
+      sessionId: crypto.randomUUID(),
+      name: "product_saved",
+      source: "sample-conveyor",
+      productId: "demo-product",
+      metadata: { placement: "result" }
+    }
+  });
+  expect(savedEvent.ok()).toBe(true);
 });
 
 test("camera permission denial offers a clear retry state", async ({ page }) => {

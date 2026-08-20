@@ -11,7 +11,9 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 5. Tap each small product in the tray. Confirm that the corresponding box/card changes and the best visible item is clearly labelled.
 6. Swipe the Similar options cards left and right. Confirm that they are comparable formats and remain usable without horizontal page overflow.
 7. Open `View at Barbora · check current price`. Confirm that the exact SKU page opens in a new tab and that Sugar.no never claims it is cheaper or affiliate-paid.
-8. Return and start `Checkout photo`. Confirm that one image of the whole belt returns four products at once, with boxes directly on the belt scene and the same Sugar.no badge as the shelf. Confirm that the copy says `Save an option for your next shop`, not that the current purchase is wrong.
+8. Use the `Shelf / Checkout` switch inside the scanner. Confirm that Checkout opens without closing the result, shows one image of the whole belt and returns four products at once with the same overlays and Sugar.no badge.
+9. Tap `Save for next shop` on the selected product and `Save` on one Similar option. Confirm the success message appears, then close the scanner and find both under `Saved options`.
+10. Reload the page. Confirm both saved products remain, each exact Barbora link opens and the remove button removes only that item. The demo should say that saves live only in this browser.
 
 ## Camera and uncertainty
 
@@ -25,7 +27,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 
 ## Saved image and privacy
 
-1. Choose `Use a saved product image` and select a large phone photo.
+1. Choose `Use a saved shelf or checkout photo` and select a large phone photo.
 2. Confirm it is resized on-device and either returns a high-confidence supported result or an honest uncertainty state.
 3. In Supabase, inspect `scan_events` for the session. Confirm it contains metadata only: no image, base64, URL to an uploaded frame or full user-agent.
 4. Confirm source links and dates are visible under `Data sources and limits`.

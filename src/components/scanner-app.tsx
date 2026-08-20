@@ -3,6 +3,8 @@
 import Image from "next/image";
 import {
   ArrowUpRight,
+  Bookmark,
+  BookmarkCheck,
   Camera,
   Check,
   ChevronRight,
@@ -21,6 +23,11 @@ import {
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mergeDetectionTray } from "@/lib/dedupe";
 import { matchCriteria, overallMatchPresentation, type MatchTone } from "@/lib/match-presentation";
+import {
+  parseSavedProductIds,
+  SAVED_PRODUCTS_STORAGE_KEY,
+  toggleSavedProductId
+} from "@/lib/saved-products";
 import type {
   ProductDetection,
   RecognitionResponse,
@@ -105,6 +112,7 @@ export function ScannerApp() {
   const lowResFrameRef = useRef<Uint8ClampedArray | null>(null);
   const lastCaptureRef = useRef(0);
   const sessionIdRef = useRef<string | null>(null);
+  const saveFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [source, setSource] = useState<ScanSource>("camera");
   const [cameraState, setCameraState] = useState<CameraState>("idle");
@@ -115,6 +123,8 @@ export function ScannerApp() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState("Ready when you are");
+  const [savedIds, setSavedIds] = useState<string[]>([]);
+  const [saveFeedback, setSaveFeedback] = useState("");
   const [networkOnline, setNetworkOnline] = useState(() =>
     typeof navigator === "undefined" ? true : navigator.onLine
   );
@@ -132,6 +142,8 @@ export function ScannerApp() {
         | "result_opened"
         | "alternative_viewed"
         | "retailer_link_clicked"
+        | "product_saved"
+        | "product_unsaved"
         | "permission_denied"
         | "recognition_failed",
       eventSource: ScanSource,
@@ -168,6 +180,26 @@ export function ScannerApp() {
       ...Object.fromEntries(entries.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)))
     }));
   }, []);
+
+  const showSaveFeedback = useCallback((message: string) => {
+    setSaveFeedback(message);
+    if (saveFeedbackTimerRef.current) clearTimeout(saveFeedbackTimerRef.current);
+    saveFeedbackTimerRef.current = setTimeout(() => setSaveFeedback(""), 2_400);
+  }, []);
+
+  const toggleSaved = useCallback(
+    (productId: string) => {
+      const wasSaved = savedIds.includes(productId);
+      const next = toggleSavedProductId(savedIds, productId);
+      setSavedIds(next);
+      window.localStorage.setItem(SAVED_PRODUCTS_STORAGE_KEY, JSON.stringify(next));
+      if (!wasSaved) void hydrateProducts([productId]);
+      showSaveFeedback(wasSaved ? "Removed from your next shop" : "Saved for your next shop");
+      track(wasSaved ? "product_unsaved" : "product_saved", source, productId);
+      if (!wasSaved && typeof navigator.vibrate === "function") navigator.vibrate(8);
+    },
+    [hydrateProducts, savedIds, showSaveFeedback, source, track]
+  );
 
   const applyRecognition = useCallback(
     (result: RecognitionResponse, eventSource: ScanSource) => {
@@ -396,7 +428,22 @@ export function ScannerApp() {
     };
   }, []);
 
-  useEffect(() => () => stopActiveCapture(), [stopActiveCapture]);
+  useEffect(() => {
+    const stored = parseSavedProductIds(window.localStorage.getItem(SAVED_PRODUCTS_STORAGE_KEY));
+    const frame = window.requestAnimationFrame(() => {
+      setSavedIds(stored);
+      if (stored.length) void hydrateProducts(stored);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [hydrateProducts]);
+
+  useEffect(
+    () => () => {
+      stopActiveCapture();
+      if (saveFeedbackTimerRef.current) clearTimeout(saveFeedbackTimerRef.current);
+    },
+    [stopActiveCapture]
+  );
 
   const selectedPayload = selectedId ? products[selectedId] : undefined;
   const loadedTray = tray.map((id) => products[id]?.product).filter(Boolean) as ScoredProduct[];
@@ -464,6 +511,14 @@ export function ScannerApp() {
           <p className={styles.privacyNote}>
             <Lock aria-hidden="true" size={15} /> Frames are analyzed, never stored by Sugar.no.
           </p>
+          {savedIds.length ? (
+            <SavedProducts
+              ids={savedIds}
+              products={products}
+              onRemove={toggleSaved}
+              onRetailer={(id) => track("retailer_link_clicked", "camera", id, { placement: "saved_list" })}
+            />
+          ) : null}
         </section>
       ) : (
         <section className={styles.experience} aria-label={`${sourceLabel(source)} scanner`}>
@@ -541,7 +596,28 @@ export function ScannerApp() {
             })}
 
             <div className={styles.stageTopbar}>
-              <span>{sourceLabel(source)}</span>
+              {source === "sample-shelf" || source === "sample-conveyor" ? (
+                <div className={styles.sampleSwitch} aria-label="Sample scene">
+                  <button
+                    type="button"
+                    className={source === "sample-shelf" ? styles.activeSample : ""}
+                    onClick={startShelf}
+                    aria-pressed={source === "sample-shelf"}
+                  >
+                    Shelf
+                  </button>
+                  <button
+                    type="button"
+                    className={source === "sample-conveyor" ? styles.activeSample : ""}
+                    onClick={startCheckout}
+                    aria-pressed={source === "sample-conveyor"}
+                  >
+                    Checkout
+                  </button>
+                </div>
+              ) : (
+                <span>{sourceLabel(source)}</span>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -603,11 +679,13 @@ export function ScannerApp() {
                 payload={selectedPayload}
                 bestInScan={bestId === selectedPayload.product.id}
                 checkout={source === "sample-conveyor"}
+                savedIds={savedIds}
                 onAlternative={(id) => {
                   setSelectedId(id);
                   if (!products[id]) void hydrateProducts([id]);
                   track("alternative_viewed", source, id);
                 }}
+                onToggleSaved={toggleSaved}
                 onRetailer={(id) => track("retailer_link_clicked", source, id)}
               />
             ) : (
@@ -629,6 +707,9 @@ export function ScannerApp() {
           </div>
         </section>
       )}
+      <div className={`${styles.saveFeedback} ${saveFeedback ? styles.saveFeedbackVisible : ""}`} aria-live="polite" aria-atomic="true">
+        <BookmarkCheck aria-hidden="true" size={17} /> {saveFeedback}
+      </div>
     </main>
   );
 }
@@ -682,13 +763,17 @@ function ProductResult({
   payload,
   bestInScan,
   checkout,
+  savedIds,
   onAlternative,
+  onToggleSaved,
   onRetailer
 }: {
   payload: ProductPayload;
   bestInScan: boolean;
   checkout: boolean;
+  savedIds: string[];
   onAlternative: (id: string) => void;
+  onToggleSaved: (id: string) => void;
   onRetailer: (id: string) => void;
 }) {
   const { product, alternatives } = payload;
@@ -733,6 +818,19 @@ function ProductResult({
         </div>
       ) : null}
 
+      <button
+        className={`${styles.saveButton} ${savedIds.includes(product.id) ? styles.savedButton : ""}`}
+        type="button"
+        onClick={() => onToggleSaved(product.id)}
+        aria-pressed={savedIds.includes(product.id)}
+      >
+        {savedIds.includes(product.id) ? <BookmarkCheck aria-hidden="true" size={19} /> : <Bookmark aria-hidden="true" size={19} />}
+        <span>
+          <strong>{savedIds.includes(product.id) ? "Saved for next shop" : checkout ? "Save for next shop" : "Save this option"}</strong>
+          <small>Stored only on this device</small>
+        </span>
+      </button>
+
       {alternatives.length ? (
         <section className={styles.alternatives} aria-labelledby={`alternatives-${product.id}`}>
           <div className={styles.sectionHeading}>
@@ -745,18 +843,35 @@ function ProductResult({
           </div>
           <div className={styles.alternativeList}>
             {alternatives.map((alternative) => (
-              <button type="button" key={alternative.id} onClick={() => onAlternative(alternative.id)}>
-                <div className={styles.alternativeThumb}>
-                  {alternative.imageUrl ? (
-                    <Image src={alternative.imageUrl} alt="" fill sizes="58px" />
-                  ) : null}
-                </div>
-                <span>
-                  <small>{alternative.brand}</small>
-                  <strong>{alternative.shortName}</strong>
-                  <MatchPill product={alternative} />
-                </span>
-              </button>
+              <article className={styles.alternativeCard} key={alternative.id}>
+                <button
+                  className={styles.alternativeOpen}
+                  type="button"
+                  onClick={() => onAlternative(alternative.id)}
+                  aria-label={`Compare ${alternative.name}`}
+                >
+                  <div className={styles.alternativeThumb}>
+                    {alternative.imageUrl ? (
+                      <Image src={alternative.imageUrl} alt="" fill sizes="58px" />
+                    ) : null}
+                  </div>
+                  <span>
+                    <small>{alternative.brand}</small>
+                    <strong>{alternative.shortName}</strong>
+                    <MatchPill product={alternative} />
+                  </span>
+                </button>
+                <button
+                  className={styles.alternativeSave}
+                  type="button"
+                  onClick={() => onToggleSaved(alternative.id)}
+                  aria-label={`${savedIds.includes(alternative.id) ? "Remove" : "Save"} ${alternative.name} ${savedIds.includes(alternative.id) ? "from" : "for"} next shop`}
+                  aria-pressed={savedIds.includes(alternative.id)}
+                >
+                  {savedIds.includes(alternative.id) ? <BookmarkCheck aria-hidden="true" size={17} /> : <Bookmark aria-hidden="true" size={17} />}
+                  {savedIds.includes(alternative.id) ? "Saved" : "Save"}
+                </button>
+              </article>
             ))}
           </div>
         </section>
@@ -790,6 +905,52 @@ function ProductResult({
         </ul>
       </details>
     </article>
+  );
+}
+
+function SavedProducts({
+  ids,
+  products,
+  onRemove,
+  onRetailer
+}: {
+  ids: string[];
+  products: Record<string, ProductPayload>;
+  onRemove: (id: string) => void;
+  onRetailer: (id: string) => void;
+}) {
+  const loaded = ids.map((id) => products[id]?.product).filter(Boolean) as ScoredProduct[];
+  if (!loaded.length) return null;
+  return (
+    <section className={styles.savedProducts} aria-labelledby="saved-products-title">
+      <div className={styles.savedHeading}>
+        <div>
+          <p>Next shop</p>
+          <h2 id="saved-products-title">Saved options</h2>
+        </div>
+        <span>{loaded.length}</span>
+      </div>
+      <div className={styles.savedList}>
+        {loaded.map((product) => (
+          <article key={product.id}>
+            <div className={styles.savedThumb}>
+              {product.imageUrl ? <Image src={product.imageUrl} alt="" fill sizes="72px" /> : null}
+            </div>
+            <div>
+              <small>{product.brand}</small>
+              <strong>{product.shortName}</strong>
+            </div>
+            <a href={product.retailerUrl} target="_blank" rel="noopener noreferrer" onClick={() => onRetailer(product.id)}>
+              View <ArrowUpRight aria-hidden="true" size={15} />
+            </a>
+            <button type="button" onClick={() => onRemove(product.id)} aria-label={`Remove ${product.name} from next shop`}>
+              <X aria-hidden="true" size={16} />
+            </button>
+          </article>
+        ))}
+      </div>
+      <p>Saved privately in this browser. No account needed for the demo.</p>
+    </section>
   );
 }
 

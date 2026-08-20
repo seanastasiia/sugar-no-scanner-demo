@@ -17,6 +17,7 @@ The app is a working mobile-first web/PWA concept with:
 - 10 golden products with independently sourced fiber and a deterministic three-signal Sugar.no badge;
 - 30 catalog products that intentionally show `Data pending` until fiber is verified;
 - normalized detection boxes, a de-duplicated checkout tray, similar options and exact Barbora product links;
+- an in-scanner Shelf/Checkout switch plus device-local `Saved options` that survive reloads without an account;
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
 - iPhone-sized WebKit end-to-end coverage and committed visual evidence.
 
@@ -33,6 +34,8 @@ The implementation keeps a deterministic internal comparison score for ranking:
 The main UI does not show an unexplained number. It presents a Sugar.no badge with three separate, text-labelled signals: Protein, Fiber and Sugar. Each signal is `Higher`, `Middle` or `Lower` relative to the verified protein-snack catalog; the sugar direction is inverted so lower total sugar receives the stronger signal. Green, yellow and red are supporting visual cues, never the only explanation and never a verdict that food is good or bad.
 
 Each percentile uses all available verified values in the 40-product protein-snack category. A product receives no overall badge state unless its protein, fiber and total sugar are all numeric. A verified `no added sugar` claim is shown separately and never changes the comparison. Similar products rank by format first and internal comparison second; commercial status is not part of recommendation ranking.
+
+`Save for next shop` is a real demo action rather than explanatory copy. Saved product IDs live only in browser `localStorage`, can be removed at any time and are restored after reload. The demo has no account or cross-device synchronization; the server receives only the bounded `product_saved` or `product_unsaved` analytics event, never the local list itself.
 
 ## Stack
 
@@ -157,4 +160,4 @@ GitHub `main` is the release source. A release is complete only after tests, pus
 
 ## Known limitations
 
-The deterministic shelf photo and checkout photo prove the multi-product interaction with overlays on the source scene; they are not evidence of computer-vision accuracy. The app has not yet been tested with physical products on a real Latvian shelf or checkout belt. Actual Gemini accuracy, p95 latency, unsupported false-positive rate, Supabase writes, current retailer availability and physical iPhone camera behavior remain unverified until the corresponding credentials and test materials are available. See [Bugs.md](Bugs.md) for the live list.
+The deterministic shelf photo and checkout photo prove the multi-product interaction with overlays on the source scene; they are not evidence of computer-vision accuracy. Device-local saved options are a prototype and do not sync between browsers or phones. The app has not yet been tested with physical products on a real Latvian shelf or checkout belt. Actual Gemini accuracy, p95 latency, unsupported false-positive rate, Supabase writes, current retailer availability and physical iPhone camera behavior remain unverified until the corresponding credentials and test materials are available. See [Bugs.md](Bugs.md) for the live list.

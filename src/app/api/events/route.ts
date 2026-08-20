@@ -13,6 +13,8 @@ const eventSchema = z.object({
     "result_opened",
     "alternative_viewed",
     "retailer_link_clicked",
+    "product_saved",
+    "product_unsaved",
     "permission_denied",
     "recognition_failed"
   ]),

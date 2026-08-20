@@ -34,6 +34,10 @@ Tap `Checkout photo`.
 
 “Checkout uses exactly the same behavior as the shelf: one view of the whole belt, several detected packages and colored overlays on the image. We do not tell someone to undo a purchase or shame the basket. The app suggests saving an alternative for the next shop.”
 
+Tap `Save for next shop`, close the scanner and show `Saved options`.
+
+“This is now a real action, not only copy. The option remains after reload on this device and the save signal can be measured separately from retailer clicks. The proof of concept deliberately avoids an account or cross-device sync.”
+
 ## Close
 
 “What this proves today is the experience, the constrained catalog and the data/privacy contract. The next validation is not ‘can AI recognize every grocery item?’ It is whether people compare visible products and whether they use the save or retailer actions. Real shelf accuracy, latency and monetization remain separate tests.”
