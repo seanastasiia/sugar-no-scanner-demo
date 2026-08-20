@@ -18,14 +18,14 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Permission denied | Mocked WebKit browser scenario verifies explanation and retry | Pass locally |
 | Saved-image fallback | Client resize and provider-unavailable state tested | Pass locally |
 | Production build | `next build` succeeds | Pass locally |
-| Focus top-1 ≥ 90% on 10 real packshots | `npm run benchmark:focus` is reproducible; needs Gemini key | Not measured |
+| Focus top-1 ≥ 90% on 10 real packshots | Gemini is configured and one production concept-image call succeeds; the 10-packshot benchmark has not been run | Not measured |
 | Shelf recall ≥ 75% on real/golden images | Deterministic demo is not an accuracy benchmark | Not measured |
 | Checkout recall ≥ 80%, duplicates ≤ 5% on a real belt | Dedup logic passes; real photo/video vision benchmark absent | Partially measured |
 | Unsupported false-positive rate ≤ 5% | Closed-catalog fail-closed behavior exists; real negative set absent | Not measured |
 | Cached result < 1 s | Deterministic/API flow observed in WebKit | Pass locally |
-| New AI p95 < 4 s | Needs Gemini key and repeated live calls | Not measured |
+| New AI p95 < 4 s | One production upload completed in 2,658 ms; repeated calls are required for p95 | Partially measured |
 | Supabase migration, seed and writes | Migration and seed are reproducible | Prepared, not applied |
-| Railway HTTPS and live health check | GitHub `main` deploy is `SUCCESS`; health and both deterministic multi-product APIs pass over HTTPS | Pass |
+| Railway HTTPS and live health check | GitHub `main` deploy is `SUCCESS`; health, deterministic scenes and a real Gemini upload request pass over HTTPS | Pass |
 | Physical iPhone Safari shelf test | Requires deployed HTTPS and physical products | Not run |
 | Cross-device saved-list sync | Intentionally absent from the account-free proof of concept | Out of scope |
 
