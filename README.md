@@ -57,7 +57,7 @@ Open `http://localhost:3000`. Development allows local access when `DEMO_ACCESS_
 See `.env.example` for every variable.
 
 - `DEMO_ACCESS_CODE`, `DEMO_SESSION_SECRET`: private investor access. Both are required in production.
-- `GEMINI_API_KEY`, `GEMINI_MODEL`: server-side live recognition.
+- `GEMINI_API_KEY`, `GEMINI_MODEL`: server-side live recognition. The default is the stable `gemini-3.7-flash` model.
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: server-only catalog and event storage.
 - `RECOGNITION_CONFIDENCE_THRESHOLD`: minimum confidence before a product is shown.
 - `COMMIT_SHA`: optional local/fallback release identifier. Railway deployments use `RAILWAY_GIT_COMMIT_SHA` automatically.

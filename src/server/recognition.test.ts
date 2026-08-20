@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { getCatalog } from "@/lib/catalog";
-import { fitBoxToFrame, recognizeProducts } from "./recognition";
+import { DEFAULT_GEMINI_MODEL, fitBoxToFrame, recognizeProducts } from "./recognition";
 
 const originalKey = process.env.GEMINI_API_KEY;
 
@@ -36,6 +36,7 @@ describe("recognizeProducts", () => {
     expect(result.status).toBe("provider_unavailable");
     expect(result.detections).toEqual([]);
     expect(result.imageStored).toBe(false);
+    expect(result.model).toBe(DEFAULT_GEMINI_MODEL);
   });
 });
 

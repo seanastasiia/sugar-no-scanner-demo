@@ -2,6 +2,8 @@ import { GoogleGenAI, ThinkingLevel, createPartFromBase64, createPartFromText } 
 import { z } from "zod";
 import type { ProductDetection, RecognitionResponse, ScanSource, ScoredProduct } from "@/lib/types";
 
+export const DEFAULT_GEMINI_MODEL = "gemini-3.7-flash";
+
 const providerResponseSchema = z.object({
   detections: z.array(
     z.object({
@@ -92,7 +94,7 @@ export async function recognizeProducts(input: {
 }): Promise<RecognitionResponse> {
   const startedAt = performance.now();
   const sample = sampleResponse(input.source, input.sampleFrame);
-  const model = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+  const model = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
   if (sample) {
     return {
       requestId: input.requestId,
