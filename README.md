@@ -2,6 +2,10 @@
 
 Private Latvia proof of concept for camera-based comparison of packaged protein snacks. It is a wellness discovery tool, not a medical device or an absolute rating of food.
 
+- Live demo: [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
+- Public source: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
+- Access: request the private investor code from the repository owner.
+
 ## Current state
 
 The app is a working mobile-first web/PWA concept with:
@@ -16,7 +20,7 @@ The app is a working mobile-first web/PWA concept with:
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
 - iPhone-sized WebKit end-to-end coverage and committed visual evidence.
 
-The guaranteed shelf and checkout scenes work without third-party credentials. Live recognition requires Gemini; production catalog/analytics storage requires Supabase. Deployment is prepared for Railway but is not complete until a GitHub remote and account credentials are connected.
+The guaranteed shelf and checkout scenes work without third-party credentials. The app is deployed from GitHub `main` to Railway with an HTTPS domain and private access-code gate. Live recognition still requires Gemini; production catalog/analytics storage still requires Supabase.
 
 ## Product rules
 
@@ -56,7 +60,7 @@ See `.env.example` for every variable.
 - `GEMINI_API_KEY`, `GEMINI_MODEL`: server-side live recognition.
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: server-only catalog and event storage.
 - `RECOGNITION_CONFIDENCE_THRESHOLD`: minimum confidence before a product is shown.
-- `COMMIT_SHA`: exposed by `/api/health` for release verification.
+- `COMMIT_SHA`: optional local/fallback release identifier. Railway deployments use `RAILWAY_GIT_COMMIT_SHA` automatically.
 
 Never expose service-role or Gemini keys through `NEXT_PUBLIC_*` variables.
 
@@ -114,6 +118,8 @@ The app uses the checked-in local catalog and structured server logs when Supaba
 
 `railway.json` builds with Railpack, runs the standalone Next server from `.next/standalone/server.js` and checks `/api/health`. The `postbuild` lifecycle copies `public` and `.next/static` into the standalone artifact.
 
+Railway must set `HOSTNAME=0.0.0.0` so its proxy and health checker can reach the standalone Next.js server.
+
 ```bash
 npm run verify
 CI=1 npm run test:e2e
@@ -147,4 +153,4 @@ GitHub `main` is the release source. A release is complete only after tests, pus
 
 ## Known limitations
 
-The app has not yet been tested with physical products on a real Latvian shelf or conveyor. Actual Gemini accuracy, p95 latency, unsupported false-positive rate, Supabase writes, retailer availability and Railway/iPhone HTTPS behavior remain unverified until credentials, deployment and physical test materials are available. See [Bugs.md](Bugs.md) for the live list.
+The deployed deterministic shelf and checkout paths are verified over Railway HTTPS. The app has not yet been tested with physical products on a real Latvian shelf or conveyor. Actual Gemini accuracy, p95 latency, unsupported false-positive rate, Supabase writes, current retailer availability and physical iPhone camera behavior remain unverified until the corresponding credentials and test materials are available. See [Bugs.md](Bugs.md) for the live list.

@@ -9,6 +9,8 @@ This file is the running record of scanner defects found and resolved.
 
 ## Resolved
 
+- **2026-08-20: the first Railway containers were unreachable by the platform health check.** Railway supplied a container hostname that made the standalone Next.js server bind too narrowly. Production now sets `HOSTNAME=0.0.0.0`; `/api/health` is reachable through the public HTTPS domain and the GitHub deployment is healthy.
+- **2026-08-20: health metadata could retain an old manually configured commit.** The endpoint now prefers Railway's deployment-specific `RAILWAY_GIT_COMMIT_SHA` and uses `COMMIT_SHA` only as a local fallback.
 - **2026-08-20: lint crashed with the newest TypeScript and ESLint majors.** `eslint-config-next@16.3.1` currently depends on plugins that reject TypeScript 7 and ESLint 10 APIs. The project pins TypeScript 6.0.3 and ESLint 9.39.5 until the Next lint stack supports the newer majors.
 - **2026-08-20: checkout detections could merge against stale React state.** The tray now has a synchronous ref used by the recognition loop, while React state remains the rendered copy.
 - **2026-08-20: saved images could exceed the recognition API body limit.** Uploads are resized and converted to a bounded JPEG in the browser before transmission.
