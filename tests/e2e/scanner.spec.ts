@@ -30,22 +30,30 @@ test("sample shelf photo highlights products and shows a three-signal Sugar.no b
   await unlock(page);
   await page.getByRole("button", { name: /Shelf photo/ }).click();
   await expect(page.getByRole("status")).toContainText("4 supported products found");
-  await expect(page.locator('button[aria-label^="Open "]')).toHaveCount(4);
+  await expect(page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
   await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
-  await expect(page.getByLabel("Sugar.no badge").getByText("Protein")).toBeVisible();
-  await expect(page.getByLabel("Sugar.no badge").getByText("Fiber")).toBeVisible();
+  await expect(page.getByLabel("Sugar.no badge").getByText("Protein", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Sugar.no badge").getByText("Fiber", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Sugar", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Shelf marker legend").getByText("Top fit", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Shelf marker legend").getByText("Mixed", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Shelf marker legend").getByText("Trade-offs", { exact: true })).toBeVisible();
   await expect(page.getByText("Values per 100 g · Compared with protein snacks in this demo")).toBeVisible();
   await expect(page.getByText(/Sugar\.no Match \d+/)).toHaveCount(0);
   const retailer = page.getByRole("link", { name: /View at Barbora/ });
   await expect(retailer).toHaveAttribute("href", /^https:\/\/barbora\.lv\/produkti\//);
   await expect(page.getByText(/\b(good|bad|unhealthy)\b/i)).toHaveCount(0);
-  await expect(page.getByLabel("Sample shelf photo with four supported protein snacks").locator("img")).toHaveCount(4);
+  await expect(page.getByLabel("Sample shelf photo with four supported protein snacks").locator("img")).toHaveCount(1);
+  await expect(page.getByAltText("Four protein bars on a supermarket shelf")).toBeVisible();
   await page.waitForFunction(() =>
     [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Sample shelf photo with four supported protein snacks"] img')]
       .every((image) => image.complete && image.naturalWidth > 0)
   );
   await waitForAlternativeImages(page);
+  const accessibility = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(accessibility.violations).toEqual([]);
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: "docs/screenshots/shelf-mobile.png", fullPage: true });
 });
@@ -56,7 +64,8 @@ test("checkout photo uses one multi-product scan instead of an animated product"
   const tray = page.getByLabel("Products in this scan");
   await expect(tray).toBeVisible({ timeout: 8_000 });
   await expect(tray.getByRole("button")).toHaveCount(4);
-  await expect(page.locator('button[aria-label^="Open "]')).toHaveCount(4);
+  await expect(page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
+  await expect(page.getByAltText("Four protein bars on a supermarket checkout belt")).toBeVisible();
   await expect(page.getByRole("status")).toContainText("4 supported products found on checkout");
   await expect(page.getByText("Save an option for your next shop")).toBeVisible();
   await waitForAlternativeImages(page);

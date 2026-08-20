@@ -1,0 +1,40 @@
+# Scanner page override
+
+This page overrides `../MASTER.md` for the live camera, sample shelf and sample checkout experiences.
+
+## Reference pattern
+
+- Use Checkit's camera-first hierarchy: the scene is the primary surface, detected packages are annotated in place, and product details arrive in a compact bottom sheet.
+- Use Lóvi's focus clarity: make the selected object visually unmistakable and show what the system is acting on.
+- Do not copy either product's visual identity, language or branding. Keep Sugar.no cream, ink and coral as the surrounding product system.
+
+## Scene and overlays
+
+- Show one photorealistic source scene for both shelf and checkout samples. Checkout uses the same multi-product scan pattern as shelf.
+- Keep the camera/image stage at least 60% of the initial mobile viewport when results exist.
+- Every supported package gets one bounded hit target with a border and central marker.
+- Marker states are `Top fit`, `Mixed`, `Trade-offs` and `Data pending`.
+- State must never depend on color alone: pair green with a check, yellow with a minus, red/coral with an alert icon, and pending with an info icon. Selected state adds a white ring and visible text.
+- These states are relative within the protein-snack catalog, not good/bad or healthy/unhealthy judgments.
+- Never show the internal numeric comparison score in the user interface.
+
+## Bottom sheet
+
+- Pull the cream results sheet over the lower edge of the scene with a visible drag handle.
+- First show product count, marker legend and a horizontally scrollable product tray.
+- The selected result contains brand/name, one compact save action and a `Sugar.no badge` with three criteria: Protein, Fiber and Sugar.
+- Each criterion includes actual value per 100 g, direction text and color support.
+- `Similar options` is a horizontally scrollable row of compact cards. Retailer CTA remains secondary.
+- Checkout uses `Save an option for your next shop`; it does not ask the user to undo the basket.
+
+## Interaction and accessibility
+
+- All actionable targets are at least 44 x 44 px and have visible focus styles.
+- Keep the header and controls legible over photos with a restrained black-to-transparent gradient and translucent control surfaces.
+- Support safe areas, portrait widths down to 375 px, phone landscape, 125% text, dark mode and reduced motion.
+- Avoid persistent animation, color-only meaning, horizontal page overflow and package labels that collide on narrow products.
+
+## Demo evidence boundary
+
+- Generated sample photos and deterministic boxes demonstrate the interaction only.
+- Never present them as computer-vision accuracy evidence; real shelf and checkout benchmarks require physical test materials and the live provider.

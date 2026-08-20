@@ -17,9 +17,9 @@ function percentileTone(value: number): Exclude<MatchTone, "pending"> {
 
 export function overallMatchPresentation(score: number | null): { label: string; tone: MatchTone } {
   if (score === null) return { label: "Data pending", tone: "pending" };
-  if (score >= 67) return { label: "Strong match", tone: "strong" };
-  if (score >= 50) return { label: "Middle match", tone: "middle" };
-  return { label: "Lower match", tone: "lower" };
+  if (score >= 67) return { label: "Top fit", tone: "strong" };
+  if (score >= 50) return { label: "Mixed", tone: "middle" };
+  return { label: "Trade-offs", tone: "lower" };
 }
 
 export function matchCriteria(product: ScoredProduct): MatchCriterion[] {

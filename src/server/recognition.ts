@@ -24,25 +24,25 @@ const sampleShelf: ProductDetection[] = [
   {
     productId: "prot-bat-sal-riekst-saldin-barebells-55-g",
     confidence: 0.98,
-    box: { x: 0.05, y: 0.17, width: 0.2, height: 0.65 },
+    box: { x: 0.01, y: 0.27, width: 0.24, height: 0.28 },
     observedText: "Barebells Salty Peanut"
   },
   {
     productId: "prot-bat-barebells-lemon-cheesecake-55-g",
     confidence: 0.97,
-    box: { x: 0.28, y: 0.17, width: 0.2, height: 0.65 },
+    box: { x: 0.25, y: 0.27, width: 0.24, height: 0.28 },
     observedText: "Barebells Lemon Cheesecake"
   },
   {
     productId: "proteina-bat-cepuma-garsa-iconfit-55-g",
     confidence: 0.96,
-    box: { x: 0.52, y: 0.17, width: 0.2, height: 0.65 },
+    box: { x: 0.5, y: 0.27, width: 0.24, height: 0.28 },
     observedText: "ICONFIT Cookie Bliss"
   },
   {
     productId: "proteina-baton-barebells-coco-choco-55-g",
     confidence: 0.95,
-    box: { x: 0.75, y: 0.17, width: 0.2, height: 0.65 },
+    box: { x: 0.75, y: 0.27, width: 0.24, height: 0.28 },
     observedText: "Barebells Coco Choco"
   }
 ];
@@ -51,25 +51,25 @@ const sampleCheckout: ProductDetection[] = [
   {
     productId: "prot-bat-sal-riekst-saldin-barebells-55-g",
     confidence: 0.98,
-    box: { x: 0.06, y: 0.2, width: 0.2, height: 0.58 },
+    box: { x: 0.01, y: 0.35, width: 0.24, height: 0.31 },
     observedText: "Barebells Salty Peanut"
   },
   {
     productId: "prot-bat-barebells-lemon-cheesecake-55-g",
     confidence: 0.97,
-    box: { x: 0.29, y: 0.24, width: 0.2, height: 0.54 },
+    box: { x: 0.25, y: 0.36, width: 0.24, height: 0.31 },
     observedText: "Barebells Lemon Cheesecake"
   },
   {
     productId: "proteina-bat-cepuma-garsa-iconfit-55-g",
     confidence: 0.96,
-    box: { x: 0.52, y: 0.18, width: 0.2, height: 0.6 },
+    box: { x: 0.5, y: 0.35, width: 0.24, height: 0.32 },
     observedText: "ICONFIT Cookie Bliss"
   },
   {
     productId: "proteina-baton-barebells-coco-choco-55-g",
     confidence: 0.95,
-    box: { x: 0.75, y: 0.23, width: 0.2, height: 0.55 },
+    box: { x: 0.75, y: 0.36, width: 0.24, height: 0.32 },
     observedText: "Barebells Coco Choco"
   }
 ];

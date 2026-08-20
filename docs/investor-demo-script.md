@@ -14,7 +14,7 @@ Show the private access screen and enter the code.
 
 Tap `Shelf photo`.
 
-“One camera view compares what is visible without asking the user to choose protein, fiber or sugar first. The colored boxes sit directly over the products in the shelf image. Green, yellow and red make the comparison scannable; the words Strong, Middle and Lower carry the same meaning without relying on color alone.”
+“One camera view compares what is visible without asking the user to choose protein, fiber or sugar first. Compact markers sit directly over the products in the shelf image. A green check, yellow minus and coral alert make the comparison scannable; Top fit, Mixed and Trade-offs carry the same meaning without relying on color alone.”
 
 Tap two product boxes and show the Sugar.no badge.
 
@@ -44,7 +44,7 @@ Tap `Save for next shop`, close the scanner and show `Saved options`.
 
 Suggested final line:
 
-> We can make a shelf or checkout belt understandable in one view. Colored overlays identify supported products, a transparent three-signal Sugar.no badge explains the comparison, and users can save or find an alternative online. The Latvia prototype recognizes a deliberately constrained catalog of 40 products; the next validation is whether people use the comparison and retailer actions, not whether AI can recognize every grocery product immediately.
+> We can make a shelf or checkout belt understandable in one view. Clear markers identify supported products, a transparent three-signal Sugar.no badge explains the comparison, and users can save or find an alternative online. The Latvia prototype recognizes a deliberately constrained catalog of 40 products; the next validation is whether people use the comparison and retailer actions, not whether AI can recognize every grocery product immediately.
 
 ## If recognition fails live
 

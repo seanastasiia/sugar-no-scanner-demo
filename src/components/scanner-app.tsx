@@ -14,6 +14,7 @@ import {
   Layers3,
   LoaderCircle,
   Lock,
+  Minus,
   RefreshCw,
   ScanLine,
   ShoppingBasket,
@@ -100,6 +101,20 @@ function toneClass(tone: MatchTone) {
   if (tone === "middle") return styles.toneMiddle;
   if (tone === "lower") return styles.toneLower;
   return styles.tonePending;
+}
+
+function overlayLabel(tone: MatchTone) {
+  if (tone === "strong") return "Top fit";
+  if (tone === "middle") return "Mixed";
+  if (tone === "lower") return "Trade-offs";
+  return "Data";
+}
+
+function OverlayToneIcon({ tone }: { tone: MatchTone }) {
+  if (tone === "strong") return <Check aria-hidden="true" size={22} strokeWidth={3} />;
+  if (tone === "middle") return <Minus aria-hidden="true" size={22} strokeWidth={3} />;
+  if (tone === "lower") return <CircleAlert aria-hidden="true" size={21} strokeWidth={2.6} />;
+  return <Info aria-hidden="true" size={20} strokeWidth={2.5} />;
 }
 
 export function ScannerApp() {
@@ -456,7 +471,7 @@ export function ScannerApp() {
 
   return (
     <main className={styles.app}>
-      <header className={styles.header}>
+      <header className={`${styles.header} ${activeExperience ? styles.scannerHeader : ""}`}>
         <div className={styles.wordmark} aria-label="Sugar dot no">
           Sugar<span>.no</span>
         </div>
@@ -527,13 +542,9 @@ export function ScannerApp() {
               <video ref={videoRef} className={styles.video} playsInline muted autoPlay aria-label="Live camera preview" />
             ) : null}
 
-            {source === "sample-shelf" ? (
-              <ShelfScene products={products} />
-            ) : null}
+            {source === "sample-shelf" ? <ShelfScene /> : null}
 
-            {source === "sample-conveyor" ? (
-              <CheckoutScene products={products} />
-            ) : null}
+            {source === "sample-conveyor" ? <CheckoutScene /> : null}
 
             {source === "upload" && previewUrl ? (
               <Image
@@ -569,7 +580,6 @@ export function ScannerApp() {
             {detections.map((detection) => {
               const product = products[detection.productId]?.product;
               const presentation = overallMatchPresentation(product?.matchScore ?? null);
-              const overlayLabel = presentation.label.replace(" match", "");
               return (
                 <button
                   className={`${styles.detectionBox} ${toneClass(presentation.tone)} ${selectedId === detection.productId ? styles.selectedBox : ""}`}
@@ -588,8 +598,8 @@ export function ScannerApp() {
                   aria-label={`Open ${product?.name || detection.observedText}`}
                 >
                   <span>
-                    <small>Sugar.no</small>
-                    <strong>{product ? overlayLabel : "Reading"}</strong>
+                    <OverlayToneIcon tone={presentation.tone} />
+                    <strong>{product ? overlayLabel(presentation.tone) : "Reading"}</strong>
                   </span>
                 </button>
               );
@@ -652,6 +662,19 @@ export function ScannerApp() {
           </div>
 
           <div className={styles.resultsSheet}>
+            {tray.length ? (
+              <div className={styles.scanSummary}>
+                <div>
+                  <strong>{tray.length} products compared</strong>
+                  <span>Tap a marker or swipe the products</span>
+                </div>
+                <div className={styles.summarySignals} aria-label="Shelf marker legend">
+                  <span className={styles.toneStrong}><Check aria-hidden="true" size={13} /> Top fit</span>
+                  <span className={styles.toneMiddle}><Minus aria-hidden="true" size={13} /> Mixed</span>
+                  <span className={styles.toneLower}><CircleAlert aria-hidden="true" size={13} /> Trade-offs</span>
+                </div>
+              </div>
+            ) : null}
             {tray.length > 1 ? (
               <div className={styles.tray} aria-label="Products in this scan">
                 {tray.map((id) => {
@@ -714,47 +737,34 @@ export function ScannerApp() {
   );
 }
 
-function ShelfScene({ products }: { products: Record<string, ProductPayload> }) {
+function ShelfScene() {
   return (
     <div className={styles.shelfScene} aria-label="Sample shelf photo with four supported protein snacks">
-      {shelfIds.map((id) => {
-        const product = products[id]?.product;
-        return (
-          <div className={styles.shelfProduct} key={id}>
-            {product?.imageUrl ? (
-              <Image src={product.imageUrl} alt={product.name} fill sizes="22vw" priority />
-            ) : (
-              <div className={styles.packagePlaceholder}>{product?.brand || "Sugar.no"}</div>
-            )}
-          </div>
-        );
-      })}
-      <div className={styles.shelfRail} aria-hidden="true">
-        <span />
-        <span />
-        <span />
-        <span />
-      </div>
+      <Image
+        className={styles.samplePhoto}
+        src="/samples/latvia-shelf.jpg"
+        alt="Four protein bars on a supermarket shelf"
+        fill
+        sizes="100vw"
+        priority
+        unoptimized
+      />
     </div>
   );
 }
 
-function CheckoutScene({ products }: { products: Record<string, ProductPayload> }) {
+function CheckoutScene() {
   return (
     <div className={styles.checkoutScene} aria-label="Sample checkout photo with four supported protein snacks">
-      <div className={styles.beltLines} aria-hidden="true" />
-      {checkoutIds.map((id) => {
-        const product = products[id]?.product;
-        return (
-          <div className={styles.checkoutProduct} key={id}>
-            {product?.imageUrl ? (
-              <Image src={product.imageUrl} alt={product.name} fill sizes="22vw" priority />
-            ) : (
-              <div className={styles.packagePlaceholder}>{product?.brand || "Sugar.no"}</div>
-            )}
-          </div>
-        );
-      })}
+      <Image
+        className={styles.samplePhoto}
+        src="/samples/latvia-checkout.jpg"
+        alt="Four protein bars on a supermarket checkout belt"
+        fill
+        sizes="100vw"
+        priority
+        unoptimized
+      />
     </div>
   );
 }
@@ -784,6 +794,16 @@ function ProductResult({
           <p>{product.brand}</p>
           <h2>{product.shortName}</h2>
         </div>
+        <button
+          className={`${styles.compactSaveButton} ${savedIds.includes(product.id) ? styles.savedButton : ""}`}
+          type="button"
+          onClick={() => onToggleSaved(product.id)}
+          aria-label={savedIds.includes(product.id) ? "Remove from next shop" : checkout ? "Save for next shop" : "Save this option"}
+          aria-pressed={savedIds.includes(product.id)}
+        >
+          {savedIds.includes(product.id) ? <BookmarkCheck aria-hidden="true" size={18} /> : <Bookmark aria-hidden="true" size={18} />}
+          <span>{savedIds.includes(product.id) ? "Saved" : "Save"}</span>
+        </button>
       </div>
 
       <SugarNoBadge product={product} />
@@ -805,31 +825,11 @@ function ProductResult({
         </div>
       ) : null}
 
-      <div className={styles.nutrients} aria-label="Nutrition per 100 grams">
-        <Nutrient label="Protein" value={product.nutrientsPer100g.proteinG} unit="g" direction="Higher" />
-        <Nutrient label="Fiber" value={product.nutrientsPer100g.fiberG} unit="g" direction="Higher" />
-        <Nutrient label="Total sugar" value={product.nutrientsPer100g.totalSugarG} unit="g" direction="Lower" />
-      </div>
-      <p className={styles.perHundred}>Values per 100 g · Compared with protein snacks in this demo</p>
-
       {product.noAddedSugarClaim ? (
         <div className={styles.claimBadge}>
           <Check aria-hidden="true" size={15} /> No added sugar claim on source label
         </div>
       ) : null}
-
-      <button
-        className={`${styles.saveButton} ${savedIds.includes(product.id) ? styles.savedButton : ""}`}
-        type="button"
-        onClick={() => onToggleSaved(product.id)}
-        aria-pressed={savedIds.includes(product.id)}
-      >
-        {savedIds.includes(product.id) ? <BookmarkCheck aria-hidden="true" size={19} /> : <Bookmark aria-hidden="true" size={19} />}
-        <span>
-          <strong>{savedIds.includes(product.id) ? "Saved for next shop" : checkout ? "Save for next shop" : "Save this option"}</strong>
-          <small>Stored only on this device</small>
-        </span>
-      </button>
 
       {alternatives.length ? (
         <section className={styles.alternatives} aria-labelledby={`alternatives-${product.id}`}>
@@ -957,10 +957,18 @@ function SavedProducts({
 function SugarNoBadge({ product }: { product: ScoredProduct }) {
   const presentation = overallMatchPresentation(product.matchScore);
   const criteria = matchCriteria(product);
+  const values = {
+    protein: product.nutrientsPer100g.proteinG,
+    fiber: product.nutrientsPer100g.fiberG,
+    sugar: product.nutrientsPer100g.totalSugarG
+  };
   return (
     <section className={styles.sugarBadge} aria-label="Sugar.no badge">
       <div className={styles.sugarBadgeHeading}>
-        <strong>Sugar.no</strong>
+        <div>
+          <small>Sugar.no badge</small>
+          <strong>Sugar.no fit</strong>
+        </div>
         <span className={toneClass(presentation.tone)}>{presentation.label}</span>
       </div>
       <div className={styles.criteria}>
@@ -968,10 +976,12 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
           <div className={`${styles.criterion} ${toneClass(criterion.tone)}`} key={criterion.key}>
             <i aria-hidden="true" />
             <span>{criterion.label}</span>
-            <strong>{criterion.status}</strong>
+            <strong>{values[criterion.key] === null ? "—" : `${values[criterion.key]}g`}</strong>
+            <small>{criterion.status}</small>
           </div>
         ))}
       </div>
+      <p className={styles.perHundred}>Values per 100 g · Compared with protein snacks in this demo</p>
     </section>
   );
 }
@@ -979,24 +989,4 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
 function MatchPill({ product }: { product: ScoredProduct }) {
   const presentation = overallMatchPresentation(product.matchScore);
   return <em className={`${styles.matchPill} ${toneClass(presentation.tone)}`}>{presentation.label}</em>;
-}
-
-function Nutrient({
-  label,
-  value,
-  unit,
-  direction
-}: {
-  label: string;
-  value: number | null;
-  unit: string;
-  direction: string;
-}) {
-  return (
-    <div className={styles.nutrient}>
-      <span>{label}</span>
-      <strong>{value === null ? "Not verified" : `${value}${unit}`}</strong>
-      <small>{direction} supports this badge</small>
-    </div>
-  );
 }

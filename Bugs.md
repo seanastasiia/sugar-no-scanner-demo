@@ -10,11 +10,16 @@ This file is the running record of scanner defects found and resolved.
 
 ## Resolved
 
+- **2026-08-20: two compact helper labels missed WCAG AA contrast.** Automated axe coverage found the scan hint at 4.21:1 and the per-100-g note at 4.08:1; both now use darker ink values and are rechecked on the populated shelf result.
+- **2026-08-20: sample shelf and checkout scenes looked like artificial UI cards instead of camera evidence.** Both samples now use photorealistic concept images while all Sugar.no markers remain real HTML overlays driven by the recognition response.
+- **2026-08-20: large colored labels obscured packages and collided on narrow boxes.** Each package now has a compact icon marker; only the selected package expands its text label. A separate legend pairs every color with an icon and plain-language state.
+- **2026-08-20: the result sheet repeated nutrition in several large cards and pushed alternatives too far down.** Protein, fiber and sugar values now live inside one compact three-criterion Sugar.no badge, the save action sits beside the product heading and similar options remain horizontally scrollable.
+- **2026-08-20: protected sample images failed through the Next.js image optimizer.** The first-party static sample files now bypass server-side optimization because the auth proxy correctly blocks the optimizer's unauthenticated internal fetch.
 - **2026-08-20: moving between the shelf and checkout demo required closing the scanner.** Sample results now include a visible `Shelf / Checkout` switch that changes the full scene in place.
 - **2026-08-20: checkout said to save an alternative for next time but had no save action.** Products and similar options can now be saved or removed, persist after reload in browser storage and appear in a dedicated `Saved options` list.
 - **2026-08-20: checkout looked like an artificial single-product animation.** Checkout now uses the same one-frame multi-product recognition contract as the shelf and returns four detections over one full-belt scene.
 - **2026-08-20: the numeric Sugar.no Match was difficult to interpret.** The primary UI now shows a Sugar.no badge with separate Protein, Fiber and Sugar states. The internal number remains only for deterministic ranking.
-- **2026-08-20: colored detection labels overlapped on narrow product boxes.** Overlay labels are constrained to each box and use compact `Strong`, `Middle` and `Lower` wording; full explanations remain in the product card.
+- **2026-08-20: colored detection labels overlapped on narrow product boxes.** Overlay labels are constrained to each box and use compact `Top fit`, `Mixed` and `Trade-offs` wording; full explanations remain in the product card.
 - **2026-08-20: a badge criterion end-to-end selector matched both `Sugar.no` and `Sugar`.** The browser test now scopes the criterion to the badge and requires an exact text match.
 - **2026-08-20: the first Railway containers were unreachable by the platform health check.** Railway supplied a container hostname that made the standalone Next.js server bind too narrowly. Production now sets `HOSTNAME=0.0.0.0`; `/api/health` is reachable through the public HTTPS domain and the GitHub deployment is healthy.
 - **2026-08-20: health metadata could retain an old manually configured commit.** The endpoint now prefers Railway's deployment-specific `RAILWAY_GIT_COMMIT_SHA` and uses `COMMIT_SHA` only as a local fallback.
