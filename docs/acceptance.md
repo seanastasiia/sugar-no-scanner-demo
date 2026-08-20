@@ -23,7 +23,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Cached result < 1 s | Deterministic/API flow observed in WebKit | Pass locally |
 | New AI p95 < 4 s | Needs Gemini key and repeated live calls | Not measured |
 | Supabase migration, seed and writes | Migration and seed are reproducible | Prepared, not applied |
-| Railway HTTPS and live health check | Config and health endpoint exist | Not deployed |
+| Railway HTTPS and live health check | GitHub `main` deploy is `SUCCESS`; health and both deterministic multi-product APIs pass over HTTPS | Pass |
 | Physical iPhone Safari shelf test | Requires deployed HTTPS and physical products | Not run |
 
 The deterministic scenes prove the interaction and data contract. They must not be presented as evidence of real-world computer-vision accuracy.
