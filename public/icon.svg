@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sugar.no scanner icon">
+  <rect width="512" height="512" rx="116" fill="#111111"/>
+  <path d="M127 172v-28c0-9 7-16 16-16h52M317 128h52c9 0 16 7 16 16v28M385 340v28c0 9-7 16-16 16h-52M195 384h-52c-9 0-16-7-16-16v-28" fill="none" stroke="#F2EDE4" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="92" fill="#E8614A"/>
+  <path d="M213 264c18 18 65 18 86-11" fill="none" stroke="#111111" stroke-width="24" stroke-linecap="round"/>
+</svg>
