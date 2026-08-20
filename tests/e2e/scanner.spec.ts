@@ -102,9 +102,9 @@ test("saved flow remains usable with reduced motion, dark mode and enlarged text
       "sugarno.saved-products.v1",
       JSON.stringify(["prot-bat-sal-riekst-saldin-barebells-55-g"])
     );
+    document.documentElement.style.fontSize = "125%";
   });
   await unlock(page);
-  await page.addStyleTag({ content: "html { font-size: 125%; }" });
   await expect(page.getByRole("heading", { name: "Saved options" })).toBeVisible();
   await expect(page.getByRole("link", { name: /View/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

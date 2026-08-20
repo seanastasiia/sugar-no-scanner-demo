@@ -23,7 +23,7 @@ The app is a working mobile-first web/PWA concept with:
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
 - iPhone-sized WebKit end-to-end coverage and committed visual evidence.
 
-The guaranteed shelf and checkout scenes work without third-party credentials. The app is deployed from GitHub `main` to Railway with an HTTPS domain and private access-code gate. Live recognition still requires Gemini; production catalog/analytics storage still requires Supabase.
+The guaranteed shelf and checkout scenes work without third-party credentials. The app is deployed from GitHub `main` to Railway with an HTTPS domain and private access-code gate. Production live recognition has a server-only Google authorization key for Gemini; production catalog/analytics storage still requires Supabase.
 
 ## Product rules
 
@@ -72,6 +72,8 @@ See `.env.example` for every variable.
 - `COMMIT_SHA`: optional local/fallback release identifier. Railway deployments use `RAILWAY_GIT_COMMIT_SHA` automatically.
 
 Never expose service-role or Gemini keys through `NEXT_PUBLIC_*` variables.
+
+The production Gemini credential is an authorization key restricted to the Gemini API and bound to a dedicated Google Cloud service account. Store it only as the Railway secret `GEMINI_API_KEY`; do not copy it into `.env.example`, GitHub, browser code or shared documentation. A successful `GET /v1beta/models` and one minimal `generateContent` request are the release checks for key validity and available quota. Gemini billing is usage/quota based rather than a prepaid token balance; enable a paid billing account only if Google returns an explicit quota or billing error.
 
 ## Commands
 
@@ -169,4 +171,4 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 
 ## Known limitations
 
-The generated deterministic shelf and checkout photos prove the multi-product interaction with overlays on the source scene; they are not evidence of computer-vision accuracy. Device-local saved options are a prototype and do not sync between browsers or phones. The app has not yet been tested with physical products on a real Latvian shelf or checkout belt. Actual Gemini accuracy, p95 latency, unsupported false-positive rate, Supabase writes, current retailer availability and physical iPhone camera behavior remain unverified until the corresponding credentials and test materials are available. See [Bugs.md](Bugs.md) for the live list.
+The generated deterministic shelf and checkout photos prove the multi-product interaction with overlays on the source scene; they are not evidence of computer-vision accuracy. Device-local saved options are a prototype and do not sync between browsers or phones. The app has not yet been tested with physical products on a real Latvian shelf or checkout belt. The Gemini credential and API quota are configured, but real-catalog accuracy, p95 latency, unsupported false-positive rate, Supabase writes, current retailer availability and physical iPhone camera behavior remain unverified until the corresponding test materials are available. See [Bugs.md](Bugs.md) for the live list.

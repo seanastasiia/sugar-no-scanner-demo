@@ -10,6 +10,8 @@ This file is the running record of scanner defects found and resolved.
 
 ## Resolved
 
+- **2026-08-20: live camera always reported that the Gemini key was missing.** `GEMINI_API_KEY` was absent from Railway even though the camera UI was deployed. Gemini API is now enabled in the Google Cloud project, a dedicated service-account-bound authorization key is restricted to Gemini API, the secret is stored only in Railway, and both model discovery and a minimal generation request return HTTP 200.
+- **2026-08-20: the enlarged-text WebKit check could race a development-server navigation.** The test now installs its font-size override before navigation, avoiding a destroyed execution context while preserving the accessibility scenario.
 - **2026-08-20: the Checkit design reference used the US App Store storefront.** Documentation now links to the same app through the Latvia storefront used for this proof of concept.
 - **2026-08-20: direct Railway uploads could report the previous Git SHA in `/api/health`.** Railway does not supply `RAILWAY_GIT_COMMIT_SHA` to CLI-uploaded builds, so the documented release command now refreshes the non-secret `COMMIT_SHA` fallback before deployment.
 - **2026-08-20: two compact helper labels missed WCAG AA contrast.** Automated axe coverage found the scan hint at 4.21:1 and the per-100-g note at 4.08:1; both now use darker ink values and are rechecked on the populated shelf result.
