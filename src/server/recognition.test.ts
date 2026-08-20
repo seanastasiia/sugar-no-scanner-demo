@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { getCatalog } from "@/lib/catalog";
-import { DEFAULT_GEMINI_MODEL, fitBoxToFrame, recognizeProducts } from "./recognition";
+import {
+  DEFAULT_GEMINI_MODEL,
+  filterAllowedDetections,
+  fitBoxToFrame,
+  recognizeProducts
+} from "./recognition";
 
 const originalKey = process.env.GEMINI_API_KEY;
 
@@ -60,5 +65,30 @@ describe("fitBoxToFrame", () => {
     expect(fitted.y).toBe(0.8);
     expect(fitted.width).toBeCloseTo(0.1);
     expect(fitted.height).toBeCloseTo(0.2);
+  });
+});
+
+describe("filterAllowedDetections", () => {
+  it("keeps the server catalog as the authority when the provider returns an unknown ID", () => {
+    const detections = filterAllowedDetections(
+      [
+        {
+          productId: "unknown-product",
+          confidence: 0.99,
+          box: { x: 0.1, y: 0.1, width: 0.3, height: 0.3 },
+          observedText: "Invented product"
+        },
+        {
+          productId: "known-product",
+          confidence: 0.9,
+          box: { x: 0.2, y: 0.2, width: 0.3, height: 0.3 },
+          observedText: "Known product"
+        }
+      ],
+      new Set(["known-product"]),
+      0.82
+    );
+
+    expect(detections.map((detection) => detection.productId)).toEqual(["known-product"]);
   });
 });

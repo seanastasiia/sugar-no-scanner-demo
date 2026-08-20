@@ -97,6 +97,17 @@ export function fitBoxToFrame(box: ProductDetection["box"]): ProductDetection["b
   };
 }
 
+export function filterAllowedDetections(
+  detections: ProductDetection[],
+  allowedIds: Set<string>,
+  threshold: number
+): ProductDetection[] {
+  return detections
+    .filter((detection) => detection.confidence >= threshold && allowedIds.has(detection.productId))
+    .map((detection) => ({ ...detection, box: fitBoxToFrame(detection.box) }))
+    .filter((detection) => detection.box.width >= 0.02 && detection.box.height >= 0.02);
+}
+
 export async function recognizeProducts(input: {
   imageDataUrl?: string;
   source: ScanSource;
@@ -166,7 +177,10 @@ export async function recognizeProducts(input: {
               additionalProperties: false,
               required: ["productId", "confidence", "box", "observedText"],
               properties: {
-                productId: { type: "string", enum: [...allowedIds] },
+                // Gemini rejects the full 40-value enum as an invalid schema.
+                // The prompt supplies the closed catalog and the server allowlist below
+                // remains the authoritative boundary before any detection is returned.
+                productId: { type: "string" },
                 confidence: { type: "number", minimum: 0, maximum: 1 },
                 observedText: { type: "string", maxLength: 160 },
                 box: {
@@ -188,10 +202,7 @@ export async function recognizeProducts(input: {
     }
   });
   const parsed = providerResponseSchema.parse(JSON.parse(response.text || '{"detections":[]}'));
-  const detections = parsed.detections
-    .filter((detection) => detection.confidence >= threshold && allowedIds.has(detection.productId))
-    .map((detection) => ({ ...detection, box: fitBoxToFrame(detection.box) }))
-    .filter((detection) => detection.box.width >= 0.02 && detection.box.height >= 0.02);
+  const detections = filterAllowedDetections(parsed.detections, allowedIds, threshold);
 
   return {
     requestId: input.requestId,

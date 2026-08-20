@@ -10,7 +10,7 @@ This file is the running record of scanner defects found and resolved.
 
 ## Resolved
 
-- **2026-08-20: live camera always reported that the Gemini key was missing.** `GEMINI_API_KEY` was absent from Railway even though the camera UI was deployed. Gemini API is now enabled in the Google Cloud project, a dedicated service-account-bound authorization key is restricted to Gemini API, the secret is stored only in Railway, and both model discovery and a minimal generation request return HTTP 200.
+- **2026-08-20: live camera could not complete a Gemini scan.** `GEMINI_API_KEY` was absent from Railway, and after the credential was installed Gemini rejected the 40-value product-ID enum in the structured-output schema as `INVALID_ARGUMENT`. Gemini API is now enabled, a dedicated service-account-bound authorization key is restricted to it and stored only in Railway, the compatible schema accepts a string ID, and the existing server allowlist still discards every ID outside the 40-product catalog.
 - **2026-08-20: the enlarged-text WebKit check could race a development-server navigation.** The test now installs its font-size override before navigation, avoiding a destroyed execution context while preserving the accessibility scenario.
 - **2026-08-20: the Checkit design reference used the US App Store storefront.** Documentation now links to the same app through the Latvia storefront used for this proof of concept.
 - **2026-08-20: direct Railway uploads could report the previous Git SHA in `/api/health`.** Railway does not supply `RAILWAY_GIT_COMMIT_SHA` to CLI-uploaded builds, so the documented release command now refreshes the non-secret `COMMIT_SHA` fallback before deployment.
