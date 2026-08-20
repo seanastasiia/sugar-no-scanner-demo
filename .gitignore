@@ -12,5 +12,6 @@ test-results/
 .DS_Store
 .vercel/
 .railway/
+supabase/.temp/
 catalog-sync-report.json
 artifacts/benchmarks/*.json
