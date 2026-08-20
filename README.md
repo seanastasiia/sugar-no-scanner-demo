@@ -1,20 +1,39 @@
 # Sugar.no Live Scanner
 
-Private Latvia proof of concept for camera-based comparison of packaged protein snacks. The scanner is a wellness discovery tool, not a medical device and not an absolute health rating.
+Private Latvia proof of concept for camera-based comparison of packaged protein snacks. It is a wellness discovery tool, not a medical device or an absolute rating of food.
 
 ## Current state
 
-The repository currently contains the Next.js/Railway/Supabase foundation and the deterministic `Sugar.no Match` scoring core. Camera UI, recognition routes and the complete product seed are under active implementation.
+The app is a working mobile-first web/PWA concept with:
 
-Important data rule: AI may identify one of the supported product IDs, but it never invents nutrition. A Match is returned only when protein, fiber and total sugars have field-level sources.
+- a private access-code gate;
+- automatic live-camera frame sampling after the user grants permission;
+- one recognition API for camera, saved images, the deterministic four-item shelf and animated checkout demo;
+- a closed catalog of 40 products found in Barbora Latvia;
+- 10 golden products with independently sourced fiber and a deterministic `Sugar.no Match`;
+- 30 catalog products that intentionally show `Match pending` until fiber is verified;
+- normalized detection boxes, a de-duplicated checkout tray, similar options and exact Barbora product links;
+- metadata-only analytics with raw-image-like values rejected at the API boundary;
+- iPhone-sized WebKit end-to-end coverage and committed visual evidence.
+
+The guaranteed shelf and checkout scenes work without third-party credentials. Live recognition requires Gemini; production catalog/analytics storage requires Supabase. Deployment is prepared for Railway but is not complete until a GitHub remote and account credentials are connected.
+
+## Product rules
+
+AI may select only one of the 40 supported product IDs. Nutrition, claims, Match and retailer URLs always come from the verified catalog, never from model output.
+
+`Match = ⅓ protein percentile + ⅓ fiber percentile + ⅓ inverse total-sugar percentile`
+
+Each percentile uses all available verified values in the 40-product protein-snack category. A product receives no total Match unless its protein, fiber and total sugar are all numeric. A verified `no added sugar` claim is shown separately and never changes Match. Similar products rank by format first and Match second; commercial status is not part of recommendation ranking.
 
 ## Stack
 
 - Next.js 16 App Router, React 19 and TypeScript
-- Gemini image understanding behind a server-only adapter
-- Supabase for catalog and anonymous event metadata
-- Railway with standalone Next.js output
-- Vitest and Playwright
+- browser `getUserMedia` plus a stability/motion sampler with one in-flight request
+- Gemini image understanding behind a server-only closed-catalog adapter
+- Supabase Postgres for catalog, sources, retailer offers and anonymous scan metadata
+- Railway standalone Next.js deployment with copied public/static build assets
+- Vitest and Playwright WebKit using an iPhone profile
 
 ## Local setup
 
@@ -23,19 +42,21 @@ Requirements: Node.js 22 or newer.
 ```bash
 cp .env.example .env.local
 npm install
+npx playwright install webkit
 npm run dev
 ```
 
-Open `http://localhost:3000`. In development, leaving `DEMO_ACCESS_CODE` blank allows local access. Production must set an access code and a random session secret.
+Open `http://localhost:3000`. Development allows local access when `DEMO_ACCESS_CODE` is blank. Camera access on a real iPhone requires HTTPS; use the Railway URL for physical-device QA.
 
 ## Environment
 
-See `.env.example` for every supported variable.
+See `.env.example` for every variable.
 
-- `DEMO_ACCESS_CODE`, `DEMO_SESSION_SECRET`: private investor access.
-- `GEMINI_API_KEY`, `GEMINI_MODEL`: server-side recognition provider.
-- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: server-only catalog and analytics storage.
-- `RECOGNITION_CONFIDENCE_THRESHOLD`: minimum confidence before a known product is shown.
+- `DEMO_ACCESS_CODE`, `DEMO_SESSION_SECRET`: private investor access. Both are required in production.
+- `GEMINI_API_KEY`, `GEMINI_MODEL`: server-side live recognition.
+- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: server-only catalog and event storage.
+- `RECOGNITION_CONFIDENCE_THRESHOLD`: minimum confidence before a product is shown.
+- `COMMIT_SHA`: exposed by `/api/health` for release verification.
 
 Never expose service-role or Gemini keys through `NEXT_PUBLIC_*` variables.
 
@@ -46,55 +67,84 @@ npm run dev
 npm run lint
 npm run typecheck
 npm test
-npm run test:e2e
+CI=1 npm run test:e2e
 npm run build
 npm run verify
 npm run catalog:sync
 npm run catalog:validate
+npm run benchmark:focus
 npm run supabase:seed
 ```
 
-## Catalog policy
+For production-like browser tests, build first and then run:
 
-The prototype targets 40 products found in Barbora Latvia's high-protein category. Retailer pages are used for product identity, exact product links, protein and total sugars. Barbora does not currently publish numeric fiber for the selected products, so fiber requires a separate manufacturer or label source. Until that source exists, the UI must show `Needs fiber data` instead of a Match.
+```bash
+npm run build
+E2E_PRODUCTION=1 CI=1 npm run test:e2e
+```
 
-Prices are not stored or displayed. `View at Barbora` always means “check current availability and price”, not “cheaper online” and not an affiliate claim.
+## API
 
-## Privacy
+- `POST /api/auth`: validates the demo code and sets a 12-hour HttpOnly cookie.
+- `POST /api/recognize`: accepts a bounded image data URL or deterministic sample source; returns known IDs, normalized boxes, confidence and `imageStored: false`.
+- `GET /api/products/:id`: returns sourced nutrition, Match and independent alternatives.
+- `POST /api/events`: stores bounded metadata only and rejects raw-image-like fields.
+- `GET /api/health`: Railway health check with commit metadata.
 
-- Camera access starts only after the browser permission prompt.
-- The client downsizes frames and allows one recognition request at a time.
-- Raw frames are not written to Supabase, logs or analytics.
-- Stored scan metadata is pseudonymous and contains source type, latency, confidence and product IDs only.
+## Catalog
+
+`npm run catalog:sync` refreshes exactly 40 relevant products from public Barbora Latvia pages and applies the reviewed field-level overrides in `data/fiber-overrides.json`. It stores no prices. `npm run catalog:validate` checks shape, uniqueness, exact retailer links and data completeness.
+
+Barbora publishes protein and total sugars for these products but not numeric fiber. Fiber therefore needs a manufacturer/label source. Pending products remain recognizable and show their known facts, but do not receive Match.
 
 ## Supabase
 
-Database changes live in `supabase/migrations`. Apply them with the Supabase CLI, then seed the verified catalog:
+The reproducible schema is in `supabase/migrations/202608200001_scanner_demo.sql`. It enables RLS on every table and creates no browser policies; only the server service role may read or write.
 
 ```bash
+npx supabase login
+npx supabase link --project-ref <project-ref>
 npx supabase db push
 npm run supabase:seed
 ```
 
-The application has a read-only local seed fallback for development. Production should configure Supabase.
+The app uses the checked-in local catalog and structured server logs when Supabase variables are absent. Production should configure Supabase before analytics validation.
 
-## Railway
+## Railway and release
 
-The checked-in `railway.json` uses Railpack, `npm ci && npm run build`, `npm run start`, and `/api/health`.
+`railway.json` builds with Railpack, runs the standalone Next server from `.next/standalone/server.js` and checks `/api/health`. The `postbuild` lifecycle copies `public` and `.next/static` into the standalone artifact.
 
 ```bash
 npm run verify
-railway link
-railway up
-railway status
+CI=1 npm run test:e2e
+git push origin main
+npx @railway/cli login
+npx @railway/cli link
+npx @railway/cli up
+npx @railway/cli status
+curl -fsS https://<railway-domain>/api/health
 ```
 
-The intended release path is GitHub `main` to Railway. A release is complete only after tests, push, successful Railway build and a live health check.
+GitHub `main` is the release source. A release is complete only after tests, push, a successful Railway build and a live health check. Set all production variables in Railway rather than committing `.env.local`.
 
-## Testing evidence
+## Privacy
 
-Test runs are recorded in `docs/test-runs/` with commit SHA, commands and outcomes. Product QA instructions are kept in `docs/product-qa.md`.
+- Camera starts only after a user action and browser permission.
+- Frames are resized in-browser and at most one recognition request runs at a time.
+- Sugar.no does not persist raw frames; Gemini receives a transient frame when live recognition is enabled.
+- Supabase receives only a random session ID, coarse device class, source, product ID, confidence/latency and explicit user actions.
+- Event metadata rejects image/frame/base64 keys, image data URLs and oversized values.
+
+## Evidence and handoff
+
+- [Product QA](docs/product-qa.md)
+- [Acceptance matrix](docs/acceptance.md)
+- [Investor demo script](docs/investor-demo-script.md)
+- [Monetization notes](docs/monetization-research.md)
+- [Mobile screenshots](docs/screenshots)
+- [Defect log](Bugs.md)
+- `docs/test-runs/` for commit-specific technical results
 
 ## Known limitations
 
-See [Bugs.md](./Bugs.md). The first benchmark uses supplied or generated images on iPhone Safari. It does not establish real shelf, glare or conveyor accuracy.
+The app has not yet been tested with physical products on a real Latvian shelf or conveyor. Actual Gemini accuracy, p95 latency, unsupported false-positive rate, Supabase writes, retailer availability and Railway/iPhone HTTPS behavior remain unverified until credentials, deployment and physical test materials are available. See [Bugs.md](Bugs.md) for the live list.

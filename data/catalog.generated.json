@@ -1,0 +1,1692 @@
+[
+  {
+    "id": "prot-batonins-go-on-kakao-sokolade-50-g",
+    "retailerProductId": "000000000000980765",
+    "brand": "GO ON",
+    "name": "Proteīna batoniņš GO ON kakao šokolādē 50g",
+    "shortName": "batoniņš GO ON kakao šokolādē",
+    "aliases": [
+      "GO ON",
+      "Proteīna batoniņš GO ON kakao šokolādē 50g",
+      "prot batonins go on kakao sokolade 50 g"
+    ],
+    "format": "bar",
+    "packSizeG": 50,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 20,
+      "fiberG": null,
+      "totalSugarG": 29
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/7f82a8e5-60c5-4df4-9714-c293fd4adee6_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-batonins-go-on-kakao-sokolade-50-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-batonins-go-on-kakao-sokolade-50-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "coral"
+  },
+  {
+    "id": "prot-baton-ar-dzerven-un-godzi-go-on-50-g",
+    "retailerProductId": "000000000000980764",
+    "brand": "GO ON",
+    "name": "Proteīna batoniņš GO ON ar dzērvenēm 50g",
+    "shortName": "batoniņš GO ON ar dzērvenēm",
+    "aliases": [
+      "GO ON",
+      "Proteīna batoniņš GO ON ar dzērvenēm 50g",
+      "prot baton ar dzerven un godzi go on 50 g"
+    ],
+    "format": "bar",
+    "packSizeG": 50,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 20,
+      "fiberG": null,
+      "totalSugarG": 31
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/9a872dfe-d43f-4975-8526-7736ea265f42_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-baton-ar-dzerven-un-godzi-go-on-50-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-baton-ar-dzerven-un-godzi-go-on-50-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "coral"
+  },
+  {
+    "id": "prot-bat-zemesr-maz-cukura-snickers-57-g",
+    "retailerProductId": "000000000001410283",
+    "brand": "SNICKERS",
+    "name": "Proteīna batoniņš zemesriekstu maz cukura SNICKERS 57g",
+    "shortName": "batoniņš zemesriekstu maz cukura SNICKERS",
+    "aliases": [
+      "SNICKERS",
+      "Proteīna batoniņš zemesriekstu maz cukura SNICKERS 57g",
+      "prot bat zemesr maz cukura snickers 57 g"
+    ],
+    "format": "bar",
+    "packSizeG": 57,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 35,
+      "fiberG": null,
+      "totalSugarG": 3.6
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/9dfc694f-f5f2-4fb9-b686-61c3baa09df9_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-zemesr-maz-cukura-snickers-57-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-zemesr-maz-cukura-snickers-57-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "cocoa"
+  },
+  {
+    "id": "prot-bat-sal-riekst-saldin-barebells-55-g",
+    "retailerProductId": "000000000001135613",
+    "brand": "BAREBELLS",
+    "name": "Proteīna batoniņš ar sāļiem riekstiem BAREBELLS 55g",
+    "shortName": "batoniņš ar sāļiem riekstiem BAREBELLS",
+    "aliases": [
+      "BAREBELLS",
+      "Proteīna batoniņš ar sāļiem riekstiem BAREBELLS 55g",
+      "prot bat sal riekst saldin barebells 55 g"
+    ],
+    "format": "bar",
+    "packSizeG": 55,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 36,
+      "fiberG": 7.2,
+      "totalSugarG": 2.3
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/25f716c3-1604-41de-8679-7f4231725f41_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      },
+      {
+        "label": "Barebells Salty Peanut nutrition",
+        "url": "https://barebells.co.uk/product/barebells-salty-peanut/",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "fiber"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": true,
+    "accent": "violet"
+  },
+  {
+    "id": "prot-bat-zemesriekstu-karameli-go-on-50-g",
+    "retailerProductId": "000000000001312508",
+    "brand": "GO ON",
+    "name": "Proteīna batoniņš GO ON ar zemesriekstiem un karameli  50g",
+    "shortName": "batoniņš GO ON ar zemesriekstiem un karameli",
+    "aliases": [
+      "GO ON",
+      "Proteīna batoniņš GO ON ar zemesriekstiem un karameli  50g",
+      "prot bat zemesriekstu karameli go on 50 g"
+    ],
+    "format": "bar",
+    "packSizeG": 50,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 20,
+      "fiberG": null,
+      "totalSugarG": 30
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/b6c538ef-a9c2-441d-bd7f-504b1ced5e86_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-zemesriekstu-karameli-go-on-50-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-zemesriekstu-karameli-go-on-50-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "coral"
+  },
+  {
+    "id": "prot-batonins-creamy-crisp-barebells-55-g",
+    "retailerProductId": "000000000001300542",
+    "brand": "BAREBELLS",
+    "name": "Proteīna batoniņš Creamy Crisp BAREBELLS 55g",
+    "shortName": "batoniņš Creamy Crisp BAREBELLS",
+    "aliases": [
+      "BAREBELLS",
+      "Proteīna batoniņš Creamy Crisp BAREBELLS 55g",
+      "prot batonins creamy crisp barebells 55 g"
+    ],
+    "format": "bar",
+    "packSizeG": 55,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 36,
+      "fiberG": 6.4,
+      "totalSugarG": 2
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/6762d5b7-93c5-4586-b2f6-44ed5b644830_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-batonins-creamy-crisp-barebells-55-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-batonins-creamy-crisp-barebells-55-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      },
+      {
+        "label": "Barebells Creamy Crisp nutrition",
+        "url": "https://barebells.com/product/creamy-crisp/",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "fiber"
+        ],
+        "status": "secondary"
+      }
+    ],
+    "isGolden": true,
+    "accent": "violet"
+  },
+  {
+    "id": "prot-bat-pann-cot-zemenu-33-proc-go-on-50-g",
+    "retailerProductId": "000000000001374792",
+    "brand": "GO ON",
+    "name": "Proteīna batoniņš GO ON ar zemeņu Panna  Cotta 33% 50g",
+    "shortName": "batoniņš GO ON ar zemeņu Panna  Cotta 33%",
+    "aliases": [
+      "GO ON",
+      "Proteīna batoniņš GO ON ar zemeņu Panna  Cotta 33% 50g",
+      "prot bat pann cot zemenu 33 proc go on 50 g"
+    ],
+    "format": "bar",
+    "packSizeG": 50,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 33,
+      "fiberG": null,
+      "totalSugarG": 2.2
+    },
+    "noAddedSugarClaim": true,
+    "imageUrl": "https://cdn.barbora.lv/products/9c792a75-71bc-4d8a-a527-83c38d3db993_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-pann-cot-zemenu-33-proc-go-on-50-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-pann-cot-zemenu-33-proc-go-on-50-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "coral"
+  },
+  {
+    "id": "prot-bat-kokosr-un-karamele-nutego-45-g",
+    "retailerProductId": "000000000001411927",
+    "brand": "NUTEGO",
+    "name": "Proteīna batoniņš kokosrieksts un karamele NUTEGO 45g",
+    "shortName": "batoniņš kokosrieksts un karamele NUTEGO",
+    "aliases": [
+      "NUTEGO",
+      "Proteīna batoniņš kokosrieksts un karamele NUTEGO 45g",
+      "prot bat kokosr un karamele nutego 45 g"
+    ],
+    "format": "bar",
+    "packSizeG": 45,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 28,
+      "fiberG": null,
+      "totalSugarG": 3
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/ea33c174-2f6e-4461-9cdc-bed82729ca8d_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-kokosr-un-karamele-nutego-45-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-kokosr-un-karamele-nutego-45-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "teal"
+  },
+  {
+    "id": "prot-baton-go-on-33-proc-ar-salo-karam-50-g",
+    "retailerProductId": "000000000001211372",
+    "brand": "GO ON",
+    "name": "Proteīna batoniņš GO ON ar sāļo karameli 33% 50g",
+    "shortName": "batoniņš GO ON ar sāļo karameli 33%",
+    "aliases": [
+      "GO ON",
+      "Proteīna batoniņš GO ON ar sāļo karameli 33% 50g",
+      "prot baton go on 33 proc ar salo karam 50 g"
+    ],
+    "format": "bar",
+    "packSizeG": 50,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 33,
+      "fiberG": null,
+      "totalSugarG": 2.8
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/49712332-b6b6-47a7-bdcc-528af97db986_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-baton-go-on-33-proc-ar-salo-karam-50-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-baton-go-on-33-proc-ar-salo-karam-50-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "coral"
+  },
+  {
+    "id": "prot-bat-cepumiem-un-karameli-go-on-50-g",
+    "retailerProductId": "000000000001312517",
+    "brand": "GO ON",
+    "name": "Proteīna batoniņš GO ON ar cepumiem un karameli 50g",
+    "shortName": "batoniņš GO ON ar cepumiem un karameli",
+    "aliases": [
+      "GO ON",
+      "Proteīna batoniņš GO ON ar cepumiem un karameli 50g",
+      "prot bat cepumiem un karameli go on 50 g"
+    ],
+    "format": "cookie",
+    "packSizeG": 50,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 20,
+      "fiberG": null,
+      "totalSugarG": 31
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/8954e4f2-bef6-4eb7-85b8-43a7242e5789_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-cepumiem-un-karameli-go-on-50-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-cepumiem-un-karameli-go-on-50-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "coral"
+  },
+  {
+    "id": "proteina-baton-barebells-coco-choco-55-g",
+    "retailerProductId": "000000000001384689",
+    "brand": "BAREBELLS",
+    "name": "Proteīna batoniņš BAREBELLS Coco Choco 55g",
+    "shortName": "batoniņš BAREBELLS Coco Choco",
+    "aliases": [
+      "BAREBELLS",
+      "Proteīna batoniņš BAREBELLS Coco Choco 55g",
+      "proteina baton barebells coco choco 55 g"
+    ],
+    "format": "bar",
+    "packSizeG": 55,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 29,
+      "fiberG": 2.4,
+      "totalSugarG": 3.5
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/bab2070f-08c3-48fc-a49a-d70435f606a8_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/proteina-baton-barebells-coco-choco-55-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/proteina-baton-barebells-coco-choco-55-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      },
+      {
+        "label": "Barebells Coco Choco nutrition",
+        "url": "https://barebells.com/product/coco-choco/",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "fiber"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": true,
+    "accent": "violet"
+  },
+  {
+    "id": "prot-bat-sal-kar-piena-sok-skriveru-45-g",
+    "retailerProductId": "000000000001360984",
+    "brand": "SKRĪVERU",
+    "name": "Proteīna batoniņš SKRĪVERU sāļā karamele piena šokolādē 45g",
+    "shortName": "batoniņš SKRĪVERU sāļā karamele piena šokolādē",
+    "aliases": [
+      "SKRĪVERU",
+      "Proteīna batoniņš SKRĪVERU sāļā karamele piena šokolādē 45g",
+      "prot bat sal kar piena sok skriveru 45 g"
+    ],
+    "format": "bar",
+    "packSizeG": 45,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 28.4,
+      "fiberG": null,
+      "totalSugarG": 8
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/701ed920-fa0a-4d4f-bb39-2031608c11e5_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-sal-kar-piena-sok-skriveru-45-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-sal-kar-piena-sok-skriveru-45-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "berry"
+  },
+  {
+    "id": "prot-bat-barebells-lemon-cheesecake-55-g",
+    "retailerProductId": "000000000001379796",
+    "brand": "BAREBELLS",
+    "name": "Proteīna batoniņš BAREBELLS Lemon Cheesecake 55g",
+    "shortName": "batoniņš BAREBELLS Lemon Cheesecake",
+    "aliases": [
+      "BAREBELLS",
+      "Proteīna batoniņš BAREBELLS Lemon Cheesecake 55g",
+      "prot bat barebells lemon cheesecake 55 g"
+    ],
+    "format": "bar",
+    "packSizeG": 55,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 29,
+      "fiberG": 9.9,
+      "totalSugarG": 3.8
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/8b69c37d-6202-4268-b33b-72d629babc06_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-barebells-lemon-cheesecake-55-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-barebells-lemon-cheesecake-55-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      },
+      {
+        "label": "Barebells Lemon Cheesecake nutrition",
+        "url": "https://barebells.com/product/lemon-cheesecake/",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "fiber"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": true,
+    "accent": "violet"
+  },
+  {
+    "id": "proteina-baton-maz-cukura-snickers-57-g",
+    "retailerProductId": "000000000001410218",
+    "brand": "SNICKERS",
+    "name": "Proteīna batoniņš maz cukura SNICKERS 57g",
+    "shortName": "batoniņš maz cukura SNICKERS",
+    "aliases": [
+      "SNICKERS",
+      "Proteīna batoniņš maz cukura SNICKERS 57g",
+      "proteina baton maz cukura snickers 57 g"
+    ],
+    "format": "bar",
+    "packSizeG": 57,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 35,
+      "fiberG": null,
+      "totalSugarG": 3.5
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/7d39d8b8-06e1-4e00-aa1a-ed3a8ab98d4a_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/proteina-baton-maz-cukura-snickers-57-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/proteina-baton-maz-cukura-snickers-57-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "cocoa"
+  },
+  {
+    "id": "ananasu-protein-bat-the-beginnings-40-g",
+    "retailerProductId": "000000000001202156",
+    "brand": "THE BEGINNINGS",
+    "name": "Ananāsu proteīna batoniņš THE BEGINNINGS 40g",
+    "shortName": "Ananāsu proteīna batoniņš THE BEGINNINGS",
+    "aliases": [
+      "THE BEGINNINGS",
+      "Ananāsu proteīna batoniņš THE BEGINNINGS 40g",
+      "ananasu protein bat the beginnings 40 g"
+    ],
+    "format": "bar",
+    "packSizeG": 40,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 14,
+      "fiberG": null,
+      "totalSugarG": 23
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/c6839b87-9e7c-4717-8abb-2d5600a84d82_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/ananasu-protein-bat-the-beginnings-40-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/ananasu-protein-bat-the-beginnings-40-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "ochre"
+  },
+  {
+    "id": "proteina-bat-cepuma-garsa-iconfit-55-g",
+    "retailerProductId": "000000000001382856",
+    "brand": "ICONFIT",
+    "name": "Proteīna batoniņš ar cepuma garšu ICONFIT 55g",
+    "shortName": "batoniņš ar cepuma garšu ICONFIT",
+    "aliases": [
+      "ICONFIT",
+      "Proteīna batoniņš ar cepuma garšu ICONFIT 55g",
+      "proteina bat cepuma garsa iconfit 55 g"
+    ],
+    "format": "cookie",
+    "packSizeG": 55,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 36,
+      "fiberG": 3.9,
+      "totalSugarG": 2.7
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/661eaec8-dfdf-49a5-9713-172c1f71494b_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/proteina-bat-cepuma-garsa-iconfit-55-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/proteina-bat-cepuma-garsa-iconfit-55-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      },
+      {
+        "label": "ICONFIT Posh Bar nutrition",
+        "url": "https://iconfit.eu/collections/proteins/products/iconfit-posh-bar-protein-bar-55g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "fiber"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": true,
+    "accent": "blue"
+  },
+  {
+    "id": "proteina-baton-barebells-chokladboll-55-g",
+    "retailerProductId": "000000000001379795",
+    "brand": "BAREBELLS",
+    "name": "Proteīna batoniņš BAREBELLS Chokladboll 55g",
+    "shortName": "batoniņš BAREBELLS Chokladboll",
+    "aliases": [
+      "BAREBELLS",
+      "Proteīna batoniņš BAREBELLS Chokladboll 55g",
+      "proteina baton barebells chokladboll 55 g"
+    ],
+    "format": "bar",
+    "packSizeG": 55,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 29,
+      "fiberG": 11,
+      "totalSugarG": 3.1
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/b0473a81-1be0-4c0b-bd53-e783a21c2706_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/proteina-baton-barebells-chokladboll-55-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/proteina-baton-barebells-chokladboll-55-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      },
+      {
+        "label": "Barebells Chocolate Ball nutrition",
+        "url": "https://barebells.com/product/chocolate-ball/",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "fiber"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": true,
+    "accent": "violet"
+  },
+  {
+    "id": "upenu-prot-bat-sok-skriveru-saldumi-45-g",
+    "retailerProductId": "000000000001396406",
+    "brand": "SKRĪVERU",
+    "name": "Upeņu proteīna batoniņš šokolādes SKRĪVERU 45g",
+    "shortName": "Upeņu proteīna batoniņš šokolādes SKRĪVERU",
+    "aliases": [
+      "SKRĪVERU",
+      "Upeņu proteīna batoniņš šokolādes SKRĪVERU 45g",
+      "upenu prot bat sok skriveru saldumi 45 g"
+    ],
+    "format": "bar",
+    "packSizeG": 45,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 29,
+      "fiberG": null,
+      "totalSugarG": 8
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/f03702af-1b30-49da-a7ff-f7f03e63d816_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/upenu-prot-bat-sok-skriveru-saldumi-45-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/upenu-prot-bat-sok-skriveru-saldumi-45-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "berry"
+  },
+  {
+    "id": "prot-bat-zemenu-baltaja-sok-skriveru-45-g",
+    "retailerProductId": "000000000001360974",
+    "brand": "SKRĪVERU",
+    "name": "Proteīna batoniņš SKRĪVERU zemeņu baltajā šokolādē 45g",
+    "shortName": "batoniņš SKRĪVERU zemeņu baltajā šokolādē",
+    "aliases": [
+      "SKRĪVERU",
+      "Proteīna batoniņš SKRĪVERU zemeņu baltajā šokolādē 45g",
+      "prot bat zemenu baltaja sok skriveru 45 g"
+    ],
+    "format": "bar",
+    "packSizeG": 45,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 28.7,
+      "fiberG": null,
+      "totalSugarG": 7.6
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/bedf6f9d-226e-403b-95bd-565b88cfef27_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-zemenu-baltaja-sok-skriveru-45-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-zemenu-baltaja-sok-skriveru-45-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "berry"
+  },
+  {
+    "id": "prot-bat-balt-sok-mand-saldin-bareb-55-g",
+    "retailerProductId": "000000000001300531",
+    "brand": "BAREBELLS",
+    "name": "Proteīna batoniņš ar balto šokolādi un mandelēm BAREBELLS 55g",
+    "shortName": "batoniņš ar balto šokolādi un mandelēm BAREBELLS",
+    "aliases": [
+      "BAREBELLS",
+      "Proteīna batoniņš ar balto šokolādi un mandelēm BAREBELLS 55g",
+      "prot bat balt sok mand saldin bareb 55 g"
+    ],
+    "format": "bar",
+    "packSizeG": 55,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 36,
+      "fiberG": 7,
+      "totalSugarG": 2.3
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/f2fa679b-462a-42a7-89f7-51a907c5ce1b_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-balt-sok-mand-saldin-bareb-55-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-balt-sok-mand-saldin-bareb-55-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      },
+      {
+        "label": "Barebells White Chocolate Almond nutrition",
+        "url": "https://barebells.com/product/white-chocolate-almond/",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "fiber"
+        ],
+        "status": "secondary"
+      }
+    ],
+    "isGolden": true,
+    "accent": "violet"
+  },
+  {
+    "id": "kakao-proteina-baton-the-beginnings-40-g",
+    "retailerProductId": "000000000001331231",
+    "brand": "THE BEGINNINGS",
+    "name": "Kakao proteīna batoniņš THE BEGINNINGS 40g",
+    "shortName": "Kakao proteīna batoniņš THE BEGINNINGS",
+    "aliases": [
+      "THE BEGINNINGS",
+      "Kakao proteīna batoniņš THE BEGINNINGS 40g",
+      "kakao proteina baton the beginnings 40 g"
+    ],
+    "format": "bar",
+    "packSizeG": 40,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 20,
+      "fiberG": null,
+      "totalSugarG": 33
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/f2f843a4-ff43-4b8f-8ec9-b241db4e0d4f_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/kakao-proteina-baton-the-beginnings-40-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/kakao-proteina-baton-the-beginnings-40-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "ochre"
+  },
+  {
+    "id": "sok-trif-prot-zemesr-pure-chocolate-40-g",
+    "retailerProductId": "000000000001381160",
+    "brand": "PURE CHOCOLATE",
+    "name": "Šokolādes trifeles PURE CHOCOLATE ar proteīna zemesriekstu krēmu 40g",
+    "shortName": "Šokolādes trifeles PURE CHOCOLATE ar proteīna zemesriekstu krēmu",
+    "aliases": [
+      "PURE CHOCOLATE",
+      "Šokolādes trifeles PURE CHOCOLATE ar proteīna zemesriekstu krēmu 40g",
+      "sok trif prot zemesr pure chocolate 40 g"
+    ],
+    "format": "truffle",
+    "packSizeG": 40,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 20.6,
+      "fiberG": null,
+      "totalSugarG": 18
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/df5e357c-e0e7-452f-971c-2b4933825f4f_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/sok-trif-prot-zemesr-pure-chocolate-40-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/sok-trif-prot-zemesr-pure-chocolate-40-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "plum"
+  },
+  {
+    "id": "zemesriek-prot-baton-the-beginnings-40-g",
+    "retailerProductId": "000000000001331230",
+    "brand": "THE BEGINNINGS",
+    "name": "Zemesriekstu proteīna batoniņš THE BEGINNINGS 40g",
+    "shortName": "Zemesriekstu proteīna batoniņš THE BEGINNINGS",
+    "aliases": [
+      "THE BEGINNINGS",
+      "Zemesriekstu proteīna batoniņš THE BEGINNINGS 40g",
+      "zemesriek prot baton the beginnings 40 g"
+    ],
+    "format": "bar",
+    "packSizeG": 40,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 20,
+      "fiberG": null,
+      "totalSugarG": 37
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/81355372-63c0-4b1e-bc16-c827b15747da_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/zemesriek-prot-baton-the-beginnings-40-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/zemesriek-prot-baton-the-beginnings-40-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "ochre"
+  },
+  {
+    "id": "proteina-bat-sok-karamelu-iconfit-55-g",
+    "retailerProductId": "000000000001382327",
+    "brand": "ICONFIT",
+    "name": "Proteīna batoniņš ar šokolādes un karameļu  garšu ICONFIT 55g",
+    "shortName": "batoniņš ar šokolādes un karameļu  garšu ICONFIT",
+    "aliases": [
+      "ICONFIT",
+      "Proteīna batoniņš ar šokolādes un karameļu  garšu ICONFIT 55g",
+      "proteina bat sok karamelu iconfit 55 g"
+    ],
+    "format": "bar",
+    "packSizeG": 55,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 36,
+      "fiberG": 3.9,
+      "totalSugarG": 2.6
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/4e1d4d87-cc03-4dd5-a4d4-109b77359f8a_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/proteina-bat-sok-karamelu-iconfit-55-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/proteina-bat-sok-karamelu-iconfit-55-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      },
+      {
+        "label": "ICONFIT Posh Bar nutrition",
+        "url": "https://iconfit.eu/collections/proteins/products/iconfit-posh-bar-protein-bar-55g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "fiber"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": true,
+    "accent": "blue"
+  },
+  {
+    "id": "proteina-batonins-karameles-iconfit-40-g",
+    "retailerProductId": "000000000001406230",
+    "brand": "ICONFIT",
+    "name": "Proteīna batoniņš karameles ICONFIT 40g",
+    "shortName": "batoniņš karameles ICONFIT",
+    "aliases": [
+      "ICONFIT",
+      "Proteīna batoniņš karameles ICONFIT 40g",
+      "proteina batonins karameles iconfit 40 g"
+    ],
+    "format": "bar",
+    "packSizeG": 40,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 13,
+      "fiberG": null,
+      "totalSugarG": 1.2
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/d2b2a811-bb4a-4b07-807f-e454227ed34c_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/proteina-batonins-karameles-iconfit-40-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/proteina-batonins-karameles-iconfit-40-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "blue"
+  },
+  {
+    "id": "proteina-sokolades-cepums-go-on-50-g",
+    "retailerProductId": "000000000001277579",
+    "brand": "GO ON",
+    "name": "Proteīna šokolādes cepums GO ON 50g",
+    "shortName": "šokolādes cepums GO ON",
+    "aliases": [
+      "GO ON",
+      "Proteīna šokolādes cepums GO ON 50g",
+      "proteina sokolades cepums go on 50 g"
+    ],
+    "format": "cookie",
+    "packSizeG": 50,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 23,
+      "fiberG": null,
+      "totalSugarG": 1.6
+    },
+    "noAddedSugarClaim": true,
+    "imageUrl": "https://cdn.barbora.lv/products/80aee7df-43bb-4bf5-9bef-691a694dc5c7_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/proteina-sokolades-cepums-go-on-50-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/proteina-sokolades-cepums-go-on-50-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "coral"
+  },
+  {
+    "id": "prot-bat-fudge-piena-sokol-skriveru-45-g",
+    "retailerProductId": "000000000001331039",
+    "brand": "SKRĪVERU",
+    "name": "Proteīna batoniņš SKRĪVERU Fudge piena šokolādē 45g",
+    "shortName": "batoniņš SKRĪVERU Fudge piena šokolādē",
+    "aliases": [
+      "SKRĪVERU",
+      "Proteīna batoniņš SKRĪVERU Fudge piena šokolādē 45g",
+      "prot bat fudge piena sokol skriveru 45 g"
+    ],
+    "format": "bar",
+    "packSizeG": 45,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 27,
+      "fiberG": null,
+      "totalSugarG": 4.5
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/65100b22-d4e7-489e-bc59-f34f165e5d67_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-fudge-piena-sokol-skriveru-45-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-fudge-piena-sokol-skriveru-45-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "berry"
+  },
+  {
+    "id": "proteina-trifeles-tumsa-sok-pure-40-g",
+    "retailerProductId": "000000000001381128",
+    "brand": "PURE CHOCOLATE",
+    "name": "Šokolādes trifeles PURE CHOCOLATE ar proteīna šokolādes krēmu 40g",
+    "shortName": "Šokolādes trifeles PURE CHOCOLATE ar proteīna šokolādes krēmu",
+    "aliases": [
+      "PURE CHOCOLATE",
+      "Šokolādes trifeles PURE CHOCOLATE ar proteīna šokolādes krēmu 40g",
+      "proteina trifeles tumsa sok pure 40 g"
+    ],
+    "format": "truffle",
+    "packSizeG": 40,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 20.7,
+      "fiberG": null,
+      "totalSugarG": 18
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/90ad2d82-69c5-4e57-be45-5f32d2289a57_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/proteina-trifeles-tumsa-sok-pure-40-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/proteina-trifeles-tumsa-sok-pure-40-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "plum"
+  },
+  {
+    "id": "pistacijas-proteina-batonins-better-50-g",
+    "retailerProductId": "000000000001264075",
+    "brand": "THE BEGINNINGS",
+    "name": "Pistācijas proteīna batoniņš BETTER 50g",
+    "shortName": "Pistācijas proteīna batoniņš BETTER",
+    "aliases": [
+      "THE BEGINNINGS",
+      "Pistācijas proteīna batoniņš BETTER 50g",
+      "pistacijas proteina batonins better 50 g"
+    ],
+    "format": "bar",
+    "packSizeG": 50,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 13,
+      "fiberG": null,
+      "totalSugarG": 44
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/5edac461-0782-4dec-8383-495840832c03_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/pistacijas-proteina-batonins-better-50-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/pistacijas-proteina-batonins-better-50-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "ochre"
+  },
+  {
+    "id": "olu-baltumu-prot-bat-fiteg-2-mellenu-35-g",
+    "retailerProductId": "000000000001385886",
+    "brand": "FITEG2",
+    "name": "Olu baltuma proteīna batoniņš FITEG2 melleņu 35g",
+    "shortName": "Olu baltuma proteīna batoniņš FITEG2 melleņu",
+    "aliases": [
+      "FITEG2",
+      "Olu baltuma proteīna batoniņš FITEG2 melleņu 35g",
+      "olu baltumu prot bat fiteg 2 mellenu 35 g"
+    ],
+    "format": "bar",
+    "packSizeG": 35,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 20,
+      "fiberG": null,
+      "totalSugarG": 42
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/2da59067-2378-453f-909f-888ed1d946ab_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/olu-baltumu-prot-bat-fiteg-2-mellenu-35-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/olu-baltumu-prot-bat-fiteg-2-mellenu-35-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "green"
+  },
+  {
+    "id": "protein-baton-sal-kar-the-beginnings-50-g",
+    "retailerProductId": "000000000001391371",
+    "brand": "THE BEGINNINGS",
+    "name": "Proteīna batoniņš THE BEGINNINGS ar sāļo karameli 50g",
+    "shortName": "batoniņš THE BEGINNINGS ar sāļo karameli",
+    "aliases": [
+      "THE BEGINNINGS",
+      "Proteīna batoniņš THE BEGINNINGS ar sāļo karameli 50g",
+      "protein baton sal kar the beginnings 50 g"
+    ],
+    "format": "bar",
+    "packSizeG": 50,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 30,
+      "fiberG": 6.9,
+      "totalSugarG": 3.3
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/33f1f083-dd58-4b9c-9774-4fc6083fd514_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/protein-baton-sal-kar-the-beginnings-50-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/protein-baton-sal-kar-the-beginnings-50-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      },
+      {
+        "label": "Mēness aptieka product nutrition",
+        "url": "https://e-menessaptieka.lv/en/p/the-beginnings-sala-karam-proteina-bars-50g-1153154",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "fiber"
+        ],
+        "status": "secondary"
+      }
+    ],
+    "isGolden": true,
+    "accent": "ochre"
+  },
+  {
+    "id": "proteina-batonins-braunija-iconfit-40-g",
+    "retailerProductId": "000000000001406211",
+    "brand": "ICONFIT",
+    "name": "Proteīna batoniņš braunija ICONFIT 40g",
+    "shortName": "batoniņš braunija ICONFIT",
+    "aliases": [
+      "ICONFIT",
+      "Proteīna batoniņš braunija ICONFIT 40g",
+      "proteina batonins braunija iconfit 40 g"
+    ],
+    "format": "bar",
+    "packSizeG": 40,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 13,
+      "fiberG": null,
+      "totalSugarG": 0.5
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/fbf242db-f2f2-4102-a551-f7f1a82f2e0f_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/proteina-batonins-braunija-iconfit-40-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/proteina-batonins-braunija-iconfit-40-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "blue"
+  },
+  {
+    "id": "prot-bat-van-bez-cuk-the-beginnings-50-g",
+    "retailerProductId": "000000000001410621",
+    "brand": "THE BEGINNINGS",
+    "name": "Proteīna batoniņš vaniļas bez cukura THE BEGINNINGS 50g",
+    "shortName": "batoniņš vaniļas bez cukura THE BEGINNINGS",
+    "aliases": [
+      "THE BEGINNINGS",
+      "Proteīna batoniņš vaniļas bez cukura THE BEGINNINGS 50g",
+      "prot bat van bez cuk the beginnings 50 g"
+    ],
+    "format": "bar",
+    "packSizeG": 50,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 31,
+      "fiberG": 6.9,
+      "totalSugarG": 3.3
+    },
+    "noAddedSugarClaim": true,
+    "imageUrl": "https://cdn.barbora.lv/products/39cc2f71-2f54-4182-9103-3d066be66aca_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-van-bez-cuk-the-beginnings-50-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-van-bez-cuk-the-beginnings-50-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      },
+      {
+        "label": "Balticsport product nutrition",
+        "url": "https://balticsport.lv/lv/the-beginnings-proteina-batonins-50g-15g-proteina-bez-pievienota-cukura-salita-karamele.html",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "fiber"
+        ],
+        "status": "secondary"
+      }
+    ],
+    "isGolden": true,
+    "accent": "ochre"
+  },
+  {
+    "id": "prot-bat-vanilas-karamelu-oshee-49-g",
+    "retailerProductId": "000000000001404488",
+    "brand": "OSHEE",
+    "name": "Proteīna batoniņš vaniļas karameļu OSHEE 49g",
+    "shortName": "batoniņš vaniļas karameļu OSHEE",
+    "aliases": [
+      "OSHEE",
+      "Proteīna batoniņš vaniļas karameļu OSHEE 49g",
+      "prot bat vanilas karamelu oshee 49 g"
+    ],
+    "format": "bar",
+    "packSizeG": 49,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 27,
+      "fiberG": null,
+      "totalSugarG": 19
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/df6dd6e0-1de6-4ce3-b3cc-3c2664a05d94_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-vanilas-karamelu-oshee-49-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-vanilas-karamelu-oshee-49-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "amber"
+  },
+  {
+    "id": "prot-bat-zemesriekstu-karamelu-oshee-49-g",
+    "retailerProductId": "000000000001404522",
+    "brand": "OSHEE",
+    "name": "Proteīna batoniņš zemesriekstu karameļu OSHEE 49g",
+    "shortName": "batoniņš zemesriekstu karameļu OSHEE",
+    "aliases": [
+      "OSHEE",
+      "Proteīna batoniņš zemesriekstu karameļu OSHEE 49g",
+      "prot bat zemesriekstu karamelu oshee 49 g"
+    ],
+    "format": "bar",
+    "packSizeG": 49,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 27,
+      "fiberG": null,
+      "totalSugarG": 17
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/cfcbb0d4-9ac4-42bf-857e-41afa0a49f66_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-zemesriekstu-karamelu-oshee-49-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-zemesriekstu-karamelu-oshee-49-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "amber"
+  },
+  {
+    "id": "prot-bat-ban-bez-cuk-the-beginnings-50-g",
+    "retailerProductId": "000000000001410627",
+    "brand": "THE BEGINNINGS",
+    "name": "Proteīna batoniņš banānu bez cukura THE BEGINNINGS 50g",
+    "shortName": "batoniņš banānu bez cukura THE BEGINNINGS",
+    "aliases": [
+      "THE BEGINNINGS",
+      "Proteīna batoniņš banānu bez cukura THE BEGINNINGS 50g",
+      "prot bat ban bez cuk the beginnings 50 g"
+    ],
+    "format": "bar",
+    "packSizeG": 50,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 25,
+      "fiberG": null,
+      "totalSugarG": 4.2
+    },
+    "noAddedSugarClaim": true,
+    "imageUrl": "https://cdn.barbora.lv/products/6555a27d-7c12-45ee-b4fd-26938d5a9858_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-ban-bez-cuk-the-beginnings-50-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-ban-bez-cuk-the-beginnings-50-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "ochre"
+  },
+  {
+    "id": "olu-baltum-prot-bat-fiteg-2-sokolades-35-g",
+    "retailerProductId": "000000000001385887",
+    "brand": "FITEG2",
+    "name": "Olu baltuma proteīna batoniņš FITEG2 šokolādes 35g",
+    "shortName": "Olu baltuma proteīna batoniņš FITEG2 šokolādes",
+    "aliases": [
+      "FITEG2",
+      "Olu baltuma proteīna batoniņš FITEG2 šokolādes 35g",
+      "olu baltum prot bat fiteg 2 sokolades 35 g"
+    ],
+    "format": "bar",
+    "packSizeG": 35,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 20,
+      "fiberG": null,
+      "totalSugarG": 41
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/4606cc64-650a-4818-8b5c-3a855c6584a2_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/olu-baltum-prot-bat-fiteg-2-sokolades-35-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/olu-baltum-prot-bat-fiteg-2-sokolades-35-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "green"
+  },
+  {
+    "id": "prot-bat-cepums-un-karamele-nutego-45-g",
+    "retailerProductId": "000000000001411963",
+    "brand": "NUTEGO",
+    "name": "Proteīna batoniņš cepums un karamele NUTEGO 45g",
+    "shortName": "batoniņš cepums un karamele NUTEGO",
+    "aliases": [
+      "NUTEGO",
+      "Proteīna batoniņš cepums un karamele NUTEGO 45g",
+      "prot bat cepums un karamele nutego 45 g"
+    ],
+    "format": "cookie",
+    "packSizeG": 45,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 28,
+      "fiberG": null,
+      "totalSugarG": 2.7
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/fac92f31-735f-4356-b659-6d5086cc66ea_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-bat-cepums-un-karamele-nutego-45-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-bat-cepums-un-karamele-nutego-45-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "teal"
+  },
+  {
+    "id": "prot-biez-ab-zemene-citr-dr-witt-200-g",
+    "retailerProductId": "000000000001413465",
+    "brand": "DR WITT",
+    "name": "Proteīna biezenis ābols zemene citrons DR WITT 200g",
+    "shortName": "biezenis ābols zemene citrons DR WITT",
+    "aliases": [
+      "DR WITT",
+      "Proteīna biezenis ābols zemene citrons DR WITT 200g",
+      "prot biez ab zemene citr dr witt 200 g"
+    ],
+    "format": "puree",
+    "packSizeG": 200,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 10,
+      "fiberG": null,
+      "totalSugarG": 9.2
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/e05495c8-21a0-436a-8afd-1c5356cfeb8c_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-biez-ab-zemene-citr-dr-witt-200-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-biez-ab-zemene-citr-dr-witt-200-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "lime"
+  },
+  {
+    "id": "prot-biez-ab-mezaoga-citr-dr-witt-200-g",
+    "retailerProductId": "000000000001413458",
+    "brand": "DR WITT",
+    "name": "Proteīna biezenis ābols mežaoga citrons DR WITT 200g",
+    "shortName": "biezenis ābols mežaoga citrons DR WITT",
+    "aliases": [
+      "DR WITT",
+      "Proteīna biezenis ābols mežaoga citrons DR WITT 200g",
+      "prot biez ab mezaoga citr dr witt 200 g"
+    ],
+    "format": "puree",
+    "packSizeG": 200,
+    "gtin": null,
+    "nutrientsPer100g": {
+      "proteinG": 10,
+      "fiberG": null,
+      "totalSugarG": 8.1
+    },
+    "noAddedSugarClaim": false,
+    "imageUrl": "https://cdn.barbora.lv/products/2262feed-a505-4c7e-be82-36b06dba1051_m.png",
+    "retailerUrl": "https://barbora.lv/produkti/prot-biez-ab-mezaoga-citr-dr-witt-200-g",
+    "sources": [
+      {
+        "label": "Barbora Latvia product page",
+        "url": "https://barbora.lv/produkti/prot-biez-ab-mezaoga-citr-dr-witt-200-g",
+        "checkedAt": "2026-08-20",
+        "fields": [
+          "identity",
+          "protein",
+          "totalSugar",
+          "retailerUrl",
+          "claim"
+        ],
+        "status": "verified"
+      }
+    ],
+    "isGolden": false,
+    "accent": "lime"
+  }
+]

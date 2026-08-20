@@ -1,0 +1,72 @@
+{
+  "prot-bat-sal-riekst-saldin-barebells-55-g": {
+    "fiberG": 7.2,
+    "label": "Barebells Salty Peanut nutrition",
+    "url": "https://barebells.co.uk/product/barebells-salty-peanut/",
+    "checkedAt": "2026-08-20",
+    "status": "verified"
+  },
+  "prot-batonins-creamy-crisp-barebells-55-g": {
+    "fiberG": 6.4,
+    "label": "Barebells Creamy Crisp nutrition",
+    "url": "https://barebells.com/product/creamy-crisp/",
+    "checkedAt": "2026-08-20",
+    "status": "secondary"
+  },
+  "proteina-baton-barebells-coco-choco-55-g": {
+    "fiberG": 2.4,
+    "label": "Barebells Coco Choco nutrition",
+    "url": "https://barebells.com/product/coco-choco/",
+    "checkedAt": "2026-08-20",
+    "status": "verified"
+  },
+  "prot-bat-barebells-lemon-cheesecake-55-g": {
+    "fiberG": 9.9,
+    "label": "Barebells Lemon Cheesecake nutrition",
+    "url": "https://barebells.com/product/lemon-cheesecake/",
+    "checkedAt": "2026-08-20",
+    "status": "verified"
+  },
+  "proteina-baton-barebells-chokladboll-55-g": {
+    "fiberG": 11,
+    "label": "Barebells Chocolate Ball nutrition",
+    "url": "https://barebells.com/product/chocolate-ball/",
+    "checkedAt": "2026-08-20",
+    "status": "verified"
+  },
+  "prot-bat-balt-sok-mand-saldin-bareb-55-g": {
+    "fiberG": 7,
+    "label": "Barebells White Chocolate Almond nutrition",
+    "url": "https://barebells.com/product/white-chocolate-almond/",
+    "checkedAt": "2026-08-20",
+    "status": "secondary"
+  },
+  "proteina-bat-cepuma-garsa-iconfit-55-g": {
+    "fiberG": 3.9,
+    "label": "ICONFIT Posh Bar nutrition",
+    "url": "https://iconfit.eu/collections/proteins/products/iconfit-posh-bar-protein-bar-55g",
+    "checkedAt": "2026-08-20",
+    "status": "verified"
+  },
+  "proteina-bat-sok-karamelu-iconfit-55-g": {
+    "fiberG": 3.9,
+    "label": "ICONFIT Posh Bar nutrition",
+    "url": "https://iconfit.eu/collections/proteins/products/iconfit-posh-bar-protein-bar-55g",
+    "checkedAt": "2026-08-20",
+    "status": "verified"
+  },
+  "protein-baton-sal-kar-the-beginnings-50-g": {
+    "fiberG": 6.9,
+    "label": "Mēness aptieka product nutrition",
+    "url": "https://e-menessaptieka.lv/en/p/the-beginnings-sala-karam-proteina-bars-50g-1153154",
+    "checkedAt": "2026-08-20",
+    "status": "secondary"
+  },
+  "prot-bat-van-bez-cuk-the-beginnings-50-g": {
+    "fiberG": 6.9,
+    "label": "Balticsport product nutrition",
+    "url": "https://balticsport.lv/lv/the-beginnings-proteina-batonins-50g-15g-proteina-bez-pievienota-cukura-salita-karamele.html",
+    "checkedAt": "2026-08-20",
+    "status": "secondary"
+  }
+}

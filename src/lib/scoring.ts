@@ -14,10 +14,15 @@ function percentileRank(value: number, population: number[]): number {
 }
 
 export function scoreCatalog(products: ProductRecord[]): ScoredProduct[] {
-  const complete = products.filter(hasCompleteNutrition);
-  const proteins = complete.map((product) => product.nutrientsPer100g.proteinG as number);
-  const fibers = complete.map((product) => product.nutrientsPer100g.fiberG as number);
-  const sugars = complete.map((product) => product.nutrientsPer100g.totalSugarG as number);
+  const proteins = products
+    .map((product) => product.nutrientsPer100g.proteinG)
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  const fibers = products
+    .map((product) => product.nutrientsPer100g.fiberG)
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  const sugars = products
+    .map((product) => product.nutrientsPer100g.totalSugarG)
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
 
   return products.map((product) => {
     if (!hasCompleteNutrition(product)) {

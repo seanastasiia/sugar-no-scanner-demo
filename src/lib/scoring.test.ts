@@ -54,6 +54,22 @@ describe("scoreCatalog", () => {
     const scored = scoreCatalog([first, second]);
     expect(scored[0].matchScore).toBe(scored[1].matchScore);
   });
+
+  it("uses every available field in the category population even when another field is missing", () => {
+    const completeOnly = scoreCatalog([
+      product("complete-low", 10, 5, 5),
+      product("complete-high", 20, 10, 2)
+    ]);
+    const withIncomplete = scoreCatalog([
+      product("complete-low", 10, 5, 5),
+      product("complete-high", 20, 10, 2),
+      product("protein-only", 40, null, 8)
+    ]);
+    expect(withIncomplete[1].percentileBreakdown?.protein).toBeLessThan(
+      completeOnly[1].percentileBreakdown?.protein ?? 0
+    );
+    expect(withIncomplete[2].matchScore).toBeNull();
+  });
 });
 
 describe("rankSimilarProducts", () => {

@@ -49,6 +49,103 @@ a {
   outline-offset: 3px;
 }
 
+.access-page {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: max(28px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
+}
+
+.access-card {
+  width: min(100%, 480px);
+  padding: 34px 30px;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 28px;
+  background: rgb(255 253 248 / 92%);
+  box-shadow: var(--shadow);
+}
+
+.access-card h1 {
+  margin: 0;
+  font-size: clamp(40px, 11vw, 62px);
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+}
+
+.access-copy {
+  margin: 22px 0 28px;
+  color: #4e463f;
+}
+
+.access-form {
+  display: grid;
+  gap: 10px;
+}
+
+.access-form label {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.access-field {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.access-field:focus-within {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px rgb(180 59 40 / 14%);
+}
+
+.access-field input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+.access-error {
+  margin: 0;
+  color: #9d2516;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.access-loading {
+  min-height: 52px;
+  color: var(--muted);
+}
+
+.button {
+  display: inline-flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.button-primary {
+  margin-top: 6px;
+  background: var(--ink);
+  color: #fff;
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .foundation-page {
   display: grid;
   min-height: 100dvh;
@@ -154,6 +251,53 @@ a {
   .foundation-card {
     padding: 26px 22px;
     border-radius: 24px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cream: #171513;
+    --cream-raised: #24211e;
+    --ink: #f8f3eb;
+    --muted: #beb5ab;
+    --border: #49433d;
+  }
+
+  html {
+    background: #171513;
+    color-scheme: dark;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 85% 8%, rgb(232 97 74 / 12%), transparent 30rem),
+      #171513;
+    color: #f8f3eb;
+  }
+
+  .access-card {
+    border-color: #3d3833;
+    background: rgb(36 33 30 / 94%);
+  }
+
+  .access-copy,
+  .access-loading {
+    color: #c8bfb5;
+  }
+
+  .access-field {
+    border-color: #514a43;
+    background: #171513;
+  }
+
+  .button-primary {
+    background: #f8f3eb;
+    color: #171513;
+  }
+
+  .eyebrow {
+    background: #40241f;
+    color: #ffad9d;
   }
 }
 

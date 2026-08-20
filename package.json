@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start -H 0.0.0.0 -p ${PORT:-3000}",
+    "postbuild": "node scripts/prepare-standalone.mjs",
+    "start": "node .next/standalone/server.js",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -18,6 +19,7 @@
     "verify": "npm run lint && npm run typecheck && npm test && npm run build",
     "catalog:sync": "tsx scripts/sync-barbora.ts",
     "catalog:validate": "tsx scripts/validate-catalog.ts",
+    "benchmark:focus": "tsx scripts/benchmark-focus.ts",
     "supabase:seed": "tsx scripts/seed-supabase.ts"
   },
   "dependencies": {
@@ -30,6 +32,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.62.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",

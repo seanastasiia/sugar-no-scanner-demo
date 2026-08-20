@@ -8,7 +8,9 @@ test-results/
 .env.local
 .env.production
 *.log
+*.tsbuildinfo
 .DS_Store
 .vercel/
 .railway/
 catalog-sync-report.json
+artifacts/benchmarks/*.json

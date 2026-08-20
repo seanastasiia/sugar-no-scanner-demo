@@ -1,0 +1,50 @@
+import { afterEach, describe, expect, it } from "vitest";
+import { getCatalog } from "@/lib/catalog";
+import { fitBoxToFrame, recognizeProducts } from "./recognition";
+
+const originalKey = process.env.GEMINI_API_KEY;
+
+afterEach(() => {
+  if (originalKey === undefined) delete process.env.GEMINI_API_KEY;
+  else process.env.GEMINI_API_KEY = originalKey;
+});
+
+describe("recognizeProducts", () => {
+  it("returns the deterministic four-product shelf without storing an image", async () => {
+    const result = await recognizeProducts({
+      source: "sample-shelf",
+      catalog: getCatalog(),
+      requestId: "request-1"
+    });
+    expect(result.status).toBe("matched");
+    expect(result.detections).toHaveLength(4);
+    expect(result.detections.every((detection) => getCatalog().some((item) => item.id === detection.productId))).toBe(
+      true
+    );
+    expect(result.imageStored).toBe(false);
+    expect(result.model).toBe("deterministic-sample-v1");
+  });
+
+  it("fails closed when live recognition is not configured", async () => {
+    delete process.env.GEMINI_API_KEY;
+    const result = await recognizeProducts({
+      source: "camera",
+      imageDataUrl: "data:image/jpeg;base64,YWJj",
+      catalog: getCatalog(),
+      requestId: "request-2"
+    });
+    expect(result.status).toBe("provider_unavailable");
+    expect(result.detections).toEqual([]);
+    expect(result.imageStored).toBe(false);
+  });
+});
+
+describe("fitBoxToFrame", () => {
+  it("prevents model boxes from overflowing the camera overlay", () => {
+    const fitted = fitBoxToFrame({ x: 0.9, y: 0.8, width: 0.4, height: 0.5 });
+    expect(fitted.x).toBe(0.9);
+    expect(fitted.y).toBe(0.8);
+    expect(fitted.width).toBeCloseTo(0.1);
+    expect(fitted.height).toBeCloseTo(0.2);
+  });
+});
