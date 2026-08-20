@@ -157,7 +157,7 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 - [Product QA](docs/product-qa.md)
 - [Acceptance matrix](docs/acceptance.md)
 - [Investor demo script](docs/investor-demo-script.md)
-- [Scanner design reference](docs/design-reference.md)
+- [Scanner design reference · Latvia App Store](docs/design-reference.md)
 - [Monetization notes](docs/monetization-research.md)
 - [Mobile screenshots](docs/screenshots)
 - [Defect log](Bugs.md)
