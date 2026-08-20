@@ -135,12 +135,14 @@ CI=1 npm run test:e2e
 git push origin main
 npx @railway/cli login
 npx @railway/cli link
-npx @railway/cli up
+release_sha="$(git rev-parse HEAD)"
+npx @railway/cli variable set "COMMIT_SHA=$release_sha" --skip-deploys
+npx @railway/cli up --detach --message "Deploy $release_sha from main"
 npx @railway/cli status
 curl -fsS https://<railway-domain>/api/health
 ```
 
-GitHub `main` is the release source. A release is complete only after tests, push, a successful Railway build and a live health check. Set all production variables in Railway rather than committing `.env.local`.
+GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct CLI deployment so `/api/health` still identifies the exact release when Railway has no Git metadata for an uploaded build. A release is complete only after tests, push, a successful Railway build and a live health check. Set all production variables in Railway rather than committing `.env.local`.
 
 ## Privacy
 

@@ -10,6 +10,7 @@ This file is the running record of scanner defects found and resolved.
 
 ## Resolved
 
+- **2026-08-20: direct Railway uploads could report the previous Git SHA in `/api/health`.** Railway does not supply `RAILWAY_GIT_COMMIT_SHA` to CLI-uploaded builds, so the documented release command now refreshes the non-secret `COMMIT_SHA` fallback before deployment.
 - **2026-08-20: two compact helper labels missed WCAG AA contrast.** Automated axe coverage found the scan hint at 4.21:1 and the per-100-g note at 4.08:1; both now use darker ink values and are rechecked on the populated shelf result.
 - **2026-08-20: sample shelf and checkout scenes looked like artificial UI cards instead of camera evidence.** Both samples now use photorealistic concept images while all Sugar.no markers remain real HTML overlays driven by the recognition response.
 - **2026-08-20: large colored labels obscured packages and collided on narrow boxes.** Each package now has a compact icon marker; only the selected package expands its text label. A separate legend pairs every color with an icon and plain-language state.
