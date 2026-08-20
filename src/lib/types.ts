@@ -54,9 +54,45 @@ export interface BoundingBox {
 
 export interface ProductDetection {
   productId: string;
+  catalogProductId?: string | null;
   confidence: number;
   box: BoundingBox;
   observedText: string;
+  identity?: RecognizedProductIdentity;
+  shelfPrice?: ShelfPrice | null;
+  retailerOffer?: RetailerOffer | null;
+}
+
+export interface RecognizedProductIdentity {
+  brand: string;
+  name: string;
+  variant: string | null;
+  packSize: string | null;
+  category: string | null;
+  matchKind: "verified_catalog" | "barbora" | "visual_only";
+}
+
+export interface ShelfPrice {
+  amount: number;
+  currency: "EUR";
+  observedText: string;
+  confidence: number;
+}
+
+export interface RetailerOffer {
+  retailer: "Barbora";
+  slug: string;
+  title: string;
+  brand: string;
+  url: string;
+  price: number;
+  currency: "EUR";
+  unitPrice: number | null;
+  unit: string | null;
+  imageUrl: string | null;
+  checkedAt: string;
+  matchConfidence: number;
+  exactSku: boolean;
 }
 
 export type ScanSource = "camera" | "upload" | "sample-shelf" | "sample-conveyor";

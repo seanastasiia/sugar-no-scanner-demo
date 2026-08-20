@@ -1,13 +1,16 @@
 import { GoogleGenAI, ThinkingLevel, createPartFromBase64, createPartFromText } from "@google/genai";
 import { z } from "zod";
 import type { ProductDetection, RecognitionResponse, ScanSource, ScoredProduct } from "@/lib/types";
+import { getBarboraOfferBySlug, resolveBarboraOffer, type BarboraLookupInput } from "./barbora-catalog";
 
 export const DEFAULT_GEMINI_MODEL = "gemini-3.7-flash";
 
 const providerResponseSchema = z.object({
   detections: z.array(
     z.object({
-      productId: z.string(),
+      brand: z.string().max(80),
+      productName: z.string().max(180),
+      searchQuery: z.string().max(240),
       confidence: z.number().min(0).max(1),
       box: z.object({
         x: z.number().min(0).max(1),
@@ -15,7 +18,9 @@ const providerResponseSchema = z.object({
         width: z.number().min(0).max(1),
         height: z.number().min(0).max(1)
       }),
-      observedText: z.string().max(160)
+      shelfPriceCents: z.number().int().min(0).max(1_000_000),
+      shelfPriceText: z.string().max(60),
+      shelfPriceConfidence: z.number().min(0).max(1)
     })
   )
 });
@@ -97,15 +102,47 @@ export function fitBoxToFrame(box: ProductDetection["box"]): ProductDetection["b
   };
 }
 
-export function filterAllowedDetections(
-  detections: ProductDetection[],
-  allowedIds: Set<string>,
-  threshold: number
-): ProductDetection[] {
-  return detections
-    .filter((detection) => detection.confidence >= threshold && allowedIds.has(detection.productId))
-    .map((detection) => ({ ...detection, box: fitBoxToFrame(detection.box) }))
-    .filter((detection) => detection.box.width >= 0.02 && detection.box.height >= 0.02);
+function normalizeIdentityText(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function identityTokens(value: string): Set<string> {
+  return new Set(normalizeIdentityText(value).split(" ").filter((token) => token.length >= 3));
+}
+
+export function matchCatalogProduct(
+  observed: { brand: string; name: string; variant: string; packSize: string; observedText: string },
+  catalog: ScoredProduct[]
+): ScoredProduct | null {
+  const observedBrand = normalizeIdentityText(observed.brand).replaceAll(" ", "");
+  const queryTokens = identityTokens(
+    `${observed.brand} ${observed.name} ${observed.variant} ${observed.packSize} ${observed.observedText}`
+  );
+  if (!observedBrand || !queryTokens.size) return null;
+  const ranked = catalog
+    .map((product) => {
+      const productBrand = normalizeIdentityText(product.brand).replaceAll(" ", "");
+      if (!productBrand.includes(observedBrand) && !observedBrand.includes(productBrand)) return { product, score: 0 };
+      const candidateTokens = identityTokens([product.name, product.shortName, ...product.aliases].join(" "));
+      const matches = [...queryTokens].filter((token) => candidateTokens.has(token)).length;
+      return { product, score: matches / queryTokens.size + 0.35 };
+    })
+    .sort((left, right) => right.score - left.score);
+  return ranked[0] && ranked[0].score >= 0.9 ? ranked[0].product : null;
+}
+
+function genericProductId(brand: string, name: string, variant: string): string {
+  const slug = normalizeIdentityText(`${brand} ${name} ${variant}`).replaceAll(" ", "-").slice(0, 90);
+  return `visual:${slug || "recognized-product"}`;
+}
+
+function extractPackSize(value: string): string {
+  return value.match(/\b\d+(?:[.,]\d+)?\s*(?:kg|g|ml|l|cl|pcs?|gab)\b/i)?.[0] || "";
 }
 
 export async function recognizeProducts(input: {
@@ -141,23 +178,22 @@ export async function recognizeProducts(input: {
     };
   }
 
-  const threshold = Number.parseFloat(process.env.RECOGNITION_CONFIDENCE_THRESHOLD || "0.82");
-  const allowedIds = new Set(input.catalog.map((product) => product.id));
-  const compactCatalog = input.catalog.map((product) => ({
-    id: product.id,
-    brand: product.brand,
-    name: product.name,
-    aliases: product.aliases
-  }));
+  const threshold = Number.parseFloat(process.env.RECOGNITION_CONFIDENCE_THRESHOLD || "0.72");
   const { mimeType, base64 } = imageParts(input.imageDataUrl);
   const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
     model,
     contents: [
       createPartFromText(
-        `Identify only clearly visible packaged products from this closed Latvia catalog. ` +
-          `Never invent an ID. Return an empty detections array when unsure. ` +
-          `Boxes use x, y, width and height normalized from 0 to 1. Catalog: ${JSON.stringify(compactCatalog)}`
+        `Identify every clearly visible packaged retail product, even when it is not in a supplied catalog. ` +
+          `Read the front label and return the exact visible brand plus one productName containing the product, variant or flavor and pack size. ` +
+          `searchQuery should repeat the identity using useful English or Latvian equivalents of foreign flavor words for retailer matching. ` +
+          `If a physical shelf price label is clearly associated with that exact package, return its EUR price in cents, ` +
+          `the exact observed price text and a separate confidence. Use zero and an empty string when no unambiguous price label is visible. ` +
+          `Never treat nutrition claims, pack size or numbers printed on the package as a shelf price. ` +
+          `Return an empty detections array rather than guessing when the product identity is unreadable. ` +
+          `Return at most one box per distinct front-facing SKU and do not enumerate repeated or blurry background packages. ` +
+          `Boxes use x, y, width and height normalized from 0 to 1.`
       ),
       createPartFromBase64(base64, mimeType)
     ],
@@ -171,18 +207,28 @@ export async function recognizeProducts(input: {
         properties: {
           detections: {
             type: "array",
-            maxItems: 12,
+            maxItems: 8,
             items: {
               type: "object",
               additionalProperties: false,
-              required: ["productId", "confidence", "box", "observedText"],
+              required: [
+                "brand",
+                "productName",
+                "searchQuery",
+                "confidence",
+                "box",
+                "shelfPriceCents",
+                "shelfPriceText",
+                "shelfPriceConfidence"
+              ],
               properties: {
-                // Gemini rejects the full 40-value enum as an invalid schema.
-                // The prompt supplies the closed catalog and the server allowlist below
-                // remains the authoritative boundary before any detection is returned.
-                productId: { type: "string" },
+                brand: { type: "string", maxLength: 80 },
+                productName: { type: "string", maxLength: 180 },
+                searchQuery: { type: "string", maxLength: 240 },
                 confidence: { type: "number", minimum: 0, maximum: 1 },
-                observedText: { type: "string", maxLength: 160 },
+                shelfPriceCents: { type: "integer", minimum: 0, maximum: 1000000 },
+                shelfPriceText: { type: "string", maxLength: 60 },
+                shelfPriceConfidence: { type: "number", minimum: 0, maximum: 1 },
                 box: {
                   type: "object",
                   additionalProperties: false,
@@ -202,7 +248,71 @@ export async function recognizeProducts(input: {
     }
   });
   const parsed = providerResponseSchema.parse(JSON.parse(response.text || '{"detections":[]}'));
-  const detections = filterAllowedDetections(parsed.detections, allowedIds, threshold);
+  const visible = parsed.detections
+    .filter((detection) => detection.confidence >= threshold)
+    .map((detection) => ({ ...detection, box: fitBoxToFrame(detection.box) }))
+    .filter((detection) => detection.box.width >= 0.02 && detection.box.height >= 0.02)
+    .slice(0, 8);
+  const resolvedDetections = await Promise.all(
+    visible.map(async (detection, detectionIndex): Promise<ProductDetection> => {
+      const packSize = extractPackSize(detection.productName);
+      const observedIdentity = {
+        brand: detection.brand,
+        name: detection.productName,
+        variant: "",
+        packSize,
+        observedText: detection.productName
+      };
+      const initialKnownProduct = matchCatalogProduct(observedIdentity, input.catalog);
+      const lookupInput: BarboraLookupInput = {
+        brand: detection.brand,
+        name: detection.productName,
+        variant: "",
+        packSize,
+        searchTerms: [detection.searchQuery]
+      };
+      const retailerOffer = initialKnownProduct
+        ? await getBarboraOfferBySlug(initialKnownProduct.id, lookupInput).catch(() => null)
+        : detectionIndex < 6
+          ? await resolveBarboraOffer(lookupInput).catch(() => null)
+          : null;
+      const exactRetailerOffer = retailerOffer?.exactSku ? retailerOffer : null;
+      const knownProduct =
+        initialKnownProduct ||
+        (exactRetailerOffer ? input.catalog.find((product) => product.id === exactRetailerOffer.slug) || null : null);
+      const productId =
+        knownProduct?.id ||
+        (exactRetailerOffer
+          ? `barbora:${exactRetailerOffer.slug}`
+          : genericProductId(detection.brand, detection.productName, ""));
+      return {
+        productId,
+        catalogProductId: knownProduct?.id || null,
+        confidence: detection.confidence,
+        box: detection.box,
+        observedText: detection.productName,
+        identity: {
+          brand: detection.brand,
+          name: detection.productName,
+          variant: null,
+          packSize: packSize || null,
+          category: null,
+          matchKind: knownProduct ? "verified_catalog" : exactRetailerOffer ? "barbora" : "visual_only"
+        },
+        shelfPrice:
+          detection.shelfPriceCents > 0 && detection.shelfPriceConfidence >= 0.72
+            ? {
+                amount: detection.shelfPriceCents / 100,
+                currency: "EUR",
+                observedText: detection.shelfPriceText,
+                confidence: detection.shelfPriceConfidence
+              }
+            : null,
+        retailerOffer
+      };
+    })
+  );
+  const detections = [...new Map(resolvedDetections.map((detection) => [detection.productId, detection])).values()];
 
   return {
     requestId: input.requestId,

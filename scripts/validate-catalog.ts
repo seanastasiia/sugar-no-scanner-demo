@@ -36,16 +36,23 @@ async function main() {
   const products = z.array(productSchema).length(40).parse(
     JSON.parse(await readFile("data/catalog.generated.json", "utf8"))
   );
+  const barboraIndex = z.array(z.string().regex(/^[a-z0-9-]+$/)).min(10_000).parse(
+    JSON.parse(await readFile("data/barbora-product-index.generated.json", "utf8"))
+  );
   const uniqueIds = new Set(products.map((product) => product.id));
   const uniqueRetailerIds = new Set(products.map((product) => product.retailerProductId));
   if (uniqueIds.size !== products.length || uniqueRetailerIds.size !== products.length) {
     throw new Error("Catalog IDs must be unique");
+  }
+  if (new Set(barboraIndex).size !== barboraIndex.length) {
+    throw new Error("Barbora index slugs must be unique");
   }
   const complete = products.filter((product) => Object.values(product.nutrientsPer100g).every(Number.isFinite));
   const missingFiber = products.filter((product) => product.nutrientsPer100g.fiberG === null);
   console.log(`Catalog rows: ${products.length}`);
   console.log(`Complete Match nutrition: ${complete.length}`);
   console.log(`Pending fiber verification: ${missingFiber.length}`);
+  console.log(`Barbora product index: ${barboraIndex.length}`);
   if (process.argv.includes("--require-complete") && complete.length !== products.length) {
     throw new Error("Catalog is not ready for public Match scores");
   }

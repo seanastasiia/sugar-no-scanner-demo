@@ -18,6 +18,7 @@
     "test:e2e": "playwright test",
     "verify": "npm run lint && npm run typecheck && npm test && npm run build",
     "catalog:sync": "tsx scripts/sync-barbora.ts",
+    "catalog:sync:barbora-index": "tsx scripts/sync-barbora-index.ts",
     "catalog:validate": "tsx scripts/validate-catalog.ts",
     "benchmark:focus": "tsx scripts/benchmark-focus.ts",
     "supabase:seed": "tsx scripts/seed-supabase.ts"

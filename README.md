@@ -1,6 +1,6 @@
 # Sugar.no Live Scanner
 
-Private Latvia proof of concept for camera-based comparison of packaged protein snacks. It is a wellness discovery tool, not a medical device or an absolute rating of food.
+Private Latvia proof of concept for camera-based identification and comparison of packaged groceries. It is a wellness discovery tool, not a medical device or an absolute rating of food.
 
 - Live demo: [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
 - Public source: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
@@ -13,21 +13,25 @@ The app is a working mobile-first web/PWA concept with:
 - a private access-code gate;
 - automatic live-camera frame sampling after the user grants permission;
 - one recognition API for camera, saved images, a deterministic four-item shelf photo and a four-item checkout photo;
-- a closed catalog of 40 products found in Barbora Latvia;
+- a reproducible index of 19,076 Barbora Latvia product pages for package naming and retailer lookup;
+- a curated nutrition catalog of 40 protein snacks used only for the verified Sugar.no badge;
 - 10 golden products with independently sourced fiber and a deterministic three-signal Sugar.no badge;
 - 30 catalog products that intentionally show `Data pending` until fiber is verified;
 - photorealistic concept scenes with compact green-check, yellow-minus and coral-alert markers placed over the detected packages;
 - a Checkit-inspired camera-first layout, selected-product focus and compact bottom sheet with a horizontally scrollable tray and similar options;
 - normalized detection boxes, a de-duplicated checkout tray, similar options and exact Barbora product links;
+- camera-read shelf prices plus a live Barbora offer lookup with source time and exact/possible-SKU state;
 - an in-scanner Shelf/Checkout switch plus device-local `Saved options` that survive reloads without an account;
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
 - iPhone-sized WebKit end-to-end coverage and committed visual evidence.
 
-The guaranteed shelf and checkout scenes work without third-party credentials. The app is deployed from GitHub `main` to Railway with an HTTPS domain and private access-code gate. Production live recognition has a server-only Google authorization key for Gemini; production catalog/analytics storage still requires Supabase.
+The guaranteed shelf and checkout scenes work without third-party credentials. Live camera/upload recognition names readable packages even outside the scored snack catalog, then searches the Barbora index and checks the matched public product page on demand. The app is deployed from GitHub `main` to Railway with an HTTPS domain and private access-code gate. Production catalog/analytics storage still requires Supabase.
 
 ## Product rules
 
-AI may select only one of the 40 supported product IDs. Nutrition, claims, Match and retailer URLs always come from the verified catalog, never from model output.
+Recognition and nutrition are separate trust levels. Gemini may read any visible package identity and a clearly associated physical shelf-price label. It never supplies nutrition, a Sugar.no score or a retailer price. The server maps the observed identity to the 19,076-entry Barbora page index, verifies the best candidate against the live public page and assigns curated nutrition only when the exact SKU belongs to the 40-product verified catalog.
+
+An unknown product can therefore show `Product recognized` and a retailer candidate without receiving a Sugar.no badge. A possible retailer match is labelled as possible and must not drive a crossed-out price. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. Because only one retailer is connected, the interface says `Barbora online`, never `best price`.
 
 The implementation keeps a deterministic internal comparison score for ranking:
 
@@ -43,7 +47,8 @@ Each percentile uses all available verified values in the 40-product protein-sna
 
 - Next.js 16 App Router, React 19 and TypeScript
 - browser `getUserMedia` plus a stability/motion sampler with one in-flight request
-- Gemini image understanding behind a server-only closed-catalog adapter
+- Gemini image understanding for package identity and associated shelf-label OCR
+- a compact Barbora sitemap index plus server-only on-demand product/price verification
 - Supabase Postgres for catalog, sources, retailer offers and anonymous scan metadata
 - Railway standalone Next.js deployment with copied public/static build assets
 - Vitest and Playwright WebKit using an iPhone profile
@@ -68,7 +73,7 @@ See `.env.example` for every variable.
 - `DEMO_ACCESS_CODE`, `DEMO_SESSION_SECRET`: private investor access. Both are required in production.
 - `GEMINI_API_KEY`, `GEMINI_MODEL`: server-side live recognition. The default is the stable `gemini-3.7-flash` model.
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: server-only catalog and event storage.
-- `RECOGNITION_CONFIDENCE_THRESHOLD`: minimum confidence before a product is shown.
+- `RECOGNITION_CONFIDENCE_THRESHOLD`: minimum package-identity confidence before a product is shown; the prototype default is `0.72`.
 - `COMMIT_SHA`: optional local/fallback release identifier. Railway deployments use `RAILWAY_GIT_COMMIT_SHA` automatically.
 
 Never expose service-role or Gemini keys through `NEXT_PUBLIC_*` variables.
@@ -86,6 +91,7 @@ CI=1 npm run test:e2e
 npm run build
 npm run verify
 npm run catalog:sync
+npm run catalog:sync:barbora-index
 npm run catalog:validate
 npm run benchmark:focus
 npm run supabase:seed
@@ -101,14 +107,16 @@ E2E_PRODUCTION=1 CI=1 npm run test:e2e
 ## API
 
 - `POST /api/auth`: validates the demo code and sets a 12-hour HttpOnly cookie.
-- `POST /api/recognize`: accepts a bounded image data URL or deterministic sample source; returns known IDs, normalized boxes, confidence and `imageStored: false`.
+- `POST /api/recognize`: accepts a bounded image data URL or deterministic sample source; returns package identity, normalized boxes, optional camera-read shelf price, exact/possible retailer offer state and `imageStored: false`.
 - `GET /api/products/:id`: returns sourced nutrition, Match and independent alternatives.
 - `POST /api/events`: stores bounded metadata only and rejects raw-image-like fields.
 - `GET /api/health`: Railway health check with commit metadata.
 
 ## Catalog
 
-`npm run catalog:sync` refreshes exactly 40 relevant products from public Barbora Latvia pages and applies the reviewed field-level overrides in `data/fiber-overrides.json`. It stores no prices. `npm run catalog:validate` checks shape, uniqueness, exact retailer links and data completeness.
+`npm run catalog:sync` refreshes exactly 40 scored products from public Barbora Latvia pages and applies the reviewed field-level overrides in `data/fiber-overrides.json`. `npm run catalog:sync:barbora-index` refreshes the product slugs published in Barbora's public sitemap; the current snapshot contains 19,076 pages. `npm run catalog:validate` checks both datasets, uniqueness, exact retailer links and nutrition completeness.
+
+The broad index intentionally stores no price snapshot. After a package is read, the server fetches only the top candidate product pages, parses the current public `window.product` payload and caches the result for five minutes. This keeps price provenance and timestamp explicit without claiming inventory, affiliate status or cross-retailer best price.
 
 Barbora publishes protein and total sugars for these products but not numeric fiber. Fiber therefore needs a manufacturer/label source. Pending products remain recognizable and show their known facts, but do not receive Match.
 
@@ -151,6 +159,7 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 - Camera starts only after a user action and browser permission.
 - Frames are resized in-browser and at most one recognition request runs at a time.
 - Sugar.no does not persist raw frames; Gemini receives a transient frame when live recognition is enabled.
+- Package text and camera-read prices are returned to the current browser session but are not added to analytics metadata.
 - Supabase receives only a random session ID, coarse device class, source, product ID, confidence/latency and explicit user actions.
 - Event metadata rejects image/frame/base64 keys, image data URLs and oversized values.
 
@@ -171,4 +180,4 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 
 ## Known limitations
 
-The generated deterministic shelf and checkout photos prove the multi-product interaction with overlays on the source scene; they are not evidence of computer-vision accuracy. Device-local saved options are a prototype and do not sync between browsers or phones. The app has not yet been tested with physical products on a real Latvian shelf or checkout belt. The Gemini credential and API quota are configured, but real-catalog accuracy, p95 latency, unsupported false-positive rate, Supabase writes, current retailer availability and physical iPhone camera behavior remain unverified until the corresponding test materials are available. See [Bugs.md](Bugs.md) for the live list.
+The generated deterministic shelf and checkout photos prove the multi-product interaction with overlays on the source scene; they are not evidence of computer-vision accuracy. The broad Barbora index improves coverage but does not mean every package will receive an exact SKU match: packaging, language, variants, availability and prices change. Shelf-price OCR is shown only above its confidence threshold and still needs physical Latvian store validation. Barbora is the only connected retailer, so `best price` is not claimed. Device-local saved options still cover only curated products and do not sync between phones. Real p95 latency, false positives, physical iPhone behavior and cross-retailer comparison remain unverified. See [Bugs.md](Bugs.md) for the live list.

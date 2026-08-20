@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { getCatalog } from "@/lib/catalog";
 import {
   DEFAULT_GEMINI_MODEL,
-  filterAllowedDetections,
   fitBoxToFrame,
+  matchCatalogProduct,
   recognizeProducts
 } from "./recognition";
 
@@ -68,27 +68,33 @@ describe("fitBoxToFrame", () => {
   });
 });
 
-describe("filterAllowedDetections", () => {
-  it("keeps the server catalog as the authority when the provider returns an unknown ID", () => {
-    const detections = filterAllowedDetections(
-      [
+describe("matchCatalogProduct", () => {
+  it("only assigns verified nutrition when brand and identity match the curated catalog", () => {
+    const catalog = getCatalog();
+    const saltyPeanut = catalog.find((product) => product.id === "prot-bat-sal-riekst-saldin-barebells-55-g")!;
+    expect(
+      matchCatalogProduct(
         {
-          productId: "unknown-product",
-          confidence: 0.99,
-          box: { x: 0.1, y: 0.1, width: 0.3, height: 0.3 },
-          observedText: "Invented product"
+          brand: saltyPeanut.brand,
+          name: saltyPeanut.name,
+          variant: "",
+          packSize: "55 g",
+          observedText: saltyPeanut.name
         },
+        catalog
+      )?.id
+    ).toBe("prot-bat-sal-riekst-saldin-barebells-55-g");
+    expect(
+      matchCatalogProduct(
         {
-          productId: "known-product",
-          confidence: 0.9,
-          box: { x: 0.2, y: 0.2, width: 0.3, height: 0.3 },
-          observedText: "Known product"
-        }
-      ],
-      new Set(["known-product"]),
-      0.82
-    );
-
-    expect(detections.map((detection) => detection.productId)).toEqual(["known-product"]);
+          brand: "SANPELLEGRINO",
+          name: "Zero sparkling drink",
+          variant: "Pesca & Clementina",
+          packSize: "330 ml",
+          observedText: "Sanpellegrino Zero Pesca & Clementina"
+        },
+        catalog
+      )
+    ).toBeNull();
   });
 });

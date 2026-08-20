@@ -5,12 +5,20 @@ This file is the running record of scanner defects found and resolved.
 ## Open
 
 - Real packaging, glare, low-light and physical checkout-belt accuracy are not validated. The first proof of concept uses curated sample scenes only.
+- Shelf-price OCR and spatial association with the correct product label need a physical Latvian store benchmark; ambiguous labels must remain hidden.
+- Barbora is the only live retailer source. The prototype can say `Barbora online`, but cannot claim `best price` until multiple comparable retailers, exact pack-size matching and freshness rules are connected.
+- The 19,076-entry sitemap index is a discovery snapshot, not a promise that every page is in stock or that packaging and prices have not changed.
 - Barbora exposes protein and total sugars for the selected catalog, but not numeric fiber. Products without an independently verified fiber value must remain unrated.
 - Saved options are device-local in the proof of concept and do not sync across browsers or phones.
 
 ## Resolved
 
-- **2026-08-20: live camera could not complete a Gemini scan.** `GEMINI_API_KEY` was absent from Railway, and after the credential was installed Gemini rejected the 40-value product-ID enum in the structured-output schema as `INVALID_ARGUMENT`. Gemini API is now enabled, a dedicated service-account-bound authorization key is restricted to it and stored only in Railway, the compatible schema accepts a string ID, and the existing server allowlist still discards every ID outside the 40-product catalog.
+- **2026-08-20: the first price cache stored query-specific match confidence by retailer slug.** The five-minute cache now stores only the parsed public product payload; exact/possible confidence is recalculated for every photographed package so one scan cannot lend certainty to another.
+- **2026-08-20: random store products outside the 40-snack catalog returned only `Not sure`.** Live recognition now reads any clear package identity, searches a reproducible 19,076-page Barbora index and keeps unverified products separate from the curated nutrition score.
+- **2026-08-20: the first broad-recognition JSON schema exceeded Gemini's accepted structured-output complexity.** Identity fields were compacted into brand, full product name and retailer search query while retaining boxes and shelf-price evidence; the resulting schema succeeds against `gemini-3.7-flash`.
+- **2026-08-20: generic token matching could present an unrelated low-confidence Barbora product.** The resolver now suppresses weak candidates, requires a confidence-and-margin rule for exact SKU status and labels the remainder as possible matches without crossing out the shelf price.
+- **2026-08-20: `ThinkingLevel.MINIMAL` produced a model-specific `INVALID_ARGUMENT`.** The scanner remains on the supported `LOW` level.
+- **2026-08-20: live camera could not complete a Gemini scan.** `GEMINI_API_KEY` was absent from Railway, and after the credential was installed Gemini rejected the 40-value product-ID enum as `INVALID_ARGUMENT`. Gemini API is now enabled, a dedicated service-account-bound authorization key is restricted to it and stored only in Railway, and the current pipeline keeps generic package identity separate from exact-SKU nutrition assignment instead of placing the whole catalog in the provider schema.
 - **2026-08-20: the enlarged-text WebKit check could race a development-server navigation.** The test now installs its font-size override before navigation, avoiding a destroyed execution context while preserving the accessibility scenario.
 - **2026-08-20: the Checkit design reference used the US App Store storefront.** Documentation now links to the same app through the Latvia storefront used for this proof of concept.
 - **2026-08-20: direct Railway uploads could report the previous Git SHA in `/api/health`.** Railway does not supply `RAILWAY_GIT_COMMIT_SHA` to CLI-uploaded builds, so the documented release command now refreshes the non-secret `COMMIT_SHA` fallback before deployment.

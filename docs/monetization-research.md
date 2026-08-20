@@ -18,10 +18,11 @@ Guardrails:
 
 - Match and similar-product order never depend on affiliate status or commission.
 - The retailer block is visually and semantically separate from Match.
-- Copy says `View at Barbora · check current price`, never `cheaper` unless a licensed current-price comparison actually proves it.
+- Copy may say `Cheaper online` only when one frame contains an unambiguous shelf price, the Barbora page is an exact SKU/pack-size match and its freshly fetched price is lower. Otherwise it says `Price check` or `Possible Barbora match`.
+- One connected retailer is not a market-wide comparison. Never say `best price` until at least two comparable, permitted and fresh retailer sources are available.
 - Checkout copy saves an alternative for next time rather than pushing an online reorder while the user is already in a store.
 - Affiliate disclosures must be added before any tracked/paid link is introduced.
 
 ## Recommended investor answer
 
-“The retailer CTA is included because it is part of the commercial hypothesis, but we are not treating it as the core value or forecasting revenue from it yet. Amazon grocery economics are thin, Instacart is not a Latvia route and Barbora has no public program we can rely on. The prototype lets us measure intent while keeping the independent Match untouched.”
+“The retailer CTA is included because it is part of the commercial hypothesis, but we are not treating it as the core value or forecasting revenue from it yet. The prototype can read a shelf label and check the exact Barbora page, while being explicit that one retailer is not a best-price engine. Amazon grocery economics are thin, Instacart is not a Latvia route and Barbora has no public affiliate program we can rely on. We can measure retailer intent while keeping the independent Match untouched.”

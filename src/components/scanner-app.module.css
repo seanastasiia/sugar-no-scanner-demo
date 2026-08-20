@@ -740,6 +740,12 @@
   white-space: nowrap;
 }
 
+.tray button small {
+  color: inherit;
+  font-size: 9px;
+  font-weight: 750;
+}
+
 .tray .activeTrayItem {
   border-color: var(--ink);
   background: var(--ink);
@@ -781,6 +787,21 @@
   line-height: 1.08;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+.recognizedBadge {
+  display: inline-flex;
+  min-height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1px solid #c9a85c;
+  border-radius: 999px;
+  background: #fff3ce;
+  color: #624500;
+  font-size: 10px;
+  font-weight: 820;
 }
 
 .compactSaveButton {
@@ -917,6 +938,94 @@
   color: #6b4311;
   font-size: 11px;
   font-weight: 800;
+}
+
+.priceComparison {
+  margin-top: 14px;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: #fffdf8;
+}
+
+.priceHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.priceHeading span {
+  color: #8a3a2c;
+  font-size: 10px;
+  font-weight: 840;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.priceHeading strong {
+  color: #0e5734;
+  font-size: 12px;
+}
+
+.priceValues {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.priceValues > div {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border-radius: 13px;
+  background: #f1ebe2;
+}
+
+.priceValues > div:only-child {
+  grid-column: 1 / -1;
+}
+
+.priceValues small {
+  color: #6f665e;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.priceValues strong {
+  font-size: 24px;
+  letter-spacing: -0.05em;
+}
+
+.priceValues .crossedPrice {
+  color: #746d66;
+  text-decoration: line-through 2px #c84f43;
+  text-decoration-skip-ink: none;
+}
+
+.priceComparison > p {
+  margin: 9px 1px 0;
+  color: #71675f;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.priceComparison .retailerButton {
+  margin-top: 11px;
+}
+
+.priceEmpty {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 11px 12px;
+  border: 1px dashed #c9a85c;
+  border-radius: 13px;
+  color: #665e57;
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .saveButton {
@@ -1326,6 +1435,8 @@
   .saveButton,
   .compactSaveButton,
   .pendingData,
+  .priceComparison,
+  .priceValues > div,
   .tray button {
     background: #24211e;
     color: #f8f3eb;
@@ -1337,6 +1448,8 @@
   .sources,
   .emptyResult,
   .pendingData,
+  .priceComparison > p,
+  .priceEmpty,
   .demoGrid button span {
     color: #beb5ab;
   }

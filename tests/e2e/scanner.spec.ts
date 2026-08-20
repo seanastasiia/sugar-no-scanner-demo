@@ -29,7 +29,7 @@ test("private gate rejects the wrong code and accepts the configured code", asyn
 test("sample shelf photo highlights products and shows a three-signal Sugar.no badge", async ({ page }) => {
   await unlock(page);
   await page.getByRole("button", { name: /Shelf photo/ }).click();
-  await expect(page.getByRole("status")).toContainText("4 supported products found");
+  await expect(page.getByRole("status")).toContainText("4 products recognized");
   await expect(page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
   await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Protein", { exact: true })).toBeVisible();
@@ -66,7 +66,7 @@ test("checkout photo uses one multi-product scan instead of an animated product"
   await expect(tray.getByRole("button")).toHaveCount(4);
   await expect(page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
   await expect(page.getByAltText("Four protein bars on a supermarket checkout belt")).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("4 supported products found on checkout");
+  await expect(page.getByRole("status")).toContainText("4 products recognized on checkout");
   await expect(page.getByText("Save an option for your next shop")).toBeVisible();
   await waitForAlternativeImages(page);
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -76,11 +76,11 @@ test("checkout photo uses one multi-product scan instead of an animated product"
 test("sample scenes switch in place and saved products persist for the next shop", async ({ page }) => {
   await unlock(page);
   await page.getByRole("button", { name: /Shelf photo/ }).click();
-  await expect(page.getByRole("status")).toContainText("4 supported products found");
+  await expect(page.getByRole("status")).toContainText("4 products recognized");
 
   const sceneSwitch = page.getByLabel("Sample scene");
   await sceneSwitch.getByRole("button", { name: "Checkout", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("4 supported products found on checkout");
+  await expect(page.getByRole("status")).toContainText("4 products recognized on checkout");
   await expect(sceneSwitch.getByRole("button", { name: "Checkout", exact: true })).toHaveAttribute("aria-pressed", "true");
 
   await page.getByRole("button", { name: "Save for next shop" }).click();
@@ -184,6 +184,92 @@ test("saved images are resized client-side and fail closed without a provider ke
   });
   await expect(page.getByRole("status")).toContainText("Live recognition needs the Gemini key");
   await expect(page.getByText("Point at the front of a package")).toBeVisible();
+});
+
+test("a product outside the scored catalog is named and receives an honest price comparison", async ({ page }) => {
+  await unlock(page);
+  let exactSku = true;
+  await page.route("**/api/recognize", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: "generic-price-test",
+        status: "matched",
+        latencyMs: 2200,
+        model: "gemini-3.7-flash",
+        imageStored: false,
+        detections: [
+          {
+            productId: "barbora:gaz-dz-sanpellegrino-zero-peach-0-33-l-d",
+            catalogProductId: null,
+            confidence: 0.94,
+            box: { x: 0.18, y: 0.18, width: 0.64, height: 0.64 },
+            observedText: "Sanpellegrino Zero Peach",
+            identity: {
+              brand: "Sanpellegrino",
+              name: "Zero Peach",
+              variant: "Pesca & Clementina",
+              packSize: "330 ml",
+              category: "Sparkling drink",
+              matchKind: "barbora"
+            },
+            shelfPrice: { amount: 1.69, currency: "EUR", observedText: "1 69", confidence: 0.94 },
+            retailerOffer: {
+              retailer: "Barbora",
+              slug: "gaz-dz-sanpellegrino-zero-peach-0-33-l-d",
+              title: "Gāzēts dzēriens SANPELLEGRINO Zero Peach 0,33L D",
+              brand: "SAN PELLEGRINO",
+              url: "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d",
+              price: 0.99,
+              currency: "EUR",
+              unitPrice: 3,
+              unit: "l",
+              imageUrl: null,
+              checkedAt: "2026-08-20T12:00:00.000Z",
+              matchConfidence: 0.82,
+              exactSku
+            }
+          }
+        ]
+      })
+    });
+  });
+
+  await page.waitForLoadState("networkidle");
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "price-check.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "base64"
+    )
+  });
+  await expect(page.getByRole("status")).toContainText("1 product recognized");
+  await expect(page.getByRole("heading", { name: /Zero Peach.*Pesca & Clementina.*330 ml/ })).toBeVisible();
+  const comparison = page.getByLabel("Price comparison");
+  await expect(comparison.getByText("Cheaper online")).toBeVisible();
+  await expect(comparison.getByText("Save €0.70")).toBeVisible();
+  await expect(comparison.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "line-through");
+  await expect(comparison.getByRole("link", { name: /View at Barbora · €0.99/ })).toHaveAttribute(
+    "href",
+    "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
+  );
+  await expect(page.getByText(/no health or Match score is invented/i)).toBeVisible();
+
+  exactSku = false;
+  await page.getByRole("button", { name: "Close scanner" }).click();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "possible-price-check.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "base64"
+    )
+  });
+  await expect(comparison.getByText("Price check")).toBeVisible();
+  await expect(comparison.getByText("Possible Barbora match")).toBeVisible();
+  await expect(comparison.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "none");
+  await expect(comparison.getByText("Cheaper online")).toHaveCount(0);
 });
 
 test("entry experience has no automated WCAG A/AA violations", async ({ page }) => {

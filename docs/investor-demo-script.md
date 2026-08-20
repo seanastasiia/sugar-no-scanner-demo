@@ -8,7 +8,7 @@ Target length: 2–3 minutes. Use the deterministic shelf and checkout scenes fo
 
 Show the private access screen and enter the code.
 
-“For this Latvia proof of concept we deliberately constrained the problem to 40 protein snacks. The model is allowed to identify only those products. It never invents nutrition.”
+“For this Latvia proof of concept we index more than 19,000 Barbora product pages, so the camera can name ordinary packaged products. Nutrition remains deliberately constrained: only 40 sourced protein snacks receive the Sugar.no badge, and the model never invents nutrition.”
 
 ## Shelf
 
@@ -26,7 +26,7 @@ Open a similar option.
 
 Open the Barbora CTA, then return.
 
-“The retailer action is deliberately secondary. We link to the exact item and ask the user to check the current price. We do not claim it is cheaper and we do not claim affiliate revenue that does not yet exist.”
+“The retailer action is deliberately secondary. If the camera can associate a shelf label with an exact package, we check the live Barbora page. We cross out the shelf price only when the exact online SKU is genuinely cheaper. With one retailer we call this a Barbora price check, not the best price, and we do not claim affiliate revenue that does not exist.”
 
 ## Checkout
 
@@ -40,11 +40,11 @@ Tap `Save for next shop`, close the scanner and show `Saved options`.
 
 ## Close
 
-“What this proves today is the experience, the constrained catalog and the data/privacy contract. The next validation is not ‘can AI recognize every grocery item?’ It is whether people compare visible products and whether they use the save or retailer actions. Real shelf accuracy, latency and monetization remain separate tests.”
+“What this proves today is broad package naming, a constrained verified nutrition layer and a source-aware retailer action. The next validation is whether people trust the exact match, compare visible products and use the save or retailer actions. Real-store accuracy, price-label association, latency and monetization remain separate tests.”
 
 Suggested final line:
 
-> We can make a shelf or checkout belt understandable in one view. Clear markers identify supported products, a transparent three-signal Sugar.no badge explains the comparison, and users can save or find an alternative online. The Latvia prototype recognizes a deliberately constrained catalog of 40 products; the next validation is whether people use the comparison and retailer actions, not whether AI can recognize every grocery product immediately.
+> We can name an ordinary package, keep nutrition honest and check a source-aware online offer in one camera flow. The Latvia prototype indexes more than 19,000 Barbora pages while reserving the Sugar.no badge for 40 verified snacks; the next validation is whether people trust the match and act on the comparison.
 
 ## If recognition fails live
 

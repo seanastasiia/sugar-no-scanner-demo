@@ -232,19 +232,22 @@ export function ScannerApp() {
       setRecognitionState("matched");
       setDetections(result.detections);
       const ids = result.detections.map((detection) => detection.productId);
+      const catalogIds = result.detections
+        .map((detection) => detection.catalogProductId || (detection.identity ? null : detection.productId))
+        .filter((id): id is string => Boolean(id));
       const merged = mergeDetectionTray(trayRef.current, seenRef.current, ids, Date.now());
       seenRef.current = merged.seen;
       trayRef.current = merged.tray;
       setStatusMessage(
         eventSource === "sample-conveyor"
-          ? `${result.detections.length} supported products found on checkout`
+          ? `${result.detections.length} products recognized on checkout`
           : result.detections.length === 1
-            ? "1 supported product found"
-            : `${result.detections.length} supported products found`
+            ? "1 product recognized"
+            : `${result.detections.length} products recognized`
       );
       setTray(merged.tray);
       setSelectedId((current) => current || ids[0]);
-      void hydrateProducts([...ids, ...merged.tray]);
+      void hydrateProducts(catalogIds);
       track("scan_completed", eventSource, ids[0], {
         count: ids.length,
         latencyMs: result.latencyMs,
@@ -354,7 +357,7 @@ export function ScannerApp() {
       await videoRef.current.play();
       setCameraState("live");
       setRecognitionState("idle");
-      setStatusMessage("Hold a supported product in the frame");
+      setStatusMessage("Hold a package and its price label in the frame");
       track("scan_started", "camera");
       scanTimerRef.current = setInterval(captureStableFrame, 650);
     } catch (error) {
@@ -461,6 +464,11 @@ export function ScannerApp() {
   );
 
   const selectedPayload = selectedId ? products[selectedId] : undefined;
+  const detectionById = useMemo(
+    () => Object.fromEntries(detections.map((detection) => [detection.productId, detection])),
+    [detections]
+  );
+  const selectedDetection = selectedId ? detectionById[selectedId] : undefined;
   const loadedTray = tray.map((id) => products[id]?.product).filter(Boolean) as ScoredProduct[];
   const bestId = useMemo(() => {
     const scored = loadedTray.filter((product) => product.matchScore !== null);
@@ -485,13 +493,13 @@ export function ScannerApp() {
           <div className={styles.introIcon} aria-hidden="true">
             <ScanLine size={28} />
           </div>
-          <p className={styles.eyebrow}>40 Latvia protein snacks</p>
+          <p className={styles.eyebrow}>19,000+ Barbora products indexed</p>
           <h1 id="intro-title">
             One camera.
             <br />A <em>clearer</em> shelf.
           </h1>
           <p className={styles.introCopy}>
-            See protein, fiber and total sugar together. No food rules and no “good versus bad”.
+            Name visible packages, read shelf prices and compare verified snacks without “good versus bad”.
           </p>
           <button className={styles.primaryButton} type="button" onClick={startCamera}>
             <Camera aria-hidden="true" size={20} />
@@ -580,6 +588,12 @@ export function ScannerApp() {
             {detections.map((detection) => {
               const product = products[detection.productId]?.product;
               const presentation = overallMatchPresentation(product?.matchScore ?? null);
+              const displayName =
+                product?.name ||
+                [detection.identity?.brand, detection.identity?.name, detection.identity?.variant]
+                  .filter(Boolean)
+                  .join(" ") ||
+                detection.observedText;
               return (
                 <button
                   className={`${styles.detectionBox} ${toneClass(presentation.tone)} ${selectedId === detection.productId ? styles.selectedBox : ""}`}
@@ -595,11 +609,11 @@ export function ScannerApp() {
                     setSelectedId(detection.productId);
                     track("result_opened", source, detection.productId);
                   }}
-                  aria-label={`Open ${product?.name || detection.observedText}`}
+                  aria-label={`Open ${displayName}`}
                 >
                   <span>
                     <OverlayToneIcon tone={presentation.tone} />
-                    <strong>{product ? overlayLabel(presentation.tone) : "Reading"}</strong>
+                    <strong>{product ? overlayLabel(presentation.tone) : detection.identity ? "Recognized" : "Reading"}</strong>
                   </span>
                 </button>
               );
@@ -665,7 +679,7 @@ export function ScannerApp() {
             {tray.length ? (
               <div className={styles.scanSummary}>
                 <div>
-                  <strong>{tray.length} products compared</strong>
+                  <strong>{tray.length} products recognized</strong>
                   <span>Tap a marker or swipe the products</span>
                 </div>
                 <div className={styles.summarySignals} aria-label="Shelf marker legend">
@@ -679,6 +693,7 @@ export function ScannerApp() {
               <div className={styles.tray} aria-label="Products in this scan">
                 {tray.map((id) => {
                   const item = products[id]?.product;
+                  const detection = detectionById[id];
                   return (
                     <button
                       type="button"
@@ -689,8 +704,14 @@ export function ScannerApp() {
                         track("result_opened", source, id);
                       }}
                     >
-                      <span>{item?.brand || "Reading"}</span>
-                      {item ? <MatchPill product={item} /> : null}
+                      <span>{item?.brand || detection?.identity?.brand || "Reading"}</span>
+                      {item ? (
+                        <MatchPill product={item} />
+                      ) : detection?.retailerOffer?.exactSku ? (
+                        <small>€{detection.retailerOffer.price.toFixed(2)} online</small>
+                      ) : (
+                        <small>Identified</small>
+                      )}
                     </button>
                   );
                 })}
@@ -700,6 +721,7 @@ export function ScannerApp() {
             {selectedPayload ? (
               <ProductResult
                 payload={selectedPayload}
+                detection={selectedDetection}
                 bestInScan={bestId === selectedPayload.product.id}
                 checkout={source === "sample-conveyor"}
                 savedIds={savedIds}
@@ -710,6 +732,11 @@ export function ScannerApp() {
                 }}
                 onToggleSaved={toggleSaved}
                 onRetailer={(id) => track("retailer_link_clicked", source, id)}
+              />
+            ) : selectedDetection?.identity ? (
+              <RecognizedProductResult
+                detection={selectedDetection}
+                onRetailer={() => track("retailer_link_clicked", source, selectedDetection.productId, { placement: "recognized_product" })}
               />
             ) : (
               <div className={styles.emptyResult}>
@@ -722,7 +749,7 @@ export function ScannerApp() {
                   <>
                     <Sparkles aria-hidden="true" size={23} />
                     <strong>Point at the front of a package</strong>
-                    <span>Sugar.no will only show a known product when confidence is high enough.</span>
+                    <span>Sugar.no names visible products. A badge appears only when nutrition is verified.</span>
                   </>
                 )}
               </div>
@@ -771,6 +798,7 @@ function CheckoutScene() {
 
 function ProductResult({
   payload,
+  detection,
   bestInScan,
   checkout,
   savedIds,
@@ -779,6 +807,7 @@ function ProductResult({
   onRetailer
 }: {
   payload: ProductPayload;
+  detection?: ProductDetection;
   bestInScan: boolean;
   checkout: boolean;
   savedIds: string[];
@@ -807,6 +836,10 @@ function ProductResult({
       </div>
 
       <SugarNoBadge product={product} />
+
+      {detection?.retailerOffer || detection?.shelfPrice ? (
+        <PriceComparison detection={detection} onRetailer={() => onRetailer(product.id)} />
+      ) : null}
 
       {bestInScan && product.matchScore !== null ? (
         <div className={styles.bestBadge}>
@@ -877,19 +910,21 @@ function ProductResult({
         </section>
       ) : null}
 
-      <a
-        className={styles.retailerButton}
-        href={product.retailerUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => onRetailer(product.id)}
-      >
-        <span>
-          <small>Available online</small>
-          View at Barbora · check current price
-        </span>
-        <ArrowUpRight aria-hidden="true" size={19} />
-      </a>
+      {!detection?.retailerOffer ? (
+        <a
+          className={styles.retailerButton}
+          href={product.retailerUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => onRetailer(product.id)}
+        >
+          <span>
+            <small>Available online</small>
+            View at Barbora · check current price
+          </span>
+          <ArrowUpRight aria-hidden="true" size={19} />
+        </a>
+      ) : null}
       <details className={styles.sources}>
         <summary>Data sources and limits</summary>
         <p>The badge compares these products with this demo category. It is not a medical or absolute health score.</p>
@@ -905,6 +940,114 @@ function ProductResult({
         </ul>
       </details>
     </article>
+  );
+}
+
+function RecognizedProductResult({
+  detection,
+  onRetailer
+}: {
+  detection: ProductDetection;
+  onRetailer: () => void;
+}) {
+  const identity = detection.identity!;
+  const visiblePackSize =
+    identity.packSize && !identity.name.toLowerCase().includes(identity.packSize.toLowerCase())
+      ? identity.packSize
+      : null;
+  return (
+    <article className={styles.productResult}>
+      <div className={styles.productHeading}>
+        <div>
+          <p>{identity.brand || "Recognized package"}</p>
+          <h2>{[identity.name, identity.variant, visiblePackSize].filter(Boolean).join(" · ")}</h2>
+        </div>
+        <span className={styles.recognizedBadge}>
+          <Check aria-hidden="true" size={15} /> Identified
+        </span>
+      </div>
+
+      <PriceComparison detection={detection} onRetailer={onRetailer} />
+
+      <div className={styles.pendingData}>
+        <Info aria-hidden="true" size={18} />
+        <span>
+          <strong>Product recognized</strong>
+          Sugar.no nutrition is not verified for this product yet, so no health or Match score is invented.
+        </span>
+      </div>
+
+      <details className={styles.sources}>
+        <summary>How this result was made</summary>
+        <p>
+          The package name was read from this frame. An online price is shown only when a Barbora candidate was found;
+          verify the flavor and pack size before ordering.
+        </p>
+      </details>
+    </article>
+  );
+}
+
+function PriceComparison({ detection, onRetailer }: { detection: ProductDetection; onRetailer: () => void }) {
+  const shelfPrice = detection.shelfPrice;
+  const offer = detection.retailerOffer;
+  if (!shelfPrice && !offer) {
+    return (
+      <div className={styles.priceEmpty}>
+        <Info aria-hidden="true" size={17} /> Keep the package and its shelf label in one frame to compare prices.
+      </div>
+    );
+  }
+  const cheaperOnline = Boolean(offer?.exactSku && shelfPrice && offer.price < shelfPrice.amount);
+  const savings = cheaperOnline && offer && shelfPrice ? shelfPrice.amount - offer.price : 0;
+  const checkedTime = offer
+    ? new Date(offer.checkedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+    : null;
+
+  return (
+    <section className={styles.priceComparison} aria-label="Price comparison">
+      <div className={styles.priceHeading}>
+        <span>{cheaperOnline ? "Cheaper online" : "Price check"}</span>
+        {savings > 0 ? <strong>Save €{savings.toFixed(2)}</strong> : null}
+      </div>
+      <div className={styles.priceValues}>
+        {shelfPrice ? (
+          <div>
+            <small>Scanned shelf label</small>
+            <strong className={cheaperOnline ? styles.crossedPrice : ""}>€{shelfPrice.amount.toFixed(2)}</strong>
+          </div>
+        ) : null}
+        {offer ? (
+          <div>
+            <small>{offer.exactSku ? "Barbora online" : "Possible Barbora match"}</small>
+            <strong>€{offer.price.toFixed(2)}</strong>
+          </div>
+        ) : null}
+      </div>
+      {offer ? (
+        <>
+          <p>
+            {offer.exactSku ? "Matched by package identity" : "Check flavor and pack size before comparing"}
+            {checkedTime ? ` · checked ${checkedTime}` : ""}
+          </p>
+          <a
+            className={styles.retailerButton}
+            href={offer.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onRetailer}
+          >
+            <span>
+              <small>{offer.exactSku ? "Current online offer" : "Possible retailer match"}</small>
+              View at Barbora · €{offer.price.toFixed(2)}
+            </span>
+            <ArrowUpRight aria-hidden="true" size={19} />
+          </a>
+        </>
+      ) : (
+        <p>No exact online match yet. The shelf price is shown as camera-read text only.</p>
+      )}
+    </section>
   );
 }
 
