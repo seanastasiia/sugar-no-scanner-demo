@@ -6,11 +6,12 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 
 1. Open the private link. Confirm that the demo requires the access code and does not appear in search engines.
 2. Enter the code. Confirm that the first screen says `40 Latvia protein snacks` and explains protein, fiber and total sugar without good/bad language.
-3. Tap `Shelf scene`. Confirm that four boxes appear automatically, the selected product is correct and the card shows Match plus all three inputs per 100 g.
-4. Tap each small product in the tray. Confirm that the corresponding box/card changes and the best visible item is clearly labelled.
-5. Open a similar option. Confirm that it is a comparable format and has a numeric Match.
-6. Open `View at Barbora · check current price`. Confirm that the exact SKU page opens in a new tab and that Sugar.no never claims it is cheaper or affiliate-paid.
-7. Return and start `Checkout scene`. Let five items pass. Confirm that the tray stops at four distinct SKUs and the copy says `For next time`, not that the current purchase is wrong.
+3. Tap `Shelf photo`. Confirm that four red/yellow/green boxes appear directly over the four packages. Each box must also say `Strong`, `Middle` or `Lower`, so color is not the only indicator.
+4. Confirm that the selected card has a Sugar.no badge with separate Protein, Fiber and Sugar signals plus the source values per 100 g. Confirm that no unexplained numeric score such as `86` appears.
+5. Tap each small product in the tray. Confirm that the corresponding box/card changes and the best visible item is clearly labelled.
+6. Swipe the Similar options cards left and right. Confirm that they are comparable formats and remain usable without horizontal page overflow.
+7. Open `View at Barbora · check current price`. Confirm that the exact SKU page opens in a new tab and that Sugar.no never claims it is cheaper or affiliate-paid.
+8. Return and start `Checkout photo`. Confirm that one image of the whole belt returns four products at once, with boxes directly on the belt scene and the same Sugar.no badge as the shelf. Confirm that the copy says `Save an option for your next shop`, not that the current purchase is wrong.
 
 ## Camera and uncertainty
 
@@ -32,7 +33,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 ## Product decision questions
 
 - Can a first-time viewer explain the value within 15 seconds without narration?
-- Is Match understood as a within-category comparison rather than a health verdict?
+- Is the three-signal badge understood as a within-category comparison rather than a health verdict?
 - Is shelf comparison the primary value, with the retailer link clearly secondary?
 - Is the checkout experience useful after the choice has already been made?
 - Would you use the camera repeatedly, or only search/barcode after the first trial?

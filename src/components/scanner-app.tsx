@@ -12,8 +12,6 @@ import {
   Layers3,
   LoaderCircle,
   Lock,
-  Pause,
-  Play,
   RefreshCw,
   ScanLine,
   ShoppingBasket,
@@ -22,6 +20,7 @@ import {
 } from "lucide-react";
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mergeDetectionTray } from "@/lib/dedupe";
+import { matchCriteria, overallMatchPresentation, type MatchTone } from "@/lib/match-presentation";
 import type {
   ProductDetection,
   RecognitionResponse,
@@ -42,15 +41,10 @@ const shelfIds = [
   "prot-bat-sal-riekst-saldin-barebells-55-g",
   "prot-bat-barebells-lemon-cheesecake-55-g",
   "proteina-bat-cepuma-garsa-iconfit-55-g",
-  "protein-baton-sal-kar-the-beginnings-50-g"
+  "proteina-baton-barebells-coco-choco-55-g"
 ];
 
-const conveyorIds = [
-  "prot-bat-sal-riekst-saldin-barebells-55-g",
-  "proteina-baton-barebells-chokladboll-55-g",
-  "proteina-bat-sok-karamelu-iconfit-55-g",
-  "prot-bat-van-bez-cuk-the-beginnings-50-g"
-];
+const checkoutIds = shelfIds;
 
 function makeSessionId() {
   return crypto.randomUUID();
@@ -88,17 +82,23 @@ async function imageFileToDataUrl(file: File): Promise<string> {
 }
 
 function sourceLabel(source: ScanSource) {
-  if (source === "sample-conveyor") return "Checkout demo";
-  if (source === "sample-shelf") return "Shelf demo";
-  if (source === "upload") return "Saved image";
+  if (source === "sample-conveyor") return "Checkout photo";
+  if (source === "sample-shelf") return "Shelf photo";
+  if (source === "upload") return "Saved shelf or checkout photo";
   return "Live camera";
+}
+
+function toneClass(tone: MatchTone) {
+  if (tone === "strong") return styles.toneStrong;
+  if (tone === "middle") return styles.toneMiddle;
+  if (tone === "lower") return styles.toneLower;
+  return styles.tonePending;
 }
 
 export function ScannerApp() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const conveyorTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inFlightRef = useRef(false);
   const seenRef = useRef(new Map<string, number>());
   const trayRef = useRef<string[]>([]);
@@ -114,8 +114,6 @@ export function ScannerApp() {
   const [products, setProducts] = useState<Record<string, ProductPayload>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [conveyorFrame, setConveyorFrame] = useState(0);
-  const [conveyorRunning, setConveyorRunning] = useState(false);
   const [statusMessage, setStatusMessage] = useState("Ready when you are");
   const [networkOnline, setNetworkOnline] = useState(() =>
     typeof navigator === "undefined" ? true : navigator.onLine
@@ -192,7 +190,7 @@ export function ScannerApp() {
       trayRef.current = merged.tray;
       setStatusMessage(
         eventSource === "sample-conveyor"
-          ? `${merged.tray.length} unique ${merged.tray.length === 1 ? "product" : "products"} saved`
+          ? `${result.detections.length} supported products found on checkout`
           : result.detections.length === 1
             ? "1 supported product found"
             : `${result.detections.length} supported products found`
@@ -242,14 +240,11 @@ export function ScannerApp() {
 
   const stopActiveCapture = useCallback(() => {
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
-    if (conveyorTimerRef.current) clearInterval(conveyorTimerRef.current);
     scanTimerRef.current = null;
-    conveyorTimerRef.current = null;
     streamRef.current?.getTracks().forEach((trackItem) => trackItem.stop());
     streamRef.current = null;
     lowResFrameRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
-    setConveyorRunning(false);
   }, []);
 
   const captureStableFrame = useCallback(() => {
@@ -341,7 +336,7 @@ export function ScannerApp() {
     void recognize({ source: "sample-shelf" });
   }, [hydrateProducts, recognize, stopActiveCapture, track]);
 
-  const startConveyor = useCallback(() => {
+  const startCheckout = useCallback(() => {
     sessionIdRef.current = makeSessionId();
     stopActiveCapture();
     setSource("sample-conveyor");
@@ -352,36 +347,10 @@ export function ScannerApp() {
     trayRef.current = [];
     setSelectedId(null);
     seenRef.current = new Map();
-    setConveyorFrame(0);
-    setConveyorRunning(true);
     track("scan_started", "sample-conveyor");
-    void hydrateProducts(conveyorIds);
-    void recognize({ source: "sample-conveyor", sampleFrame: 0 });
-    conveyorTimerRef.current = setInterval(() => {
-      setConveyorFrame((current) => {
-        const next = current + 1;
-        void recognize({ source: "sample-conveyor", sampleFrame: next });
-        return next;
-      });
-    }, 2_200);
+    void hydrateProducts(checkoutIds);
+    void recognize({ source: "sample-conveyor" });
   }, [hydrateProducts, recognize, stopActiveCapture, track]);
-
-  function toggleConveyor() {
-    if (conveyorRunning) {
-      if (conveyorTimerRef.current) clearInterval(conveyorTimerRef.current);
-      conveyorTimerRef.current = null;
-      setConveyorRunning(false);
-      return;
-    }
-    setConveyorRunning(true);
-    conveyorTimerRef.current = setInterval(() => {
-      setConveyorFrame((current) => {
-        const next = current + 1;
-        void recognize({ source: "sample-conveyor", sampleFrame: next });
-        return next;
-      });
-    }, 2_200);
-  }
 
   async function uploadImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -435,7 +404,6 @@ export function ScannerApp() {
     const scored = loadedTray.filter((product) => product.matchScore !== null);
     return scored.sort((left, right) => (right.matchScore ?? -1) - (left.matchScore ?? -1))[0]?.id;
   }, [loadedTray]);
-  const conveyorProduct = products[conveyorIds[conveyorFrame % conveyorIds.length]]?.product;
   const activeExperience =
     cameraState !== "idle" || source !== "camera" || previewUrl || detections.length > 0 || tray.length > 0;
 
@@ -474,23 +442,23 @@ export function ScannerApp() {
             <button type="button" onClick={startShelf}>
               <Layers3 aria-hidden="true" size={21} />
               <span>
-                <strong>Shelf scene</strong>
-                Compare four products
+                <strong>Shelf photo</strong>
+                Highlight four products
               </span>
               <ChevronRight aria-hidden="true" size={18} />
             </button>
-            <button type="button" onClick={startConveyor}>
+            <button type="button" onClick={startCheckout}>
               <ShoppingBasket aria-hidden="true" size={21} />
               <span>
-                <strong>Checkout scene</strong>
-                Watch the tray build
+                <strong>Checkout photo</strong>
+                Scan the whole belt
               </span>
               <ChevronRight aria-hidden="true" size={18} />
             </button>
           </div>
           <label className={styles.uploadButton}>
             <FileImage aria-hidden="true" size={19} />
-            Use a saved product image
+            Use a saved shelf or checkout photo
             <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} />
           </label>
           <p className={styles.privacyNote}>
@@ -509,7 +477,7 @@ export function ScannerApp() {
             ) : null}
 
             {source === "sample-conveyor" ? (
-              <ConveyorScene product={conveyorProduct} running={conveyorRunning} />
+              <CheckoutScene products={products} />
             ) : null}
 
             {source === "upload" && previewUrl ? (
@@ -545,9 +513,11 @@ export function ScannerApp() {
 
             {detections.map((detection) => {
               const product = products[detection.productId]?.product;
+              const presentation = overallMatchPresentation(product?.matchScore ?? null);
+              const overlayLabel = presentation.label.replace(" match", "");
               return (
                 <button
-                  className={`${styles.detectionBox} ${selectedId === detection.productId ? styles.selectedBox : ""}`}
+                  className={`${styles.detectionBox} ${toneClass(presentation.tone)} ${selectedId === detection.productId ? styles.selectedBox : ""}`}
                   style={{
                     left: `${detection.box.x * 100}%`,
                     top: `${detection.box.y * 100}%`,
@@ -563,11 +533,8 @@ export function ScannerApp() {
                   aria-label={`Open ${product?.name || detection.observedText}`}
                 >
                   <span>
-                    {product?.matchScore !== null && product?.matchScore !== undefined
-                      ? `${product.matchScore} Match`
-                      : product
-                        ? "Data pending"
-                        : "Reading"}
+                    <small>Sugar.no</small>
+                    <strong>{product ? overlayLabel : "Reading"}</strong>
                   </span>
                 </button>
               );
@@ -606,13 +573,6 @@ export function ScannerApp() {
               )}
               {networkOnline ? statusMessage : "Offline — recognition paused"}
             </div>
-
-            {source === "sample-conveyor" ? (
-              <button className={styles.pauseButton} type="button" onClick={toggleConveyor}>
-                {conveyorRunning ? <Pause aria-hidden="true" size={17} /> : <Play aria-hidden="true" size={17} />}
-                {conveyorRunning ? "Pause belt" : "Resume belt"}
-              </button>
-            ) : null}
           </div>
 
           <div className={styles.resultsSheet}>
@@ -631,7 +591,7 @@ export function ScannerApp() {
                       }}
                     >
                       <span>{item?.brand || "Reading"}</span>
-                      <strong>{item?.matchScore === null || !item ? "—" : item.matchScore}</strong>
+                      {item ? <MatchPill product={item} /> : null}
                     </button>
                   );
                 })}
@@ -675,8 +635,7 @@ export function ScannerApp() {
 
 function ShelfScene({ products }: { products: Record<string, ProductPayload> }) {
   return (
-    <div className={styles.shelfScene} aria-label="Sample shelf with four supported protein snacks">
-      <div className={styles.shelfGlow} />
+    <div className={styles.shelfScene} aria-label="Sample shelf photo with four supported protein snacks">
       {shelfIds.map((id) => {
         const product = products[id]?.product;
         return (
@@ -689,26 +648,32 @@ function ShelfScene({ products }: { products: Record<string, ProductPayload> }) 
           </div>
         );
       })}
-      <div className={styles.shelfRail}>Supported demo products</div>
+      <div className={styles.shelfRail} aria-hidden="true">
+        <span />
+        <span />
+        <span />
+        <span />
+      </div>
     </div>
   );
 }
 
-function ConveyorScene({ product, running }: { product?: ScoredProduct; running: boolean }) {
+function CheckoutScene({ products }: { products: Record<string, ProductPayload> }) {
   return (
-    <div className={styles.conveyorScene} aria-label="Animated checkout belt demo">
-      <div className={styles.beltLines} />
-      <div className={`${styles.conveyorProduct} ${running ? styles.conveyorMoving : ""}`} key={product?.id}>
-        {product?.imageUrl ? (
-          <Image src={product.imageUrl} alt={product.name} fill sizes="46vw" priority />
-        ) : (
-          <div className={styles.packagePlaceholder}>Reading package</div>
-        )}
-      </div>
-      <div className={styles.checkoutGate}>
-        <ScanLine aria-hidden="true" size={22} />
-        auto capture zone
-      </div>
+    <div className={styles.checkoutScene} aria-label="Sample checkout photo with four supported protein snacks">
+      <div className={styles.beltLines} aria-hidden="true" />
+      {checkoutIds.map((id) => {
+        const product = products[id]?.product;
+        return (
+          <div className={styles.checkoutProduct} key={id}>
+            {product?.imageUrl ? (
+              <Image src={product.imageUrl} alt={product.name} fill sizes="22vw" priority />
+            ) : (
+              <div className={styles.packagePlaceholder}>{product?.brand || "Sugar.no"}</div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -734,16 +699,14 @@ function ProductResult({
           <p>{product.brand}</p>
           <h2>{product.shortName}</h2>
         </div>
-        <div className={`${styles.matchBadge} ${product.matchScore === null ? styles.pendingMatch : ""}`}>
-          <span>{product.matchScore === null ? "—" : product.matchScore}</span>
-          <small>Sugar.no Match</small>
-        </div>
       </div>
+
+      <SugarNoBadge product={product} />
 
       {bestInScan && product.matchScore !== null ? (
         <div className={styles.bestBadge}>
           <Sparkles aria-hidden="true" size={15} />
-          {product.matchScore >= 75 ? "Top Match · Best match in this scan" : "Best match in this scan"}
+          Best fit in this scan
         </div>
       ) : null}
 
@@ -755,16 +718,14 @@ function ProductResult({
             Fiber is not yet confirmed by an independent source. Protein and total sugar remain visible.
           </span>
         </div>
-      ) : (
-        <p className={styles.matchExplanation}>More protein · More fiber · Less total sugar</p>
-      )}
+      ) : null}
 
       <div className={styles.nutrients} aria-label="Nutrition per 100 grams">
-        <Nutrient label="Protein" value={product.nutrientsPer100g.proteinG} unit="g" direction="More" />
-        <Nutrient label="Fiber" value={product.nutrientsPer100g.fiberG} unit="g" direction="More" />
-        <Nutrient label="Total sugar" value={product.nutrientsPer100g.totalSugarG} unit="g" direction="Less" />
+        <Nutrient label="Protein" value={product.nutrientsPer100g.proteinG} unit="g" direction="Higher" />
+        <Nutrient label="Fiber" value={product.nutrientsPer100g.fiberG} unit="g" direction="Higher" />
+        <Nutrient label="Total sugar" value={product.nutrientsPer100g.totalSugarG} unit="g" direction="Lower" />
       </div>
-      <p className={styles.perHundred}>Values per 100 g · Category-relative demo score</p>
+      <p className={styles.perHundred}>Values per 100 g · Compared with protein snacks in this demo</p>
 
       {product.noAddedSugarClaim ? (
         <div className={styles.claimBadge}>
@@ -776,9 +737,9 @@ function ProductResult({
         <section className={styles.alternatives} aria-labelledby={`alternatives-${product.id}`}>
           <div className={styles.sectionHeading}>
             <div>
-              <p>{checkout ? "For next time" : "Similar options"}</p>
+              <p>Similar options</p>
               <h3 id={`alternatives-${product.id}`}>
-                {checkout ? "Save a higher Match for your next shop" : "Compare without starting over"}
+                {checkout ? "Save an option for your next shop" : "Compare without starting over"}
               </h3>
             </div>
           </div>
@@ -793,8 +754,8 @@ function ProductResult({
                 <span>
                   <small>{alternative.brand}</small>
                   <strong>{alternative.shortName}</strong>
+                  <MatchPill product={alternative} />
                 </span>
-                <b>{alternative.matchScore}</b>
               </button>
             ))}
           </div>
@@ -816,7 +777,7 @@ function ProductResult({
       </a>
       <details className={styles.sources}>
         <summary>Data sources and limits</summary>
-        <p>Match is a transparent category comparison, not a medical or absolute health score.</p>
+        <p>The badge compares these products with this demo category. It is not a medical or absolute health score.</p>
         <ul>
           {product.sources.map((source) => (
             <li key={source.url}>
@@ -830,6 +791,33 @@ function ProductResult({
       </details>
     </article>
   );
+}
+
+function SugarNoBadge({ product }: { product: ScoredProduct }) {
+  const presentation = overallMatchPresentation(product.matchScore);
+  const criteria = matchCriteria(product);
+  return (
+    <section className={styles.sugarBadge} aria-label="Sugar.no badge">
+      <div className={styles.sugarBadgeHeading}>
+        <strong>Sugar.no</strong>
+        <span className={toneClass(presentation.tone)}>{presentation.label}</span>
+      </div>
+      <div className={styles.criteria}>
+        {criteria.map((criterion) => (
+          <div className={`${styles.criterion} ${toneClass(criterion.tone)}`} key={criterion.key}>
+            <i aria-hidden="true" />
+            <span>{criterion.label}</span>
+            <strong>{criterion.status}</strong>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function MatchPill({ product }: { product: ScoredProduct }) {
+  const presentation = overallMatchPresentation(product.matchScore);
+  return <em className={`${styles.matchPill} ${toneClass(presentation.tone)}`}>{presentation.label}</em>;
 }
 
 function Nutrient({
@@ -847,7 +835,7 @@ function Nutrient({
     <div className={styles.nutrient}>
       <span>{label}</span>
       <strong>{value === null ? "Not verified" : `${value}${unit}`}</strong>
-      <small>{direction} supports Match</small>
+      <small>{direction} supports this badge</small>
     </div>
   );
 }

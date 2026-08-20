@@ -25,6 +25,19 @@ describe("recognizeProducts", () => {
     expect(result.model).toBe("deterministic-sample-v1");
   });
 
+  it("treats checkout as one multi-product frame through the same response shape", async () => {
+    const result = await recognizeProducts({
+      source: "sample-conveyor",
+      sampleFrame: 7,
+      catalog: getCatalog(),
+      requestId: "request-checkout"
+    });
+    expect(result.status).toBe("matched");
+    expect(result.detections).toHaveLength(4);
+    expect(new Set(result.detections.map((detection) => detection.productId)).size).toBe(4);
+    expect(result.imageStored).toBe(false);
+  });
+
   it("fails closed when live recognition is not configured", async () => {
     delete process.env.GEMINI_API_KEY;
     const result = await recognizeProducts({

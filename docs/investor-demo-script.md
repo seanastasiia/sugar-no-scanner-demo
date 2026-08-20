@@ -12,17 +12,17 @@ Show the private access screen and enter the code.
 
 ## Shelf
 
-Tap `Shelf scene`.
+Tap `Shelf photo`.
 
-“One camera view compares what is visible without asking the user to choose protein, fiber or sugar first. Sugar.no Match weights all three equally within this category. It is transparent and non-judgmental: no food is marked bad or forbidden.”
+“One camera view compares what is visible without asking the user to choose protein, fiber or sugar first. The colored boxes sit directly over the products in the shelf image. Green, yellow and red make the comparison scannable; the words Strong, Middle and Lower carry the same meaning without relying on color alone.”
 
-Tap two product boxes and show the inputs.
+Tap two product boxes and show the Sugar.no badge.
 
-“If fiber is not independently verified, there is no total Match. We prefer a missing score over false precision.”
+“Instead of an unexplained score such as 86, the badge shows the three inputs separately: protein, fiber and total sugar. These are relative comparisons inside this protein-snack catalog, not a good-food or bad-food verdict. If fiber is not independently verified, the overall state remains pending rather than pretending to know.”
 
 Open a similar option.
 
-“Recommendations are ranked by similarity and Match. Commercial availability never changes the recommendation.”
+“Similar options scroll horizontally. They are ranked by category similarity and the internal comparison, while commercial availability never changes the recommendation.”
 
 Open the Barbora CTA, then return.
 
@@ -30,9 +30,9 @@ Open the Barbora CTA, then return.
 
 ## Checkout
 
-Tap `Checkout scene` and let the four products pass.
+Tap `Checkout photo`.
 
-“At checkout, the product behavior changes. We do not tell someone to undo a purchase or shame the basket. The app saves a potentially better-fit alternative for next time and de-duplicates repeated detections.”
+“Checkout uses exactly the same behavior as the shelf: one view of the whole belt, several detected packages and colored overlays on the image. We do not tell someone to undo a purchase or shame the basket. The app suggests saving an alternative for the next shop.”
 
 ## Close
 
@@ -40,8 +40,8 @@ Tap `Checkout scene` and let the four products pass.
 
 Suggested final line:
 
-> We can make the shelf understandable before purchase and useful after purchase. One camera shows a transparent Sugar.no Match, compares visible products and lets users save or find an alternative online. The Latvia prototype recognizes a deliberately constrained catalog of 40 products; the next validation is whether people use the comparison and retailer actions, not whether AI can recognize every grocery product immediately.
+> We can make a shelf or checkout belt understandable in one view. Colored overlays identify supported products, a transparent three-signal Sugar.no badge explains the comparison, and users can save or find an alternative online. The Latvia prototype recognizes a deliberately constrained catalog of 40 products; the next validation is whether people use the comparison and retailer actions, not whether AI can recognize every grocery product immediately.
 
 ## If recognition fails live
 
-Say: “This is why the investor path includes deterministic scenes through the same API. The live model is being benchmarked separately, and below-threshold frames intentionally return `Not sure`.” Then continue with `Shelf scene`.
+Say: “This is why the investor path includes deterministic scenes through the same API. The live model is being benchmarked separately, and below-threshold frames intentionally return `Not sure`.” Then continue with `Shelf photo`.

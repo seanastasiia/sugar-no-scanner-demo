@@ -12,10 +12,10 @@ The app is a working mobile-first web/PWA concept with:
 
 - a private access-code gate;
 - automatic live-camera frame sampling after the user grants permission;
-- one recognition API for camera, saved images, the deterministic four-item shelf and animated checkout demo;
+- one recognition API for camera, saved images, a deterministic four-item shelf photo and a four-item checkout photo;
 - a closed catalog of 40 products found in Barbora Latvia;
-- 10 golden products with independently sourced fiber and a deterministic `Sugar.no Match`;
-- 30 catalog products that intentionally show `Match pending` until fiber is verified;
+- 10 golden products with independently sourced fiber and a deterministic three-signal Sugar.no badge;
+- 30 catalog products that intentionally show `Data pending` until fiber is verified;
 - normalized detection boxes, a de-duplicated checkout tray, similar options and exact Barbora product links;
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
 - iPhone-sized WebKit end-to-end coverage and committed visual evidence.
@@ -26,9 +26,13 @@ The guaranteed shelf and checkout scenes work without third-party credentials. T
 
 AI may select only one of the 40 supported product IDs. Nutrition, claims, Match and retailer URLs always come from the verified catalog, never from model output.
 
-`Match = ⅓ protein percentile + ⅓ fiber percentile + ⅓ inverse total-sugar percentile`
+The implementation keeps a deterministic internal comparison score for ranking:
 
-Each percentile uses all available verified values in the 40-product protein-snack category. A product receives no total Match unless its protein, fiber and total sugar are all numeric. A verified `no added sugar` claim is shown separately and never changes Match. Similar products rank by format first and Match second; commercial status is not part of recommendation ranking.
+`comparison = ⅓ protein percentile + ⅓ fiber percentile + ⅓ inverse total-sugar percentile`
+
+The main UI does not show an unexplained number. It presents a Sugar.no badge with three separate, text-labelled signals: Protein, Fiber and Sugar. Each signal is `Higher`, `Middle` or `Lower` relative to the verified protein-snack catalog; the sugar direction is inverted so lower total sugar receives the stronger signal. Green, yellow and red are supporting visual cues, never the only explanation and never a verdict that food is good or bad.
+
+Each percentile uses all available verified values in the 40-product protein-snack category. A product receives no overall badge state unless its protein, fiber and total sugar are all numeric. A verified `no added sugar` claim is shown separately and never changes the comparison. Similar products rank by format first and internal comparison second; commercial status is not part of recommendation ranking.
 
 ## Stack
 
@@ -153,4 +157,4 @@ GitHub `main` is the release source. A release is complete only after tests, pus
 
 ## Known limitations
 
-The deployed deterministic shelf and checkout paths are verified over Railway HTTPS. The app has not yet been tested with physical products on a real Latvian shelf or conveyor. Actual Gemini accuracy, p95 latency, unsupported false-positive rate, Supabase writes, current retailer availability and physical iPhone camera behavior remain unverified until the corresponding credentials and test materials are available. See [Bugs.md](Bugs.md) for the live list.
+The deterministic shelf photo and checkout photo prove the multi-product interaction with overlays on the source scene; they are not evidence of computer-vision accuracy. The app has not yet been tested with physical products on a real Latvian shelf or checkout belt. Actual Gemini accuracy, p95 latency, unsupported false-positive rate, Supabase writes, current retailer availability and physical iPhone camera behavior remain unverified until the corresponding credentials and test materials are available. See [Bugs.md](Bugs.md) for the live list.

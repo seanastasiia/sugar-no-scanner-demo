@@ -40,32 +40,44 @@ const sampleShelf: ProductDetection[] = [
     observedText: "ICONFIT Cookie Bliss"
   },
   {
-    productId: "protein-baton-sal-kar-the-beginnings-50-g",
+    productId: "proteina-baton-barebells-coco-choco-55-g",
     confidence: 0.95,
     box: { x: 0.75, y: 0.17, width: 0.2, height: 0.65 },
-    observedText: "The Beginnings Salty Caramel"
+    observedText: "Barebells Coco Choco"
   }
 ];
 
-const conveyorIds = [
-  "prot-bat-sal-riekst-saldin-barebells-55-g",
-  "proteina-baton-barebells-chokladboll-55-g",
-  "proteina-bat-sok-karamelu-iconfit-55-g",
-  "prot-bat-van-bez-cuk-the-beginnings-50-g"
+const sampleCheckout: ProductDetection[] = [
+  {
+    productId: "prot-bat-sal-riekst-saldin-barebells-55-g",
+    confidence: 0.98,
+    box: { x: 0.06, y: 0.2, width: 0.2, height: 0.58 },
+    observedText: "Barebells Salty Peanut"
+  },
+  {
+    productId: "prot-bat-barebells-lemon-cheesecake-55-g",
+    confidence: 0.97,
+    box: { x: 0.29, y: 0.24, width: 0.2, height: 0.54 },
+    observedText: "Barebells Lemon Cheesecake"
+  },
+  {
+    productId: "proteina-bat-cepuma-garsa-iconfit-55-g",
+    confidence: 0.96,
+    box: { x: 0.52, y: 0.18, width: 0.2, height: 0.6 },
+    observedText: "ICONFIT Cookie Bliss"
+  },
+  {
+    productId: "proteina-baton-barebells-coco-choco-55-g",
+    confidence: 0.95,
+    box: { x: 0.75, y: 0.23, width: 0.2, height: 0.55 },
+    observedText: "Barebells Coco Choco"
+  }
 ];
 
-function sampleResponse(source: ScanSource, sampleFrame = 0): ProductDetection[] | null {
+function sampleResponse(source: ScanSource): ProductDetection[] | null {
   if (source === "sample-shelf") return sampleShelf;
-  if (source !== "sample-conveyor") return null;
-  const productId = conveyorIds[Math.abs(sampleFrame) % conveyorIds.length];
-  return [
-    {
-      productId,
-      confidence: 0.97,
-      box: { x: 0.34, y: 0.2, width: 0.32, height: 0.62 },
-      observedText: productId.replaceAll("-", " ")
-    }
-  ];
+  if (source === "sample-conveyor") return sampleCheckout;
+  return null;
 }
 
 function imageParts(imageDataUrl: string) {
@@ -93,7 +105,7 @@ export async function recognizeProducts(input: {
   requestId: string;
 }): Promise<RecognitionResponse> {
   const startedAt = performance.now();
-  const sample = sampleResponse(input.source, input.sampleFrame);
+  const sample = sampleResponse(input.source);
   const model = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
   if (sample) {
     return {

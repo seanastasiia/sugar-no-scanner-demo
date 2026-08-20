@@ -4,11 +4,15 @@ This file is the running record of scanner defects found and resolved.
 
 ## Open
 
-- Real packaging, glare, low-light and physical conveyor accuracy are not validated. The first proof of concept uses supplied or generated images only.
+- Real packaging, glare, low-light and physical checkout-belt accuracy are not validated. The first proof of concept uses curated sample scenes only.
 - Barbora exposes protein and total sugars for the selected catalog, but not numeric fiber. Products without an independently verified fiber value must remain unrated.
 
 ## Resolved
 
+- **2026-08-20: checkout looked like an artificial single-product animation.** Checkout now uses the same one-frame multi-product recognition contract as the shelf and returns four detections over one full-belt scene.
+- **2026-08-20: the numeric Sugar.no Match was difficult to interpret.** The primary UI now shows a Sugar.no badge with separate Protein, Fiber and Sugar states. The internal number remains only for deterministic ranking.
+- **2026-08-20: colored detection labels overlapped on narrow product boxes.** Overlay labels are constrained to each box and use compact `Strong`, `Middle` and `Lower` wording; full explanations remain in the product card.
+- **2026-08-20: a badge criterion end-to-end selector matched both `Sugar.no` and `Sugar`.** The browser test now scopes the criterion to the badge and requires an exact text match.
 - **2026-08-20: the first Railway containers were unreachable by the platform health check.** Railway supplied a container hostname that made the standalone Next.js server bind too narrowly. Production now sets `HOSTNAME=0.0.0.0`; `/api/health` is reachable through the public HTTPS domain and the GitHub deployment is healthy.
 - **2026-08-20: health metadata could retain an old manually configured commit.** The endpoint now prefers Railway's deployment-specific `RAILWAY_GIT_COMMIT_SHA` and uses `COMMIT_SHA` only as a local fallback.
 - **2026-08-20: lint crashed with the newest TypeScript and ESLint majors.** `eslint-config-next@16.3.1` currently depends on plugins that reject TypeScript 7 and ESLint 10 APIs. The project pins TypeScript 6.0.3 and ESLint 9.39.5 until the Next lint stack supports the newer majors.
