@@ -42,4 +42,6 @@
 
 ## Production verification
 
-- Pending Railway deployment, health check and authenticated production WebKit smoke.
+- Railway deployment: `de9b6938-68ff-483a-b3fa-705d1fb5e072`, status `SUCCESS`.
+- `/api/health`: `status=ok`, commit `699bc0dcb2040d03553a2f90f0c75a59a663035f`.
+- Authenticated production iPhone/WebKit smoke: HTTP 200 auth, zero Save buttons, zero `Saved options` sections before and after closing the scanner, one visible exact Barbora action and a visible `Compare without starting over` section.
