@@ -17,8 +17,8 @@ The app is a working mobile-first web/PWA concept with:
 - a curated nutrition catalog of 40 protein snacks used only for the verified Sugar.no badge;
 - 10 golden products with independently sourced fiber and a deterministic three-signal Sugar.no badge;
 - 30 catalog products that intentionally show `Data pending` until fiber is verified;
-- photorealistic concept scenes with compact green-check, yellow-minus and coral-alert markers placed over the detected packages;
-- a Checkit-inspired camera-first layout with an enlarged, stable half-screen camera area, selected-product focus and compact bottom sheet with a horizontally scrollable tray and similar options;
+- photorealistic concept scenes with compact green-check, yellow-minus and coral-alert markers placed only over products with a complete Sugar.no rating;
+- a camera-first full-viewport scanner with Sugar.no overlays and a compact bottom results sheet that shows product thumbnails, then expands into a dedicated comparison page;
 - normalized detection boxes, a de-duplicated checkout tray, similar options and exact Barbora product links;
 - camera-read shelf prices plus a live Barbora offer lookup with source time and fail-closed exact-SKU state;
 - same-SKU grouping so repeated facings such as four Coca-Cola cans count as one unique product;
@@ -34,7 +34,9 @@ The guaranteed shelf and checkout scenes work without third-party credentials. L
 
 Recognition and nutrition are separate trust levels. Gemini may read any visible package identity and a clearly associated physical shelf-price label. It never supplies nutrition, a Sugar.no score or a retailer price. The server maps the observed identity to the 19,076-entry Barbora page index, verifies the best candidate against the live public page and assigns curated nutrition only when the exact SKU belongs to the 40-product verified catalog.
 
-An unknown product can therefore show `Product recognized` without receiving a Sugar.no badge. The `Top fit / Mixed / Trade-offs` legend appears only when at least one visible product has complete verified nutrition; otherwise the interface says `Identified, not rated`. The price card appears only when Gemini reports a separate physical price label, confidence is at least 0.90 and the exact OCR text includes a matching EUR amount. A package number, deposit or online offer cannot create the card. A possible retailer candidate is never linked or displayed as a comparison. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. Because only one retailer is connected, the interface says `Barbora online`, never `best price`.
+An unknown product can therefore show `Product recognized` without receiving a Sugar.no badge. Camera boxes and colored shelf markers are reserved for products with a complete verified Sugar.no rating; identified-but-unrated packages remain available in the result sheet without an `i` marker over the shelf. The `Top fit / Mixed / Trade-offs` legend appears only when at least one visible product has complete verified nutrition; otherwise the interface explains that the detected products were not highlighted. The price card appears only when Gemini reports a separate physical price label, confidence is at least 0.90 and the exact OCR text includes a matching EUR amount. A package number, deposit or online offer cannot create the card. A possible retailer candidate is never linked or displayed as a comparison. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. Because only one retailer is connected, the interface says `Barbora online`, never `best price`.
+
+The scanner remains the primary surface after recognition. A 166 px bottom sheet names the rated picks and exposes a horizontal thumbnail preview without covering most of the shelf. `View products`, the title or the list icon expands that sheet into a full-height, internally scrollable comparison page on phones; collapsing it returns to the held camera frame. While the full page is open, background camera controls are removed from keyboard and screen-reader focus, Escape collapses the page and reduced-motion users receive the same state change without animation.
 
 Repeated facings are grouped by verified catalog ID, exact retailer SKU or normalized brand/product identity. After a successful live-camera scan, the captured frame and result are held while the user reads. `Scan again` clears the previous result and resumes analysis for the next product; detections from different moments are not accumulated into one tray.
 
@@ -128,6 +130,8 @@ The broad index intentionally stores no price snapshot. After a package is read,
 
 Barbora publishes protein and total sugars for these products but not numeric fiber. Fiber therefore needs a manufacturer/label source. Pending products remain recognizable and show their known facts, but do not receive Match.
 
+The measured path from broad package naming to broad verified rating coverage is documented in [docs/latvia-coverage-plan.md](docs/latvia-coverage-plan.md). It separates exact-SKU identity, sourced nutrition and category-specific comparison rather than treating one Gemini label as a complete product record.
+
 ## Supabase
 
 The reproducible schema is in `supabase/migrations/202608200001_scanner_demo.sql`. It enables RLS on every table and creates no browser policies; only the server service role may read or write.
@@ -179,6 +183,7 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 - [Scanner design reference · Latvia App Store](docs/design-reference.md)
 - [Monetization notes](docs/monetization-research.md)
 - [Mobile screenshots](docs/screenshots)
+- [Camera-first collapsed sheet](docs/screenshots/shelf-mobile.png) and [expanded result page](docs/screenshots/shelf-results-mobile.png)
 - [Defect log](Bugs.md)
 - `docs/test-runs/` for commit-specific technical results
 

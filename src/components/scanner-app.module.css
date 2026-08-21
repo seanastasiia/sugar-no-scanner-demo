@@ -361,13 +361,15 @@
 }
 
 .experience {
-  display: grid;
+  position: relative;
+  height: 100dvh;
   min-height: 100dvh;
-  grid-template-rows: clamp(430px, 68svh, 620px) 1fr;
+  overflow: hidden;
 }
 
 .stage {
   position: relative;
+  height: 100%;
   isolation: isolate;
   overflow: hidden;
   background: #171513;
@@ -474,6 +476,11 @@
   font-weight: 680;
   text-align: center;
   backdrop-filter: blur(12px);
+  transition: bottom 220ms ease;
+}
+
+.stageWithResults .stageStatus {
+  bottom: calc(178px + env(safe-area-inset-bottom));
 }
 
 .scanGuide {
@@ -644,24 +651,163 @@
 }
 
 .resultsSheet {
-  position: relative;
-  z-index: 20;
+  position: fixed;
+  z-index: 50;
+  right: 0;
+  bottom: 0;
+  left: 0;
   min-width: 0;
-  margin-top: -26px;
-  padding: 15px 18px max(30px, env(safe-area-inset-bottom));
-  overflow: auto;
   border-radius: 26px 26px 0 0;
   background: var(--cream);
+  box-shadow: 0 -20px 54px rgb(0 0 0 / 24%);
+  transition: height 240ms ease-out, border-radius 240ms ease-out;
 }
 
-.resultsSheet::before {
-  display: block;
+.resultsCollapsed {
+  height: calc(166px + env(safe-area-inset-bottom));
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.resultsExpanded {
+  top: 0;
+  height: 100dvh;
+  overflow: auto;
+  border-radius: 0;
+  overscroll-behavior: contain;
+}
+
+.sheetChrome {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  display: grid;
+  min-height: 70px;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--cream) 94%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.resultsExpanded .sheetChrome {
+  min-height: calc(66px + env(safe-area-inset-top));
+  padding-top: calc(8px + env(safe-area-inset-top));
+  border-bottom: 1px solid var(--border);
+}
+
+.sheetIconButton,
+.sheetTitleButton,
+.sheetPreview button {
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease, opacity 180ms ease;
+}
+
+.sheetIconButton {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: #fffdf8;
+  color: var(--ink);
+}
+
+.sheetIconButton:active,
+.sheetTitleButton:active,
+.sheetPreview button:active {
+  opacity: 0.65;
+}
+
+.sheetTitleButton {
+  display: grid;
+  min-height: 44px;
+  align-content: center;
+  gap: 2px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+
+.sheetTitleButton strong {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 820;
+  letter-spacing: -0.025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheetTitleButton span {
+  color: #716860;
+  font-size: 10px;
+  font-weight: 680;
+}
+
+.sheetPreview {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sheetPreview button {
+  display: grid;
+  min-width: 158px;
+  min-height: 72px;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px 8px 8px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #fffdf8;
+  color: #625950;
+  text-align: left;
+}
+
+.sheetPreviewThumb {
+  position: relative;
   width: 42px;
-  height: 4px;
-  margin: -5px auto 12px;
-  border-radius: 999px;
-  background: #cfc5b8;
-  content: "";
+  height: 54px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #f0e9df;
+}
+
+.sheetPreviewThumb img {
+  object-fit: contain;
+}
+
+.sheetPreviewCopy {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.sheetPreviewCopy > span {
+  max-width: 88px;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 780;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheetPreview button small {
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.sheetContent {
+  width: min(100%, 720px);
+  min-height: calc(100dvh - 70px);
+  margin: 0 auto;
+  padding: 16px 18px max(34px, env(safe-area-inset-bottom));
 }
 
 .scanSummary {
@@ -750,6 +896,13 @@
   color: var(--tone-text);
   font-size: 9px;
   font-weight: 800;
+}
+
+.markerScopeNote {
+  margin: 0;
+  color: #665e57;
+  font-size: 10px;
+  line-height: 1.4;
 }
 
 .tray {
@@ -1407,34 +1560,39 @@
 }
 
 @media (min-width: 760px) {
-  .experience {
-    grid-template-columns: minmax(380px, 0.9fr) minmax(420px, 1.1fr);
-    grid-template-rows: 100dvh;
+  .resultsCollapsed {
+    right: 24px;
+    bottom: 24px;
+    left: auto;
+    width: min(520px, calc(100vw - 48px));
+    border-radius: 24px;
   }
 
-  .stage {
-    height: 100%;
+  .resultsExpanded {
+    right: 0;
+    left: auto;
+    width: min(680px, 54vw);
+    border-left: 1px solid var(--border);
+    box-shadow: -24px 0 64px rgb(0 0 0 / 26%);
   }
 
-  .resultsSheet {
-    height: 100%;
-    margin-top: 0;
-    padding: calc(84px + env(safe-area-inset-top)) clamp(24px, 5vw, 54px) 28px;
-    border-radius: 0;
-  }
-
-  .resultsSheet::before {
-    display: none;
+  .stageWithResults .stageStatus {
+    right: max(40px, calc(min(680px, 54vw) + 32px));
+    bottom: 32px;
   }
 }
 
 @media (max-height: 500px) and (max-width: 759px) {
-  .experience {
-    grid-template-rows: minmax(300px, 100dvh) 1fr;
+  .resultsCollapsed {
+    height: calc(86px + env(safe-area-inset-bottom));
   }
 
-  .stageStatus {
-    bottom: 28px;
+  .resultsCollapsed .sheetPreview {
+    display: none;
+  }
+
+  .stageWithResults .stageStatus {
+    bottom: calc(94px + env(safe-area-inset-bottom));
   }
 }
 
@@ -1456,6 +1614,9 @@
   }
 
   .privateBadge,
+  .sheetIconButton,
+  .sheetPreview button,
+  .sheetPreviewThumb,
   .demoGrid button,
   .savedList article,
   .nutrient,
@@ -1498,6 +1659,15 @@
   .scanSummary > div:first-child span {
     color: #beb5ab;
   }
+
+  .sheetChrome {
+    background: rgb(23 21 19 / 94%);
+  }
+
+  .sheetTitleButton span,
+  .markerScopeNote {
+    color: #beb5ab;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1508,6 +1678,11 @@
   }
 
   .saveFeedback {
+    transition: none;
+  }
+
+  .resultsSheet,
+  .stageStatus {
     transition: none;
   }
 }

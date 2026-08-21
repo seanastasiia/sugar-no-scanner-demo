@@ -30,7 +30,22 @@ test("sample shelf photo highlights products and shows a three-signal Sugar.no b
   await unlock(page);
   await page.getByRole("button", { name: /Shelf photo/ }).click();
   await expect(page.getByRole("status")).toContainText("4 unique products recognized");
-  await expect(page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
+  await expect(page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open Sugar.no-rated"]')).toHaveCount(4);
+  await expect(page.getByText("4 Sugar.no picks", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Sample shelf photo with four supported protein snacks").locator("img")).toHaveCount(1);
+  await expect(page.getByAltText("Four protein bars on a supermarket shelf")).toBeVisible();
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Sample shelf photo with four supported protein snacks"] img')]
+      .every((image) => image.complete && image.naturalWidth > 0)
+  );
+  await waitForAlternativeImages(page);
+  await page.screenshot({ path: "docs/screenshots/shelf-mobile.png", fullPage: true });
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
+  const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
+  await expect(resultsDialog).toBeVisible();
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  await expect.poll(async () => (await resultsDialog.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(viewportHeight * 0.95);
+  await page.screenshot({ path: "docs/screenshots/shelf-results-mobile.png" });
   await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Protein", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Fiber", { exact: true })).toBeVisible();
@@ -43,34 +58,31 @@ test("sample shelf photo highlights products and shows a three-signal Sugar.no b
   const retailer = page.getByRole("link", { name: /View at Barbora/ });
   await expect(retailer).toHaveAttribute("href", /^https:\/\/barbora\.lv\/produkti\//);
   await expect(page.getByText(/\b(good|bad|unhealthy)\b/i)).toHaveCount(0);
-  await expect(page.getByLabel("Sample shelf photo with four supported protein snacks").locator("img")).toHaveCount(1);
-  await expect(page.getByAltText("Four protein bars on a supermarket shelf")).toBeVisible();
-  await page.waitForFunction(() =>
-    [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Sample shelf photo with four supported protein snacks"] img')]
-      .every((image) => image.complete && image.naturalWidth > 0)
-  );
   await waitForAlternativeImages(page);
   const accessibility = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
   expect(accessibility.violations).toEqual([]);
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: "docs/screenshots/shelf-mobile.png", fullPage: true });
 });
 
 test("checkout photo uses one multi-product scan instead of an animated product", async ({ page }) => {
   await unlock(page);
   await page.getByRole("button", { name: /Checkout photo/ }).click();
+  await expect(page.getByRole("status")).toContainText("4 unique products recognized on checkout");
+  await expect(page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open Sugar.no-rated"]')).toHaveCount(4);
+  await expect(page.getByAltText("Four protein bars on a supermarket checkout belt")).toBeVisible();
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Sample checkout photo with four supported protein snacks"] img')]
+      .every((image) => image.complete && image.naturalWidth > 0)
+  );
+  await waitForAlternativeImages(page);
+  await page.screenshot({ path: "docs/screenshots/checkout-mobile.png", fullPage: true });
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
   const tray = page.getByLabel("Products in this scan");
   await expect(tray).toBeVisible({ timeout: 8_000 });
   await expect(tray.getByRole("button")).toHaveCount(4);
-  await expect(page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
-  await expect(page.getByAltText("Four protein bars on a supermarket checkout belt")).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("4 unique products recognized on checkout");
   await expect(page.getByText("Save an option for your next shop")).toBeVisible();
   await waitForAlternativeImages(page);
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: "docs/screenshots/checkout-mobile.png", fullPage: true });
 });
 
 test("sample scenes switch in place and saved products persist for the next shop", async ({ page }) => {
@@ -83,8 +95,10 @@ test("sample scenes switch in place and saved products persist for the next shop
   await expect(page.getByRole("status")).toContainText("4 unique products recognized on checkout");
   await expect(sceneSwitch.getByRole("button", { name: "Checkout", exact: true })).toHaveAttribute("aria-pressed", "true");
 
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
   await page.getByRole("button", { name: "Save for next shop" }).click();
   await expect(page.getByText("Saved for your next shop")).toBeVisible();
+  await page.getByRole("button", { name: "Return to camera" }).click();
   await page.getByRole("button", { name: "Close scanner" }).click();
   await expect(page.getByRole("heading", { name: "Saved options" })).toBeVisible();
   await expect(page.getByText("Saved privately in this browser. No account needed for the demo.")).toBeVisible();
@@ -114,15 +128,18 @@ test("scanner remains operable at narrow portrait and phone landscape sizes", as
   await page.setViewportSize({ width: 375, height: 812 });
   await unlock(page);
   await page.getByRole("button", { name: /Shelf photo/ }).click();
-  await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
   const portraitStage = page.getByLabel("Shelf photo scanner").locator(":scope > div").first();
   const portraitStageBox = await portraitStage.boundingBox();
-  expect(portraitStageBox?.height).toBeGreaterThanOrEqual(812 * 0.66);
+  expect(portraitStageBox?.height).toBeGreaterThanOrEqual(812 * 0.95);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
-  await page.setViewportSize({ width: 812, height: 375 });
-  await expect(page.getByRole("button", { name: "Close scanner" })).toBeVisible();
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
   await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
+
+  await page.setViewportSize({ width: 812, height: 375 });
+  await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
+  await page.getByRole("button", { name: "Collapse product results" }).click();
+  await expect(page.getByRole("button", { name: "Close scanner" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
@@ -186,7 +203,8 @@ test("saved images are resized client-side and fail closed without a provider ke
     buffer: onePixelPng
   });
   await expect(page.getByRole("status")).toContainText("Live recognition needs the Gemini key");
-  await expect(page.getByText("Point at the front of a package")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
+  await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
 });
 
 test("live camera groups repeated packs, holds the result and replaces it only after Scan again", async ({ page }) => {
@@ -266,7 +284,11 @@ test("live camera groups repeated packs, holds the result and replaces it only a
 
   await page.getByRole("button", { name: "Start live camera" }).click();
   await expect(page.getByRole("status")).toContainText("1 unique product recognized", { timeout: 10_000 });
+  await expect(page.getByText("1 product identified", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open Sugar.no-rated"]')).toHaveCount(0);
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toBeVisible();
+  await expect(page.getByText("No Sugar.no rating in this scan.")).toBeVisible();
   const scanAgainButton = page.getByRole("button", { name: "Scan again" });
   await expect(scanAgainButton).toBeVisible();
   const scanAgainBox = await scanAgainButton.boundingBox();
@@ -278,9 +300,10 @@ test("live camera groups repeated packs, holds the result and replaces it only a
 
   currentProduct = "activia";
   await page.getByRole("button", { name: "Scan again" }).click();
+  await expect(page.getByRole("status")).toContainText("1 unique product recognized", { timeout: 10_000 });
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Activia Forest Berries Yogurt/ })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toHaveCount(0);
-  await expect(page.getByRole("status")).toContainText("1 unique product recognized");
   expect(recognitionRequests).toBe(3);
   expect(focusModes).toEqual([false, true, false]);
 });
@@ -347,9 +370,11 @@ test("a product outside the scored catalog is named and receives an honest price
     )
   });
   await expect(page.getByRole("status")).toContainText("1 unique product recognized");
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Zero Peach.*Pesca & Clementina.*330 ml/ })).toBeVisible();
+  await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open Sugar.no-rated"]')).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
-  await expect(page.getByText(/Identified, not rated/)).toBeVisible();
+  await expect(page.getByText("No Sugar.no rating in this scan.")).toBeVisible();
   const comparison = page.getByLabel("Price comparison");
   await expect(comparison.getByText("Cheaper online")).toBeVisible();
   await expect(comparison.getByText("Save €0.70")).toBeVisible();
@@ -361,6 +386,7 @@ test("a product outside the scored catalog is named and receives an honest price
   await expect(page.getByText(/no health or Match score is invented/i)).toBeVisible();
 
   exactSku = false;
+  await page.getByRole("button", { name: "Return to camera" }).click();
   await page.getByRole("button", { name: "Close scanner" }).click();
   await page.locator('input[type="file"]').setInputFiles({
     name: "possible-price-check.png",
@@ -370,6 +396,7 @@ test("a product outside the scored catalog is named and receives an honest price
       "base64"
     )
   });
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
   await expect(comparison.getByText("Shelf price", { exact: true })).toBeVisible();
   await expect(comparison.getByText("Possible Barbora match")).toHaveCount(0);
   await expect(comparison.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "none");
@@ -378,6 +405,7 @@ test("a product outside the scored catalog is named and receives an honest price
 
   exactSku = true;
   includeShelfPrice = false;
+  await page.getByRole("button", { name: "Return to camera" }).click();
   await page.getByRole("button", { name: "Close scanner" }).click();
   await page.locator('input[type="file"]').setInputFiles({
     name: "package-without-shelf-label.png",
@@ -387,6 +415,7 @@ test("a product outside the scored catalog is named and receives an honest price
       "base64"
     )
   });
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
   await expect(page.getByText(/Keep the package and its shelf label/)).toHaveCount(0);
 });
