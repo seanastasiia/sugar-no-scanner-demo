@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { isExactBarboraMatch, parseBarboraProductPage, rankBarboraCandidates } from "./barbora-catalog";
+import {
+  isExactBarboraMatch,
+  parseBarboraProductPage,
+  rankBarboraCandidates,
+  retailerBrandMatches
+} from "./barbora-catalog";
 
 describe("Barbora product lookup", () => {
   it("ranks the photographed Sanpellegrino flavor ahead of other variants", () => {
@@ -32,5 +37,11 @@ describe("Barbora product lookup", () => {
     expect(isExactBarboraMatch(0.78, 0.65)).toBe(true);
     expect(isExactBarboraMatch(0.75, 0.71)).toBe(false);
     expect(isExactBarboraMatch(0.9, 0.87)).toBe(false);
+  });
+
+  it("rejects a Pepsi retailer page for a photographed Coca-Cola package", () => {
+    expect(retailerBrandMatches("Coca-Cola", "PEPSI")).toBe(false);
+    expect(retailerBrandMatches("Coca-Cola", "COCA COLA")).toBe(true);
+    expect(retailerBrandMatches("Sanpellegrino", "SAN PELLEGRINO")).toBe(true);
   });
 });

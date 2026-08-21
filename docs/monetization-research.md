@@ -18,7 +18,7 @@ Guardrails:
 
 - Match and similar-product order never depend on affiliate status or commission.
 - The retailer block is visually and semantically separate from Match.
-- Copy may say `Cheaper online` only when one frame contains an unambiguous shelf price, the Barbora page is an exact SKU/pack-size match and its freshly fetched price is lower. Otherwise it says `Price check` or `Possible Barbora match`.
+- Copy may say `Cheaper online` only when one frame contains an unambiguous shelf price, the Barbora page is an exact SKU/pack-size match and its freshly fetched price is lower. Without a shelf label the price module stays hidden; without an exact retailer SKU it shows the camera-read shelf price only and no retailer link.
 - One connected retailer is not a market-wide comparison. Never say `best price` until at least two comparable, permitted and fresh retailer sources are available.
 - Checkout copy saves an alternative for next time rather than pushing an online reorder while the user is already in a store.
 - Affiliate disclosures must be added before any tracked/paid link is introduced.

@@ -688,6 +688,49 @@
   text-align: right;
 }
 
+.scanAgainButton {
+  display: inline-flex;
+  width: 100%;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  border: 1px solid var(--ink);
+  border-radius: 14px;
+  background: var(--ink);
+  color: var(--cream);
+  font-size: 12px;
+  font-weight: 800;
+  transition: opacity 180ms ease;
+}
+
+.scanAgainButton:active {
+  opacity: 0.72;
+}
+
+.ratingNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #ece7df;
+  color: #514b45;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.ratingNotice svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.ratingNotice strong {
+  font-size: inherit;
+  letter-spacing: 0;
+}
+
 .summarySignals {
   display: flex;
   gap: 6px;
@@ -1013,19 +1056,6 @@
 
 .priceComparison .retailerButton {
   margin-top: 11px;
-}
-
-.priceEmpty {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin-top: 14px;
-  padding: 11px 12px;
-  border: 1px dashed #c9a85c;
-  border-radius: 13px;
-  color: #665e57;
-  font-size: 11px;
-  line-height: 1.45;
 }
 
 .saveButton {
@@ -1437,6 +1467,7 @@
   .pendingData,
   .priceComparison,
   .priceValues > div,
+  .ratingNotice,
   .tray button {
     background: #24211e;
     color: #f8f3eb;
@@ -1449,7 +1480,7 @@
   .emptyResult,
   .pendingData,
   .priceComparison > p,
-  .priceEmpty,
+  .ratingNotice,
   .demoGrid button span {
     color: #beb5ab;
   }

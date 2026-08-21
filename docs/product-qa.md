@@ -22,10 +22,15 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 3. Allow permission in Safari settings, reopen the demo and point at a golden product image on another screen.
 4. Confirm scanning begins without a shutter button. Keep the package still and front-facing.
 5. Point at a clear product outside the 40 scored snacks. Confirm the app names the package, labels nutrition as unverified and does not invent a Sugar.no badge.
-6. Include the product and one clearly associated shelf label in the same frame. Confirm the camera price appears. If an exact Barbora match is cheaper, confirm only the shelf price is crossed out and the current online price plus check time are shown.
-7. Repeat with an ambiguous label or multiple nearby prices. Confirm Sugar.no hides the shelf price instead of guessing.
-8. Cover the lens or use poor light. Confirm the interface stays usable and does not invent nutrition.
-9. Turn on airplane mode. Confirm that the preview stays local and recognition pauses with an offline message.
+6. Put several identical facings of one SKU in the frame. Confirm the status and tray count them as one unique product, not one product per package.
+7. After a successful live scan, move the phone. Confirm the captured frame and result stay fixed while being read. Tap `Scan again`, show a different product and confirm the old result is replaced rather than accumulated.
+8. With no physical shelf label in the frame, confirm no `Price check` card, retailer price or price prompt appears.
+9. Include the product and one clearly associated shelf label in the same frame. Confirm the camera price appears. If an exact Barbora match is cheaper, confirm only the shelf price is crossed out and the current online price plus check time are shown.
+10. Repeat with a non-exact retailer candidate. Confirm only the shelf price remains and there is no retailer link. A Coca-Cola result must never open Pepsi.
+11. Confirm `Top fit / Mixed / Trade-offs` appears only for products with complete verified nutrition. A generic Coca-Cola or Activia result should instead say `Identified, not rated`.
+12. Repeat with an ambiguous label or multiple nearby prices. Confirm Sugar.no hides the shelf price instead of guessing.
+13. Cover the lens or use poor light. Confirm the interface stays usable and does not invent nutrition.
+14. Turn on airplane mode. Confirm that the preview stays local and recognition pauses with an offline message.
 
 ## Saved image and privacy
 

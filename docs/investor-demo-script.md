@@ -28,6 +28,8 @@ Open the Barbora CTA, then return.
 
 “The retailer action is deliberately secondary. If the camera can associate a shelf label with an exact package, we check the live Barbora page. We cross out the shelf price only when the exact online SKU is genuinely cheaper. With one retailer we call this a Barbora price check, not the best price, and we do not claim affiliate revenue that does not exist.”
 
+For the optional live-camera moment, show several facings of one SKU. Explain that repeated cans count as one product type and that the successful frame is held while the viewer reads. Tap `Scan again` before showing a different product; the new scan replaces the old one instead of accumulating it.
+
 ## Checkout
 
 Tap `Checkout photo`.

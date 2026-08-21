@@ -1,5 +1,6 @@
 import { GoogleGenAI, ThinkingLevel, createPartFromBase64, createPartFromText } from "@google/genai";
 import { z } from "zod";
+import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import type { ProductDetection, RecognitionResponse, ScanSource, ScoredProduct } from "@/lib/types";
 import { getBarboraOfferBySlug, resolveBarboraOffer, type BarboraLookupInput } from "./barbora-catalog";
 
@@ -20,7 +21,8 @@ const providerResponseSchema = z.object({
       }),
       shelfPriceCents: z.number().int().min(0).max(1_000_000),
       shelfPriceText: z.string().max(60),
-      shelfPriceConfidence: z.number().min(0).max(1)
+      shelfPriceConfidence: z.number().min(0).max(1),
+      shelfPriceLabelVisible: z.boolean()
     })
   )
 });
@@ -100,6 +102,25 @@ export function fitBoxToFrame(box: ProductDetection["box"]): ProductDetection["b
     width: Math.max(0, Math.min(box.width, 1 - x)),
     height: Math.max(0, Math.min(box.height, 1 - y))
   };
+}
+
+export function isTrustedShelfPriceDetection(detection: {
+  shelfPriceCents: number;
+  shelfPriceText: string;
+  shelfPriceConfidence: number;
+  shelfPriceLabelVisible: boolean;
+}): boolean {
+  if (
+    !detection.shelfPriceLabelVisible ||
+    detection.shelfPriceCents <= 0 ||
+    detection.shelfPriceConfidence < 0.9
+  ) {
+    return false;
+  }
+  const observedAmount = detection.shelfPriceText.match(/\d{1,4}[.,]\d{2}/)?.[0];
+  const hasExplicitCurrency = /€|\beur\b/i.test(detection.shelfPriceText);
+  if (!observedAmount || !hasExplicitCurrency) return false;
+  return Math.round(Number.parseFloat(observedAmount.replace(",", ".")) * 100) === detection.shelfPriceCents;
 }
 
 function normalizeIdentityText(value: string): string {
@@ -188,9 +209,10 @@ export async function recognizeProducts(input: {
         `Identify every clearly visible packaged retail product, even when it is not in a supplied catalog. ` +
           `Read the front label and return the exact visible brand plus one productName containing the product, variant or flavor and pack size. ` +
           `searchQuery should repeat the identity using useful English or Latvian equivalents of foreign flavor words for retailer matching. ` +
-          `If a physical shelf price label is clearly associated with that exact package, return its EUR price in cents, ` +
-          `the exact observed price text and a separate confidence. Use zero and an empty string when no unambiguous price label is visible. ` +
-          `Never treat nutrition claims, pack size or numbers printed on the package as a shelf price. ` +
+          `Only when a separate physical shelf price label outside the package is clearly visible and associated with that exact package, ` +
+          `set shelfPriceLabelVisible true and return its EUR price in cents, the exact observed price text including € or EUR, and a separate confidence. ` +
+          `Otherwise set shelfPriceLabelVisible false, price cents and confidence to zero, and price text to an empty string. ` +
+          `Never treat nutrition claims, pack size, deposit text or any number printed on the package as a shelf price. ` +
           `Return an empty detections array rather than guessing when the product identity is unreadable. ` +
           `Return at most one box per distinct front-facing SKU and do not enumerate repeated or blurry background packages. ` +
           `Boxes use x, y, width and height normalized from 0 to 1.`
@@ -219,7 +241,8 @@ export async function recognizeProducts(input: {
                 "box",
                 "shelfPriceCents",
                 "shelfPriceText",
-                "shelfPriceConfidence"
+                "shelfPriceConfidence",
+                "shelfPriceLabelVisible"
               ],
               properties: {
                 brand: { type: "string", maxLength: 80 },
@@ -229,6 +252,7 @@ export async function recognizeProducts(input: {
                 shelfPriceCents: { type: "integer", minimum: 0, maximum: 1000000 },
                 shelfPriceText: { type: "string", maxLength: 60 },
                 shelfPriceConfidence: { type: "number", minimum: 0, maximum: 1 },
+                shelfPriceLabelVisible: { type: "boolean" },
                 box: {
                   type: "object",
                   additionalProperties: false,
@@ -300,7 +324,7 @@ export async function recognizeProducts(input: {
           matchKind: knownProduct ? "verified_catalog" : exactRetailerOffer ? "barbora" : "visual_only"
         },
         shelfPrice:
-          detection.shelfPriceCents > 0 && detection.shelfPriceConfidence >= 0.72
+          isTrustedShelfPriceDetection(detection)
             ? {
                 amount: detection.shelfPriceCents / 100,
                 currency: "EUR",
@@ -312,7 +336,7 @@ export async function recognizeProducts(input: {
       };
     })
   );
-  const detections = [...new Map(resolvedDetections.map((detection) => [detection.productId, detection])).values()];
+  const detections = dedupeProductDetections(resolvedDetections);
 
   return {
     requestId: input.requestId,

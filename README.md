@@ -20,7 +20,9 @@ The app is a working mobile-first web/PWA concept with:
 - photorealistic concept scenes with compact green-check, yellow-minus and coral-alert markers placed over the detected packages;
 - a Checkit-inspired camera-first layout, selected-product focus and compact bottom sheet with a horizontally scrollable tray and similar options;
 - normalized detection boxes, a de-duplicated checkout tray, similar options and exact Barbora product links;
-- camera-read shelf prices plus a live Barbora offer lookup with source time and exact/possible-SKU state;
+- camera-read shelf prices plus a live Barbora offer lookup with source time and fail-closed exact-SKU state;
+- same-SKU grouping so repeated facings such as four Coca-Cola cans count as one unique product;
+- a held live-camera result with an explicit `Scan again` action, so moving the phone cannot replace the result while it is being read;
 - an in-scanner Shelf/Checkout switch plus device-local `Saved options` that survive reloads without an account;
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
 - iPhone-sized WebKit end-to-end coverage and committed visual evidence.
@@ -31,7 +33,9 @@ The guaranteed shelf and checkout scenes work without third-party credentials. L
 
 Recognition and nutrition are separate trust levels. Gemini may read any visible package identity and a clearly associated physical shelf-price label. It never supplies nutrition, a Sugar.no score or a retailer price. The server maps the observed identity to the 19,076-entry Barbora page index, verifies the best candidate against the live public page and assigns curated nutrition only when the exact SKU belongs to the 40-product verified catalog.
 
-An unknown product can therefore show `Product recognized` and a retailer candidate without receiving a Sugar.no badge. A possible retailer match is labelled as possible and must not drive a crossed-out price. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. Because only one retailer is connected, the interface says `Barbora online`, never `best price`.
+An unknown product can therefore show `Product recognized` without receiving a Sugar.no badge. The `Top fit / Mixed / Trade-offs` legend appears only when at least one visible product has complete verified nutrition; otherwise the interface says `Identified, not rated`. The price card appears only when Gemini reports a separate physical price label, confidence is at least 0.90 and the exact OCR text includes a matching EUR amount. A package number, deposit or online offer cannot create the card. A possible retailer candidate is never linked or displayed as a comparison. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. Because only one retailer is connected, the interface says `Barbora online`, never `best price`.
+
+Repeated facings are grouped by verified catalog ID, exact retailer SKU or normalized brand/product identity. After a successful live-camera scan, the captured frame and result are held while the user reads. `Scan again` clears the previous result and resumes analysis for the next product; detections from different moments are not accumulated into one tray.
 
 The implementation keeps a deterministic internal comparison score for ranking:
 
@@ -116,7 +120,7 @@ E2E_PRODUCTION=1 CI=1 npm run test:e2e
 
 `npm run catalog:sync` refreshes exactly 40 scored products from public Barbora Latvia pages and applies the reviewed field-level overrides in `data/fiber-overrides.json`. `npm run catalog:sync:barbora-index` refreshes the product slugs published in Barbora's public sitemap; the current snapshot contains 19,076 pages. `npm run catalog:validate` checks both datasets, uniqueness, exact retailer links and nutrition completeness.
 
-The broad index intentionally stores no price snapshot. After a package is read, the server fetches only the top candidate product pages, parses the current public `window.product` payload and caches the result for five minutes. This keeps price provenance and timestamp explicit without claiming inventory, affiliate status or cross-retailer best price.
+The broad index intentionally stores no price snapshot. After a package is read, the server fetches only the top candidate product pages, rejects candidates whose retailer brand conflicts with the observed package, parses the current public `window.product` payload and caches it for five minutes. This keeps price provenance and timestamp explicit without claiming inventory, affiliate status or cross-retailer best price.
 
 Barbora publishes protein and total sugars for these products but not numeric fiber. Fiber therefore needs a manufacturer/label source. Pending products remain recognizable and show their known facts, but do not receive Match.
 

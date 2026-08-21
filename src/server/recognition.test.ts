@@ -3,6 +3,7 @@ import { getCatalog } from "@/lib/catalog";
 import {
   DEFAULT_GEMINI_MODEL,
   fitBoxToFrame,
+  isTrustedShelfPriceDetection,
   matchCatalogProduct,
   recognizeProducts
 } from "./recognition";
@@ -65,6 +66,23 @@ describe("fitBoxToFrame", () => {
     expect(fitted.y).toBe(0.8);
     expect(fitted.width).toBeCloseTo(0.1);
     expect(fitted.height).toBeCloseTo(0.2);
+  });
+});
+
+describe("isTrustedShelfPriceDetection", () => {
+  const trusted = {
+    shelfPriceCents: 169,
+    shelfPriceText: "1,69 €",
+    shelfPriceConfidence: 0.96,
+    shelfPriceLabelVisible: true
+  };
+
+  it("requires a separate visible label, high confidence and matching currency text", () => {
+    expect(isTrustedShelfPriceDetection(trusted)).toBe(true);
+    expect(isTrustedShelfPriceDetection({ ...trusted, shelfPriceLabelVisible: false })).toBe(false);
+    expect(isTrustedShelfPriceDetection({ ...trusted, shelfPriceConfidence: 0.89 })).toBe(false);
+    expect(isTrustedShelfPriceDetection({ ...trusted, shelfPriceText: "1,69" })).toBe(false);
+    expect(isTrustedShelfPriceDetection({ ...trusted, shelfPriceCents: 59 })).toBe(false);
   });
 });
 

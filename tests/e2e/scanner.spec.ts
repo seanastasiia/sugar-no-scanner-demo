@@ -29,7 +29,7 @@ test("private gate rejects the wrong code and accepts the configured code", asyn
 test("sample shelf photo highlights products and shows a three-signal Sugar.no badge", async ({ page }) => {
   await unlock(page);
   await page.getByRole("button", { name: /Shelf photo/ }).click();
-  await expect(page.getByRole("status")).toContainText("4 products recognized");
+  await expect(page.getByRole("status")).toContainText("4 unique products recognized");
   await expect(page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
   await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Protein", { exact: true })).toBeVisible();
@@ -66,7 +66,7 @@ test("checkout photo uses one multi-product scan instead of an animated product"
   await expect(tray.getByRole("button")).toHaveCount(4);
   await expect(page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
   await expect(page.getByAltText("Four protein bars on a supermarket checkout belt")).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("4 products recognized on checkout");
+  await expect(page.getByRole("status")).toContainText("4 unique products recognized on checkout");
   await expect(page.getByText("Save an option for your next shop")).toBeVisible();
   await waitForAlternativeImages(page);
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -76,11 +76,11 @@ test("checkout photo uses one multi-product scan instead of an animated product"
 test("sample scenes switch in place and saved products persist for the next shop", async ({ page }) => {
   await unlock(page);
   await page.getByRole("button", { name: /Shelf photo/ }).click();
-  await expect(page.getByRole("status")).toContainText("4 products recognized");
+  await expect(page.getByRole("status")).toContainText("4 unique products recognized");
 
   const sceneSwitch = page.getByLabel("Sample scene");
   await sceneSwitch.getByRole("button", { name: "Checkout", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("4 products recognized on checkout");
+  await expect(page.getByRole("status")).toContainText("4 unique products recognized on checkout");
   await expect(sceneSwitch.getByRole("button", { name: "Checkout", exact: true })).toHaveAttribute("aria-pressed", "true");
 
   await page.getByRole("button", { name: "Save for next shop" }).click();
@@ -186,9 +186,86 @@ test("saved images are resized client-side and fail closed without a provider ke
   await expect(page.getByText("Point at the front of a package")).toBeVisible();
 });
 
+test("live camera groups repeated packs, holds the result and replaces it only after Scan again", async ({ page }) => {
+  await page.addInitScript(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 640;
+    canvas.height = 960;
+    const context = canvas.getContext("2d");
+    context?.fillRect(0, 0, canvas.width, canvas.height);
+    let tick = 0;
+    window.setInterval(() => {
+      if (!context) return;
+      context.fillStyle = tick++ % 2 ? "#000" : "#111";
+      context.fillRect(0, 0, 2, 2);
+    }, 120);
+    Object.defineProperty(window, "__scannerTestCanvas", { value: canvas });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: async () => canvas.captureStream(5) }
+    });
+  });
+  await unlock(page);
+
+  let currentProduct: "coke" | "activia" = "coke";
+  let recognitionRequests = 0;
+  await page.route("**/api/recognize", async (route) => {
+    recognitionRequests += 1;
+    const identities =
+      currentProduct === "coke"
+        ? ["Coca-Cola Original Taste", "Coca Cola Original", "Coca-Cola Original Taste can", "Coca-Cola"]
+        : ["Activia Forest Berries Yogurt"];
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: `held-result-${recognitionRequests}`,
+        status: "matched",
+        latencyMs: 800,
+        model: "gemini-3.7-flash",
+        imageStored: false,
+        detections: identities.map((name, index) => ({
+          productId: `visual:${name.toLowerCase().replaceAll(" ", "-")}`,
+          catalogProductId: null,
+          confidence: 0.96 - index * 0.01,
+          box: { x: 0.08 + index * 0.2, y: 0.2, width: 0.16, height: 0.5 },
+          observedText: name,
+          identity: {
+            brand: currentProduct === "coke" ? "Coca-Cola" : "Activia",
+            name,
+            variant: null,
+            packSize: currentProduct === "coke" ? "330 ml" : "4 x 120 g",
+            category: null,
+            matchKind: "visual_only"
+          },
+          shelfPrice: null,
+          retailerOffer: null
+        }))
+      })
+    });
+  });
+
+  await page.getByRole("button", { name: "Start live camera" }).click();
+  await expect(page.getByRole("status")).toContainText("1 unique product recognized", { timeout: 10_000 });
+  await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toBeVisible();
+  const scanAgainButton = page.getByRole("button", { name: "Scan again" });
+  await expect(scanAgainButton).toBeVisible();
+  const scanAgainBox = await scanAgainButton.boundingBox();
+  expect(scanAgainBox?.height).toBeGreaterThanOrEqual(44);
+  await expect(page.getByLabel("Products in this scan")).toHaveCount(0);
+  await page.waitForTimeout(2_500);
+  expect(recognitionRequests).toBe(1);
+
+  currentProduct = "activia";
+  await page.getByRole("button", { name: "Scan again" }).click();
+  await expect(page.getByRole("heading", { name: /Activia Forest Berries Yogurt/ })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toHaveCount(0);
+  await expect(page.getByRole("status")).toContainText("1 unique product recognized");
+});
+
 test("a product outside the scored catalog is named and receives an honest price comparison", async ({ page }) => {
   await unlock(page);
   let exactSku = true;
+  let includeShelfPrice = true;
   await page.route("**/api/recognize", async (route) => {
     await route.fulfill({
       contentType: "application/json",
@@ -213,7 +290,9 @@ test("a product outside the scored catalog is named and receives an honest price
               category: "Sparkling drink",
               matchKind: "barbora"
             },
-            shelfPrice: { amount: 1.69, currency: "EUR", observedText: "1 69", confidence: 0.94 },
+            shelfPrice: includeShelfPrice
+              ? { amount: 1.69, currency: "EUR", observedText: "1 69", confidence: 0.94 }
+              : null,
             retailerOffer: {
               retailer: "Barbora",
               slug: "gaz-dz-sanpellegrino-zero-peach-0-33-l-d",
@@ -244,8 +323,10 @@ test("a product outside the scored catalog is named and receives an honest price
       "base64"
     )
   });
-  await expect(page.getByRole("status")).toContainText("1 product recognized");
+  await expect(page.getByRole("status")).toContainText("1 unique product recognized");
   await expect(page.getByRole("heading", { name: /Zero Peach.*Pesca & Clementina.*330 ml/ })).toBeVisible();
+  await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
+  await expect(page.getByText(/Identified, not rated/)).toBeVisible();
   const comparison = page.getByLabel("Price comparison");
   await expect(comparison.getByText("Cheaper online")).toBeVisible();
   await expect(comparison.getByText("Save €0.70")).toBeVisible();
@@ -266,10 +347,25 @@ test("a product outside the scored catalog is named and receives an honest price
       "base64"
     )
   });
-  await expect(comparison.getByText("Price check")).toBeVisible();
-  await expect(comparison.getByText("Possible Barbora match")).toBeVisible();
+  await expect(comparison.getByText("Shelf price", { exact: true })).toBeVisible();
+  await expect(comparison.getByText("Possible Barbora match")).toHaveCount(0);
   await expect(comparison.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "none");
   await expect(comparison.getByText("Cheaper online")).toHaveCount(0);
+  await expect(comparison.getByRole("link")).toHaveCount(0);
+
+  exactSku = true;
+  includeShelfPrice = false;
+  await page.getByRole("button", { name: "Close scanner" }).click();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "package-without-shelf-label.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "base64"
+    )
+  });
+  await expect(page.getByLabel("Price comparison")).toHaveCount(0);
+  await expect(page.getByText(/Keep the package and its shelf label/)).toHaveCount(0);
 });
 
 test("entry experience has no automated WCAG A/AA violations", async ({ page }) => {

@@ -56,6 +56,13 @@ export function normalizeRetailText(value: string): string {
     .trim();
 }
 
+export function retailerBrandMatches(observedBrand: string, retailerBrand: string): boolean {
+  const observed = normalizeRetailText(observedBrand).replaceAll(" ", "");
+  const retailer = normalizeRetailText(retailerBrand).replaceAll(" ", "");
+  if (observed.length < 3 || retailer.length < 3) return true;
+  return observed.includes(retailer) || retailer.includes(observed);
+}
+
 function tokens(value: string): string[] {
   return [
     ...new Set(
@@ -152,6 +159,7 @@ async function fetchOffer(slug: string, input: BarboraLookupInput, indexScore: n
     productPageCache.set(slug, { product, expiresAt: Date.now() + 5 * 60_000 });
   }
   if (product.status && product.status !== "active") return null;
+  if (!retailerBrandMatches(input.brand, product.brand_name)) return null;
   const pageScore = scoreText(lookupQuery(input), `${product.brand_name} ${product.title} ${product.Url}`, input.brand);
   const matchConfidence = Math.min(1, indexScore * 0.35 + pageScore * 0.65);
   return {
