@@ -43,4 +43,6 @@
 
 ## Production verification
 
-Pending the Railway deployment of this release evidence commit.
+- Railway deployment: `87fa2ed2-aa3d-467a-9299-f7c116885524`, status `SUCCESS`.
+- `/api/health`: `status=ok`, commit `2484f8e8108e223ae500f662c704dee717a646f3`.
+- Authenticated production WebKit smoke: HTTP 200, one Sugar.no wordmark and zero exact `Private demo` labels.
