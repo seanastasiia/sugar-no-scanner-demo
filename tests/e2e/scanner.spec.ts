@@ -51,9 +51,9 @@ test("sample shelf photo highlights products and shows a three-signal Sugar.no b
   await expect(page.getByLabel("Sugar.no badge").getByText("Protein", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Fiber", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Sugar", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Shelf marker legend").getByText("Top fit", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Shelf marker legend").getByText("Mixed", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Shelf marker legend").getByText("Trade-offs", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Shelf marker legend").getByText("Great fit", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Shelf marker legend").getByText("Moderate fit", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Shelf marker legend").getByText("Low fit", { exact: true })).toBeVisible();
   await expect(page.getByText("Values per 100 g · Compared with protein snacks in this demo")).toBeVisible();
   await expect(page.getByText(/Sugar\.no Match \d+/)).toHaveCount(0);
   const retailer = page.getByRole("link", { name: /View at Barbora/ });

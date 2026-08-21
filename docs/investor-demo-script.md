@@ -14,7 +14,7 @@ Show the private access screen and enter the code.
 
 Tap `Shelf photo`.
 
-“One camera view compares what is visible without asking the user to choose protein, fiber or sugar first. Compact markers sit directly over the products in the shelf image. A green check, yellow minus and coral alert make the comparison scannable; Top fit, Mixed and Trade-offs carry the same meaning without relying on color alone.”
+“One camera view compares what is visible without asking the user to choose protein, fiber or sugar first. Compact markers sit directly over the products in the shelf image. A green check, yellow minus and coral alert make the comparison scannable; Great fit, Moderate fit and Low fit carry the same meaning without relying on color alone.”
 
 Tap two product boxes and show the Sugar.no badge.
 

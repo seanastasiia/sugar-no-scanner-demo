@@ -13,7 +13,7 @@ This page overrides `../MASTER.md` for the live camera, sample shelf and sample 
 - Show one photorealistic source scene for both shelf and checkout samples. Checkout uses the same multi-product scan pattern as shelf.
 - Keep the camera/image stage at least 60% of the initial mobile viewport when results exist.
 - Every supported package gets one bounded hit target with a border and central marker.
-- Marker states are `Top fit`, `Mixed`, `Trade-offs` and `Data pending`.
+- Marker states are `Great fit`, `Moderate fit`, `Low fit` and `Data pending`, matching the Sugar.no product taxonomy.
 - State must never depend on color alone: pair green with a check, yellow with a minus, red/coral with an alert icon, and pending with an info icon. Selected state adds a white ring and visible text.
 - These states are relative within the protein-snack catalog, not good/bad or healthy/unhealthy judgments.
 - Never show the internal numeric comparison score in the user interface.

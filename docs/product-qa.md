@@ -6,7 +6,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 
 1. Open the private link. Confirm that the demo requires the access code and does not appear in search engines.
 2. Enter the code. Confirm that the first screen says `19,076 Barbora pages indexed` and distinguishes package recognition from retailer-listed Sugar.no nutrition.
-3. Tap `Shelf photo`. Confirm that the camera scene fills the phone and four markers appear directly over the four supported packages: green check, yellow minus or coral alert. The selected marker must also say `Top fit`, `Mixed` or `Trade-offs`.
+3. Tap `Shelf photo`. Confirm that the camera scene fills the phone and four markers appear directly over the four supported packages: green check, yellow minus or coral alert. The selected marker must also say `Great fit`, `Moderate fit` or `Low fit`.
 4. Confirm that only a compact bottom sheet overlays the shelf. It should say `4 Sugar.no picks`, show product thumbnails and expose `View products` plus a list icon. Tap it and confirm it expands into a full-height comparison page; collapse it and confirm the held shelf returns unchanged.
 5. In the expanded page, confirm that the selected card has one compact Sugar.no badge with separate Protein, Fiber and Sugar signals, source values per 100 g and direction text. Confirm that no unexplained numeric score such as `86` appears.
 6. Tap each marker and each small product in the tray. Confirm that the corresponding marker gets the white selected ring, its text appears and the product card changes.
@@ -30,7 +30,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 10. With no physical shelf label in the frame, confirm no `Price check` card, retailer price or price prompt appears.
 11. Include the product and one clearly associated shelf label in the same frame. Confirm the camera price appears. If an exact Barbora match is cheaper, confirm only the shelf price is crossed out and the current online price plus check time are shown.
 12. Repeat with a non-exact retailer candidate. Confirm only the shelf price remains and there is no retailer link. A Coca-Cola result must never open Pepsi.
-13. Confirm `Top fit / Mixed / Trade-offs` markers appear only for products with a numeric full badge or quick view. A visual-only Coca-Cola or Activia result should have no camera marker and should say that it was identified but not highlighted.
+13. Confirm `Great fit / Moderate fit / Low fit` markers appear only for products with a numeric full badge or quick view. A visual-only Coca-Cola or Activia result should have no camera marker and should say that it was identified but not highlighted.
 14. Repeat with an ambiguous label or multiple nearby prices. Confirm Sugar.no hides the shelf price instead of guessing.
 15. Cover the lens or use poor light. Confirm the interface stays usable and does not invent nutrition.
 16. Turn on airplane mode. Confirm that the preview stays local and recognition pauses with an offline message.
@@ -47,7 +47,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 - Can a first-time viewer explain the value within 15 seconds without narration?
 - Is the three-signal badge understood as a within-category comparison rather than a health verdict?
 - Is `2/3` understood as a useful partial view rather than a complete badge, and is missing fiber visibly neutral?
-- Do `Top fit`, `Mixed` and `Trade-offs` feel clearer than a numeric score without implying permission or prohibition?
+- Do `Great fit`, `Moderate fit` and `Low fit` feel clearer than a numeric score without implying permission or prohibition?
 - Is shelf comparison the primary value, with the retailer link clearly secondary?
 - Is the checkout experience useful after the choice has already been made?
 - Would you use the camera repeatedly, or only search/barcode after the first trial?

@@ -2,6 +2,13 @@ import type { ScoredProduct } from "./types";
 
 export type MatchTone = "strong" | "middle" | "lower" | "pending";
 
+const MATCH_TONE_LABELS: Record<MatchTone, string> = {
+  strong: "Great fit",
+  middle: "Moderate fit",
+  lower: "Low fit",
+  pending: "Data pending"
+};
+
 export interface MatchCriterion {
   key: "protein" | "fiber" | "sugar";
   label: string;
@@ -16,10 +23,12 @@ function percentileTone(value: number): Exclude<MatchTone, "pending"> {
 }
 
 export function overallMatchPresentation(score: number | null): { label: string; tone: MatchTone } {
-  if (score === null) return { label: "Data pending", tone: "pending" };
-  if (score >= 67) return { label: "Top fit", tone: "strong" };
-  if (score >= 50) return { label: "Mixed", tone: "middle" };
-  return { label: "Trade-offs", tone: "lower" };
+  const tone: MatchTone = score === null ? "pending" : score >= 67 ? "strong" : score >= 50 ? "middle" : "lower";
+  return { label: matchToneLabel(tone), tone };
+}
+
+export function matchToneLabel(tone: MatchTone): string {
+  return MATCH_TONE_LABELS[tone];
 }
 
 export function matchCriteria(product: ScoredProduct): MatchCriterion[] {

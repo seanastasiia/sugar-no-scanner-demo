@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CAMERA_FOCUS_CROP, remapRecognitionFromCrop } from "@/lib/camera-focus";
-import { matchCriteria, overallMatchPresentation, type MatchTone } from "@/lib/match-presentation";
+import { matchCriteria, matchToneLabel, overallMatchPresentation, type MatchTone } from "@/lib/match-presentation";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { hasSugarNoRating } from "@/lib/rating-visibility";
 import {
@@ -106,13 +106,6 @@ function toneClass(tone: MatchTone) {
   if (tone === "middle") return styles.toneMiddle;
   if (tone === "lower") return styles.toneLower;
   return styles.tonePending;
-}
-
-function overlayLabel(tone: MatchTone) {
-  if (tone === "strong") return "Top fit";
-  if (tone === "middle") return "Mixed";
-  if (tone === "lower") return "Trade-offs";
-  return "Data";
 }
 
 function OverlayToneIcon({ tone }: { tone: MatchTone }) {
@@ -763,7 +756,7 @@ export function ScannerApp() {
                 >
                   <span>
                     <OverlayToneIcon tone={presentation.tone} />
-                    <strong>{overlayLabel(presentation.tone)}</strong>
+                    <strong>{presentation.label}</strong>
                   </span>
                 </button>
               );
@@ -902,9 +895,9 @@ export function ScannerApp() {
                     {hasScoredProducts ? (
                       <>
                         <div className={styles.summarySignals} aria-label="Shelf marker legend">
-                          <span className={styles.toneStrong}><Check aria-hidden="true" size={13} /> Top fit</span>
-                          <span className={styles.toneMiddle}><Minus aria-hidden="true" size={13} /> Mixed</span>
-                          <span className={styles.toneLower}><CircleAlert aria-hidden="true" size={13} /> Trade-offs</span>
+                          <span className={styles.toneStrong}><Check aria-hidden="true" size={13} /> {matchToneLabel("strong")}</span>
+                          <span className={styles.toneMiddle}><Minus aria-hidden="true" size={13} /> {matchToneLabel("middle")}</span>
+                          <span className={styles.toneLower}><CircleAlert aria-hidden="true" size={13} /> {matchToneLabel("lower")}</span>
                         </div>
                         <p className={styles.markerScopeNote}>
                           Only products with a source-backed Sugar.no result are highlighted.

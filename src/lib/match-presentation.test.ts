@@ -33,9 +33,9 @@ function scoredProduct(
 
 describe("match presentation", () => {
   it("maps the hidden score to three plain-language shelf states", () => {
-    expect(overallMatchPresentation(86)).toEqual({ label: "Top fit", tone: "strong" });
-    expect(overallMatchPresentation(63)).toEqual({ label: "Mixed", tone: "middle" });
-    expect(overallMatchPresentation(43)).toEqual({ label: "Trade-offs", tone: "lower" });
+    expect(overallMatchPresentation(86)).toEqual({ label: "Great fit", tone: "strong" });
+    expect(overallMatchPresentation(63)).toEqual({ label: "Moderate fit", tone: "middle" });
+    expect(overallMatchPresentation(43)).toEqual({ label: "Low fit", tone: "lower" });
     expect(overallMatchPresentation(null)).toEqual({ label: "Data pending", tone: "pending" });
   });
 
