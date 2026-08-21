@@ -9,10 +9,10 @@ This file is the running record of scanner defects found and resolved.
 - Barbora is the only live retailer source. The prototype can say `Barbora online`, but cannot claim `best price` until multiple comparable retailers, exact pack-size matching and freshness rules are connected.
 - The 19,076-entry sitemap index is a discovery snapshot, not a promise that every page is in stock or that packaging and prices have not changed.
 - Barbora often omits voluntary numeric fiber. Exact food pages can receive a clearly labelled two-signal quick view, but a complete three-signal badge still needs fiber from Barbora, the manufacturer or a reviewed label source.
-- Saved options are device-local in the proof of concept and do not sync across browsers or phones.
 
 ## Resolved
 
+- **2026-08-21: save controls competed with the core scan and comparison flow.** Product, checkout and Similar options save buttons, the local saved list and its toast were removed. Recognition, comparison and exact retailer actions are unchanged.
 - **2026-08-21: scanner fit labels differed from the main Sugar.no product.** All current markers, pills, legends, cards and accessibility labels now use the shared `Great fit`, `Moderate fit` and `Low fit` taxonomy from one presentation source; score thresholds and colors are unchanged.
 - **2026-08-21: the persistent `Private demo` header badge competed with the camera.** The scanner header now shows only the Sugar.no wordmark; the access-code gate and privacy protections are unchanged.
 - **2026-08-21: a single recognized product called itself `Best fit in this scan`.** The best-in-scan chip now requires at least two rated products, so it only appears when a real comparison exists.

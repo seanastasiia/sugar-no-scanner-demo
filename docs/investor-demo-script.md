@@ -34,15 +34,11 @@ For the optional live-camera moment, show several facings of one SKU. Explain th
 
 Tap `Checkout photo`.
 
-“Checkout uses exactly the same behavior as the shelf: one view of the whole belt, several detected packages and colored overlays on the image. We do not tell someone to undo a purchase or shame the basket. The app suggests saving an alternative for the next shop.”
-
-Tap `Save for next shop`, close the scanner and show `Saved options`.
-
-“This is now a real action, not only copy. The option remains after reload on this device and the save signal can be measured separately from retailer clicks. The proof of concept deliberately avoids an account or cross-device sync.”
+“Checkout uses exactly the same comparison behavior as the shelf: one view of the whole belt, several detected packages and colored overlays on the image. We do not tell someone to undo a purchase, shame the basket or add another action to save a product.”
 
 ## Close
 
-“What this proves today is broad package naming, a constrained verified nutrition layer and a source-aware retailer action. The next validation is whether people trust the exact match, compare visible products and use the save or retailer actions. Real-store accuracy, price-label association, latency and monetization remain separate tests.”
+“What this proves today is broad package naming, a constrained verified nutrition layer and a source-aware retailer action. The next validation is whether people trust the exact match, compare visible products and use the retailer action. Real-store accuracy, price-label association, latency and monetization remain separate tests.”
 
 Suggested final line:
 

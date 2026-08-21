@@ -3,8 +3,6 @@
 import Image from "next/image";
 import {
   ArrowUpRight,
-  Bookmark,
-  BookmarkCheck,
   Camera,
   Check,
   ChevronDown,
@@ -29,11 +27,6 @@ import { CAMERA_FOCUS_CROP, remapRecognitionFromCrop } from "@/lib/camera-focus"
 import { matchCriteria, matchToneLabel, overallMatchPresentation, type MatchTone } from "@/lib/match-presentation";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { hasSugarNoRating } from "@/lib/rating-visibility";
-import {
-  parseSavedProductIds,
-  SAVED_PRODUCTS_STORAGE_KEY,
-  toggleSavedProductId
-} from "@/lib/saved-products";
 import type {
   ProductDetection,
   RecognitionResponse,
@@ -124,7 +117,6 @@ export function ScannerApp() {
   const focusRetryRef = useRef(false);
   const lastCaptureRef = useRef(0);
   const sessionIdRef = useRef<string | null>(null);
-  const saveFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resultsSheetRef = useRef<HTMLElement>(null);
   const productFetchesRef = useRef(new Set<string>());
 
@@ -140,8 +132,6 @@ export function ScannerApp() {
   const [statusMessage, setStatusMessage] = useState("Ready when you are");
   const [resultLocked, setResultLocked] = useState(false);
   const [resultsExpanded, setResultsExpanded] = useState(false);
-  const [savedIds, setSavedIds] = useState<string[]>([]);
-  const [saveFeedback, setSaveFeedback] = useState("");
   const [networkOnline, setNetworkOnline] = useState(() =>
     typeof navigator === "undefined" ? true : navigator.onLine
   );
@@ -159,8 +149,6 @@ export function ScannerApp() {
         | "result_opened"
         | "alternative_viewed"
         | "retailer_link_clicked"
-        | "product_saved"
-        | "product_unsaved"
         | "permission_denied"
         | "recognition_failed",
       eventSource: ScanSource,
@@ -205,26 +193,6 @@ export function ScannerApp() {
       setLoadingProductIds([...productFetchesRef.current]);
     }
   }, []);
-
-  const showSaveFeedback = useCallback((message: string) => {
-    setSaveFeedback(message);
-    if (saveFeedbackTimerRef.current) clearTimeout(saveFeedbackTimerRef.current);
-    saveFeedbackTimerRef.current = setTimeout(() => setSaveFeedback(""), 2_400);
-  }, []);
-
-  const toggleSaved = useCallback(
-    (productId: string) => {
-      const wasSaved = savedIds.includes(productId);
-      const next = toggleSavedProductId(savedIds, productId);
-      setSavedIds(next);
-      window.localStorage.setItem(SAVED_PRODUCTS_STORAGE_KEY, JSON.stringify(next));
-      if (!wasSaved) void hydrateProducts([productId]);
-      showSaveFeedback(wasSaved ? "Removed from your next shop" : "Saved for your next shop");
-      track(wasSaved ? "product_unsaved" : "product_saved", source, productId);
-      if (!wasSaved && typeof navigator.vibrate === "function") navigator.vibrate(8);
-    },
-    [hydrateProducts, savedIds, showSaveFeedback, source, track]
-  );
 
   const applyRecognition = useCallback(
     (result: RecognitionResponse, eventSource: ScanSource, focusMode = false) => {
@@ -552,19 +520,9 @@ export function ScannerApp() {
     };
   }, []);
 
-  useEffect(() => {
-    const stored = parseSavedProductIds(window.localStorage.getItem(SAVED_PRODUCTS_STORAGE_KEY));
-    const frame = window.requestAnimationFrame(() => {
-      setSavedIds(stored);
-      if (stored.length) void hydrateProducts(stored);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [hydrateProducts]);
-
   useEffect(
     () => () => {
       stopActiveCapture();
-      if (saveFeedbackTimerRef.current) clearTimeout(saveFeedbackTimerRef.current);
     },
     [stopActiveCapture]
   );
@@ -677,14 +635,6 @@ export function ScannerApp() {
           <p className={styles.privacyNote}>
             <Lock aria-hidden="true" size={15} /> Frames are analyzed, never stored by Sugar.no.
           </p>
-          {savedIds.length ? (
-            <SavedProducts
-              ids={savedIds}
-              products={products}
-              onRemove={toggleSaved}
-              onRetailer={(id) => track("retailer_link_clicked", "camera", id, { placement: "saved_list" })}
-            />
-          ) : null}
         </section>
       ) : (
         <section className={styles.experience} aria-label={`${sourceLabel(source)} scanner`}>
@@ -946,14 +896,11 @@ export function ScannerApp() {
                       payload={selectedPayload}
                       detection={selectedDetection}
                       bestInScan={bestId === selectedPayload.product.id}
-                      checkout={source === "sample-conveyor"}
-                      savedIds={savedIds}
                       onAlternative={(id) => {
                         setSelectedId(id);
                         if (!products[id]) void hydrateProducts([id]);
                         track("alternative_viewed", source, id);
                       }}
-                      onToggleSaved={toggleSaved}
                       onRetailer={(id) => track("retailer_link_clicked", source, id)}
                     />
                   ) : selectedDetection?.identity && selectedId && loadingProductIds.includes(selectedId) ? (
@@ -970,9 +917,6 @@ export function ScannerApp() {
           ) : null}
         </section>
       )}
-      <div className={`${styles.saveFeedback} ${saveFeedback ? styles.saveFeedbackVisible : ""}`} aria-live="polite" aria-atomic="true">
-        <BookmarkCheck aria-hidden="true" size={17} /> {saveFeedback}
-      </div>
     </main>
   );
 }
@@ -1013,19 +957,13 @@ function ProductResult({
   payload,
   detection,
   bestInScan,
-  checkout,
-  savedIds,
   onAlternative,
-  onToggleSaved,
   onRetailer
 }: {
   payload: ProductPayload;
   detection?: ProductDetection;
   bestInScan: boolean;
-  checkout: boolean;
-  savedIds: string[];
   onAlternative: (id: string) => void;
-  onToggleSaved: (id: string) => void;
   onRetailer: (id: string) => void;
 }) {
   const { product, alternatives } = payload;
@@ -1036,16 +974,6 @@ function ProductResult({
           <p>{product.brand}</p>
           <h2>{product.shortName}</h2>
         </div>
-        <button
-          className={`${styles.compactSaveButton} ${savedIds.includes(product.id) ? styles.savedButton : ""}`}
-          type="button"
-          onClick={() => onToggleSaved(product.id)}
-          aria-label={savedIds.includes(product.id) ? "Remove from next shop" : checkout ? "Save for next shop" : "Save this option"}
-          aria-pressed={savedIds.includes(product.id)}
-        >
-          {savedIds.includes(product.id) ? <BookmarkCheck aria-hidden="true" size={18} /> : <Bookmark aria-hidden="true" size={18} />}
-          <span>{savedIds.includes(product.id) ? "Saved" : "Save"}</span>
-        </button>
       </div>
 
       {product.matchScore !== null ? <SugarNoBadge product={product} /> : null}
@@ -1094,9 +1022,7 @@ function ProductResult({
           <div className={styles.sectionHeading}>
             <div>
               <p>Similar options</p>
-              <h3 id={`alternatives-${product.id}`}>
-                {checkout ? "Save an option for your next shop" : "Compare without starting over"}
-              </h3>
+              <h3 id={`alternatives-${product.id}`}>Compare without starting over</h3>
             </div>
           </div>
           <div className={styles.alternativeList}>
@@ -1118,16 +1044,6 @@ function ProductResult({
                     <strong>{alternative.shortName}</strong>
                     <MatchPill product={alternative} />
                   </span>
-                </button>
-                <button
-                  className={styles.alternativeSave}
-                  type="button"
-                  onClick={() => onToggleSaved(alternative.id)}
-                  aria-label={`${savedIds.includes(alternative.id) ? "Remove" : "Save"} ${alternative.name} ${savedIds.includes(alternative.id) ? "from" : "for"} next shop`}
-                  aria-pressed={savedIds.includes(alternative.id)}
-                >
-                  {savedIds.includes(alternative.id) ? <BookmarkCheck aria-hidden="true" size={17} /> : <Bookmark aria-hidden="true" size={17} />}
-                  {savedIds.includes(alternative.id) ? "Saved" : "Save"}
                 </button>
               </article>
             ))}
@@ -1290,52 +1206,6 @@ function PriceComparison({ detection, onRetailer }: { detection: ProductDetectio
       ) : (
         <p>No exact online match. The camera-read shelf price is shown without a retailer link.</p>
       )}
-    </section>
-  );
-}
-
-function SavedProducts({
-  ids,
-  products,
-  onRemove,
-  onRetailer
-}: {
-  ids: string[];
-  products: Record<string, ProductPayload>;
-  onRemove: (id: string) => void;
-  onRetailer: (id: string) => void;
-}) {
-  const loaded = ids.map((id) => products[id]?.product).filter(Boolean) as ScoredProduct[];
-  if (!loaded.length) return null;
-  return (
-    <section className={styles.savedProducts} aria-labelledby="saved-products-title">
-      <div className={styles.savedHeading}>
-        <div>
-          <p>Next shop</p>
-          <h2 id="saved-products-title">Saved options</h2>
-        </div>
-        <span>{loaded.length}</span>
-      </div>
-      <div className={styles.savedList}>
-        {loaded.map((product) => (
-          <article key={product.id}>
-            <div className={styles.savedThumb}>
-              {product.imageUrl ? <Image src={product.imageUrl} alt="" fill sizes="72px" /> : null}
-            </div>
-            <div>
-              <small>{product.brand}</small>
-              <strong>{product.shortName}</strong>
-            </div>
-            <a href={product.retailerUrl} target="_blank" rel="noopener noreferrer" onClick={() => onRetailer(product.id)}>
-              View <ArrowUpRight aria-hidden="true" size={15} />
-            </a>
-            <button type="button" onClick={() => onRemove(product.id)} aria-label={`Remove ${product.name} from next shop`}>
-              <X aria-hidden="true" size={16} />
-            </button>
-          </article>
-        ))}
-      </div>
-      <p>Saved privately in this browser. No account needed for the demo.</p>
     </section>
   );
 }

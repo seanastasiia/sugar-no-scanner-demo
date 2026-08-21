@@ -13,8 +13,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 7. Swipe the Similar options cards left and right. Confirm that they are comparable formats and remain usable without horizontal page overflow.
 8. Open the Barbora action. Confirm that the exact SKU page opens in a new tab and that Sugar.no never claims affiliate revenue.
 9. Collapse the page and use the `Shelf / Checkout` switch inside the scanner. Confirm that Checkout opens without closing the scanner, shows one photorealistic image of the whole belt and returns four products at once with the same marker and expandable-sheet interaction.
-10. Expand the page, tap `Save for next shop` on the selected product and `Save` on one Similar option. Confirm the success message appears, collapse the page, close the scanner and find both under `Saved options`.
-11. Reload the page. Confirm both saved products remain, each exact Barbora link opens and the remove button removes only that item. The demo should say that saves live only in this browser.
+10. Expand Shelf and Checkout results. Confirm there are no `Save`, `Saved`, `Save for next shop` or `Saved options` controls; Similar options and the Barbora link must remain available.
 
 ## Camera and uncertainty
 
@@ -51,7 +50,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 - Is shelf comparison the primary value, with the retailer link clearly secondary?
 - Is the checkout experience useful after the choice has already been made?
 - Would you use the camera repeatedly, or only search/barcode after the first trial?
-- Which action is worth measuring next: product comparison, saved alternative or retailer click?
+- Which action is worth measuring next: product comparison or retailer click?
 
 Record the iPhone model, iOS version, location, lighting, tested SKUs, false positives, misses and time-to-result. Do not call the physical-shelf benchmark passed until those observations exist.
 

@@ -25,7 +25,7 @@ The app is a working mobile-first web/PWA concept with:
 - same-SKU grouping so repeated facings such as four Coca-Cola cans count as one unique product;
 - a held live-camera result with an explicit `Scan again` action, so moving the phone cannot replace the result while it is being read;
 - an automatic focused center retry after an uncertain broad camera pass, with remapped overlays and a separate conservative confidence threshold;
-- an in-scanner Shelf/Checkout switch plus device-local `Saved options` that survive reloads without an account;
+- an in-scanner Shelf/Checkout switch that changes scenes without restarting the scanner;
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
 - iPhone-sized WebKit end-to-end coverage and committed visual evidence.
 
@@ -53,7 +53,7 @@ Each percentile uses all available verified values in the 40-product protein-sna
 
 For exact Barbora food pages outside that category, the server calculates a separate reference-based quick view at recognition time. It requires page-listed energy, protein and total sugar. Protein uses the EU `source of protein` / `high protein` energy-share thresholds; total sugar uses the EU low-sugar threshold of 5 g/100 g for solids or 2.5 g/100 ml for liquids. Fiber uses the EU source/high-fiber thresholds when Barbora lists a numeric value. Sugar.no's yellow middle sugar band is explicitly defined as up to twice the official low-sugar threshold. The available two or three signal bands are averaged for the shelf summary. `Best fit in this scan` appears only when at least two rated products share the same rating basis; a category-percentile badge is never ranked against a retailer-reference quick view. These nutrition-claim references are not a medical or absolute health score. Adult products and pages without enough nutrition remain unrated. See [Regulation (EC) No 1924/2006](https://eur-lex.europa.eu/legal-content/en/TXT/?uri=CELEX%3A32006R1924).
 
-`Save for next shop` is a real demo action rather than explanatory copy. Saved product IDs live only in browser `localStorage`, can be removed at any time and are restored after reload. The demo has no account or cross-device synchronization; the server receives only the bounded `product_saved` or `product_unsaved` analytics event, never the local list itself.
+The comparison page deliberately has no save action. Similar options remain immediately comparable and the exact Barbora link remains available, but the proof of concept does not create or retain a personal product list.
 
 ## Stack
 
@@ -197,4 +197,4 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 
 ## Known limitations
 
-The generated deterministic shelf and checkout photos prove the multi-product interaction with overlays on the source scene; they are not evidence of computer-vision accuracy. The broad Barbora index improves identity and on-demand data coverage but does not mean every package will receive an exact SKU match or a rating: packaging, language, variants, availability, nutrition and prices change, and the index includes non-food. Page-listed nutrition is retailer data, not an independently audited label database. Shelf-price OCR is shown only above its confidence threshold and still needs physical Latvian store validation. Barbora is the only connected retailer, so `best price` is not claimed. Device-local saved options do not sync between phones. Real p95 latency, false positives, physical iPhone behavior and cross-retailer comparison remain unverified. See [Bugs.md](Bugs.md) for the live list.
+The generated deterministic shelf and checkout photos prove the multi-product interaction with overlays on the source scene; they are not evidence of computer-vision accuracy. The broad Barbora index improves identity and on-demand data coverage but does not mean every package will receive an exact SKU match or a rating: packaging, language, variants, availability, nutrition and prices change, and the index includes non-food. Page-listed nutrition is retailer data, not an independently audited label database. Shelf-price OCR is shown only above its confidence threshold and still needs physical Latvian store validation. Barbora is the only connected retailer, so `best price` is not claimed. Real p95 latency, false positives, physical iPhone behavior and cross-retailer comparison remain unverified. See [Bugs.md](Bugs.md) for the live list.

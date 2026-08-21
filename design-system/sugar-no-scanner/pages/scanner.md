@@ -22,10 +22,10 @@ This page overrides `../MASTER.md` for the live camera, sample shelf and sample 
 
 - Pull the cream results sheet over the lower edge of the scene with a visible drag handle.
 - First show product count, marker legend and a horizontally scrollable product tray.
-- The selected result contains brand/name, one compact save action and a `Sugar.no badge` with three criteria: Protein, Fiber and Sugar.
+- The selected result contains brand/name and a `Sugar.no badge` with three criteria: Protein, Fiber and Sugar. It has no save control.
 - Each criterion includes actual value per 100 g, direction text and color support.
 - `Similar options` is a horizontally scrollable row of compact cards. Retailer CTA remains secondary.
-- Checkout uses `Save an option for your next shop`; it does not ask the user to undo the basket.
+- Checkout uses the same comparison pattern as Shelf and does not ask the user to undo the basket or save a product.
 
 ## Interaction and accessibility
 

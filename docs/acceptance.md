@@ -24,7 +24,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Shelf demo | One photorealistic concept image returns four deterministic detections with compact icon markers and a collapsed thumbnail sheet; the legend and product comparison appear on expansion | Pass as concept |
 | Checkout demo | One photorealistic checkout concept image returns four deterministic detections through the same camera-first overlay and expandable-sheet interaction as the shelf | Pass as concept |
 | Shelf/checkout navigation | A segmented control changes between both sample scenes without closing the scanner | Pass locally |
-| Save for next shop | Product and alternative save controls persist a bounded device-local list across reloads; save/remove events contain IDs only | Pass locally |
+| No save actions | Product, checkout and Similar options results expose comparison and retailer actions without Save buttons or a persisted product list | Pass locally |
 | Repeated-frame de-duplication | Unit tests retain one tray entry per SKU across repeated live-camera detections | Pass as logic |
 | Raw images not stored in analytics | `imageStored: false`, metadata guard and API end-to-end rejection test | Pass at app boundary |
 | Permission denied | Mocked WebKit browser scenario verifies explanation and retry | Pass locally |
@@ -41,6 +41,5 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Supabase migration, seed and writes | Migration and seed are reproducible | Prepared, not applied |
 | Railway HTTPS and live health check | GitHub `main` deploy is `SUCCESS`; health, deterministic scenes and a real Gemini upload request pass over HTTPS | Pass |
 | Physical iPhone Safari shelf test | Requires deployed HTTPS and physical products | Not run |
-| Cross-device saved-list sync | Intentionally absent from the account-free proof of concept | Out of scope |
 
 The deterministic scenes prove the interaction and data contract. They must not be presented as evidence of real-world computer-vision accuracy.

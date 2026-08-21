@@ -82,11 +82,12 @@ test("checkout photo uses one multi-product scan instead of an animated product"
   const tray = page.getByLabel("Products in this scan");
   await expect(tray).toBeVisible({ timeout: 8_000 });
   await expect(tray.getByRole("button")).toHaveCount(4);
-  await expect(page.getByText("Save an option for your next shop")).toBeVisible();
+  await expect(page.getByText("Compare without starting over")).toBeVisible();
+  await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
   await waitForAlternativeImages(page);
 });
 
-test("sample scenes switch in place and saved products persist for the next shop", async ({ page }) => {
+test("sample scenes switch in place without exposing save actions", async ({ page }) => {
   await unlock(page);
   await page.getByRole("button", { name: /Shelf photo/ }).click();
   await expect(page.getByRole("status")).toContainText("4 unique products recognized");
@@ -97,20 +98,15 @@ test("sample scenes switch in place and saved products persist for the next shop
   await expect(sceneSwitch.getByRole("button", { name: "Checkout", exact: true })).toHaveAttribute("aria-pressed", "true");
 
   await page.getByRole("button", { name: "Open product results", exact: true }).click();
-  await page.getByRole("button", { name: "Save for next shop" }).click();
-  await expect(page.getByText("Saved for your next shop")).toBeVisible();
+  await expect(page.getByText("Compare without starting over")).toBeVisible();
+  await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Saved options" })).toHaveCount(0);
   await page.getByRole("button", { name: "Return to camera" }).click();
   await page.getByRole("button", { name: "Close scanner" }).click();
-  await expect(page.getByRole("heading", { name: "Saved options" })).toBeVisible();
-  await expect(page.getByText("Saved privately in this browser. No account needed for the demo.")).toBeVisible();
-
-  await page.reload();
-  await expect(page.getByRole("heading", { name: "Saved options" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /View/ }).first()).toHaveAttribute("href", /^https:\/\/barbora\.lv\/produkti\//);
-  await page.screenshot({ path: "docs/screenshots/saved-next-shop-mobile.png", fullPage: true });
+  await expect(page.getByRole("heading", { name: "Saved options" })).toHaveCount(0);
 });
 
-test("saved flow remains usable with reduced motion, dark mode and enlarged text", async ({ page }) => {
+test("comparison remains usable with reduced motion, dark mode and enlarged text", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.addInitScript(() => {
     window.localStorage.setItem(
@@ -120,8 +116,11 @@ test("saved flow remains usable with reduced motion, dark mode and enlarged text
     document.documentElement.style.fontSize = "125%";
   });
   await unlock(page);
-  await expect(page.getByRole("heading", { name: "Saved options" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /View/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Saved options" })).toHaveCount(0);
+  await page.getByRole("button", { name: /Shelf photo/ }).click();
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
+  await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
+  await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
@@ -165,16 +164,16 @@ test("sample response and analytics reject raw image storage", async ({ page }) 
   expect(unsafeEvent.status()).toBe(400);
   expect(await unsafeEvent.json()).toEqual({ error: "unsafe_event_metadata" });
 
-  const savedEvent = await page.request.post("/api/events", {
+  const productEvent = await page.request.post("/api/events", {
     data: {
       sessionId: crypto.randomUUID(),
-      name: "product_saved",
+      name: "alternative_viewed",
       source: "sample-conveyor",
       productId: "demo-product",
       metadata: { placement: "result" }
     }
   });
-  expect(savedEvent.ok()).toBe(true);
+  expect(productEvent.ok()).toBe(true);
 });
 
 test("camera permission denial offers a clear retry state", async ({ page }) => {
