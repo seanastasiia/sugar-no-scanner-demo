@@ -133,6 +133,7 @@ export function ScannerApp() {
   const sessionIdRef = useRef<string | null>(null);
   const saveFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resultsSheetRef = useRef<HTMLElement>(null);
+  const productFetchesRef = useRef(new Set<string>());
 
   const [source, setSource] = useState<ScanSource>("camera");
   const [cameraState, setCameraState] = useState<CameraState>("idle");
@@ -140,6 +141,7 @@ export function ScannerApp() {
   const [detections, setDetections] = useState<ProductDetection[]>([]);
   const [tray, setTray] = useState<string[]>([]);
   const [products, setProducts] = useState<Record<string, ProductPayload>>({});
+  const [loadingProductIds, setLoadingProductIds] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState("Ready when you are");
@@ -189,18 +191,26 @@ export function ScannerApp() {
   );
 
   const hydrateProducts = useCallback(async (ids: string[]) => {
-    const uniqueIds = [...new Set(ids)];
-    const entries = await Promise.all(
-      uniqueIds.map(async (id) => {
-        const response = await fetch(`/api/products/${encodeURIComponent(id)}`);
-        if (!response.ok) return null;
-        return [id, (await response.json()) as ProductPayload] as const;
-      })
-    );
-    setProducts((current) => ({
-      ...current,
-      ...Object.fromEntries(entries.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)))
-    }));
+    const uniqueIds = [...new Set(ids)].filter((id) => !productFetchesRef.current.has(id));
+    if (!uniqueIds.length) return;
+    uniqueIds.forEach((id) => productFetchesRef.current.add(id));
+    setLoadingProductIds([...productFetchesRef.current]);
+    try {
+      const entries = await Promise.all(
+        uniqueIds.map(async (id) => {
+          const response = await fetch(`/api/products/${encodeURIComponent(id)}`);
+          if (!response.ok) return null;
+          return [id, (await response.json()) as ProductPayload] as const;
+        })
+      );
+      setProducts((current) => ({
+        ...current,
+        ...Object.fromEntries(entries.filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)))
+      }));
+    } finally {
+      uniqueIds.forEach((id) => productFetchesRef.current.delete(id));
+      setLoadingProductIds([...productFetchesRef.current]);
+    }
   }, []);
 
   const showSaveFeedback = useCallback((message: string) => {
@@ -252,7 +262,12 @@ export function ScannerApp() {
       setDetections(uniqueDetections);
       const ids = uniqueDetections.map((detection) => detection.productId);
       const catalogIds = uniqueDetections
-        .map((detection) => detection.catalogProductId || (detection.identity ? null : detection.productId))
+        .map(
+          (detection) =>
+            detection.catalogProductId ||
+            (detection.identity?.matchKind === "barbora" ? detection.productId : null) ||
+            (detection.identity ? null : detection.productId)
+        )
         .filter((id): id is string => Boolean(id));
       if (eventSource === "camera") {
         if (scanTimerRef.current) clearInterval(scanTimerRef.current);
@@ -579,6 +594,8 @@ export function ScannerApp() {
   const unratedDetectionCount = detections.length - ratedDetections.length;
   const bestId = useMemo(() => {
     const scored = loadedTray.filter((product) => product.matchScore !== null);
+    if (scored.length < 2) return undefined;
+    if (scored.some((product) => product.ratingBasis !== scored[0].ratingBasis)) return undefined;
     return scored.sort((left, right) => (right.matchScore ?? -1) - (left.matchScore ?? -1))[0]?.id;
   }, [loadedTray]);
   const activeExperience =
@@ -629,13 +646,13 @@ export function ScannerApp() {
           <div className={styles.introIcon} aria-hidden="true">
             <ScanLine size={28} />
           </div>
-          <p className={styles.eyebrow}>19,000+ Barbora products indexed</p>
+          <p className={styles.eyebrow}>19,076 Barbora pages indexed</p>
           <h1 id="intro-title">
             One camera.
             <br />A <em>clearer</em> shelf.
           </h1>
           <p className={styles.introCopy}>
-            Name visible packages, read shelf prices and compare verified snacks without “good versus bad”.
+            Name visible packages, read shelf prices and build a Sugar.no quick view from exact retailer nutrition.
           </p>
           <button className={styles.primaryButton} type="button" onClick={startCamera}>
             <Camera aria-hidden="true" size={20} />
@@ -861,7 +878,11 @@ export function ScannerApp() {
                         </div>
                         <div className={styles.sheetPreviewCopy}>
                           <span>{item?.brand || detection?.identity?.brand || "Product"}</span>
-                          {item && hasSugarNoRating(item) ? <MatchPill product={item} /> : <small>Identified</small>}
+                          {item && hasSugarNoRating(item) ? (
+                            <MatchPill product={item} />
+                          ) : (
+                            <small>{loadingProductIds.includes(id) ? "Checking nutrition…" : "Identified"}</small>
+                          )}
                         </div>
                       </button>
                     );
@@ -889,7 +910,7 @@ export function ScannerApp() {
                           <span className={styles.toneLower}><CircleAlert aria-hidden="true" size={13} /> Trade-offs</span>
                         </div>
                         <p className={styles.markerScopeNote}>
-                          Only products with a verified Sugar.no rating are highlighted.
+                          Only products with a source-backed Sugar.no result are highlighted.
                           {unratedDetectionCount > 0 ? ` ${unratedDetectionCount} more identified below.` : ""}
                         </p>
                       </>
@@ -919,7 +940,11 @@ export function ScannerApp() {
                             }}
                           >
                             <span>{item?.brand || detection?.identity?.brand || "Reading"}</span>
-                            {item ? <MatchPill product={item} /> : <small>Identified</small>}
+                            {item ? (
+                              <MatchPill product={item} />
+                            ) : (
+                              <small>{loadingProductIds.includes(id) ? "Checking nutrition…" : "Identified"}</small>
+                            )}
                           </button>
                         );
                       })}
@@ -941,6 +966,8 @@ export function ScannerApp() {
                       onToggleSaved={toggleSaved}
                       onRetailer={(id) => track("retailer_link_clicked", source, id)}
                     />
+                  ) : selectedDetection?.identity && selectedId && loadingProductIds.includes(selectedId) ? (
+                    <LoadingProductResult detection={selectedDetection} />
                   ) : selectedDetection?.identity ? (
                     <RecognizedProductResult
                       detection={selectedDetection}
@@ -1031,7 +1058,7 @@ function ProductResult({
         </button>
       </div>
 
-      <SugarNoBadge product={product} />
+      {product.matchScore !== null ? <SugarNoBadge product={product} /> : null}
 
       {detection?.shelfPrice ? (
         <PriceComparison detection={detection} onRetailer={() => onRetailer(product.id)} />
@@ -1048,8 +1075,20 @@ function ProductResult({
         <div className={styles.pendingData}>
           <Info aria-hidden="true" size={18} />
           <span>
-            <strong>Match pending</strong>
-            Fiber is not yet confirmed by an independent source. Protein and total sugar remain visible.
+            <strong>Identified, not rated</strong>
+            {product.ratingBasis === "catalog_percentile"
+              ? "A full category badge needs protein, fiber and total sugar. Missing values are not invented."
+              : "This exact Barbora page does not list enough nutrition to build a Sugar.no quick view."}
+          </span>
+        </div>
+      ) : null}
+
+      {product.matchReason === "partial_nutrition" ? (
+        <div className={styles.pendingData}>
+          <Info aria-hidden="true" size={18} />
+          <span>
+            <strong>Quick view · 2 of 3 signals</strong>
+            Protein and total sugar come from the exact Barbora page. Fiber is not listed, so this is not the full three-signal badge.
           </span>
         </div>
       ) : null}
@@ -1123,7 +1162,12 @@ function ProductResult({
       ) : null}
       <details className={styles.sources}>
         <summary>Data sources and limits</summary>
-        <p>The badge compares these products with this demo category. It is not a medical or absolute health score.</p>
+        <p>
+          {product.ratingBasis === "catalog_percentile"
+            ? "The badge compares these products with this demo category."
+            : "The quick view uses transparent EU nutrition-claim reference thresholds; Sugar.no's middle sugar band is up to twice the low-sugar threshold."}{" "}
+          It is not a medical or absolute health score.
+        </p>
         <ul>
           {product.sources.map((source) => (
             <li key={source.url}>
@@ -1180,6 +1224,27 @@ function RecognizedProductResult({
           and the Barbora SKU is exact.
         </p>
       </details>
+    </article>
+  );
+}
+
+function LoadingProductResult({ detection }: { detection: ProductDetection }) {
+  const identity = detection.identity!;
+  return (
+    <article className={styles.productResult} aria-live="polite">
+      <div className={styles.productHeading}>
+        <div>
+          <p>{identity.brand || "Recognized package"}</p>
+          <h2>{identity.name}</h2>
+        </div>
+      </div>
+      <div className={styles.pendingData}>
+        <LoaderCircle className={styles.spin} aria-hidden="true" size={18} />
+        <span>
+          <strong>Checking nutrition…</strong>
+          Reading the exact Barbora page. Sugar.no will show a result only when the source lists enough data.
+        </span>
+      </div>
     </article>
   );
 }
@@ -1297,8 +1362,8 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
     <section className={styles.sugarBadge} aria-label="Sugar.no badge">
       <div className={styles.sugarBadgeHeading}>
         <div>
-          <small>Sugar.no badge</small>
-          <strong>Sugar.no fit</strong>
+          <small>{product.ratingBasis === "catalog_percentile" ? "Sugar.no badge" : "Exact Barbora nutrition"}</small>
+          <strong>{product.matchReason === "partial_nutrition" ? "Sugar.no quick view · 2/3" : "Sugar.no fit"}</strong>
         </div>
         <span className={toneClass(presentation.tone)}>{presentation.label}</span>
       </div>
@@ -1312,12 +1377,21 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
           </div>
         ))}
       </div>
-      <p className={styles.perHundred}>Values per 100 g · Compared with protein snacks in this demo</p>
+      <p className={styles.perHundred}>
+        {product.ratingBasis === "catalog_percentile"
+          ? "Values per 100 g · Compared with protein snacks in this demo"
+          : `Values per ${product.nutritionBasis === "100ml" ? "100 ml" : "100 g"} · ${product.ratingSignalCount} of 3 source-backed signals`}
+      </p>
     </section>
   );
 }
 
 function MatchPill({ product }: { product: ScoredProduct }) {
   const presentation = overallMatchPresentation(product.matchScore);
-  return <em className={`${styles.matchPill} ${toneClass(presentation.tone)}`}>{presentation.label}</em>;
+  return (
+    <em className={`${styles.matchPill} ${toneClass(presentation.tone)}`}>
+      {presentation.label}
+      {product.matchReason === "partial_nutrition" ? " · 2/3" : ""}
+    </em>
+  );
 }

@@ -122,7 +122,23 @@ export function rankBarboraCandidates(
     .slice(0, limit);
 }
 
-interface BarboraPageProduct {
+export interface BarboraNutrientAmount {
+  Amount: number;
+  UnitName: string;
+}
+
+export interface BarboraNutrient {
+  Name: string;
+  Amounts: BarboraNutrientAmount[];
+}
+
+export interface BarboraProductAttribute {
+  id: string;
+  value: string;
+  group: number;
+}
+
+export interface BarboraPageProduct {
   title: string;
   brand_name: string;
   price: number;
@@ -131,34 +147,51 @@ interface BarboraPageProduct {
   image?: string;
   Url: string;
   status?: string;
+  nutrients?: BarboraNutrient[];
+  attributes?: {
+    list?: BarboraProductAttribute[];
+    additional?: Record<string, boolean>;
+  };
+  description?: string;
+  ingredients?: string;
+  category_name_full_path?: string;
+  root_category_id?: string;
+  is_adult?: boolean;
 }
 
 export function parseBarboraProductPage(html: string): BarboraPageProduct {
   const match = html.match(/window\.product = (\{.*?\});/s);
   if (!match) throw new Error("Barbora product payload was not found");
   const product = JSON.parse(match[1]) as BarboraPageProduct;
-  if (!product.title || !product.brand_name || !Number.isFinite(product.price) || !product.Url) {
+  if (!product.title || !Number.isFinite(product.price) || !product.Url) {
     throw new Error("Barbora product payload is incomplete");
   }
   return product;
 }
 
 const productPageCache = new Map<string, { expiresAt: number; product: BarboraPageProduct }>();
+const knownProductSlugs = new Set(productSlugs as string[]);
+
+export async function getBarboraProductBySlug(slug: string): Promise<BarboraPageProduct | null> {
+  if (!knownProductSlugs.has(slug)) return null;
+  const cached = productPageCache.get(slug);
+  if (cached && cached.expiresAt > Date.now()) return cached.product;
+
+  const response = await fetch(`https://barbora.lv/produkti/${slug}`, {
+    headers: { "user-agent": "Sugar.no Latvia catalog research demo/0.1" },
+    signal: AbortSignal.timeout(5_000)
+  });
+  if (!response.ok) return null;
+  const product = parseBarboraProductPage(await response.text());
+  if (product.status && product.status !== "active") return null;
+  productPageCache.set(slug, { product, expiresAt: Date.now() + 5 * 60_000 });
+  return product;
+}
 
 async function fetchOffer(slug: string, input: BarboraLookupInput, indexScore: number): Promise<RetailerOffer | null> {
   const url = `https://barbora.lv/produkti/${slug}`;
-  const cached = productPageCache.get(slug);
-  let product = cached && cached.expiresAt > Date.now() ? cached.product : null;
-  if (!product) {
-    const response = await fetch(url, {
-      headers: { "user-agent": "Sugar.no Latvia catalog research demo/0.1" },
-      signal: AbortSignal.timeout(5_000)
-    });
-    if (!response.ok) return null;
-    product = parseBarboraProductPage(await response.text());
-    productPageCache.set(slug, { product, expiresAt: Date.now() + 5 * 60_000 });
-  }
-  if (product.status && product.status !== "active") return null;
+  const product = await getBarboraProductBySlug(slug);
+  if (!product) return null;
   if (!retailerBrandMatches(input.brand, product.brand_name)) return null;
   const pageScore = scoreText(lookupQuery(input), `${product.brand_name} ${product.title} ${product.Url}`, input.brand);
   const matchConfidence = Math.min(1, indexScore * 0.35 + pageScore * 0.65);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rankSimilarProducts, scoreCatalog } from "./scoring";
+import { rankSimilarProducts, scoreBarboraProduct, scoreCatalog } from "./scoring";
 import type { ProductRecord } from "./types";
 
 function product(
@@ -65,10 +65,66 @@ describe("scoreCatalog", () => {
       product("complete-high", 20, 10, 2),
       product("protein-only", 40, null, 8)
     ]);
-    expect(withIncomplete[1].percentileBreakdown?.protein).toBeLessThan(
-      completeOnly[1].percentileBreakdown?.protein ?? 0
+    expect(withIncomplete[1].criterionScores?.protein).toBeLessThan(
+      completeOnly[1].criterionScores?.protein ?? 0
     );
     expect(withIncomplete[2].matchScore).toBeNull();
+  });
+});
+
+describe("scoreBarboraProduct", () => {
+  it("builds a two-signal quick view when the exact page omits fiber", () => {
+    const scored = scoreBarboraProduct({
+      ...product("barbora-food", 22, null, 14, "other"),
+      energyKcalPer100: 594,
+      nutritionBasis: "100g"
+    });
+
+    expect(scored.matchScore).toBe(38);
+    expect(scored.matchReason).toBe("partial_nutrition");
+    expect(scored.ratingBasis).toBe("barbora_reference_partial");
+    expect(scored.ratingSignalCount).toBe(2);
+    expect(scored.criterionScores).toEqual({ protein: 55, fiber: null, inverseSugar: 20 });
+  });
+
+  it("builds a full three-signal reference view when fiber is listed", () => {
+    const scored = scoreBarboraProduct({
+      ...product("barbora-complete", 25, 8, 2, "other"),
+      energyKcalPer100: 300,
+      nutritionBasis: "100g"
+    });
+
+    expect(scored.matchScore).toBe(100);
+    expect(scored.matchReason).toBe("complete");
+    expect(scored.ratingBasis).toBe("barbora_reference");
+    expect(scored.ratingSignalCount).toBe(3);
+  });
+
+  it("uses the lower EU low-sugar threshold for liquids", () => {
+    const solid = scoreBarboraProduct({
+      ...product("solid", 4, null, 4, "other"),
+      energyKcalPer100: 80,
+      nutritionBasis: "100g"
+    });
+    const liquid = scoreBarboraProduct({
+      ...product("liquid", 4, null, 4, "other"),
+      energyKcalPer100: 80,
+      nutritionBasis: "100ml"
+    });
+
+    expect(solid.criterionScores?.inverseSugar).toBe(100);
+    expect(liquid.criterionScores?.inverseSugar).toBe(55);
+  });
+
+  it("does not invent a rating without protein, sugar and energy", () => {
+    const scored = scoreBarboraProduct({
+      ...product("non-food", null, null, null, "other"),
+      energyKcalPer100: null,
+      nutritionBasis: "100g"
+    });
+
+    expect(scored.matchScore).toBeNull();
+    expect(scored.matchReason).toBe("missing_nutrition");
   });
 });
 

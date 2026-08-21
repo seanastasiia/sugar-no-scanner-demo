@@ -1,4 +1,11 @@
-export type ProductFormat = "bar" | "cookie" | "truffle" | "puree";
+export type ProductFormat = "bar" | "cookie" | "truffle" | "puree" | "other";
+
+export type NutritionBasis = "100g" | "100ml";
+
+export type RatingBasis =
+  | "catalog_percentile"
+  | "barbora_reference"
+  | "barbora_reference_partial";
 
 export type NutrientDataStatus = "verified" | "secondary" | "pending";
 
@@ -25,6 +32,8 @@ export interface ProductRecord {
   aliases: string[];
   format: ProductFormat;
   packSizeG: number;
+  nutritionBasis?: NutritionBasis;
+  energyKcalPer100?: number | null;
   gtin: string | null;
   nutrientsPer100g: NutrientsPer100g;
   noAddedSugarClaim: boolean;
@@ -37,11 +46,13 @@ export interface ProductRecord {
 
 export interface ScoredProduct extends ProductRecord {
   matchScore: number | null;
-  matchReason: "complete" | "missing_nutrition";
-  percentileBreakdown: {
-    protein: number;
-    fiber: number;
-    inverseSugar: number;
+  matchReason: "complete" | "partial_nutrition" | "missing_nutrition";
+  ratingBasis: RatingBasis;
+  ratingSignalCount: number;
+  criterionScores: {
+    protein: number | null;
+    fiber: number | null;
+    inverseSugar: number | null;
   } | null;
 }
 

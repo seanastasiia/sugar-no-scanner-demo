@@ -14,10 +14,10 @@ The app is a working mobile-first web/PWA concept with:
 - automatic live-camera frame sampling after the user grants permission;
 - one recognition API for camera, saved images, a deterministic four-item shelf photo and a four-item checkout photo;
 - a reproducible index of 19,076 Barbora Latvia product pages for package naming and retailer lookup;
-- a curated nutrition catalog of 40 protein snacks used only for the verified Sugar.no badge;
-- 10 golden products with independently sourced fiber and a deterministic three-signal Sugar.no badge;
-- 30 catalog products that intentionally show `Data pending` until fiber is verified;
-- photorealistic concept scenes with compact green-check, yellow-minus and coral-alert markers placed only over products with a complete Sugar.no rating;
+- a curated nutrition catalog of 40 protein snacks, including 10 golden products with independently sourced fiber and a deterministic three-signal category badge;
+- on-demand Sugar.no quick views for exact Barbora food pages that list energy, protein and total sugar, without preloading all 19,076 pages;
+- an explicit `2 of 3 source-backed signals` state when Barbora omits fiber; missing fiber stays neutral and is never scored as low;
+- photorealistic concept scenes with compact green-check, yellow-minus and coral-alert markers placed only over products with a numeric Sugar.no result;
 - a camera-first full-viewport scanner with Sugar.no overlays and a compact bottom results sheet that shows product thumbnails, then expands into a dedicated comparison page;
 - normalized detection boxes, a de-duplicated checkout tray, similar options and exact Barbora product links;
 - camera-read shelf prices plus a live Barbora offer lookup with source time and fail-closed exact-SKU state;
@@ -32,9 +32,9 @@ The guaranteed shelf and checkout scenes work without third-party credentials. L
 
 ## Product rules
 
-Recognition and nutrition are separate trust levels. Gemini may read any visible package identity and a clearly associated physical shelf-price label. It never supplies nutrition, a Sugar.no score or a retailer price. The server maps the observed identity to the 19,076-entry Barbora page index, verifies the best candidate against the live public page and assigns curated nutrition only when the exact SKU belongs to the 40-product verified catalog.
+Recognition and nutrition are separate trust levels. Gemini may read any visible package identity and a clearly associated physical shelf-price label. It never supplies nutrition, a Sugar.no score or a retailer price. The server maps the observed identity to the 19,076-entry Barbora page index and verifies the best candidate against the live public page. A curated SKU receives the three-signal category badge. Any other exact food SKU may receive an on-demand quick view only from energy, protein, fiber and total sugar actually listed on that exact Barbora page.
 
-An unknown product can therefore show `Product recognized` without receiving a Sugar.no badge. Camera boxes and colored shelf markers are reserved for products with a complete verified Sugar.no rating; identified-but-unrated packages remain available in the result sheet without an `i` marker over the shelf. The `Top fit / Mixed / Trade-offs` legend appears only when at least one visible product has complete verified nutrition; otherwise the interface explains that the detected products were not highlighted. The price card appears only when Gemini reports a separate physical price label, confidence is at least 0.90 and the exact OCR text includes a matching EUR amount. A package number, deposit or online offer cannot create the card. A possible retailer candidate is never linked or displayed as a comparison. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. Because only one retailer is connected, the interface says `Barbora online`, never `best price`.
+An unknown or data-poor product can therefore show `Product recognized` without receiving a Sugar.no result. Camera boxes and colored shelf markers are reserved for numeric Sugar.no results; identified-but-unrated packages remain available in the result sheet without an `i` marker over the shelf. A two-signal result is labelled `Sugar.no quick view · 2/3`, names fiber as `Not listed` and explains that it is not the full badge. The `Top fit / Mixed / Trade-offs` legend appears only when at least one visible product has a numeric result; otherwise the interface explains that the detected products were not highlighted. The price card appears only when Gemini reports a separate physical price label, confidence is at least 0.90 and the exact OCR text includes a matching EUR amount. A package number, deposit or online offer cannot create the card. A possible retailer candidate is never linked or displayed as a comparison. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. Because only one retailer is connected, the interface says `Barbora online`, never `best price`.
 
 The scanner remains the primary surface after recognition. A 166 px bottom sheet names the rated picks and exposes a horizontal thumbnail preview without covering most of the shelf. `View products`, the title or the list icon expands that sheet into a full-height, internally scrollable comparison page on phones; collapsing it returns to the held camera frame. While the full page is open, background camera controls are removed from keyboard and screen-reader focus, Escape collapses the page and reduced-motion users receive the same state change without animation.
 
@@ -49,6 +49,8 @@ The implementation keeps a deterministic internal comparison score for ranking:
 The main UI does not show an unexplained number. It presents a Sugar.no badge with three separate, text-labelled signals: Protein, Fiber and Sugar. Each signal is `Higher`, `Middle` or `Lower` relative to the verified protein-snack catalog; the sugar direction is inverted so lower total sugar receives the stronger signal. Shelf markers summarize the combined result as `Top fit`, `Mixed` or `Trade-offs`. Green, yellow and coral/red are supporting visual cues paired with icons and text, never the only explanation and never a verdict that food is good or bad.
 
 Each percentile uses all available verified values in the 40-product protein-snack category. A product receives no overall badge state unless its protein, fiber and total sugar are all numeric. A verified `no added sugar` claim is shown separately and never changes the comparison. Similar products rank by format first and internal comparison second; commercial status is not part of recommendation ranking.
+
+For exact Barbora food pages outside that category, the server calculates a separate reference-based quick view at recognition time. It requires page-listed energy, protein and total sugar. Protein uses the EU `source of protein` / `high protein` energy-share thresholds; total sugar uses the EU low-sugar threshold of 5 g/100 g for solids or 2.5 g/100 ml for liquids. Fiber uses the EU source/high-fiber thresholds when Barbora lists a numeric value. Sugar.no's yellow middle sugar band is explicitly defined as up to twice the official low-sugar threshold. The available two or three signal bands are averaged for the shelf summary. `Best fit in this scan` appears only when at least two rated products share the same rating basis; a category-percentile badge is never ranked against a retailer-reference quick view. These nutrition-claim references are not a medical or absolute health score. Adult products and pages without enough nutrition remain unrated. See [Regulation (EC) No 1924/2006](https://eur-lex.europa.eu/legal-content/en/TXT/?uri=CELEX%3A32006R1924).
 
 `Save for next shop` is a real demo action rather than explanatory copy. Saved product IDs live only in browser `localStorage`, can be removed at any time and are restored after reload. The demo has no account or cross-device synchronization; the server receives only the bounded `product_saved` or `product_unsaved` analytics event, never the local list itself.
 
@@ -118,7 +120,7 @@ E2E_PRODUCTION=1 CI=1 npm run test:e2e
 
 - `POST /api/auth`: validates the demo code and sets a 12-hour HttpOnly cookie.
 - `POST /api/recognize`: accepts a bounded image data URL or deterministic sample source; returns package identity, normalized boxes, optional camera-read shelf price, exact/possible retailer offer state and `imageStored: false`.
-- `GET /api/products/:id`: returns sourced nutrition, Match and independent alternatives.
+- `GET /api/products/:id`: returns curated nutrition or an on-demand exact-Barbora quick view plus independent alternatives when available.
 - `POST /api/events`: stores bounded metadata only and rejects raw-image-like fields.
 - `GET /api/health`: Railway health check with commit metadata.
 
@@ -126,9 +128,9 @@ E2E_PRODUCTION=1 CI=1 npm run test:e2e
 
 `npm run catalog:sync` refreshes exactly 40 scored products from public Barbora Latvia pages and applies the reviewed field-level overrides in `data/fiber-overrides.json`. `npm run catalog:sync:barbora-index` refreshes the product slugs published in Barbora's public sitemap; the current snapshot contains 19,076 pages. `npm run catalog:validate` checks both datasets, uniqueness, exact retailer links and nutrition completeness.
 
-The broad index intentionally stores no price snapshot. After a package is read, the server fetches only the top candidate product pages, rejects candidates whose retailer brand conflicts with the observed package, parses the current public `window.product` payload and caches it for five minutes. This keeps price provenance and timestamp explicit without claiming inventory, affiliate status or cross-retailer best price.
+The broad index intentionally stores no price or nutrition snapshot. After a package is read, the server fetches only the top candidate product pages, rejects candidates whose retailer brand conflicts with the observed package, parses the current public `window.product` payload and caches it for five minutes. The same exact page may produce a two- or three-signal quick view when it lists sufficient food nutrition. This keeps provenance and timestamp explicit without claiming inventory, affiliate status or cross-retailer best price.
 
-Barbora publishes protein and total sugars for these products but not numeric fiber. Fiber therefore needs a manufacturer/label source. Pending products remain recognizable and show their known facts, but do not receive Match.
+The 19,076-entry sitemap includes non-food, alcohol and pages without nutrition, so it is not a 19,076-product nutrition database. EU labels usually give energy, protein and total sugar, while fiber is voluntary. The quick view therefore commonly has two signals. A complete three-signal badge still requires page-listed or independently sourced fiber; no missing value is generated by AI.
 
 The measured path from broad package naming to broad verified rating coverage is documented in [docs/latvia-coverage-plan.md](docs/latvia-coverage-plan.md). It separates exact-SKU identity, sourced nutrition and category-specific comparison rather than treating one Gemini label as a complete product record.
 
@@ -184,6 +186,7 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 - [Monetization notes](docs/monetization-research.md)
 - [Mobile screenshots](docs/screenshots)
 - [Camera-first collapsed sheet](docs/screenshots/shelf-mobile.png) and [expanded result page](docs/screenshots/shelf-results-mobile.png)
+- [On-demand exact-Barbora quick view](docs/screenshots/barbora-quick-view-mobile.png)
 - [Defect log](Bugs.md)
 - `docs/test-runs/` for commit-specific technical results
 
@@ -193,4 +196,4 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 
 ## Known limitations
 
-The generated deterministic shelf and checkout photos prove the multi-product interaction with overlays on the source scene; they are not evidence of computer-vision accuracy. The broad Barbora index improves coverage but does not mean every package will receive an exact SKU match: packaging, language, variants, availability and prices change. Shelf-price OCR is shown only above its confidence threshold and still needs physical Latvian store validation. Barbora is the only connected retailer, so `best price` is not claimed. Device-local saved options still cover only curated products and do not sync between phones. Real p95 latency, false positives, physical iPhone behavior and cross-retailer comparison remain unverified. See [Bugs.md](Bugs.md) for the live list.
+The generated deterministic shelf and checkout photos prove the multi-product interaction with overlays on the source scene; they are not evidence of computer-vision accuracy. The broad Barbora index improves identity and on-demand data coverage but does not mean every package will receive an exact SKU match or a rating: packaging, language, variants, availability, nutrition and prices change, and the index includes non-food. Page-listed nutrition is retailer data, not an independently audited label database. Shelf-price OCR is shown only above its confidence threshold and still needs physical Latvian store validation. Barbora is the only connected retailer, so `best price` is not claimed. Device-local saved options do not sync between phones. Real p95 latency, false positives, physical iPhone behavior and cross-retailer comparison remain unverified. See [Bugs.md](Bugs.md) for the live list.

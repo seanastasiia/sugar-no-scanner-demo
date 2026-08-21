@@ -30,7 +30,11 @@ export function scoreCatalog(products: ProductRecord[]): ScoredProduct[] {
         ...product,
         matchScore: null,
         matchReason: "missing_nutrition",
-        percentileBreakdown: null
+        ratingBasis: "catalog_percentile",
+        ratingSignalCount: Object.values(product.nutrientsPer100g).filter(
+          (value) => typeof value === "number" && Number.isFinite(value)
+        ).length,
+        criterionScores: null
       };
     }
 
@@ -42,9 +46,74 @@ export function scoreCatalog(products: ProductRecord[]): ScoredProduct[] {
       ...product,
       matchScore: Math.round((protein + fiber + inverseSugar) / 3),
       matchReason: "complete",
-      percentileBreakdown: { protein, fiber, inverseSugar }
+      ratingBasis: "catalog_percentile",
+      ratingSignalCount: 3,
+      criterionScores: { protein, fiber, inverseSugar }
     };
   });
+}
+
+function proteinReferenceScore(proteinG: number, energyKcal: number): number {
+  const proteinEnergyShare = energyKcal > 0 ? ((proteinG * 4) / energyKcal) * 100 : 0;
+  if (proteinEnergyShare >= 20) return 100;
+  if (proteinEnergyShare >= 12) return 55;
+  return 20;
+}
+
+function fiberReferenceScore(fiberG: number, energyKcal: number): number {
+  const perHundredKcal = energyKcal > 0 ? (fiberG / energyKcal) * 100 : 0;
+  if (fiberG >= 6 || perHundredKcal >= 3) return 100;
+  if (fiberG >= 3 || perHundredKcal >= 1.5) return 55;
+  return 20;
+}
+
+function inverseSugarReferenceScore(totalSugarG: number, basis: ProductRecord["nutritionBasis"]): number {
+  const lowSugarThreshold = basis === "100ml" ? 2.5 : 5;
+  if (totalSugarG <= lowSugarThreshold) return 100;
+  // Sugar.no's demo middle band is intentionally explicit: up to 2x the EU low-sugar threshold.
+  if (totalSugarG <= lowSugarThreshold * 2) return 55;
+  return 20;
+}
+
+/**
+ * Builds an on-demand Sugar.no quick view from nutrients listed on an exact
+ * Barbora product page. The values are reference bands, not category percentiles
+ * and not a medical or absolute health score.
+ */
+export function scoreBarboraProduct(product: ProductRecord): ScoredProduct {
+  const { proteinG, fiberG, totalSugarG } = product.nutrientsPer100g;
+  const energyKcal = product.energyKcalPer100;
+  const hasProtein = typeof proteinG === "number" && Number.isFinite(proteinG);
+  const hasFiber = typeof fiberG === "number" && Number.isFinite(fiberG);
+  const hasSugar = typeof totalSugarG === "number" && Number.isFinite(totalSugarG);
+  const hasEnergy = typeof energyKcal === "number" && Number.isFinite(energyKcal) && energyKcal > 0;
+
+  if (!hasProtein || !hasSugar || !hasEnergy) {
+    return {
+      ...product,
+      matchScore: null,
+      matchReason: "missing_nutrition",
+      ratingBasis: "barbora_reference_partial",
+      ratingSignalCount: [hasProtein && hasEnergy, hasFiber && hasEnergy, hasSugar].filter(Boolean).length,
+      criterionScores: null
+    };
+  }
+
+  const protein = proteinReferenceScore(proteinG, energyKcal);
+  const fiber = hasFiber ? fiberReferenceScore(fiberG, energyKcal) : null;
+  const inverseSugar = inverseSugarReferenceScore(totalSugarG, product.nutritionBasis);
+  const availableScores = [protein, fiber, inverseSugar].filter(
+    (score): score is number => typeof score === "number"
+  );
+
+  return {
+    ...product,
+    matchScore: Math.round(availableScores.reduce((sum, score) => sum + score, 0) / availableScores.length),
+    matchReason: fiber === null ? "partial_nutrition" : "complete",
+    ratingBasis: fiber === null ? "barbora_reference_partial" : "barbora_reference",
+    ratingSignalCount: availableScores.length,
+    criterionScores: { protein, fiber, inverseSugar }
+  };
 }
 
 export function rankSimilarProducts(

@@ -8,7 +8,7 @@ Target length: 2–3 minutes. Use the deterministic shelf and checkout scenes fo
 
 Show the private access screen and enter the code.
 
-“For this Latvia proof of concept we index more than 19,000 Barbora product pages, so the camera can name ordinary packaged products. Nutrition remains deliberately constrained: only 40 sourced protein snacks receive the Sugar.no badge, and the model never invents nutrition.”
+“For this Latvia proof of concept we index 19,076 Barbora pages, so the camera can name ordinary packaged products. Ten curated snacks have the full three-signal category badge. For an exact food outside that set, we can now build a live two-signal quick view from the nutrition on its exact Barbora page. The model never invents nutrition.”
 
 ## Shelf
 
@@ -18,7 +18,7 @@ Tap `Shelf photo`.
 
 Tap two product boxes and show the Sugar.no badge.
 
-“Instead of an unexplained score such as 86, the badge shows the three inputs separately: protein, fiber and total sugar. These are relative comparisons inside this protein-snack catalog, not a good-food or bad-food verdict. If fiber is not independently verified, the overall state remains pending rather than pretending to know.”
+“Instead of an unexplained score such as 86, the card shows protein, fiber and total sugar separately. The full curated badge is a relative comparison inside the protein-snack catalog. Outside it, a clearly labelled quick view uses transparent reference bands from the exact retailer page. If fiber is not listed, it stays neutral and the card says two of three — it never pretends to know.”
 
 Open a similar option.
 
@@ -46,7 +46,7 @@ Tap `Save for next shop`, close the scanner and show `Saved options`.
 
 Suggested final line:
 
-> We can name an ordinary package, keep nutrition honest and check a source-aware online offer in one camera flow. The Latvia prototype indexes more than 19,000 Barbora pages while reserving the Sugar.no badge for 40 verified snacks; the next validation is whether people trust the match and act on the comparison.
+> We can name an ordinary package, build a source-aware Sugar.no view and check an online offer in one camera flow. The Latvia prototype indexes 19,076 Barbora pages, gives ten curated products a full three-signal badge and can create a transparent two-signal quick view for other exact food pages. The next validation is real-store identity and result coverage, not a claim that all indexed pages are rated foods.
 
 ## If recognition fails live
 

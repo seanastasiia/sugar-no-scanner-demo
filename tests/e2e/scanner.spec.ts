@@ -310,6 +310,9 @@ test("live camera groups repeated packs, holds the result and replaces it only a
 
 test("a product outside the scored catalog is named and receives an honest price comparison", async ({ page }) => {
   await unlock(page);
+  await page.route("**/api/products/**", async (route) => {
+    await route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: "not_found" }) });
+  });
   let exactSku = true;
   let includeShelfPrice = true;
   await page.route("**/api/recognize", async (route) => {
@@ -418,6 +421,116 @@ test("a product outside the scored catalog is named and receives an honest price
   await page.getByRole("button", { name: "Open product results", exact: true }).click();
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
   await expect(page.getByText(/Keep the package and its shelf label/)).toHaveCount(0);
+});
+
+test("an exact Barbora food gets an on-demand two-signal Sugar.no quick view", async ({ page }) => {
+  await unlock(page);
+  const productId = "barbora:zemesrieksti-estrella-ar-medu-140-g";
+  await page.route("**/api/recognize", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: "barbora-rating-test",
+        status: "matched",
+        latencyMs: 1_400,
+        model: "gemini-3.7-flash",
+        imageStored: false,
+        detections: [
+          {
+            productId,
+            catalogProductId: null,
+            confidence: 0.96,
+            box: { x: 0.18, y: 0.16, width: 0.64, height: 0.68 },
+            observedText: "Estrella peanuts with honey",
+            identity: {
+              brand: "ESTRELLA",
+              name: "Zemesrieksti ar medu",
+              variant: null,
+              packSize: "140 g",
+              category: "Nuts",
+              matchKind: "barbora"
+            },
+            shelfPrice: null,
+            retailerOffer: null
+          }
+        ]
+      })
+    });
+  });
+  await page.route("**/api/products/**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 450));
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        product: {
+          id: productId,
+          retailerProductId: "zemesrieksti-estrella-ar-medu-140-g",
+          brand: "ESTRELLA",
+          name: "Zemesrieksti ESTRELLA ar medu 140g",
+          shortName: "Zemesrieksti ESTRELLA ar medu 140g",
+          aliases: [],
+          format: "other",
+          packSizeG: 140,
+          nutritionBasis: "100g",
+          energyKcalPer100: 594,
+          gtin: null,
+          nutrientsPer100g: { proteinG: 22, fiberG: null, totalSugarG: 14 },
+          noAddedSugarClaim: false,
+          imageUrl: null,
+          retailerUrl: "https://barbora.lv/produkti/zemesrieksti-estrella-ar-medu-140-g",
+          sources: [
+            {
+              label: "Exact Barbora product page",
+              url: "https://barbora.lv/produkti/zemesrieksti-estrella-ar-medu-140-g",
+              checkedAt: "2026-08-21T12:00:00.000Z",
+              fields: ["identity", "retailerUrl", "protein", "totalSugar"],
+              status: "secondary"
+            }
+          ],
+          isGolden: false,
+          accent: "coral",
+          matchScore: 38,
+          matchReason: "partial_nutrition",
+          ratingBasis: "barbora_reference_partial",
+          ratingSignalCount: 2,
+          criterionScores: { protein: 55, fiber: null, inverseSugar: 20 }
+        },
+        alternatives: []
+      })
+    });
+  });
+
+  await page.waitForLoadState("networkidle");
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "exact-barbora-food.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "base64"
+    )
+  });
+
+  await expect(page.getByRole("status")).toContainText("1 unique product recognized");
+  await expect(page.getByText("Checking nutrition…", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open Sugar.no-rated"]')).toHaveCount(1);
+  await expect(page.getByText("1 Sugar.no pick", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
+  const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  await expect.poll(async () => (await resultsDialog.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(viewportHeight * 0.95);
+  const badge = page.getByLabel("Sugar.no badge");
+  await expect(badge.getByText("Sugar.no quick view · 2/3", { exact: true })).toBeVisible();
+  await expect(badge.getByText("22g", { exact: true })).toBeVisible();
+  await expect(badge.getByText("14g", { exact: true })).toBeVisible();
+  await expect(badge.getByText("Not listed", { exact: true })).toBeVisible();
+  await expect(page.getByText("Values per 100 g · 2 of 3 source-backed signals", { exact: true })).toBeVisible();
+  await expect(page.getByText("Quick view · 2 of 3 signals", { exact: true })).toBeVisible();
+  await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
+  await page.screenshot({ path: "docs/screenshots/barbora-quick-view-mobile.png" });
+  const accessibility = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(accessibility.violations).toEqual([]);
 });
 
 test("entry experience has no automated WCAG A/AA violations", async ({ page }) => {

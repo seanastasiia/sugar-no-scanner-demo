@@ -5,7 +5,7 @@ export type MatchTone = "strong" | "middle" | "lower" | "pending";
 export interface MatchCriterion {
   key: "protein" | "fiber" | "sugar";
   label: string;
-  status: "Higher" | "Middle" | "Lower" | "Pending";
+  status: "Higher" | "Middle" | "Lower" | "Pending" | "Not listed";
   tone: MatchTone;
 }
 
@@ -23,7 +23,7 @@ export function overallMatchPresentation(score: number | null): { label: string;
 }
 
 export function matchCriteria(product: ScoredProduct): MatchCriterion[] {
-  const breakdown = product.percentileBreakdown;
+  const breakdown = product.criterionScores;
   if (!breakdown) {
     return [
       { key: "protein", label: "Protein", status: "Pending", tone: "pending" },
@@ -32,9 +32,10 @@ export function matchCriteria(product: ScoredProduct): MatchCriterion[] {
     ];
   }
 
-  const proteinTone = percentileTone(breakdown.protein);
-  const fiberTone = percentileTone(breakdown.fiber);
-  const sugarTone = percentileTone(breakdown.inverseSugar);
+  const criterionTone = (value: number | null) => (value === null ? "pending" as const : percentileTone(value));
+  const proteinTone = criterionTone(breakdown.protein);
+  const fiberTone = criterionTone(breakdown.fiber);
+  const sugarTone = criterionTone(breakdown.inverseSugar);
   const directionalStatus = (tone: Exclude<MatchTone, "pending">, inverse = false) => {
     if (tone === "middle") return "Middle" as const;
     if (inverse) return tone === "strong" ? ("Lower" as const) : ("Higher" as const);
@@ -42,8 +43,23 @@ export function matchCriteria(product: ScoredProduct): MatchCriterion[] {
   };
 
   return [
-    { key: "protein", label: "Protein", status: directionalStatus(proteinTone), tone: proteinTone },
-    { key: "fiber", label: "Fiber", status: directionalStatus(fiberTone), tone: fiberTone },
-    { key: "sugar", label: "Sugar", status: directionalStatus(sugarTone, true), tone: sugarTone }
+    {
+      key: "protein",
+      label: "Protein",
+      status: proteinTone === "pending" ? "Not listed" : directionalStatus(proteinTone),
+      tone: proteinTone
+    },
+    {
+      key: "fiber",
+      label: "Fiber",
+      status: fiberTone === "pending" ? "Not listed" : directionalStatus(fiberTone),
+      tone: fiberTone
+    },
+    {
+      key: "sugar",
+      label: "Sugar",
+      status: sugarTone === "pending" ? "Not listed" : directionalStatus(sugarTone, true),
+      tone: sugarTone
+    }
   ];
 }
