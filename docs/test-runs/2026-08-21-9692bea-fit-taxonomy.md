@@ -41,4 +41,6 @@
 
 ## Production verification
 
-Pending Railway deployment and authenticated WebKit smoke.
+- Railway deployment: `67e90e17-fec5-4680-8d5c-2e9560c8fa33`, status `SUCCESS`.
+- `/api/health`: `status=ok`, commit `aa1a4ca91468687b13f3dcaf0b2d997930ee62c9`.
+- Authenticated production WebKit smoke: HTTP 200; the shelf legend contained one exact `Great fit`, one `Moderate fit` and one `Low fit`; exact legacy-label count was zero.
