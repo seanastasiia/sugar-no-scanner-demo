@@ -24,6 +24,7 @@ test("private gate rejects the wrong code and accepts the configured code", asyn
   await page.getByLabel("Investor access code").fill("e2e-access");
   await page.getByRole("button", { name: "Open demo" }).click();
   await expect(page.getByRole("heading", { name: /One camera/ })).toBeVisible();
+  await expect(page.getByText("Private demo", { exact: true })).toHaveCount(0);
 });
 
 test("sample shelf photo highlights products and shows a three-signal Sugar.no badge", async ({ page }) => {

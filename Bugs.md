@@ -13,6 +13,7 @@ This file is the running record of scanner defects found and resolved.
 
 ## Resolved
 
+- **2026-08-21: the persistent `Private demo` header badge competed with the camera.** The scanner header now shows only the Sugar.no wordmark; the access-code gate and privacy protections are unchanged.
 - **2026-08-21: a single recognized product called itself `Best fit in this scan`.** The best-in-scan chip now requires at least two rated products, so it only appears when a real comparison exists.
 - **2026-08-21: only 10 curated products displayed a Sugar.no result despite 19,076 Barbora pages being indexed.** The scanner now hydrates an exact `barbora:<slug>` SKU after recognition, fetches its live retailer page and creates an on-demand reference-based quick view when energy, protein and total sugar are listed. Missing fiber is a neutral `Not listed` third criterion and the UI says `2 of 3 source-backed signals`; adult, non-food and nutrition-poor pages remain unrated rather than receiving invented data.
 - **2026-08-21: product details displaced the camera and made the shelf feel secondary.** The scanner now owns the full phone viewport. Recognition first opens a compact thumbnail sheet over the bottom edge; the user deliberately expands it into a full comparison page and can collapse it back to the held camera frame. The expanded state traps interaction away from background camera controls and supports Escape/reduced motion.

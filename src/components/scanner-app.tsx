@@ -636,9 +636,6 @@ export function ScannerApp() {
         <div className={styles.wordmark} aria-label="Sugar dot no">
           Sugar<span>.no</span>
         </div>
-        <div className={styles.privateBadge}>
-          <Lock aria-hidden="true" size={14} /> Private demo
-        </div>
       </header>
 
       {!activeExperience ? (

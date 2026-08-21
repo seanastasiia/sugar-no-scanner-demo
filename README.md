@@ -11,6 +11,7 @@ Private Latvia proof of concept for camera-based identification and comparison o
 The app is a working mobile-first web/PWA concept with:
 
 - a private access-code gate;
+- a brand-only scanner header without a persistent private-demo label; access remains protected by the gate;
 - automatic live-camera frame sampling after the user grants permission;
 - one recognition API for camera, saved images, a deterministic four-item shelf photo and a four-item checkout photo;
 - a reproducible index of 19,076 Barbora Latvia product pages for package naming and retailer lookup;

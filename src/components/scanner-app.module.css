@@ -15,7 +15,7 @@
   display: flex;
   height: calc(62px + env(safe-area-inset-top));
   align-items: flex-end;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 0 20px 14px;
   background: linear-gradient(to bottom, rgb(242 237 228 / 96%), rgb(242 237 228 / 82%));
   backdrop-filter: blur(16px);
@@ -29,13 +29,6 @@
   pointer-events: none;
 }
 
-.scannerHeader .privateBadge {
-  border-color: rgb(255 255 255 / 24%);
-  background: rgb(0 0 0 / 34%);
-  color: #ffffff;
-  backdrop-filter: blur(12px);
-}
-
 .wordmark {
   font-size: 18px;
   font-weight: 800;
@@ -44,20 +37,6 @@
 
 .wordmark span {
   color: var(--coral);
-}
-
-.privateBadge {
-  display: inline-flex;
-  min-height: 32px;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: rgb(255 253 248 / 74%);
-  color: #544b44;
-  font-size: 12px;
-  font-weight: 700;
 }
 
 .intro {
@@ -1613,7 +1592,6 @@
     background: rgb(23 21 19 / 88%);
   }
 
-  .privateBadge,
   .sheetIconButton,
   .sheetPreview button,
   .sheetPreviewThumb,
