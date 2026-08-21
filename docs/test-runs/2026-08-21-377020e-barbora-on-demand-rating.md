@@ -1,6 +1,7 @@
 # Release verification: on-demand Barbora nutrition rating
 
 - Application code commit: `377020e01c7cbd1639de47ca22d2d92c08924f1e`
+- Release evidence commit: `3591376ccbe87f3b26ac52e046e06367121aacfe`
 - Branch: `main`
 - Production URL: `https://sugar-no-scanner-demo-production.up.railway.app`
 - Verification date: 2026-08-21, Europe/Riga
@@ -53,3 +54,11 @@ This proves the runtime data path on one real page. It is not a coverage estimat
 6. Confirm the retailer page under `Data sources and limits` is the exact recognized SKU.
 
 Real-store identity accuracy and the proportions of full, partial and unrated results remain unmeasured. The 19,076-page index must not be presented as 19,076 rated foods.
+
+## Production verification
+
+- Railway deployment: `57389e46-0470-4f25-a3d9-6d1aea34b3b0`, status `Online`.
+- `/api/health`: `status=ok`, commit `3591376ccbe87f3b26ac52e046e06367121aacfe`.
+- Authenticated production product API: Estrella peanuts returned `partial_nutrition`, score 38, two signals, protein 22 g, fiber null and total sugar 14 g.
+- Authenticated production product API: Sanpellegrino Zero Peach returned `missing_nutrition`, null score and zero signals.
+- Production WebKit smoke: the entry page displayed `19,076 Barbora pages indexed`; Shelf photo completed with four unique products and four Sugar.no markers.
