@@ -115,6 +115,9 @@ test("scanner remains operable at narrow portrait and phone landscape sizes", as
   await unlock(page);
   await page.getByRole("button", { name: /Shelf photo/ }).click();
   await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
+  const portraitStage = page.getByLabel("Shelf photo scanner").locator(":scope > div").first();
+  const portraitStageBox = await portraitStage.boundingBox();
+  expect(portraitStageBox?.height).toBeGreaterThanOrEqual(812 * 0.66);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.setViewportSize({ width: 812, height: 375 });

@@ -18,7 +18,7 @@ The app is a working mobile-first web/PWA concept with:
 - 10 golden products with independently sourced fiber and a deterministic three-signal Sugar.no badge;
 - 30 catalog products that intentionally show `Data pending` until fiber is verified;
 - photorealistic concept scenes with compact green-check, yellow-minus and coral-alert markers placed over the detected packages;
-- a Checkit-inspired camera-first layout, selected-product focus and compact bottom sheet with a horizontally scrollable tray and similar options;
+- a Checkit-inspired camera-first layout with an enlarged, stable half-screen camera area, selected-product focus and compact bottom sheet with a horizontally scrollable tray and similar options;
 - normalized detection boxes, a de-duplicated checkout tray, similar options and exact Barbora product links;
 - camera-read shelf prices plus a live Barbora offer lookup with source time and fail-closed exact-SKU state;
 - same-SKU grouping so repeated facings such as four Coca-Cola cans count as one unique product;

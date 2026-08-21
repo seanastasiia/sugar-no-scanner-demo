@@ -363,7 +363,7 @@
 .experience {
   display: grid;
   min-height: 100dvh;
-  grid-template-rows: minmax(420px, 62svh) 1fr;
+  grid-template-rows: clamp(430px, 68svh, 620px) 1fr;
 }
 
 .stage {

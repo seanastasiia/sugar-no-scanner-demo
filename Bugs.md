@@ -13,6 +13,7 @@ This file is the running record of scanner defects found and resolved.
 
 ## Resolved
 
+- **2026-08-21: the camera area felt too small beside the result sheet.** The portrait scanner stage now uses roughly two thirds of the browser viewport, which keeps the camera close to half of the full iPhone display after Safari chrome and safe areas, while results continue below in the normal page scroll.
 - **2026-08-20: four facings of Coca-Cola were reported as four recognized products.** Recognition now groups detections by curated ID, exact retailer SKU or normalized brand/product identity and renders one union marker per unique product type.
 - **2026-08-20: a possible retailer match for Coca-Cola opened a Pepsi product page.** Retailer page candidates now fail closed on conflicting brands. Possible candidates are not exposed as links or price comparisons; only an exact SKU may open from a scan result.
 - **2026-08-20: live results accumulated stale products and changed while the user was reading.** A successful live scan now pauses the video frame and analysis, holds one stable result and offers a 46 px `Scan again` action that clears the previous result before resuming.

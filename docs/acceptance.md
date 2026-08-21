@@ -8,6 +8,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 | 40 Latvia SKUs | Generated catalog validation and unit test | Pass |
 | Broad Barbora discovery | Reproducible public-sitemap index contains 19,076 unique product slugs | Pass as index |
 | Product outside scored catalog | Generic identity is implemented; the Sanpellegrino screenshot resolves to an exact Barbora page while non-exact candidates remain unlinked | Pass as concept |
+| Camera occupies the primary viewport area | Portrait stage is clamped to 430–620 px and WebKit asserts at least 66% of a 375×812 browser viewport; landscape and tablet retain dedicated layouts | Pass locally |
 | Repeated facings count once | Server and client normalize same-SKU detections; unit test merges four Coca-Cola descriptions and live-camera WebKit test renders one unique product | Pass locally |
 | Live result remains readable | Successful camera recognition pauses the frame and requests until `Scan again`; WebKit test confirms no background replacement and then a clean new result | Pass locally |
 | Conflicting retailer brand | Coca-Cola/Pepsi brand regression is rejected before any offer is returned; possible matches have no UI link | Pass locally |
