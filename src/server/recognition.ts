@@ -5,6 +5,8 @@ import type { ProductDetection, RecognitionResponse, ScanSource, ScoredProduct }
 import { getBarboraOfferBySlug, resolveBarboraOffer, type BarboraLookupInput } from "./barbora-catalog";
 
 export const DEFAULT_GEMINI_MODEL = "gemini-3.7-flash";
+const DEFAULT_RECOGNITION_THRESHOLD = 0.72;
+const DEFAULT_FOCUSED_RECOGNITION_THRESHOLD = 0.58;
 
 const providerResponseSchema = z.object({
   detections: z.array(
@@ -123,6 +125,17 @@ export function isTrustedShelfPriceDetection(detection: {
   return Math.round(Number.parseFloat(observedAmount.replace(",", ".")) * 100) === detection.shelfPriceCents;
 }
 
+export function recognitionConfidenceThreshold(
+  focusMode: boolean,
+  environment: Record<string, string | undefined> = process.env
+): number {
+  const fallback = focusMode ? DEFAULT_FOCUSED_RECOGNITION_THRESHOLD : DEFAULT_RECOGNITION_THRESHOLD;
+  const configured = Number.parseFloat(
+    environment[focusMode ? "FOCUSED_RECOGNITION_CONFIDENCE_THRESHOLD" : "RECOGNITION_CONFIDENCE_THRESHOLD"] || ""
+  );
+  return Number.isFinite(configured) && configured >= 0 && configured <= 1 ? configured : fallback;
+}
+
 function normalizeIdentityText(value: string): string {
   return value
     .normalize("NFKD")
@@ -169,6 +182,7 @@ function extractPackSize(value: string): string {
 export async function recognizeProducts(input: {
   imageDataUrl?: string;
   source: ScanSource;
+  focusMode?: boolean;
   sampleFrame?: number;
   catalog: ScoredProduct[];
   requestId: string;
@@ -199,14 +213,19 @@ export async function recognizeProducts(input: {
     };
   }
 
-  const threshold = Number.parseFloat(process.env.RECOGNITION_CONFIDENCE_THRESHOLD || "0.72");
+  const focusMode = input.source === "camera" && Boolean(input.focusMode);
+  const threshold = recognitionConfidenceThreshold(focusMode);
   const { mimeType, base64 } = imageParts(input.imageDataUrl);
   const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
     model,
     contents: [
       createPartFromText(
-        `Identify every clearly visible packaged retail product, even when it is not in a supplied catalog. ` +
+        (focusMode
+          ? `This is a center crop after a broad scan was uncertain. Identify the most prominent readable package in the crop. ` +
+            `Repeated copies of the same package are one SKU; return it once rather than returning an empty result. `
+          : `Identify every clearly visible packaged retail product, even when it is not in a supplied catalog. ` +
+            `Always include the most prominent central readable SKU, and treat repeated copies of it as one product type. `) +
           `Read the front label and return the exact visible brand plus one productName containing the product, variant or flavor and pack size. ` +
           `searchQuery should repeat the identity using useful English or Latvian equivalents of foreign flavor words for retailer matching. ` +
           `Only when a separate physical shelf price label outside the package is clearly visible and associated with that exact package, ` +
@@ -277,6 +296,20 @@ export async function recognizeProducts(input: {
     .map((detection) => ({ ...detection, box: fitBoxToFrame(detection.box) }))
     .filter((detection) => detection.box.width >= 0.02 && detection.box.height >= 0.02)
     .slice(0, 8);
+  if (!visible.length) {
+    console.info(
+      JSON.stringify({
+        event: "recognition_not_sure",
+        requestId: input.requestId,
+        focusMode,
+        rawDetectionCount: parsed.detections.length,
+        maxConfidence: parsed.detections.length
+          ? Math.max(...parsed.detections.map((detection) => detection.confidence))
+          : null,
+        threshold
+      })
+    );
+  }
   const resolvedDetections = await Promise.all(
     visible.map(async (detection, detectionIndex): Promise<ProductDetection> => {
       const packSize = extractPackSize(detection.productName);

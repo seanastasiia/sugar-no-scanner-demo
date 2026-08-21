@@ -22,6 +22,7 @@ import {
   X
 } from "lucide-react";
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CAMERA_FOCUS_CROP, remapRecognitionFromCrop } from "@/lib/camera-focus";
 import { matchCriteria, overallMatchPresentation, type MatchTone } from "@/lib/match-presentation";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import {
@@ -123,6 +124,7 @@ export function ScannerApp() {
   const scanTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inFlightRef = useRef(false);
   const lowResFrameRef = useRef<Uint8ClampedArray | null>(null);
+  const focusRetryRef = useRef(false);
   const lastCaptureRef = useRef(0);
   const sessionIdRef = useRef<string | null>(null);
   const saveFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -216,20 +218,29 @@ export function ScannerApp() {
   );
 
   const applyRecognition = useCallback(
-    (result: RecognitionResponse, eventSource: ScanSource) => {
+    (result: RecognitionResponse, eventSource: ScanSource, focusMode = false) => {
       if (result.status === "provider_unavailable") {
         setRecognitionState("unavailable");
         setStatusMessage("Live recognition needs the Gemini key. Sample scenes still work.");
         return;
       }
       if (result.status !== "matched" || result.detections.length === 0) {
-        setRecognitionState("not_sure");
+        if (eventSource === "camera" && !focusMode) {
+          focusRetryRef.current = true;
+          setRecognitionState("scanning");
+          setStatusMessage("Trying a closer center read…");
+        } else {
+          setRecognitionState("not_sure");
+          setStatusMessage(
+            eventSource === "camera" ? "Not sure — center one package" : "Not sure — use a clearer package photo"
+          );
+        }
         setDetections([]);
         setTray([]);
         setSelectedId(null);
-        setStatusMessage("Not sure — point closer");
         return;
       }
+      focusRetryRef.current = false;
       const uniqueDetections = dedupeProductDetections(result.detections);
       setRecognitionState("matched");
       setDetections(uniqueDetections);
@@ -267,7 +278,7 @@ export function ScannerApp() {
   );
 
   const recognize = useCallback(
-    async (payload: { source: ScanSource; imageDataUrl?: string; sampleFrame?: number }) => {
+    async (payload: { source: ScanSource; imageDataUrl?: string; sampleFrame?: number; focusMode?: boolean }) => {
       if (inFlightRef.current || !navigator.onLine) return;
       inFlightRef.current = true;
       setRecognitionState("scanning");
@@ -279,7 +290,12 @@ export function ScannerApp() {
           body: JSON.stringify(payload)
         });
         if (!response.ok) throw new Error(`Recognition returned ${response.status}`);
-        applyRecognition((await response.json()) as RecognitionResponse, payload.source);
+        const result = (await response.json()) as RecognitionResponse;
+        applyRecognition(
+          payload.focusMode ? remapRecognitionFromCrop(result) : result,
+          payload.source,
+          Boolean(payload.focusMode)
+        );
       } catch (error) {
         setRecognitionState("error");
         setStatusMessage("The scan paused. Try again.");
@@ -299,6 +315,7 @@ export function ScannerApp() {
     streamRef.current?.getTracks().forEach((trackItem) => trackItem.stop());
     streamRef.current = null;
     lowResFrameRef.current = null;
+    focusRetryRef.current = false;
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
@@ -327,13 +344,31 @@ export function ScannerApp() {
     lastCaptureRef.current = now;
 
     const canvas = document.createElement("canvas");
-    const targetWidth = Math.min(video.videoWidth || 960, 960);
+    const sourceWidth = video.videoWidth || 960;
+    const sourceHeight = video.videoHeight || 1280;
+    const focusMode = focusRetryRef.current;
+    const crop = focusMode ? CAMERA_FOCUS_CROP : { x: 0, y: 0, width: 1, height: 1 };
+    const targetWidth = Math.min(sourceWidth, 960);
     canvas.width = targetWidth;
-    canvas.height = Math.round(targetWidth * ((video.videoHeight || 1280) / (video.videoWidth || 960)));
+    canvas.height = Math.round(targetWidth * ((sourceHeight * crop.height) / (sourceWidth * crop.width)));
     const context = canvas.getContext("2d");
     if (!context) return;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    void recognize({ source: "camera", imageDataUrl: canvas.toDataURL("image/jpeg", 0.72) });
+    context.drawImage(
+      video,
+      sourceWidth * crop.x,
+      sourceHeight * crop.y,
+      sourceWidth * crop.width,
+      sourceHeight * crop.height,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+    void recognize({
+      source: "camera",
+      imageDataUrl: canvas.toDataURL("image/jpeg", 0.76),
+      focusMode
+    });
   }, [recognize]);
 
   const startCamera = useCallback(async () => {
@@ -346,6 +381,7 @@ export function ScannerApp() {
     setTray([]);
     setSelectedId(null);
     setResultLocked(false);
+    focusRetryRef.current = false;
     setStatusMessage("Waiting for camera permission…");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -384,6 +420,7 @@ export function ScannerApp() {
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
     scanTimerRef.current = null;
     lowResFrameRef.current = null;
+    focusRetryRef.current = false;
     lastCaptureRef.current = 0;
     setDetections([]);
     setTray([]);

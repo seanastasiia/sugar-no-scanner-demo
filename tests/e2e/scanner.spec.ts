@@ -212,8 +212,25 @@ test("live camera groups repeated packs, holds the result and replaces it only a
 
   let currentProduct: "coke" | "activia" = "coke";
   let recognitionRequests = 0;
+  const focusModes: boolean[] = [];
   await page.route("**/api/recognize", async (route) => {
     recognitionRequests += 1;
+    const request = route.request().postDataJSON() as { focusMode?: boolean };
+    focusModes.push(Boolean(request.focusMode));
+    if (currentProduct === "coke" && !request.focusMode) {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          requestId: `broad-not-sure-${recognitionRequests}`,
+          status: "not_sure",
+          latencyMs: 800,
+          model: "gemini-3.7-flash",
+          imageStored: false,
+          detections: []
+        })
+      });
+      return;
+    }
     const identities =
       currentProduct === "coke"
         ? ["Coca-Cola Original Taste", "Coca Cola Original", "Coca-Cola Original Taste can", "Coca-Cola"]
@@ -256,13 +273,16 @@ test("live camera groups repeated packs, holds the result and replaces it only a
   expect(scanAgainBox?.height).toBeGreaterThanOrEqual(44);
   await expect(page.getByLabel("Products in this scan")).toHaveCount(0);
   await page.waitForTimeout(2_500);
-  expect(recognitionRequests).toBe(1);
+  expect(recognitionRequests).toBe(2);
+  expect(focusModes).toEqual([false, true]);
 
   currentProduct = "activia";
   await page.getByRole("button", { name: "Scan again" }).click();
   await expect(page.getByRole("heading", { name: /Activia Forest Berries Yogurt/ })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toHaveCount(0);
   await expect(page.getByRole("status")).toContainText("1 unique product recognized");
+  expect(recognitionRequests).toBe(3);
+  expect(focusModes).toEqual([false, true, false]);
 });
 
 test("a product outside the scored catalog is named and receives an honest price comparison", async ({ page }) => {

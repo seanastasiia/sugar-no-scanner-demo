@@ -13,6 +13,7 @@ This file is the running record of scanner defects found and resolved.
 
 ## Resolved
 
+- **2026-08-21: a clear Rocket Bean display repeatedly returned `Not sure`.** Production logs confirmed three successful Gemini HTTP calls with empty visible results, while the official packshot of the same SKU was recognized at 0.95 confidence. Camera recognition now prioritizes the central readable SKU in the broad prompt and automatically retries an uncertain frame through the center guide at a separate 0.58 threshold; focused boxes are mapped back to the full preview.
 - **2026-08-21: the camera area felt too small beside the result sheet.** The portrait scanner stage now uses roughly two thirds of the browser viewport, which keeps the camera close to half of the full iPhone display after Safari chrome and safe areas, while results continue below in the normal page scroll.
 - **2026-08-20: four facings of Coca-Cola were reported as four recognized products.** Recognition now groups detections by curated ID, exact retailer SKU or normalized brand/product identity and renders one union marker per unique product type.
 - **2026-08-20: a possible retailer match for Coca-Cola opened a Pepsi product page.** Retailer page candidates now fail closed on conflicting brands. Possible candidates are not exposed as links or price comparisons; only an exact SKU may open from a scan result.

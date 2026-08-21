@@ -11,6 +11,7 @@ const requestSchema = z
   .object({
     imageDataUrl: z.string().max(2_800_000).optional(),
     source: z.enum(["camera", "upload", "sample-shelf", "sample-conveyor"]),
+    focusMode: z.boolean().optional(),
     sampleFrame: z.number().int().nonnegative().max(10_000).optional()
   })
   .refine((value) => value.source.startsWith("sample-") || Boolean(value.imageDataUrl), {

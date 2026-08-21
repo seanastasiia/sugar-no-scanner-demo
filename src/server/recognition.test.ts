@@ -5,6 +5,7 @@ import {
   fitBoxToFrame,
   isTrustedShelfPriceDetection,
   matchCatalogProduct,
+  recognitionConfidenceThreshold,
   recognizeProducts
 } from "./recognition";
 
@@ -66,6 +67,22 @@ describe("fitBoxToFrame", () => {
     expect(fitted.y).toBe(0.8);
     expect(fitted.width).toBeCloseTo(0.1);
     expect(fitted.height).toBeCloseTo(0.2);
+  });
+});
+
+describe("recognitionConfidenceThreshold", () => {
+  it("keeps the broad pass strict and allows a more sensitive focused retry", () => {
+    expect(recognitionConfidenceThreshold(false, {})).toBe(0.72);
+    expect(recognitionConfidenceThreshold(true, {})).toBe(0.58);
+    expect(recognitionConfidenceThreshold(false, { RECOGNITION_CONFIDENCE_THRESHOLD: "0.8" })).toBe(0.8);
+    expect(recognitionConfidenceThreshold(true, { FOCUSED_RECOGNITION_CONFIDENCE_THRESHOLD: "0.62" })).toBe(0.62);
+  });
+
+  it("falls back safely when configured values are invalid", () => {
+    expect(recognitionConfidenceThreshold(false, { RECOGNITION_CONFIDENCE_THRESHOLD: "1.2" })).toBe(0.72);
+    expect(recognitionConfidenceThreshold(true, { FOCUSED_RECOGNITION_CONFIDENCE_THRESHOLD: "invalid" })).toBe(
+      0.58
+    );
   });
 });
 

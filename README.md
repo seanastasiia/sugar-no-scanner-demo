@@ -23,6 +23,7 @@ The app is a working mobile-first web/PWA concept with:
 - camera-read shelf prices plus a live Barbora offer lookup with source time and fail-closed exact-SKU state;
 - same-SKU grouping so repeated facings such as four Coca-Cola cans count as one unique product;
 - a held live-camera result with an explicit `Scan again` action, so moving the phone cannot replace the result while it is being read;
+- an automatic focused center retry after an uncertain broad camera pass, with remapped overlays and a separate conservative confidence threshold;
 - an in-scanner Shelf/Checkout switch plus device-local `Saved options` that survive reloads without an account;
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
 - iPhone-sized WebKit end-to-end coverage and committed visual evidence.
@@ -36,6 +37,8 @@ Recognition and nutrition are separate trust levels. Gemini may read any visible
 An unknown product can therefore show `Product recognized` without receiving a Sugar.no badge. The `Top fit / Mixed / Trade-offs` legend appears only when at least one visible product has complete verified nutrition; otherwise the interface says `Identified, not rated`. The price card appears only when Gemini reports a separate physical price label, confidence is at least 0.90 and the exact OCR text includes a matching EUR amount. A package number, deposit or online offer cannot create the card. A possible retailer candidate is never linked or displayed as a comparison. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. Because only one retailer is connected, the interface says `Barbora online`, never `best price`.
 
 Repeated facings are grouped by verified catalog ID, exact retailer SKU or normalized brand/product identity. After a successful live-camera scan, the captured frame and result are held while the user reads. `Scan again` clears the previous result and resumes analysis for the next product; detections from different moments are not accumulated into one tray.
+
+Live camera recognition starts with the full scene. If that broad pass returns no supported detection, the next stable frame is automatically cropped to the central guide and analysed with a focused prompt and a lower `0.58` identity threshold. Successful boxes are mapped back to the full camera coordinates. This preserves broad shelf comparison first while giving a clear central package a second path without requiring a shutter button or another user action.
 
 The implementation keeps a deterministic internal comparison score for ranking:
 
@@ -78,6 +81,7 @@ See `.env.example` for every variable.
 - `GEMINI_API_KEY`, `GEMINI_MODEL`: server-side live recognition. The default is the stable `gemini-3.7-flash` model.
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: server-only catalog and event storage.
 - `RECOGNITION_CONFIDENCE_THRESHOLD`: minimum package-identity confidence before a product is shown; the prototype default is `0.72`.
+- `FOCUSED_RECOGNITION_CONFIDENCE_THRESHOLD`: minimum identity confidence for the automatic central retry; the prototype default is `0.58`.
 - `COMMIT_SHA`: optional local/fallback release identifier. Railway deployments use `RAILWAY_GIT_COMMIT_SHA` automatically.
 
 Never expose service-role or Gemini keys through `NEXT_PUBLIC_*` variables.
