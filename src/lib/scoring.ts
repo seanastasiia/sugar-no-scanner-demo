@@ -147,7 +147,7 @@ export interface FairComparisonResult {
 }
 
 function comparisonMethod(product: ScoredProduct): "catalog_percentile" | "barbora_reference" {
-  return product.ratingBasis.startsWith("catalog_") ? "catalog_percentile" : "barbora_reference";
+  return product.ratingBasis?.startsWith("catalog_") ? "catalog_percentile" : "barbora_reference";
 }
 
 function comparisonCategory(product: ScoredProduct): string {
@@ -167,6 +167,9 @@ function comparisonCategory(product: ScoredProduct): string {
 export function compareFairCohorts(products: ScoredProduct[], tieThreshold = 5): FairComparisonResult {
   const groups = new Map<string, ScoredProduct[]>();
   for (const product of products) {
+    // Fail closed when an older or external payload identifies the product but
+    // does not carry enough rating metadata for a fair comparison.
+    if (!product.ratingBasis || product.ratingSignalCount < 2 || !product.criterionScores) continue;
     const key = [comparisonCategory(product), product.nutritionBasis || "100g", comparisonMethod(product)].join("|");
     groups.set(key, [...(groups.get(key) || []), product]);
   }
