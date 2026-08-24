@@ -11,7 +11,7 @@ const MATCH_TONE_LABELS: Record<MatchTone, string> = {
 };
 
 export interface MatchCriterion {
-  key: "protein" | "fiber" | "sugar";
+  key: "protein" | "sugar";
   label: string;
   status: "Higher" | "Middle" | "Lower" | "Pending" | "Not listed";
   tone: MatchTone;
@@ -33,7 +33,6 @@ export function globalBestProductId(comparison: { cohorts: unknown[]; winnerIds:
 
 const signalLabels: Record<RatingSignal, string> = {
   protein: "protein",
-  fiber: "fiber",
   inverseSugar: "total sugar"
 };
 
@@ -49,7 +48,7 @@ export function partialNutritionExplanation(signalMask: RatingSignal[]): string 
     .map((signal) => signalLabels[signal]);
   const availableText = joinSignalLabels(available);
   const missingText = joinSignalLabels(missing);
-  return `${availableText[0]?.toUpperCase() || "N"}${availableText.slice(1)} ${available.length === 1 ? "is" : "are"} source-backed. ${missingText[0]?.toUpperCase() || "N"}${missingText.slice(1)} ${missing.length === 1 ? "is" : "are"} not listed, so this is not the full three-signal fit.`;
+  return `${availableText[0]?.toUpperCase() || "N"}${availableText.slice(1)} is source-backed. ${missingText[0]?.toUpperCase() || "N"}${missingText.slice(1)} is not listed, so Sugar.no does not calculate an overall fit.`;
 }
 
 function percentileTone(value: number): Exclude<MatchTone, "pending"> {
@@ -78,13 +77,13 @@ export function overlayMatchPresentation(product?: ScoredProduct): OverlayPresen
     };
   }
 
-  const signalCount = Math.max(0, Math.min(3, product.ratingSignalCount));
+  const signalCount = Math.max(0, Math.min(2, product.ratingSignalCount));
   if (signalCount <= 1) {
     return {
       label: signalCount === 1 ? "Limited view" : "Identified",
       tone: "pending",
       completeness: signalCount === 1 ? "limited" : "identified",
-      completenessLabel: signalCount === 1 ? "1/3 signal" : "Nutrition checking",
+      completenessLabel: signalCount === 1 ? "1/2 signal" : "Nutrition checking",
       signalCount
     };
   }
@@ -92,8 +91,8 @@ export function overlayMatchPresentation(product?: ScoredProduct): OverlayPresen
   const scorePresentation = overallMatchPresentation(product.matchScore);
   return {
     ...scorePresentation,
-    completeness: signalCount === 3 ? "full" : "partial",
-    completenessLabel: `${signalCount}/3 signals`,
+    completeness: signalCount === 2 ? "full" : "partial",
+    completenessLabel: `${signalCount}/2 signals`,
     signalCount
   };
 }
@@ -103,14 +102,12 @@ export function matchCriteria(product: ScoredProduct): MatchCriterion[] {
   if (!breakdown) {
     return [
       { key: "protein", label: "Protein", status: "Pending", tone: "pending" },
-      { key: "fiber", label: "Fiber", status: "Pending", tone: "pending" },
       { key: "sugar", label: "Sugar", status: "Pending", tone: "pending" }
     ];
   }
 
   const criterionTone = (value: number | null) => (value === null ? "pending" as const : percentileTone(value));
   const proteinTone = criterionTone(breakdown.protein);
-  const fiberTone = criterionTone(breakdown.fiber);
   const sugarTone = criterionTone(breakdown.inverseSugar);
   const directionalStatus = (tone: Exclude<MatchTone, "pending">, inverse = false) => {
     if (tone === "middle") return "Middle" as const;
@@ -124,12 +121,6 @@ export function matchCriteria(product: ScoredProduct): MatchCriterion[] {
       label: "Protein",
       status: proteinTone === "pending" ? "Not listed" : directionalStatus(proteinTone),
       tone: proteinTone
-    },
-    {
-      key: "fiber",
-      label: "Fiber",
-      status: fiberTone === "pending" ? "Not listed" : directionalStatus(fiberTone),
-      tone: fiberTone
     },
     {
       key: "sugar",
