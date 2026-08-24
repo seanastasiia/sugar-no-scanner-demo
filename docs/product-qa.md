@@ -12,7 +12,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 6. Tap each marker and each small product in the tray. Confirm that the corresponding marker gets the white selected ring, its text appears and the product card changes.
 7. Swipe the Similar options cards left and right. Confirm that they are comparable formats and remain usable without horizontal page overflow.
 8. Open the Barbora action. Confirm that the exact SKU page opens in a new tab and that Sugar.no never claims affiliate revenue.
-9. Return to live camera, tap `Show demo`, then `Checkout demo`. Confirm it shows one photorealistic image of the whole belt and returns four products at once with the same marker and expandable-sheet interaction.
+9. Return to live camera, tap `Show demo`, then `Checkout demo`. Confirm it shows the real checkout-belt photo and returns three named packaged products at once: Sproud, Schnitzer and Stockmann. Because nutrition is not verified for these identities, they must remain in the expandable sheet without camera fit markers or an invented Sugar.no result.
 10. Expand Shelf and Checkout results. Confirm there are no `Save`, `Saved`, `Save for next shop` or `Saved options` controls; Similar options and the Barbora link must remain available.
 
 ## Camera and uncertainty
@@ -57,4 +57,4 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 
 Record the iPhone model, iOS version, location, lighting, tested SKUs, false positives, misses and time-to-result. Do not call the physical-shelf benchmark passed until those observations exist.
 
-The two guaranteed sample photos are AI-generated interaction fixtures. Verify layout and comprehension with them, but do not record their deterministic detections as recognition accuracy.
+The shelf sample is an AI-generated interaction fixture. The checkout sample is a real project-owner photo with a deterministic three-identity response. Verify layout and comprehension with both, but do not record their deterministic detections as recognition accuracy.
