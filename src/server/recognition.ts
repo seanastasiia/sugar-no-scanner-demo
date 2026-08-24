@@ -9,7 +9,14 @@ import type {
   ScanSource,
   ScoredProduct
 } from "@/lib/types";
-import { getBarboraOfferBySlug, resolveBarboraOffer, type BarboraLookupInput } from "./barbora-catalog";
+import {
+  getBarboraOfferBySlug,
+  isExactBarboraMatch,
+  resolveBarboraOffer,
+  visualBarboraCandidates,
+  type BarboraLookupInput,
+  type VisualBarboraCandidate
+} from "./barbora-catalog";
 import { nutritionLabelToScoredProduct, type NutritionLabelRead } from "./nutrition-label";
 import { resolveOpenFoodFactsProduct } from "./open-food-facts";
 
@@ -40,6 +47,31 @@ const providerResponseSchema = z.object({
 });
 
 export type ProviderDetection = z.infer<typeof providerResponseSchema>["detections"][number];
+
+const candidateConfirmationResponseSchema = z.object({
+  choices: z.array(
+    z.object({
+      detectionIndex: z.number().int().min(0).max(7),
+      candidateSlug: z.string().max(220),
+      confidence: z.number().min(0).max(1),
+      evidence: z.string().max(220)
+    })
+  ).max(4)
+});
+
+export interface CandidateConfirmationSet {
+  detectionIndex: number;
+  candidates: VisualBarboraCandidate[];
+}
+
+export interface CandidateConfirmationChoice {
+  detectionIndex: number;
+  candidateSlug: string;
+  confidence: number;
+  evidence: string;
+}
+
+export type ConfirmedProviderDetection = ProviderDetection & { confirmedBarboraSlug?: string };
 
 const nutritionLabelResponseSchema = z.object({
   basis: z.enum(["100g", "100ml", "unknown"]),
@@ -354,6 +386,147 @@ export function recognitionInstruction(focusMode: boolean): string {
   );
 }
 
+function lookupInputForDetection(detection: ProviderDetection): BarboraLookupInput {
+  const packSize = extractPackSize(detection.productName);
+  return {
+    brand: detection.brand,
+    name: detection.productName,
+    variant: "",
+    packSize,
+    searchTerms: [detection.searchQuery]
+  };
+}
+
+export function applyBarboraCandidateConfirmations(
+  detections: ProviderDetection[],
+  sets: CandidateConfirmationSet[],
+  choices: CandidateConfirmationChoice[]
+): ConfirmedProviderDetection[] {
+  const allowed = new Map(
+    sets.map((set) => [set.detectionIndex, new Set(set.candidates.map((candidate) => candidate.slug))])
+  );
+  const accepted = new Map<number, CandidateConfirmationChoice>();
+  for (const choice of choices) {
+    if (
+      choice.confidence < 0.92 ||
+      !choice.candidateSlug ||
+      !allowed.get(choice.detectionIndex)?.has(choice.candidateSlug)
+    ) {
+      continue;
+    }
+    const previous = accepted.get(choice.detectionIndex);
+    if (!previous || choice.confidence > previous.confidence) accepted.set(choice.detectionIndex, choice);
+  }
+  return detections.map((detection, index) => {
+    const choice = accepted.get(index);
+    return choice ? { ...detection, confirmedBarboraSlug: choice.candidateSlug } : detection;
+  });
+}
+
+async function fetchCandidateImage(
+  candidate: VisualBarboraCandidate
+): Promise<{ candidate: VisualBarboraCandidate; base64: string; mimeType: string } | null> {
+  if (!candidate.imageUrl) return null;
+  try {
+    const response = await fetch(candidate.imageUrl, { signal: AbortSignal.timeout(2_500) });
+    const mimeType = response.headers.get("content-type")?.split(";")[0] || "";
+    if (!response.ok || !/^image\/(?:jpeg|png|webp)$/.test(mimeType)) return null;
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (!bytes.length || bytes.length > 750_000) return null;
+    return { candidate, base64: bytes.toString("base64"), mimeType };
+  } catch {
+    return null;
+  }
+}
+
+async function confirmAmbiguousBarboraCandidates(input: {
+  ai: GoogleGenAI;
+  model: string;
+  mimeType: string;
+  base64: string;
+  detections: ProviderDetection[];
+}): Promise<ConfirmedProviderDetection[]> {
+  const sets = input.detections
+    .map((detection, detectionIndex): CandidateConfirmationSet => ({
+      detectionIndex,
+      candidates: visualBarboraCandidates(lookupInputForDetection(detection), 3)
+    }))
+    .filter((set) => {
+      const best = set.candidates[0];
+      if (!best || best.score < 0.62 || set.candidates.length < 2) return false;
+      return !isExactBarboraMatch(best.score, set.candidates[1]?.score || 0);
+    })
+    .sort((left, right) => (right.candidates[0]?.score || 0) - (left.candidates[0]?.score || 0))
+    .slice(0, 4);
+  if (!sets.length) return input.detections;
+
+  const packshots = (
+    await Promise.all(sets.flatMap((set) => set.candidates.slice(0, 2).map(fetchCandidateImage)))
+  ).filter((image): image is NonNullable<typeof image> => Boolean(image));
+  const lines = sets.flatMap((set) => {
+    const detection = input.detections[set.detectionIndex];
+    return [
+      `Detection ${set.detectionIndex}: observed "${detection.brand} ${detection.productName}"; ` +
+        `box x=${detection.box.x.toFixed(3)}, y=${detection.box.y.toFixed(3)}, ` +
+        `w=${detection.box.width.toFixed(3)}, h=${detection.box.height.toFixed(3)}.`,
+      ...set.candidates.map(
+        (candidate) =>
+          `- ${candidate.slug}: ${candidate.brand} ${candidate.title}; pack ${candidate.packSize || "not listed"}.`
+      )
+    ];
+  });
+  const parts = [
+    createPartFromText(
+      `The first image is the original supermarket frame. The text lists ambiguous exact Barbora SKU candidates for some already detected packages. ` +
+        `Use the stated normalized box to inspect only that package, then compare its visible variant, container format, design and pack size with the candidate packshots that follow. ` +
+        `Choose a candidate only when the exact SKU is visually supported. If the size/variant cannot be distinguished, return an empty candidateSlug and low confidence. ` +
+        `Never choose merely because the brand and generic product type match. Return at most one choice per listed detection.\n${lines.join("\n")}`
+    ),
+    createPartFromBase64(input.base64, input.mimeType),
+    ...packshots.flatMap((packshot) => [
+      createPartFromText(`Candidate packshot ${packshot.candidate.slug}`),
+      createPartFromBase64(packshot.base64, packshot.mimeType)
+    ])
+  ];
+
+  try {
+    const response = await input.ai.models.generateContent({
+      model: input.model,
+      contents: parts,
+      config: {
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+        responseMimeType: "application/json",
+        responseJsonSchema: {
+          type: "object",
+          additionalProperties: false,
+          required: ["choices"],
+          properties: {
+            choices: {
+              type: "array",
+              maxItems: 4,
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: ["detectionIndex", "candidateSlug", "confidence", "evidence"],
+                properties: {
+                  detectionIndex: { type: "integer", minimum: 0, maximum: 7 },
+                  candidateSlug: { type: "string", maxLength: 220 },
+                  confidence: { type: "number", minimum: 0, maximum: 1 },
+                  evidence: { type: "string", maxLength: 220 }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+    const parsed = candidateConfirmationResponseSchema.parse(JSON.parse(response.text || '{"choices":[]}'));
+    return applyBarboraCandidateConfirmations(input.detections, sets, parsed.choices);
+  } catch {
+    return input.detections;
+  }
+}
+
 export interface DetectionResolutionDependencies {
   getOfferBySlug: typeof getBarboraOfferBySlug;
   resolveOffer: typeof resolveBarboraOffer;
@@ -392,7 +565,7 @@ async function mapWithConcurrency<T, R>(
  * catalog or exact retailer match.
  */
 export async function resolveVisibleDetections(
-  visible: ProviderDetection[],
+  visible: ConfirmedProviderDetection[],
   catalog: ScoredProduct[],
   dependencies: DetectionResolutionDependencies = defaultResolutionDependencies,
   concurrency = 3
@@ -407,15 +580,11 @@ export async function resolveVisibleDetections(
       observedText: detection.productName
     };
     const initialCatalogMatch = matchCatalogProductWithConfidence(observedIdentity, catalog);
-    const lookupInput: BarboraLookupInput = {
-      brand: detection.brand,
-      name: detection.productName,
-      variant: "",
-      packSize,
-      searchTerms: [detection.searchQuery]
-    };
+    const lookupInput = lookupInputForDetection(detection);
     const retailerOffer = initialCatalogMatch
       ? await dependencies.getOfferBySlug(initialCatalogMatch.product.id, lookupInput).catch(() => null)
+      : detection.confirmedBarboraSlug
+        ? await dependencies.getOfferBySlug(detection.confirmedBarboraSlug, lookupInput).catch(() => null)
       : await dependencies.resolveOffer(lookupInput).catch(() => null);
     const exactRetailerOffer = retailerOffer?.exactSku ? retailerOffer : null;
     // Barbora is the Latvia-primary source and its broad local index is free to
@@ -615,7 +784,14 @@ export async function recognizeProducts(input: {
       })
     );
   }
-  const detections = await resolveVisibleDetections(visible, input.catalog);
+  const confirmedVisible = await confirmAmbiguousBarboraCandidates({
+    ai,
+    model,
+    mimeType,
+    base64,
+    detections: visible
+  });
+  const detections = await resolveVisibleDetections(confirmedVisible, input.catalog);
 
   return {
     requestId: input.requestId,

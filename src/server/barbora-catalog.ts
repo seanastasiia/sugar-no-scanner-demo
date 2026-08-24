@@ -1,6 +1,7 @@
 import productSlugs from "../../data/barbora-product-index.generated.json";
 import type { RetailerOffer } from "@/lib/types";
 import {
+  getIndexedBarboraNutrition,
   listIndexedBarboraNutrition,
   type BarboraNutritionIndexProduct
 } from "./barbora-nutrition-index";
@@ -16,6 +17,13 @@ export interface BarboraLookupInput {
 export interface RankedBarboraCandidate {
   slug: string;
   score: number;
+}
+
+export interface VisualBarboraCandidate extends RankedBarboraCandidate {
+  title: string;
+  brand: string;
+  packSize: string;
+  imageUrl: string | null;
 }
 
 const stopWords = new Set([
@@ -246,6 +254,22 @@ export function rankIndexedBarboraCandidates(
     })
     .sort((left, right) => right.score - left.score || left.slug.localeCompare(right.slug))
     .slice(0, limit);
+}
+
+export function visualBarboraCandidates(input: BarboraLookupInput, limit = 3): VisualBarboraCandidate[] {
+  const indexed = listIndexedBarboraNutrition();
+  return rankIndexedBarboraCandidates(input, indexed, limit).flatMap((candidate): VisualBarboraCandidate[] => {
+    const product = getIndexedBarboraNutrition(candidate.slug);
+    return product
+      ? [{
+          ...candidate,
+          title: product.title,
+          brand: product.brand,
+          packSize: product.packSize,
+          imageUrl: product.imageUrl
+        }]
+      : [];
+  });
 }
 
 export function rankBarboraCandidates(

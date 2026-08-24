@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { getCatalog } from "@/lib/catalog";
 import {
   DEFAULT_GEMINI_MODEL,
+  applyBarboraCandidateConfirmations,
   fitBoxToFrame,
   isTrustedShelfPriceDetection,
   matchCatalogProduct,
@@ -191,6 +192,36 @@ function providerDetection(index: number, overrides: Partial<ProviderDetection> 
     ...overrides
   };
 }
+
+describe("candidate confirmation", () => {
+  const candidate = (slug: string) => ({
+    slug,
+    score: 0.78,
+    title: `Product ${slug}`,
+    brand: "SPILVA",
+    packSize: "250g",
+    imageUrl: null
+  });
+
+  it("accepts only a high-confidence slug from that detection's constrained candidate set", () => {
+    const detections = [providerDetection(1), providerDetection(2)];
+    const confirmed = applyBarboraCandidateConfirmations(
+      detections,
+      [
+        { detectionIndex: 0, candidates: [candidate("allowed-a"), candidate("allowed-b")] },
+        { detectionIndex: 1, candidates: [candidate("allowed-c"), candidate("allowed-d")] }
+      ],
+      [
+        { detectionIndex: 0, candidateSlug: "allowed-b", confidence: 0.95, evidence: "Exact visible pack" },
+        { detectionIndex: 1, candidateSlug: "invented", confidence: 0.99, evidence: "Not in candidates" },
+        { detectionIndex: 1, candidateSlug: "allowed-c", confidence: 0.91, evidence: "Below threshold" }
+      ]
+    );
+
+    expect(confirmed[0].confirmedBarboraSlug).toBe("allowed-b");
+    expect(confirmed[1].confirmedBarboraSlug).toBeUndefined();
+  });
+});
 
 describe("resolveVisibleDetections", () => {
   it("attempts retailer resolution for the seventh and eighth identities with bounded concurrency", async () => {
