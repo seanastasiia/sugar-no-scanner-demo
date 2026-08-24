@@ -27,4 +27,7 @@ One full production-mode run exposed an existing fixed-delay race in the shelf-c
 
 ## Production check
 
-Pending GitHub `main`, Railway deployment and public health/UI smoke at the time this record was created.
+- GitHub Actions run [32775369464](https://github.com/seanastasiia/sugar-no-scanner-demo/actions/runs/32775369464) completed successfully for evidence commit `5cb60420fd55fb372bbd43cff335a01a05ae7e09`.
+- Railway deployed that GitHub `main` commit; `GET /api/health` returned `status: ok` and the same commit SHA.
+- Public Mobile Safari-compatible smoke at `https://sugar-no-scanner-demo-production.up.railway.app/` confirmed the shelf order `#1 Barebells Salty Peanut`, `#2 ICONFIT Cookie`, `#3 Barebells Coco Choco`, `#4 Barebells Lemon Cheesecake`.
+- The same public smoke confirmed that the checkout sample keeps Sproud, Schnitzer and Stockmann unranked as `Fit pending` instead of inventing a suitability order.
