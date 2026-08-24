@@ -28,7 +28,9 @@ const onePixelPng = Buffer.from(
 
 async function chooseSavedPhoto(page: Page, name = "qa-shelf.png") {
   await page.getByRole("button", { name: "Show demo" }).click();
-  await page.locator('input[type="file"]').setInputFiles({
+  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  await expect(chooser).toBeVisible();
+  await chooser.locator('input[type="file"]').setInputFiles({
     name,
     mimeType: "image/png",
     buffer: onePixelPng
@@ -40,7 +42,25 @@ async function mockLiveCamera(page: Page) {
     const canvas = document.createElement("canvas");
     canvas.width = 640;
     canvas.height = 960;
-    canvas.getContext("2d")?.fillRect(0, 0, canvas.width, canvas.height);
+    const context = canvas.getContext("2d");
+    context?.fillRect(0, 0, canvas.width, canvas.height);
+    const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      this: CanvasRenderingContext2D,
+      ...args: Parameters<typeof originalDrawImage>
+    ) {
+      if (args[0] instanceof HTMLVideoElement) return;
+      return originalDrawImage.apply(this, args);
+    } as typeof originalDrawImage;
+    HTMLMediaElement.prototype.play = async function (this: HTMLMediaElement) {
+      if (this instanceof HTMLVideoElement) {
+        Object.defineProperties(this, {
+          readyState: { configurable: true, get: () => 4 },
+          videoWidth: { configurable: true, get: () => 640 },
+          videoHeight: { configurable: true, get: () => 960 }
+        });
+      }
+    };
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
       value: { getUserMedia: async () => canvas.captureStream(5) }
@@ -441,17 +461,7 @@ test("one-signal and identity-only products remain neutral without an overall fi
 });
 
 test("a broad live shelf scan keeps several different Sugar.no-rated products in one result", async ({ page }) => {
-  await page.addInitScript(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 640;
-    canvas.height = 960;
-    const context = canvas.getContext("2d");
-    context?.fillRect(0, 0, canvas.width, canvas.height);
-    Object.defineProperty(navigator, "mediaDevices", {
-      configurable: true,
-      value: { getUserMedia: async () => canvas.captureStream(5) }
-    });
-  });
+  await mockLiveCamera(page);
   await unlock(page);
 
   let recognitionAttempts = 0;
@@ -559,7 +569,7 @@ test("a not-sure shelf completion retry retains and locks the first valid produc
 
   await unlock(page);
   await expect(page.getByRole("status")).toContainText("1 product found", { timeout: 10_000 });
-  await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open First Product"]')).toHaveCount(1);
+  await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open First Product"]')).toHaveCount(0);
   await page.waitForTimeout(2_500);
   expect(recognitionRequests).toBe(2);
   expect(focusModes).toEqual([false, false]);
@@ -645,30 +655,13 @@ test("HTTP 429 preserves a provisional product and pauses automatic spending ret
   );
   await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
-  await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open Rate Limit Product"]')).toHaveCount(1);
+  await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open Rate Limit Product"]')).toHaveCount(0);
   await page.waitForTimeout(2_500);
   expect(recognitionRequests).toBe(2);
 });
 
 test("live camera groups repeated packs, holds the result and replaces it only after Scan again", async ({ page }) => {
-  await page.addInitScript(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 640;
-    canvas.height = 960;
-    const context = canvas.getContext("2d");
-    context?.fillRect(0, 0, canvas.width, canvas.height);
-    let tick = 0;
-    window.setInterval(() => {
-      if (!context) return;
-      context.fillStyle = tick++ % 2 ? "#000" : "#111";
-      context.fillRect(0, 0, 2, 2);
-    }, 120);
-    Object.defineProperty(window, "__scannerTestCanvas", { value: canvas });
-    Object.defineProperty(navigator, "mediaDevices", {
-      configurable: true,
-      value: { getUserMedia: async () => canvas.captureStream(5) }
-    });
-  });
+  await mockLiveCamera(page);
   await unlock(page);
 
   let currentProduct: "coke" | "activia" = "coke";
@@ -727,7 +720,7 @@ test("live camera groups repeated packs, holds the result and replaces it only a
 
   await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit", { timeout: 10_000 });
   await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit");
-  await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
+  await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open "]')).toHaveCount(0);
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toBeVisible();
   await expect(page.getByText("No Sugar.no fit yet.")).toBeVisible();
@@ -806,15 +799,7 @@ test("a product outside the scored catalog is named and receives an honest price
   });
 
   await page.waitForLoadState("networkidle");
-  await page.getByRole("button", { name: "Show demo" }).click();
-  await page.locator('input[type="file"]').setInputFiles({
-    name: "price-check.png",
-    mimeType: "image/png",
-    buffer: Buffer.from(
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
-      "base64"
-    )
-  });
+  await chooseSavedPhoto(page, "price-check.png");
   await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit");
   await expect(
     page.getByLabel("Product result preview").getByLabel("Shelf price €1.69, Barbora €0.99, cheaper at Barbora")
@@ -831,7 +816,7 @@ test("a product outside the scored catalog is named and receives an honest price
   await page.screenshot({ path: "docs/screenshots/price-cta-compact-mobile.png" });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Zero Peach.*Pesca & Clementina.*330 ml/ })).toBeVisible();
-  await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
+  await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await expect(page.getByText("No Sugar.no fit yet.")).toBeVisible();
   const comparison = page.getByLabel("Price comparison");
@@ -850,15 +835,7 @@ test("a product outside the scored catalog is named and receives an honest price
   exactSku = false;
   await page.getByRole("button", { name: "Return to camera" }).click();
   await page.getByRole("button", { name: "Back to live camera" }).click();
-  await page.getByRole("button", { name: "Show demo" }).click();
-  await page.locator('input[type="file"]').setInputFiles({
-    name: "possible-price-check.png",
-    mimeType: "image/png",
-    buffer: Buffer.from(
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
-      "base64"
-    )
-  });
+  await chooseSavedPhoto(page, "possible-price-check.png");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(comparison.getByText("Shelf price", { exact: true })).toBeVisible();
   await expect(comparison.getByText("Possible Barbora match")).toHaveCount(0);
@@ -871,15 +848,7 @@ test("a product outside the scored catalog is named and receives an honest price
   includeShelfPrice = false;
   await page.getByRole("button", { name: "Return to camera" }).click();
   await page.getByRole("button", { name: "Back to live camera" }).click();
-  await page.getByRole("button", { name: "Show demo" }).click();
-  await page.locator('input[type="file"]').setInputFiles({
-    name: "package-without-shelf-label.png",
-    mimeType: "image/png",
-    buffer: Buffer.from(
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
-      "base64"
-    )
-  });
+  await chooseSavedPhoto(page, "package-without-shelf-label.png");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
   await expect(page.getByLabel(/Shelf price €/)).toHaveCount(0);
@@ -967,15 +936,7 @@ test("an exact Barbora food gets an on-demand two-signal Sugar.no quick view", a
   });
 
   await page.waitForLoadState("networkidle");
-  await page.getByRole("button", { name: "Show demo" }).click();
-  await page.locator('input[type="file"]').setInputFiles({
-    name: "exact-barbora-food.png",
-    mimeType: "image/png",
-    buffer: Buffer.from(
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
-      "base64"
-    )
-  });
+  await chooseSavedPhoto(page, "exact-barbora-food.png");
 
   await expect(page.getByRole("status")).toContainText("Products found. Checking Sugar.no signals");
   await expect(page.getByText("Checking nutrition…", { exact: true })).toBeVisible();
