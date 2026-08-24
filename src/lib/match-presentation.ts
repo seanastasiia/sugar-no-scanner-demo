@@ -31,6 +31,33 @@ export function globalBestProductId(comparison: { cohorts: unknown[]; winnerIds:
     : undefined;
 }
 
+/**
+ * Keeps the scan readable without turning missing nutrition into a score.
+ * Rated products are ordered from higher to lower Sugar.no fit; recognized
+ * products without a complete fit stay in their original scan order at the end.
+ */
+export function rankScanProductIds(
+  productIds: string[],
+  products: Record<string, Pick<ScoredProduct, "matchScore"> | undefined>
+): string[] {
+  const originalOrder = new Map<string, number>();
+  const uniqueIds = productIds.filter((id, index) => {
+    if (originalOrder.has(id)) return false;
+    originalOrder.set(id, index);
+    return true;
+  });
+
+  return uniqueIds.sort((leftId, rightId) => {
+    const leftScore = products[leftId]?.matchScore;
+    const rightScore = products[rightId]?.matchScore;
+    const leftRated = typeof leftScore === "number";
+    const rightRated = typeof rightScore === "number";
+    if (leftRated !== rightRated) return leftRated ? -1 : 1;
+    if (leftRated && rightRated && leftScore !== rightScore) return rightScore - leftScore;
+    return (originalOrder.get(leftId) ?? 0) - (originalOrder.get(rightId) ?? 0);
+  });
+}
+
 const signalLabels: Record<RatingSignal, string> = {
   protein: "protein",
   inverseSugar: "total sugar"

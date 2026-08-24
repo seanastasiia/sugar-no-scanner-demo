@@ -12,3 +12,5 @@ The broad camera pass follows the multi-product shelf pattern: it scans the comp
 The checkout fixture must be visually unmistakable as a supermarket conveyor, not a generic dark tabletop. It now uses a real project-owner checkout photo. The public copy is cropped, resized and stripped of EXIF/GPS metadata; its deterministic result names only the three package identities Gemini could read and does not add fit markers without verified nutrition.
 
 When several comparable rated products are present, `Best fit in this scan` is a small eyebrow heading above the leading product name. It is not a separate status pill and stays hidden for a one-product scan.
+
+The compact sheet keeps a short best-first preview. Expanding it turns the recognized set into a vertical `Best fit first` list rather than another horizontal carousel. Each rated row carries its rank, plain-language fit and the two verified inputs. Products without a complete fit remain useful but sit after the ranking as `Fit pending`, without a number or inferred nutrition.

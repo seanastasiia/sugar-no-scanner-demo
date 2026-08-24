@@ -30,6 +30,7 @@ import {
   globalBestProductId,
   matchCriteria,
   overlayMatchPresentation,
+  rankScanProductIds,
   type MatchTone,
   type SignalCompleteness
 } from "@/lib/match-presentation";
@@ -677,6 +678,10 @@ export function ScannerApp() {
   );
   const selectedDetection = selectedId ? detectionById[selectedId] : undefined;
   const loadedTray = tray.map((id) => products[id]?.product).filter(Boolean) as ScoredProduct[];
+  const productById = useMemo(
+    () => Object.fromEntries(Object.entries(products).map(([id, payload]) => [id, payload.product])),
+    [products]
+  );
   const ratedDetections = useMemo(
     () =>
       detections.filter(
@@ -688,11 +693,17 @@ export function ScannerApp() {
   const bestId = globalBestProductId(fairComparison);
   const ratedCount = ratedDetections.length;
   const sheetTitle = `${tray.length} ${tray.length === 1 ? "product" : "products"} · ${ratedCount} with Sugar.no fit`;
-  const orderedTray = useMemo(
-    () => [...new Set([selectedId, bestId, ...tray].filter((id): id is string => Boolean(id)))],
-    [bestId, selectedId, tray]
+  const compactSheetTitle = `${tray.length} ${tray.length === 1 ? "product" : "products"}`;
+  const rankedTrayIds = useMemo(
+    () => rankScanProductIds(tray, productById),
+    [productById, tray]
   );
-  const sheetPreviewIds = orderedTray.slice(0, 4);
+  const rankedRatedIds = useMemo(
+    () => rankedTrayIds.filter((id) => hasSugarNoRating(productById[id])),
+    [productById, rankedTrayIds]
+  );
+  const firstRankedId = rankedRatedIds[0] || rankedTrayIds[0];
+  const sheetPreviewIds = rankedTrayIds.slice(0, 4);
   const displayedStatusMessage =
     recognitionState === "matched" && tray.length > 0 && loadingProductIds.length === 0
       ? `${tray.length} ${tray.length === 1 ? "product" : "products"} · ${ratedCount} with Sugar.no fit`
@@ -707,8 +718,8 @@ export function ScannerApp() {
   }, []);
 
   useEffect(() => {
-    if (bestId && !manualSelectionRef.current) setSelectedId(bestId);
-  }, [bestId]);
+    if (!manualSelectionRef.current && (bestId || firstRankedId)) setSelectedId(bestId || firstRankedId);
+  }, [bestId, firstRankedId]);
 
   const closeResults = useCallback(() => {
     setResultsExpanded(false);
@@ -928,8 +939,8 @@ export function ScannerApp() {
                 ) : (
                   <>
                     <div className={styles.sheetTitleStatic}>
-                      <strong>{sheetTitle}</strong>
-                      <span>{ratedCount > 0 ? "Best available result first" : "Recognized packages"}</span>
+                      <strong>{compactSheetTitle}</strong>
+                      <span>{ratedCount > 0 ? `${ratedCount} rated · Best fit first` : "Fit order pending"}</span>
                     </div>
                     <div className={styles.sheetActions}>
                       <button type="button" onClick={openResults} aria-controls="scan-results-content">
@@ -1012,7 +1023,7 @@ export function ScannerApp() {
                       <strong>
                         {tray.length} unique {tray.length === 1 ? "product" : "products"} recognized
                       </strong>
-                      <span>{resultLocked ? "Result held while you read" : "Tap a marker or swipe the products"}</span>
+                      <span>{resultLocked ? "Result held while you read" : "Tap a product to compare"}</span>
                     </div>
                     <button
                       className={styles.scanAgainButton}
@@ -1021,47 +1032,76 @@ export function ScannerApp() {
                     >
                         <RefreshCw aria-hidden="true" size={16} /> Scan again
                     </button>
-                    {ratedCount === 0 ? (
-                      <div className={styles.ratingNotice}>
-                        <Info aria-hidden="true" size={15} />
-                        <span>
-                          <strong>No Sugar.no fit yet.</strong> {detections.length} {detections.length === 1 ? "package is" : "packages are"} still available in the results without a camera marker.
-                        </span>
-                      </div>
-                    ) : null}
                   </div>
 
                   {tray.length > 1 ? (
-                    <div className={styles.tray} aria-label="Products in this scan">
-                      {orderedTray.map((id) => {
-                        const item = products[id]?.product;
-                        const detection = detectionById[id];
-                        const itemBrand = item?.brand || detection?.identity?.brand || "Product";
-                        const itemName = item?.shortName || detection?.identity?.name || "Identified product";
-                        return (
-                          <button
-                            type="button"
-                            key={id}
-                            aria-label={`Select ${itemBrand} ${itemName}`}
-                            className={selectedId === id ? styles.activeTrayItem : ""}
-                            onClick={() => {
-                              manualSelectionRef.current = true;
-                              setSelectedId(id);
-                              track("result_opened", source, id);
-                            }}
-                          >
-                            <span>{itemBrand}</span>
-                            <small className={styles.trayProductName}>{itemName}</small>
-                            {item ? (
-                              <MatchPill product={item} />
-                            ) : (
-                              <small>{loadingProductIds.includes(id) ? "Checking nutrition…" : "Identified"}</small>
-                            )}
-                            <CompactProductPrice detection={detection} />
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <section className={styles.rankingSection} aria-labelledby="scan-ranking-title">
+                      <div className={styles.rankingHeading}>
+                        <div>
+                          <p>Sugar.no ranking</p>
+                          <h2 id="scan-ranking-title">{ratedCount > 0 ? "Best fit first" : "Fit order pending"}</h2>
+                          <span>
+                            {ratedCount > 0
+                              ? "Based on verified protein and total sugar"
+                              : "Recognized products need verified nutrition before ranking"}
+                          </span>
+                        </div>
+                        <strong>{ratedCount}/{tray.length} rated</strong>
+                      </div>
+                      <ol className={styles.rankedList} aria-label="Products ranked by Sugar.no fit">
+                        {rankedTrayIds.map((id) => {
+                          const item = products[id]?.product;
+                          const detection = detectionById[id];
+                          const itemBrand = item?.brand || detection?.identity?.brand || "Product";
+                          const itemName = item?.shortName || detection?.identity?.name || "Identified product";
+                          const isRated = hasSugarNoRating(item);
+                          const rank = isRated ? rankedRatedIds.indexOf(id) + 1 : null;
+                          const presentation = isRated ? overlayMatchPresentation(item) : null;
+                          const protein = item?.nutrientsPer100g.proteinG;
+                          const sugar = item?.nutrientsPer100g.totalSugarG;
+                          return (
+                            <li key={id}>
+                              <button
+                                type="button"
+                                aria-label={
+                                  isRated && presentation
+                                    ? `Rank ${rank}, ${itemBrand} ${itemName}, ${presentation.label}`
+                                    : `${itemBrand} ${itemName}, fit pending`
+                                }
+                                className={`${styles.rankedProduct} ${selectedId === id ? styles.activeRankedProduct : ""}`}
+                                onClick={() => {
+                                  manualSelectionRef.current = true;
+                                  setSelectedId(id);
+                                  track("result_opened", source, id);
+                                }}
+                              >
+                                <span className={`${styles.rankPosition} ${isRated ? "" : styles.rankPending}`} aria-hidden="true">
+                                  {rank ? `#${rank}` : "—"}
+                                </span>
+                                <span className={styles.rankedProductThumb} aria-hidden="true">
+                                  {item?.imageUrl ? <Image src={item.imageUrl} alt="" fill sizes="48px" /> : null}
+                                </span>
+                                <div className={styles.rankedProductCopy}>
+                                  <small>{itemBrand}</small>
+                                  <strong>{itemName}</strong>
+                                  <div className={styles.rankedProductMeta}>
+                                    {isRated ? (
+                                      <>
+                                        <MatchPill product={item} />
+                                        <small>Protein {protein}g · Sugar {sugar}g</small>
+                                      </>
+                                    ) : (
+                                      <small>{loadingProductIds.includes(id) ? "Checking nutrition…" : "Fit pending"}</small>
+                                    )}
+                                  </div>
+                                  <CompactProductPrice detection={detection} />
+                                </div>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </section>
                   ) : null}
 
                   {selectedPayload ? (

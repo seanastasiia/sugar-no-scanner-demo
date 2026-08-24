@@ -5,7 +5,8 @@ import {
   matchCriteria,
   overallMatchPresentation,
   overlayMatchPresentation,
-  partialNutritionExplanation
+  partialNutritionExplanation,
+  rankScanProductIds
 } from "./match-presentation";
 
 function scoredProduct(score: number | null, breakdown: ScoredProduct["criterionScores"]): ScoredProduct {
@@ -48,6 +49,22 @@ describe("match presentation", () => {
     expect(overallMatchPresentation(63)).toEqual({ label: "Moderate fit", tone: "middle" });
     expect(overallMatchPresentation(43)).toEqual({ label: "Low fit", tone: "lower" });
     expect(overallMatchPresentation(null)).toEqual({ label: "Data pending", tone: "pending" });
+  });
+
+  it("orders rated scan products from higher to lower fit and leaves unrated products last", () => {
+    expect(
+      rankScanProductIds(
+        ["pending-a", "moderate", "great", "low", "pending-b", "great-tie", "great"],
+        {
+          "pending-a": { matchScore: null },
+          moderate: { matchScore: 58 },
+          great: { matchScore: 82 },
+          low: { matchScore: 31 },
+          "pending-b": undefined,
+          "great-tie": { matchScore: 82 }
+        }
+      )
+    ).toEqual(["great", "great-tie", "moderate", "low", "pending-a", "pending-b"]);
   });
 
   it("uses inverse direction for sugar and text in addition to color", () => {

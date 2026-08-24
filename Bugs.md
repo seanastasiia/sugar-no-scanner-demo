@@ -1,5 +1,9 @@
 # Bugs
 
+- **2026-08-24: multi-product results appeared as an unordered horizontal tray, so users could not immediately see which product fit them more or less.** The expanded comparison now presents one vertical `Best fit first` list. Products with a complete Protein/Sugar fit are sorted high to low, every row keeps the plain-language `Great / Moderate / Low fit` label and verified values, and unrated identities stay last as `Fit pending` without a fabricated rank.
+
+- **2026-08-24: the production-mode shelf-completion regression used a fixed 2.5-second pause and could inspect the request count just before the browser scheduled its second frame.** The test now waits for the actual second request with a bounded five-second poll, preserving the same product assertion without a timing race.
+
 - **2026-08-24: the expanded results repeated fit states and signal limitations in three separate explanatory blocks.** The top fit legend, its marker-scope copy and the duplicate limited-signal explanation card are removed. Product markers, tray pills and the Sugar.no Protein/Sugar badge keep the result understandable without the extra chrome.
 
 - **2026-08-24: the expanded comparison header showed two arrows for the same collapse action.** The duplicate left arrow is removed. One 44 px right-side arrow remains, while the text title stays tappable as an accessible return target.

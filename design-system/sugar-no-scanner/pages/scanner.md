@@ -21,9 +21,10 @@ This page overrides `../MASTER.md` for the live camera, sample shelf and sample 
 ## Bottom sheet
 
 - Pull the cream results sheet over the lower edge of the scene with a visible drag handle.
-- First show product count, marker legend and a horizontally scrollable product tray.
+- First show product count and a compact best-first preview. Expanding the sheet reveals a vertical ranking, not a second horizontal carousel.
+- Order complete Protein/Sugar fits from higher to lower internal score and keep `Great fit`, `Moderate fit` or `Low fit` visible on every row. Preserve stable scan order for ties. Products without a full fit must appear last as `Fit pending` without a rank number.
 - The selected result contains brand/name and a `Sugar.no badge` with three criteria: Protein, Fiber and Sugar. It has no save control.
-- When a trusted physical shelf label is associated with a product, show its price directly beneath that product in the compact preview, tray and expanded result. Cross it out only when an exact current Barbora offer is lower, then use the explicit `Cheaper at Barbora` label and `Buy cheaper at Barbora` action.
+- When a trusted physical shelf label is associated with a product, show its price directly beneath that product in the compact preview, ranked row and expanded result. Cross it out only when an exact current Barbora offer is lower, then use the explicit `Cheaper at Barbora` label and `Buy cheaper at Barbora` action.
 - Each criterion includes actual value per 100 g, direction text and color support.
 - `Similar options` is a horizontally scrollable row of compact cards. Retailer CTA remains secondary.
 - Checkout uses the same comparison pattern as Shelf and does not ask the user to undo the basket or save a product.
