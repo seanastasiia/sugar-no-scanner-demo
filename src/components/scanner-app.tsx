@@ -6,7 +6,6 @@ import {
   ArrowDown,
   Camera,
   Check,
-  ChevronDown,
   ChevronUp,
   CircleAlert,
   FileImage,
@@ -912,17 +911,14 @@ export function ScannerApp() {
                 {resultsExpanded ? (
                   <>
                     <button
-                      className={styles.sheetIconButton}
+                      className={styles.sheetTitleButton}
                       type="button"
                       onClick={closeResults}
                       aria-label="Return to camera"
                     >
-                      <ChevronDown aria-hidden="true" size={20} />
-                    </button>
-                    <div className={styles.sheetTitleStatic}>
                       <strong>{sheetTitle}</strong>
                       <span>Full comparison</span>
-                    </div>
+                    </button>
                     <button
                       className={styles.sheetIconButton}
                       type="button"
