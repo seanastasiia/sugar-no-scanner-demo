@@ -42,4 +42,6 @@
 
 ## Production evidence
 
-Pending Railway deployment and HTTPS smoke for this release.
+- Railway deployment `bf9c353c-2060-4e2c-8e68-60bff17f46e2`: `SUCCESS`.
+- `GET /api/health`: `ok`, commit `b8393824474bd7c0836c87e6483a1818d83d0f71`.
+- Authenticated production iPhone/WebKit smoke with a controlled exact-deal API response: the compact link was visible, 70 px high, targeted `_blank` and pointed directly to the expected Barbora SKU URL.
