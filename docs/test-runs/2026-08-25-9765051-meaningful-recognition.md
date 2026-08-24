@@ -38,4 +38,10 @@
 5. Repeat from a two-product shelf and confirm the unscanned product remains in the comparison.
 6. Try a blurry or serving-only table and confirm no fit is invented.
 
-Production deployment and public HTTPS smoke are recorded in a follow-up evidence-only update after Railway reports the release SHA.
+## Production release
+
+- GitHub Actions [Latvia public shelf benchmark run 32781804241](https://github.com/seanastasiia/sugar-no-scanner-demo/actions/runs/32781804241) passed on release commit `c69e87e72b936fce7e968936abddd05f586a22bb`: 18 Vitest files / 90 tests, production build, 19 Mobile Safari scenarios and all acceptance gates.
+- The deployed five-image Latvia smoke found 20 unique identities, 5 already rated, zero duplicate identities and `imageStored: false` for every case. This is a reproducible scene smoke, not a ground-truthed recall claim.
+- Railway deployment `fbe0c3d0-9bc8-40cc-af59-4dbaed54b762` completed successfully. `/api/health` returned `status: ok` and release SHA `c69e87e72b936fce7e968936abddd05f586a22bb`.
+- Production exact-barcode API smoke returned a complete Open Food Facts-backed record with Protein 2 g and Sugar 1.9 g.
+- Production Mobile Safari-compatible UI smoke opened checkout with zero `Private demo` labels, three `Needs nutrition label` rows, the `Scan labels to compare` heading and one functional selected-product label-scan action.

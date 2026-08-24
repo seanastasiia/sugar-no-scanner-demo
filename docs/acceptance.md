@@ -46,7 +46,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Cached result < 1 s | Deterministic/API flow observed in WebKit | Pass locally |
 | New AI p95 < 4 s | One current broad-identity plus live-retailer call took 3,591 ms on the supplied Sanpellegrino screenshot; a p95 sample has not been collected, and the six-product shelf took 7,159 ms | Not measured |
 | Supabase migration, seed and writes | Migration and seed are reproducible | Prepared, not applied |
-| Railway HTTPS and live health check | GitHub Actions run 32775369464 passed for commit `5cb60420fd55fb372bbd43cff335a01a05ae7e09`; Railway `/api/health` reported the same commit and the public ranked shelf/checkout smoke passed | Pass in production |
+| Railway HTTPS and live health check | GitHub Actions run 32781804241 passed for commit `c69e87e72b936fce7e968936abddd05f586a22bb`; Railway `/api/health` reported the same commit. Public UI smoke showed three actionable checkout pending rows, and an exact-barcode product API smoke returned a complete Open Food Facts-backed fit | Pass in production |
 | Physical iPhone Safari shelf test | Requires deployed HTTPS and physical products | Not run |
 
 The deterministic scenes prove the interaction and data contract. They must not be presented as evidence of real-world computer-vision accuracy. The independent QA record and the suitability-only review of temporary Latvian-store images are in [the 2026-08-24 QA run](test-runs/2026-08-24-independent-qa.md).
