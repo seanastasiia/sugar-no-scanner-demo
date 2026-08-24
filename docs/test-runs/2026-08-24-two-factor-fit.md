@@ -20,6 +20,7 @@ Code and product-documentation SHA before this evidence-only commit: `3abe65a934
 | `npm run catalog:validate` | Pass: 40 rows, 40 complete two-factor records, 10 records with optional raw fiber, 19,076 Barbora slugs |
 | `npx playwright test --list` | Pass: 18 authored Mobile Safari scenarios discovered |
 | GitHub Mobile Safari run #8 | Found one real 4.34:1 compact-name contrast defect and one cold-hydration flake; both fixes were added before the final rerun |
+| [GitHub Mobile Safari run #9](https://github.com/seanastasiia/sugar-no-scanner-demo/actions/runs/32762710546) | Pass on `6499458648a05f167412299da90410c59cf5da4e`: source verification, 16 Vitest files / 80 tests, production build, 18 authored WebKit scenarios, deployed recognition benchmark and acceptance gates |
 | Local Playwright execution | Not run: the managed QA sandbox cannot bind the required local web server; GitHub WebKit is the browser release gate |
 
 ## Product checks after deploy
@@ -30,4 +31,4 @@ Code and product-documentation SHA before this evidence-only commit: `3abe65a934
 4. Scan an exact Barbora food with energy, protein and total sugar. Confirm it receives `Sugar.no fit`, not `2/3` or a partial badge.
 5. Check a protein-only or sugar-only fixture. It must remain a neutral limited view with no camera marker or overall fit.
 
-Railway deployment, production health and GitHub WebKit results are recorded after this evidence file reaches `main`.
+Railway health reported `status=ok` on `6499458648a05f167412299da90410c59cf5da4e`. A production Shelf demo smoke returned 4/4 rated products, displayed only Protein and Sugar, retained `Best fit in this scan` and contained no Fiber or `2/3` state. This final evidence-only update does not change product code.
