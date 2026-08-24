@@ -3,6 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 
 async function unlock(page: Page) {
   await page.goto("/");
+  await page.waitForLoadState("networkidle");
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
 }
@@ -31,9 +32,12 @@ const onePixelPng = Buffer.from(
 );
 
 async function chooseSavedPhoto(page: Page, name = "qa-shelf.png") {
-  await page.getByRole("button", { name: "Show demo" }).click();
+  const showDemo = page.getByRole("button", { name: "Show demo" });
+  await showDemo.click();
   const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
-  await expect(chooser).toBeVisible();
+  await page.waitForTimeout(150);
+  if (!(await chooser.isVisible())) await showDemo.click();
+  await expect(chooser).toBeVisible({ timeout: 10_000 });
   await chooser.locator('input[type="file"]').setInputFiles({
     name,
     mimeType: "image/png",
