@@ -640,6 +640,7 @@
 
 .resultsExpanded .sheetChrome {
   min-height: calc(66px + env(safe-area-inset-top));
+  grid-template-columns: minmax(0, 1fr) 44px;
   padding-top: calc(8px + env(safe-area-inset-top));
   border-bottom: 1px solid var(--border);
 }
