@@ -989,7 +989,6 @@
 .tray button .trayProductName {
   max-width: 104px;
   overflow: hidden;
-  opacity: 0.82;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
