@@ -349,7 +349,9 @@ for (const scenario of [
     await expect(badge.getByText("Sugar.no quick view · 2/3", { exact: true })).toBeVisible();
     await expect(badge.getByText(scenario.missingCriterion, { exact: true })).toBeVisible();
     await expect(badge.getByText("Not listed", { exact: true })).toBeVisible();
-    await expect(page.getByText(scenario.expectedCopy, { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Quick view · 2 of 3 signals", { exact: true }).locator("..")
+    ).toContainText(scenario.expectedCopy);
   });
 }
 
