@@ -188,9 +188,7 @@ export function ScannerApp() {
   const [demoOpen, setDemoOpen] = useState(false);
   const [stageDimensions, setStageDimensions] = useState<MediaDimensions | null>(null);
   const [mediaDimensions, setMediaDimensions] = useState<MediaDimensions | null>(null);
-  const [networkOnline, setNetworkOnline] = useState(() =>
-    typeof navigator === "undefined" ? true : navigator.onLine
-  );
+  const [networkOnline, setNetworkOnline] = useState(true);
 
   const ensureSession = useCallback(() => {
     if (!sessionIdRef.current) sessionIdRef.current = makeSessionId();
@@ -368,7 +366,7 @@ export function ScannerApp() {
 
   const recognize = useCallback(
     async (payload: { source: ScanSource; imageDataUrl?: string; sampleFrame?: number; focusMode?: boolean }) => {
-      if (inFlightRef.current || !navigator.onLine) return;
+      if (inFlightRef.current) return;
       inFlightRef.current = true;
       setRecognitionState("scanning");
       setStatusMessage("Reading visible products…");
