@@ -125,9 +125,8 @@ test("sample shelf photo highlights products and shows a two-factor Sugar.no bad
   await expect(page.getByLabel("Sugar.no badge").getByText("Protein", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Fiber", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Sugar.no badge").getByText("Sugar", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Shelf marker legend").getByText("Great fit", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Shelf marker legend").getByText("Moderate fit", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Shelf marker legend").getByText("Low fit", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
+  await expect(page.getByText("Outlines show products with both protein and total sugar available.", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Values per 100 g · Compared with protein snacks in this demo")).toBeVisible();
   await expect(page.getByText(/Sugar\.no Match \d+/)).toHaveCount(0);
   await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
@@ -353,7 +352,8 @@ test("one-signal and identity-only products remain neutral without an overall fi
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByText("No Sugar.no fit yet.", { exact: true })).toBeVisible();
   await expect(page.getByText(/available in the results without a camera marker/)).toBeVisible();
-  await expect(page.getByText("Limited view · 1 of 2 signals", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Sugar.no badge").getByText("Sugar.no limited view · 1/2", { exact: true })).toBeVisible();
+  await expect(page.getByText("Limited view · 1 of 2 signals", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await page.getByLabel("Products in this scan").getByRole("button", { name: /QA identity only/ }).click();
   await expect(page.getByText("Identified, not rated", { exact: true })).toBeVisible();
