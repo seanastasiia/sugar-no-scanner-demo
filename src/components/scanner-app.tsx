@@ -929,7 +929,7 @@ export function ScannerApp() {
                   <>
                     <div className={styles.sheetTitleStatic}>
                       <strong>{sheetTitle}</strong>
-                      <span>Best available result first</span>
+                      <span>{ratedCount > 0 ? "Best available result first" : "Recognized packages"}</span>
                     </div>
                     <div className={styles.sheetActions}>
                       <button type="button" onClick={openResults} aria-controls="scan-results-content">
@@ -1157,11 +1157,11 @@ function ShelfScene({ onLoad }: { onLoad: (dimensions: MediaDimensions) => void 
 
 function CheckoutScene({ onLoad }: { onLoad: (dimensions: MediaDimensions) => void }) {
   return (
-    <div className={styles.checkoutScene} aria-label="Real supermarket checkout belt sample with four supported protein snacks">
+    <div className={styles.checkoutScene} aria-label="Real supermarket checkout belt sample with three recognized packaged products">
       <Image
         className={styles.samplePhoto}
         src="/samples/latvia-checkout.jpg"
-        alt="Four protein bars on a supermarket checkout conveyor belt beside a cashier"
+        alt="Groceries on a real supermarket checkout conveyor belt"
         fill
         sizes="100vw"
         priority
