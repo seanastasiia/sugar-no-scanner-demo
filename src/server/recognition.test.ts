@@ -43,8 +43,13 @@ describe("recognizeProducts", () => {
       requestId: "request-checkout"
     });
     expect(result.status).toBe("matched");
-    expect(result.detections).toHaveLength(4);
-    expect(new Set(result.detections.map((detection) => detection.productId)).size).toBe(4);
+    expect(result.detections).toHaveLength(3);
+    expect(result.detections.map((detection) => detection.productId)).toEqual([
+      "visual:sproud-barista-low-sugar-high-in-protein-drink-made-from-peas-1l",
+      "visual:schnitzer-bio-burger-buns",
+      "visual:stockmann-gailenes-chanterelles"
+    ]);
+    expect(result.detections.every((detection) => detection.identity?.matchKind === "visual_only")).toBe(true);
     expect(result.imageStored).toBe(false);
   });
 
