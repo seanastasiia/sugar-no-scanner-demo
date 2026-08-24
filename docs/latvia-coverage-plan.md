@@ -4,15 +4,15 @@ Checked: 2026-08-21
 
 ## Two different coverage metrics
 
-`Identity coverage` means the scanner can name the exact SKU. `Sugar.no result coverage` now has two levels: a full three-signal category badge, or an on-demand two-signal exact-Barbora quick view. These metrics must not be combined: a readable brand name is not evidence for nutrition.
+`Identity coverage` means the scanner can name the exact SKU. `Sugar.no result coverage` means both protein and total sugar are source-backed; exact Barbora items also need energy to place protein in the reference band. These metrics must not be combined: a readable brand name is not evidence for nutrition.
 
 Current proof-of-concept state:
 
 - Gemini can name readable packages outside the curated catalog.
 - 19,076 Barbora Latvia product-page slugs are indexed for retailer discovery.
 - 40 protein-snack records contain sourced protein and total sugar.
-- 10 of those 40 currently have independently sourced fiber and receive a complete Sugar.no rating.
-- exact Barbora food pages with listed energy, protein and total sugar can now receive a runtime `2 of 3` quick view; pages with listed fiber can receive `3 of 3`.
+- all 40 receive the two-factor Sugar.no fit because both protein and total sugar are sourced.
+- exact Barbora food pages with listed energy, protein and total sugar can receive the same runtime two-factor fit; fiber is not a rating input.
 - pages without enough nutrition, adult products and non-food pages remain identified but unrated.
 
 ## External data check
@@ -38,9 +38,9 @@ Official references:
 
 1. **Run barcode and visual recognition together.** EAN-13/EAN-8 gives the strongest exact-SKU key when a barcode is visible. Native `BarcodeDetector` cannot be the only web implementation because browser support is limited; use a tested EAN-capable WebAssembly/JavaScript fallback on iPhone Safari.
 2. **Resolve the SKU through a source ladder.** Query a reviewed Sugar.no/Supabase record first, then a separately attributed Open Food Facts record by GTIN, then an exact Barbora product page, and finally visual identity only. Never let Gemini generate nutrition.
-3. **Read retailer nutrition on demand.** This path is now implemented for exact Barbora SKUs. Energy, protein and total sugar produce a clearly labelled two-signal reference view; numeric fiber is added only when the retailer, manufacturer, Open Food Facts or a reviewed package label actually supplies it.
+3. **Read retailer nutrition on demand.** This path is now implemented for exact Barbora SKUs. Energy, protein and total sugar produce the two-factor reference view. Fiber may remain in the raw record when a source supplies it, but it does not affect the fit.
 4. **Add a label fallback.** If the SKU is known but a required nutrient is missing, ask the user to show the nutrition table. AI may transcribe the label into a review screen, but the rating becomes verified only after source validation. Raw images remain unsaved.
-5. **Compare inside a category.** A yogurt, cola and protein bar must not share one percentile population. Store a reviewed category and calculate the three signals against that category's current sourced distribution.
+5. **Compare inside a category.** A yogurt, cola and protein bar must not share one percentile population. Store a reviewed category and calculate protein and inverse total sugar against that category's current sourced distribution.
 6. **Build shelf recognition from exact SKU assets.** Store approved front-pack images or embeddings linked to GTINs. Visual matching proposes candidates; barcode, label text and brand/pack-size checks decide the exact SKU.
 7. **Cache by GTIN in Supabase with provenance.** Keep every nutrient field's source, checked date and status. Open Food Facts-derived data should remain attributable and logically separated until ODbL obligations are reviewed.
 
@@ -49,9 +49,9 @@ Official references:
 Do not promise “almost every Latvian product” yet. For the next validation, choose 200 products from real Rimi, Maxima and Barbora shelves across 8–10 categories and measure:
 
 - exact identity top-1 accuracy;
-- percentage with a complete three-signal rating;
+- percentage with a complete protein-and-sugar rating;
 - unsupported false-positive rate;
 - median and p95 time to first useful result;
 - number of products requiring barcode or back-label fallback.
 
-The first scalable milestone should be at least 90% exact identity on that fixed benchmark and separately reported full-badge, partial-quick-view and unrated percentages. Only then can the investor demo make a quantified Latvia coverage claim. The existence of 19,076 indexed pages must never be presented as 19,076 rated foods.
+The first scalable milestone should be at least 90% exact identity on that fixed benchmark and separately reported rated, one-factor and unrated percentages. Only then can the investor demo make a quantified Latvia coverage claim. The existence of 19,076 indexed pages must never be presented as 19,076 rated foods.
