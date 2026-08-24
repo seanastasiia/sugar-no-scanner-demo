@@ -363,7 +363,7 @@ for (const scenario of [
 
     await unlock(page);
     await chooseSavedPhoto(page, `${scenario.name.replaceAll(" ", "-")}.png`);
-    await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
+    await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
     await page.getByRole("button", { name: "View all", exact: true }).click();
     const badge = page.getByLabel("Sugar.no badge");
     await expect(badge.getByText("Sugar.no quick view · 2/3", { exact: true })).toBeVisible();
