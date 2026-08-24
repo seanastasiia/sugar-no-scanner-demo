@@ -1056,10 +1056,13 @@ export function ScannerApp() {
                       {orderedTray.map((id) => {
                         const item = products[id]?.product;
                         const detection = detectionById[id];
+                        const itemBrand = item?.brand || detection?.identity?.brand || "Product";
+                        const itemName = item?.shortName || detection?.identity?.name || "Identified product";
                         return (
                           <button
                             type="button"
                             key={id}
+                            aria-label={`Select ${itemBrand} ${itemName}`}
                             className={selectedId === id ? styles.activeTrayItem : ""}
                             onClick={() => {
                               manualSelectionRef.current = true;
@@ -1067,7 +1070,8 @@ export function ScannerApp() {
                               track("result_opened", source, id);
                             }}
                           >
-                            <span>{item?.brand || detection?.identity?.brand || "Reading"}</span>
+                            <span>{itemBrand}</span>
+                            <small className={styles.trayProductName}>{itemName}</small>
                             {item ? (
                               <MatchPill product={item} />
                             ) : (
