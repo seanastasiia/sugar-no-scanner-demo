@@ -5,6 +5,7 @@ import {
   fitBoxToFrame,
   isTrustedShelfPriceDetection,
   matchCatalogProduct,
+  nutritionLabelInstruction,
   recognitionInstruction,
   recognitionConfidenceThreshold,
   recognizeProducts,
@@ -101,6 +102,21 @@ describe("recognitionInstruction", () => {
     expect(instruction).toContain("several different products on the same shelf");
     expect(instruction).toContain("Do not stop after the central or most prominent package");
     expect(instruction).toContain("Repeated facings of the same SKU are one product type");
+    expect(instruction).toContain("EAN-8, EAN-13 or UPC barcode");
+  });
+
+  it("requires one printed per-100 column for the nutrition fallback", () => {
+    const instruction = nutritionLabelInstruction({
+      brand: "Sproud",
+      name: "Barista 1L",
+      variant: null,
+      packSize: "1 L",
+      category: null,
+      matchKind: "visual_only"
+    });
+    expect(instruction).toContain("per 100 g or per 100 ml");
+    expect(instruction).toContain("energy in kcal, protein in grams and total sugars");
+    expect(instruction).toContain("Do not use front-of-pack claims, serving values");
   });
 
   it("keeps the uncertain retry focused on one centered package", () => {
@@ -165,6 +181,7 @@ function providerDetection(index: number, overrides: Partial<ProviderDetection> 
     brand: `Brand${label}`,
     productName: `Snack ${label} 50 g`,
     searchQuery: `Brand${label} Snack ${label} 50 g`,
+    barcode: "",
     confidence: 0.9,
     box: { x: index / 10, y: 0.2, width: 0.08, height: 0.4 },
     shelfPriceCents: 0,
@@ -192,7 +209,8 @@ describe("resolveVisibleDetections", () => {
           await Promise.resolve();
           active -= 1;
           return null;
-        }
+        },
+        resolveOpenFoodFacts: async () => null
       },
       3
     );
@@ -225,10 +243,29 @@ describe("resolveVisibleDetections", () => {
         resolveOffer: async () => {
           attempts += 1;
           return null;
-        }
+        },
+        resolveOpenFoodFacts: async () => null
       }
     );
     expect(attempts).toBe(2);
     expect(detections).toHaveLength(1);
+  });
+
+  it("uses an exact Open Food Facts result when Barbora cannot resolve the SKU", async () => {
+    const fallback = getCatalog()[0];
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, { brand: "NICK'S", productName: "Soft Toffee protein bar 50 g" })],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveOpenFoodFacts: async () => ({ product: { ...fallback, id: "off:7350104401012" }, confidence: 0.93 })
+      }
+    );
+    expect(detections[0]).toMatchObject({
+      productId: "off:7350104401012",
+      nutritionLinkConfidence: 0.93,
+      identity: { matchKind: "open_food_facts" }
+    });
   });
 });

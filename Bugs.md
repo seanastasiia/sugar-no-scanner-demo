@@ -1,6 +1,6 @@
 # Bugs
 
-- **2026-08-24: multi-product results appeared as an unordered horizontal tray, so users could not immediately see which product fit them more or less.** The expanded comparison now presents one vertical `Best fit first` list. Products with a complete Protein/Sugar fit are sorted high to low, every row keeps the plain-language `Great / Moderate / Low fit` label and verified values, and unrated identities stay last as `Fit pending` without a fabricated rank.
+- **2026-08-24: multi-product results appeared as an unordered horizontal tray, so users could not immediately see which product fit them more or less.** The expanded comparison now presents one vertical `Best fit first` list. Products with a complete Protein/Sugar fit are sorted high to low, every rated row keeps the plain-language `Great / Moderate / Low fit` label and verified values, and unrated identities stay last as `Needs nutrition label` without a fabricated rank.
 
 - **2026-08-24: the production-mode shelf-completion regression used a fixed 2.5-second pause and could inspect the request count just before the browser scheduled its second frame.** The test now waits for the actual second request with a bounded five-second poll, preserving the same product assertion without a timing race.
 
@@ -12,7 +12,6 @@ This file is the running record of scanner defects found and resolved.
 
 ## Open
 
-- The current managed QA sandbox rejects all local socket binds, including `127.0.0.1`; the QA-authored Mobile Safari regressions must run in CI or a normal local shell before release.
 - Real packaging, glare, low-light and physical checkout-belt accuracy are not validated. The first proof of concept uses curated sample scenes only.
 - Shelf-price OCR and spatial association with the correct product label need a physical Latvian store benchmark; ambiguous labels must remain hidden.
 - Barbora is the only live retailer source. The prototype can say `Barbora online`, but cannot claim `best price` until multiple comparable retailers, exact pack-size matching and freshness rules are connected.
@@ -20,6 +19,7 @@ This file is the running record of scanner defects found and resolved.
 
 ## Resolved
 
+- **2026-08-25: most visually recognized packages ended at `Identified` with no Sugar.no value.** Recognition now reads a clearly printed barcode and tries three source-backed paths: the curated catalog, exact Barbora nutrition and an exact/strict Open Food Facts record. If none supplies energy, protein and total sugars, the result becomes `Needs nutrition label` with a functional one-step camera action. That follow-up accepts only one high-confidence per-100 table with matching OCR evidence, replaces only the selected pending item, preserves the rest of the held shelf and produces the usual Protein/Sugar fit; it never invents missing nutrition.
 - **2026-08-24: final Mobile Safari CI found 4.34:1 contrast on compact tray SKU names and one hydration-time demo-button flake.** The artificial name opacity is removed so text clears the 4.5:1 WCAG AA threshold. Browser setup now waits for network idle, retries the demo trigger once after hydration and gives the chooser the same explicit ten-second cold-start budget as recognition flows.
 - **2026-08-24: fiber was a required third rating input even though Latvian retailer data often omits it.** Sugar.no fit now uses only protein and inverse total sugar with equal weight. Fiber remains available in raw source records for compatibility but is absent from the badge, comparison formula and completeness rules. All 40 curated products now have the two required factors; exact Barbora foods receive a fit only when energy, protein and total sugar are source-backed.
 - **2026-08-24: expanded multi-product tray cards showed only the brand, so two recognized variants from the same brand were visually and accessibly ambiguous.** Each tray card now names the recognized SKU or variant and exposes a matching selection label while keeping the horizontal shelf comparison compact.

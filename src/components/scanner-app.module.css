@@ -1362,7 +1362,8 @@
   text-decoration-skip-ink: none;
 }
 
-.pendingData {
+.pendingData,
+.pendingDataAction {
   display: flex;
   align-items: flex-start;
   gap: 9px;
@@ -1375,9 +1376,37 @@
   font-size: 12px;
 }
 
-.pendingData span {
+.pendingData span,
+.pendingDataAction span {
   display: grid;
   gap: 2px;
+}
+
+.pendingDataAction {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+}
+
+.pendingDataAction > button {
+  display: inline-flex;
+  min-height: 48px;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+  cursor: pointer;
+  border: 1px solid var(--ink);
+  border-radius: 13px;
+  background: var(--ink);
+  color: var(--cream);
+  font: inherit;
+  font-weight: 820;
+  transition: opacity 180ms ease;
+}
+
+.pendingDataAction > button:active {
+  opacity: 0.72;
 }
 
 .nutrients {
@@ -1777,6 +1806,7 @@
   .sugarBadge,
   .alternativeCard,
   .pendingData,
+  .pendingDataAction,
   .priceComparison,
   .priceValues > div,
   .rankingHeading > strong,
@@ -1820,6 +1850,7 @@
   .perHundred,
   .emptyResult,
   .pendingData,
+  .pendingDataAction,
   .priceComparison > p,
   .rankingHeading span,
   .rankedProductMeta > small,

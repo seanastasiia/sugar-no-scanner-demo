@@ -1,8 +1,17 @@
 import { GoogleGenAI, ThinkingLevel, createPartFromBase64, createPartFromText } from "@google/genai";
 import { z } from "zod";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
-import type { ProductDetection, RecognitionResponse, ScanSource, ScoredProduct } from "@/lib/types";
+import type {
+  ProductDetection,
+  RecognitionMode,
+  RecognitionResponse,
+  RecognizedProductIdentity,
+  ScanSource,
+  ScoredProduct
+} from "@/lib/types";
 import { getBarboraOfferBySlug, resolveBarboraOffer, type BarboraLookupInput } from "./barbora-catalog";
+import { nutritionLabelToScoredProduct, type NutritionLabelRead } from "./nutrition-label";
+import { resolveOpenFoodFactsProduct } from "./open-food-facts";
 
 export const DEFAULT_GEMINI_MODEL = "gemini-3.7-flash";
 const DEFAULT_RECOGNITION_THRESHOLD = 0.72;
@@ -14,6 +23,7 @@ const providerResponseSchema = z.object({
       brand: z.string().max(80),
       productName: z.string().max(180),
       searchQuery: z.string().max(240),
+      barcode: z.string().max(14),
       confidence: z.number().min(0).max(1),
       box: z.object({
         x: z.number().min(0).max(1),
@@ -30,6 +40,15 @@ const providerResponseSchema = z.object({
 });
 
 export type ProviderDetection = z.infer<typeof providerResponseSchema>["detections"][number];
+
+const nutritionLabelResponseSchema = z.object({
+  basis: z.enum(["100g", "100ml", "unknown"]),
+  energyKcal: z.number().min(0).max(1_000),
+  proteinG: z.number().min(0).max(100),
+  totalSugarG: z.number().min(0).max(100),
+  confidence: z.number().min(0).max(1),
+  observedText: z.string().max(600)
+});
 
 const sampleShelf: ProductDetection[] = [
   {
@@ -125,6 +144,92 @@ function imageParts(imageDataUrl: string) {
   const match = imageDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
   if (!match) throw new Error("unsupported_image");
   return { mimeType: match[1], base64: match[2] };
+}
+
+export function nutritionLabelInstruction(identity: RecognizedProductIdentity): string {
+  const target = [identity.brand, identity.name, identity.variant, identity.packSize].filter(Boolean).join(" · ");
+  return (
+    `The user turned around this already recognized product: ${target}. ` +
+    `Read only the printed nutrition declaration in this frame. Find one column explicitly labelled per 100 g or per 100 ml. ` +
+    `Return energy in kcal, protein in grams and total sugars (the "of which sugars" value) in grams from that same column. ` +
+    `Copy the relevant lines exactly into observedText, including the per-100 basis, field labels, values and units. ` +
+    `Do not use front-of-pack claims, serving values, carbohydrates, added sugar or estimates. ` +
+    `If the table, basis or any required value is unreadable, set basis to unknown, all numeric values and confidence to zero, ` +
+    `and describe only what was actually readable in observedText.`
+  );
+}
+
+async function recognizeNutritionLabel(input: {
+  ai: GoogleGenAI;
+  model: string;
+  mimeType: string;
+  base64: string;
+  targetIdentity: RecognizedProductIdentity;
+  requestId: string;
+  startedAt: number;
+}): Promise<RecognitionResponse> {
+  const response = await input.ai.models.generateContent({
+    model: input.model,
+    contents: [
+      createPartFromText(nutritionLabelInstruction(input.targetIdentity)),
+      createPartFromBase64(input.base64, input.mimeType)
+    ],
+    config: {
+      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+      responseMimeType: "application/json",
+      responseJsonSchema: {
+        type: "object",
+        additionalProperties: false,
+        required: ["basis", "energyKcal", "proteinG", "totalSugarG", "confidence", "observedText"],
+        properties: {
+          basis: { type: "string", enum: ["100g", "100ml", "unknown"] },
+          energyKcal: { type: "number", minimum: 0, maximum: 1000 },
+          proteinG: { type: "number", minimum: 0, maximum: 100 },
+          totalSugarG: { type: "number", minimum: 0, maximum: 100 },
+          confidence: { type: "number", minimum: 0, maximum: 1 },
+          observedText: { type: "string", maxLength: 600 }
+        }
+      }
+    }
+  });
+  const read = nutritionLabelResponseSchema.parse(
+    JSON.parse(
+      response.text ||
+        '{"basis":"unknown","energyKcal":0,"proteinG":0,"totalSugarG":0,"confidence":0,"observedText":""}'
+    )
+  ) as NutritionLabelRead;
+  const product = nutritionLabelToScoredProduct(input.targetIdentity, read);
+  if (!product) {
+    return {
+      requestId: input.requestId,
+      status: "not_sure",
+      detections: [],
+      latencyMs: Math.round(performance.now() - input.startedAt),
+      model: input.model,
+      imageStored: false
+    };
+  }
+  return {
+    requestId: input.requestId,
+    status: "matched",
+    detections: [
+      {
+        productId: product.id,
+        catalogProductId: null,
+        confidence: read.confidence,
+        box: { x: 0.08, y: 0.08, width: 0.84, height: 0.84 },
+        observedText: read.observedText,
+        identity: { ...input.targetIdentity, matchKind: "package_label" },
+        shelfPrice: null,
+        retailerOffer: null,
+        nutritionLinkConfidence: read.confidence,
+        inlineProduct: product
+      }
+    ],
+    latencyMs: Math.round(performance.now() - input.startedAt),
+    model: input.model,
+    imageStored: false
+  };
 }
 
 export function fitBoxToFrame(box: ProductDetection["box"]): ProductDetection["box"] {
@@ -233,6 +338,7 @@ export function recognitionInstruction(focusMode: boolean): string {
     scope +
     `Read the front label and return the exact visible brand plus one productName containing the product, variant or flavor and pack size. ` +
     `searchQuery should repeat the identity using useful English or Latvian equivalents of foreign flavor words for retailer matching. ` +
+    `If a complete EAN-8, EAN-13 or UPC barcode number is clearly readable, return only its digits in barcode; otherwise return an empty string. ` +
     `Only when a separate physical shelf price label outside the package is clearly visible and associated with that exact package, ` +
     `set shelfPriceLabelVisible true and return its EUR price in cents, the exact observed price text including € or EUR, and a separate confidence. ` +
     `Otherwise set shelfPriceLabelVisible false, price cents and confidence to zero, and price text to an empty string. ` +
@@ -246,11 +352,13 @@ export function recognitionInstruction(focusMode: boolean): string {
 export interface DetectionResolutionDependencies {
   getOfferBySlug: typeof getBarboraOfferBySlug;
   resolveOffer: typeof resolveBarboraOffer;
+  resolveOpenFoodFacts: typeof resolveOpenFoodFactsProduct;
 }
 
 const defaultResolutionDependencies: DetectionResolutionDependencies = {
   getOfferBySlug: getBarboraOfferBySlug,
-  resolveOffer: resolveBarboraOffer
+  resolveOffer: resolveBarboraOffer,
+  resolveOpenFoodFacts: resolveOpenFoodFactsProduct
 };
 
 async function mapWithConcurrency<T, R>(
@@ -301,16 +409,22 @@ export async function resolveVisibleDetections(
       packSize,
       searchTerms: [detection.searchQuery]
     };
-    const retailerOffer = initialCatalogMatch
-      ? await dependencies.getOfferBySlug(initialCatalogMatch.product.id, lookupInput).catch(() => null)
-      : await dependencies.resolveOffer(lookupInput).catch(() => null);
+    const [retailerOffer, openFoodFactsCandidate] = initialCatalogMatch
+      ? [await dependencies.getOfferBySlug(initialCatalogMatch.product.id, lookupInput).catch(() => null), null]
+      : await Promise.all([
+          dependencies.resolveOffer(lookupInput).catch(() => null),
+          dependencies.resolveOpenFoodFacts(lookupInput, detection.barcode).catch(() => null)
+        ]);
     const exactRetailerOffer = retailerOffer?.exactSku ? retailerOffer : null;
     const knownProduct =
       initialCatalogMatch?.product ||
       (exactRetailerOffer ? catalog.find((product) => product.id === exactRetailerOffer.slug) || null : null);
-    const nutritionLinkConfidence = initialCatalogMatch?.confidence ?? exactRetailerOffer?.matchConfidence ?? null;
+    const openFoodFacts = knownProduct || exactRetailerOffer ? null : openFoodFactsCandidate;
+    const resolvedProduct = knownProduct || openFoodFacts?.product || null;
+    const nutritionLinkConfidence =
+      initialCatalogMatch?.confidence ?? exactRetailerOffer?.matchConfidence ?? openFoodFacts?.confidence ?? null;
     const productId =
-      knownProduct?.id ||
+      resolvedProduct?.id ||
       (exactRetailerOffer
         ? `barbora:${exactRetailerOffer.slug}`
         : genericProductId(detection.brand, detection.productName, ""));
@@ -326,7 +440,13 @@ export async function resolveVisibleDetections(
         variant: null,
         packSize: packSize || null,
         category: null,
-        matchKind: knownProduct ? "verified_catalog" : exactRetailerOffer ? "barbora" : "visual_only"
+        matchKind: knownProduct
+          ? "verified_catalog"
+          : exactRetailerOffer
+            ? "barbora"
+            : openFoodFacts
+              ? "open_food_facts"
+              : "visual_only"
       },
       shelfPrice: isTrustedShelfPriceDetection(detection)
         ? {
@@ -347,6 +467,8 @@ export async function recognizeProducts(input: {
   imageDataUrl?: string;
   source: ScanSource;
   focusMode?: boolean;
+  mode?: RecognitionMode;
+  targetIdentity?: RecognizedProductIdentity;
   sampleFrame?: number;
   catalog: ScoredProduct[];
   requestId: string;
@@ -381,6 +503,27 @@ export async function recognizeProducts(input: {
   const threshold = recognitionConfidenceThreshold(focusMode);
   const { mimeType, base64 } = imageParts(input.imageDataUrl);
   const ai = new GoogleGenAI({ apiKey });
+  if (input.mode === "nutrition-label") {
+    if (!input.targetIdentity) {
+      return {
+        requestId: input.requestId,
+        status: "not_sure",
+        detections: [],
+        latencyMs: Math.round(performance.now() - startedAt),
+        model,
+        imageStored: false
+      };
+    }
+    return recognizeNutritionLabel({
+      ai,
+      model,
+      mimeType,
+      base64,
+      targetIdentity: input.targetIdentity,
+      requestId: input.requestId,
+      startedAt
+    });
+  }
   const response = await ai.models.generateContent({
     model,
     contents: [
@@ -407,6 +550,7 @@ export async function recognizeProducts(input: {
                 "brand",
                 "productName",
                 "searchQuery",
+                "barcode",
                 "confidence",
                 "box",
                 "shelfPriceCents",
@@ -418,6 +562,7 @@ export async function recognizeProducts(input: {
                 brand: { type: "string", maxLength: 80 },
                 productName: { type: "string", maxLength: 180 },
                 searchQuery: { type: "string", maxLength: 240 },
+                barcode: { type: "string", maxLength: 14 },
                 confidence: { type: "number", minimum: 0, maximum: 1 },
                 shelfPriceCents: { type: "integer", minimum: 0, maximum: 1000000 },
                 shelfPriceText: { type: "string", maxLength: 60 },

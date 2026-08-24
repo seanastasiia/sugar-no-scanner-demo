@@ -6,7 +6,11 @@ export type RatingBasis =
   | "catalog_percentile"
   | "catalog_percentile_partial"
   | "barbora_reference"
-  | "barbora_reference_partial";
+  | "barbora_reference_partial"
+  | "open_food_facts_reference"
+  | "open_food_facts_reference_partial"
+  | "package_label_reference"
+  | "package_label_reference_partial";
 
 export type RatingSignal = "protein" | "inverseSugar";
 
@@ -80,6 +84,7 @@ export interface ProductDetection {
   shelfPrice?: ShelfPrice | null;
   retailerOffer?: RetailerOffer | null;
   nutritionLinkConfidence?: number | null;
+  inlineProduct?: ScoredProduct | null;
 }
 
 export interface RecognizedProductIdentity {
@@ -88,7 +93,7 @@ export interface RecognizedProductIdentity {
   variant: string | null;
   packSize: string | null;
   category: string | null;
-  matchKind: "verified_catalog" | "barbora" | "visual_only";
+  matchKind: "verified_catalog" | "barbora" | "open_food_facts" | "package_label" | "visual_only";
 }
 
 export interface ShelfPrice {
@@ -115,6 +120,8 @@ export interface RetailerOffer {
 }
 
 export type ScanSource = "camera" | "upload" | "sample-shelf" | "sample-conveyor";
+
+export type RecognitionMode = "products" | "nutrition-label";
 
 export interface RecognitionResponse {
   requestId: string;

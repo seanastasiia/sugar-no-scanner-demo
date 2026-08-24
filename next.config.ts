@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "cdn.barbora.lv",
         pathname: "/products/**"
+      },
+      {
+        protocol: "https",
+        hostname: "images.openfoodfacts.org",
+        pathname: "/images/products/**"
       }
     ]
   },

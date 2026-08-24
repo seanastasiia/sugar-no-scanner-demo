@@ -13,4 +13,4 @@ The checkout fixture must be visually unmistakable as a supermarket conveyor, no
 
 When several comparable rated products are present, `Best fit in this scan` is a small eyebrow heading above the leading product name. It is not a separate status pill and stays hidden for a one-product scan.
 
-The compact sheet keeps a short best-first preview. Expanding it turns the recognized set into a vertical `Best fit first` list rather than another horizontal carousel. Each rated row carries its rank, plain-language fit and the two verified inputs. Products without a complete fit remain useful but sit after the ranking as `Fit pending`, without a number or inferred nutrition.
+The compact sheet keeps a short best-first preview. Expanding it turns the recognized set into a vertical `Best fit first` list rather than another horizontal carousel. Each rated row carries its rank, plain-language fit and the two verified inputs. Products without a complete fit remain useful but sit after the ranking as `Needs nutrition label`, without a number or inferred nutrition, and expose one clear label-scan recovery action.

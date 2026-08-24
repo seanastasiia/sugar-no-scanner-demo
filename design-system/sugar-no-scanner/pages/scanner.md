@@ -13,8 +13,8 @@ This page overrides `../MASTER.md` for the live camera, sample shelf and sample 
 - Show one photorealistic source scene for both shelf and checkout samples. Checkout uses the same multi-product scan pattern as shelf.
 - Keep the camera/image stage at least 60% of the initial mobile viewport when results exist.
 - Every supported package gets one bounded hit target with a border and central marker.
-- Marker states are `Great fit`, `Moderate fit`, `Low fit` and `Data pending`, matching the Sugar.no product taxonomy.
-- State must never depend on color alone: pair green with a check, yellow with a minus, red/coral with an alert icon, and pending with an info icon. Selected state adds a white ring and visible text.
+- Marker states are `Great fit`, `Moderate fit` and `Low fit`, matching the Sugar.no product taxonomy. A recognized identity without a complete fit remains in the result sheet and receives no camera marker.
+- State must never depend on color alone: pair green with a check, yellow with a minus and red/coral with an alert icon. Selected state adds a white ring and visible text.
 - These states are relative within the protein-snack catalog, not good/bad or healthy/unhealthy judgments.
 - Never show the internal numeric comparison score in the user interface.
 
@@ -22,8 +22,9 @@ This page overrides `../MASTER.md` for the live camera, sample shelf and sample 
 
 - Pull the cream results sheet over the lower edge of the scene with a visible drag handle.
 - First show product count and a compact best-first preview. Expanding the sheet reveals a vertical ranking, not a second horizontal carousel.
-- Order complete Protein/Sugar fits from higher to lower internal score and keep `Great fit`, `Moderate fit` or `Low fit` visible on every row. Preserve stable scan order for ties. Products without a full fit must appear last as `Fit pending` without a rank number.
-- The selected result contains brand/name and a `Sugar.no badge` with three criteria: Protein, Fiber and Sugar. It has no save control.
+- Order complete Protein/Sugar fits from higher to lower internal score and keep `Great fit`, `Moderate fit` or `Low fit` visible on every row. Preserve stable scan order for ties. Products without a full fit must appear last as `Needs nutrition label` without a rank number.
+- The selected rated result contains brand/name and a two-criterion `Sugar.no badge`: Protein and Sugar. It has no save control.
+- The selected unrated result has one primary recovery action: `Scan nutrition label`. Keep it at least 48 px high, explain that the user should turn the pack around, and replace the pending state only after a trusted per-100 table is read.
 - When a trusted physical shelf label is associated with a product, show its price directly beneath that product in the compact preview, ranked row and expanded result. Cross it out only when an exact current Barbora offer is lower, then use the explicit `Cheaper at Barbora` label and `Buy cheaper at Barbora` action.
 - Each criterion includes actual value per 100 g, direction text and color support.
 - `Similar options` is a horizontally scrollable row of compact cards. Retailer CTA remains secondary.

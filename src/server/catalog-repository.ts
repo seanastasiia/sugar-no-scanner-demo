@@ -2,6 +2,7 @@ import { getCatalog, getProductWithAlternatives } from "@/lib/catalog";
 import { scoreCatalog } from "@/lib/scoring";
 import type { ProductRecord, ScoredProduct } from "@/lib/types";
 import { getRatedBarboraProduct } from "./barbora-product-rating";
+import { getOpenFoodFactsProductByBarcode } from "./open-food-facts";
 import { getSupabaseAdmin } from "./supabase";
 
 interface ProductRow {
@@ -71,6 +72,14 @@ export async function listProducts(): Promise<ScoredProduct[]> {
 }
 
 export async function productWithAlternatives(id: string) {
+  if (id.startsWith("off:")) {
+    try {
+      const product = await getOpenFoodFactsProductByBarcode(id.slice("off:".length));
+      return product ? { product, alternatives: [] } : null;
+    } catch {
+      return null;
+    }
+  }
   if (id.startsWith("barbora:")) {
     try {
       const product = await getRatedBarboraProduct(id.slice("barbora:".length));

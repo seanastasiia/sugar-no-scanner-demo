@@ -63,7 +63,14 @@ describe("recognition benchmark privacy harness", () => {
     expect(result.exactIdentityRecall).toBe(0.5);
     expect(result.ratedProductCount).toBe(1);
     expect(result.duplicateCount).toBe(0);
-    expect(result.identityKinds).toEqual({ verified_catalog: 1, barbora: 0, visual_only: 1, unknown: 0 });
+    expect(result.identityKinds).toEqual({
+      verified_catalog: 1,
+      barbora: 0,
+      open_food_facts: 0,
+      package_label: 0,
+      visual_only: 1,
+      unknown: 0
+    });
     expect(aggregateRecognitionBenchmark([result])).toMatchObject({
       exactIdentityRecall: 0.5,
       ratedCoverage: 0.5,

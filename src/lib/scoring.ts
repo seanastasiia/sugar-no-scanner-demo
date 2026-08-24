@@ -98,7 +98,11 @@ function inverseSugarReferenceScore(totalSugarG: number, basis: ProductRecord["n
  * Barbora product page. The values are reference bands, not category percentiles
  * and not a medical or absolute health score.
  */
-export function scoreBarboraProduct(product: ProductRecord): ScoredProduct {
+export function scoreReferenceProduct(
+  product: ProductRecord,
+  completeBasis: ScoredProduct["ratingBasis"],
+  partialBasis: ScoredProduct["ratingBasis"]
+): ScoredProduct {
   const { proteinG, totalSugarG } = product.nutrientsPer100g;
   const energyKcal = product.energyKcalPer100;
   const hasProtein = typeof proteinG === "number" && Number.isFinite(proteinG);
@@ -111,9 +115,13 @@ export function scoreBarboraProduct(product: ProductRecord): ScoredProduct {
       protein: hasProtein && hasEnergy ? proteinReferenceScore(proteinG, energyKcal) : null,
       inverseSugar: hasSugar ? inverseSugarReferenceScore(totalSugarG, product.nutritionBasis) : null
     },
-    "barbora_reference",
-    "barbora_reference_partial"
+    completeBasis,
+    partialBasis
   );
+}
+
+export function scoreBarboraProduct(product: ProductRecord): ScoredProduct {
+  return scoreReferenceProduct(product, "barbora_reference", "barbora_reference_partial");
 }
 
 export interface FairComparisonCohort {
@@ -129,8 +137,8 @@ export interface FairComparisonResult {
   winnerIds: string[];
 }
 
-function comparisonMethod(product: ScoredProduct): "catalog_percentile" | "barbora_reference" {
-  return product.ratingBasis?.startsWith("catalog_") ? "catalog_percentile" : "barbora_reference";
+function comparisonMethod(product: ScoredProduct): "catalog_percentile" | "reference" {
+  return product.ratingBasis?.startsWith("catalog_") ? "catalog_percentile" : "reference";
 }
 
 function comparisonCategory(product: ScoredProduct): string {
