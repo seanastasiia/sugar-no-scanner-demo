@@ -8,7 +8,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 2. Confirm the camera permission prompt begins immediately and `Show demo` remains visible if permission is denied or the camera is unavailable.
 3. Tap `Show demo`, then `Shelf demo`. Confirm that the camera scene fills the phone and four markers appear directly over the four supported packages. Rated markers must say `Great fit`, `Moderate fit` or `Low fit`; neutral identities must not masquerade as rated picks.
 4. Confirm that only a compact bottom sheet overlays the shelf. It should say `4 products · 4 with Sugar.no fit`, show product thumbnails and expose `View all`. Tap it and confirm it expands into a full-height comparison page; collapse it and confirm the held shelf returns unchanged.
-5. In the expanded page, confirm that the leading comparable product says `Best fit in this scan` as a small heading above its brand and name, not as a separate pill beneath the Sugar.no badge. Confirm that the selected card has one compact Sugar.no badge with separate Protein, Fiber and Sugar signals, source values per 100 g and direction text. Confirm that no unexplained numeric score such as `86` appears.
+5. In the expanded page, confirm that the leading comparable product says `Best fit in this scan` as a small heading above its brand and name, not as a separate pill beneath the Sugar.no badge. Confirm that the selected card has one compact Sugar.no badge with separate Protein and Sugar factors, source values per 100 g and direction text. Confirm that Fiber and unexplained numeric scores such as `86` do not appear.
 6. Tap each marker and each small product in the tray. Confirm that the corresponding marker gets the white selected ring, its text appears and the product card changes.
 7. Swipe the Similar options cards left and right. Confirm that they are comparable formats and remain usable without horizontal page overflow.
 8. Open the Barbora action. Confirm that the exact SKU page opens in a new tab and that Sugar.no never claims affiliate revenue.
@@ -22,7 +22,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 3. Allow permission in Safari settings, reopen the demo and point at a golden product image on another screen.
 4. Confirm scanning begins without a shutter button. Keep the package still and front-facing.
 5. Confirm the camera owns the full browser viewport. After a match, only the compact bottom sheet may cover it; product details should appear only after explicitly opening the sheet.
-6. Point at a clear food outside the 40 curated snacks. If the exact Barbora page lists any two source-backed Sugar.no signals, confirm a dashed partial marker appears and the card says `Sugar.no quick view · 2/3`. The missing nutrient must say `Not listed`, never `Lower`; the explanation must name the two available signals rather than assuming fiber is always missing. A one-signal product may show that signal in the result sheet but must have no camera marker or overall fit. A zero-signal product must be identity-only and likewise stay off the camera overlay.
+6. Point at a clear food outside the 40 curated snacks. If the exact Barbora page lists energy, protein and total sugar, confirm a `Great fit`, `Moderate fit` or `Low fit` marker and a two-factor Sugar.no badge appear. Fiber must not appear or affect the result. A protein-only or sugar-only product may show that factor in the result sheet but must have no camera marker or overall fit. A zero-factor product must be identity-only and likewise stay off the camera overlay.
 7. If the first broad pass is uncertain, keep one package inside the central guide. Confirm the status changes to `Trying a closer center read…` and the result appears without pressing a shutter or restarting the camera.
 8. Point at a shelf containing at least three different front-facing readable products. Confirm one broad pass returns several distinct products at once rather than only the center package; up to eight distinct SKUs may be returned. If the broad pass first finds one product and the completion pass finds nothing else, the confirmed product must remain visible and locked for reading.
 9. Put several identical facings of one SKU in the frame. Confirm the status and tray count them as one unique product, not one product per package.
@@ -47,8 +47,8 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 ## Product decision questions
 
 - Can a first-time viewer explain the value within 15 seconds without narration?
-- Is the three-signal badge understood as a within-category comparison rather than a health verdict?
-- Is `2/3` understood as a useful partial view rather than a complete badge, and is whichever nutrient is missing visibly neutral?
+- Is the two-factor badge understood as a transparent comparison rather than a health verdict?
+- Is it clear that both protein and total sugar are required and that fiber is not part of this version of the fit?
 - Do `Great fit`, `Moderate fit` and `Low fit` feel clearer than a numeric score without implying permission or prohibition?
 - Is shelf comparison the primary value, with the retailer link clearly secondary?
 - Is the checkout experience useful after the choice has already been made?
