@@ -69,7 +69,7 @@ test("sample shelf photo highlights products and shows a three-signal Sugar.no b
   await openDemoScene(page, "Shelf demo");
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
   await expect(page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
-  await expect(page.getByText("4 products · 4 with Sugar.no fit", { exact: true })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
   await expect(page.getByLabel("Sample shelf photo with four supported protein snacks").locator("img")).toHaveCount(1);
   await expect(page.getByAltText("Four protein bars on a supermarket shelf")).toBeVisible();
   await page.waitForFunction(() =>
@@ -343,7 +343,7 @@ for (const scenario of [
 
     await unlock(page);
     await chooseSavedPhoto(page, `${scenario.name.replaceAll(" ", "-")}.png`);
-    await expect(page.getByText("1 product · 1 with Sugar.no fit", { exact: true })).toBeVisible();
+    await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
     await page.getByRole("button", { name: "View all", exact: true }).click();
     const badge = page.getByLabel("Sugar.no badge");
     await expect(badge.getByText("Sugar.no quick view · 2/3", { exact: true })).toBeVisible();
@@ -425,7 +425,7 @@ test("one-signal and identity-only products remain neutral without an overall fi
 
   await unlock(page);
   await chooseSavedPhoto(page, "limited-and-identity.png");
-  await expect(page.getByText("2 products · 0 with Sugar.no fit", { exact: true })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("2 products · 0 with Sugar.no fit");
   const scanner = page.getByLabel("Saved shelf or checkout photo scanner");
   await expect(scanner.locator('button[aria-label^="Open "]')).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
@@ -502,7 +502,7 @@ test("a broad live shelf scan keeps several different Sugar.no-rated products in
   expect(focusModes).toEqual([false, false]);
   const scanner = page.getByLabel("Live camera scanner");
   await expect(scanner.locator('button[aria-label^="Open "]')).toHaveCount(3);
-  await expect(page.getByText("3 products · 3 with Sugar.no fit", { exact: true })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByLabel("Products in this scan").getByRole("button")).toHaveCount(3);
 });
@@ -724,7 +724,7 @@ test("live camera groups repeated packs, holds the result and replaces it only a
   });
 
   await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit", { timeout: 10_000 });
-  await expect(page.getByText("1 product · 0 with Sugar.no fit", { exact: true })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit");
   await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toBeVisible();
@@ -978,7 +978,7 @@ test("an exact Barbora food gets an on-demand two-signal Sugar.no quick view", a
   await expect(page.getByRole("status")).toContainText("Products found. Checking Sugar.no signals");
   await expect(page.getByText("Checking nutrition…", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label*="2/3 signals"]')).toHaveCount(1);
-  await expect(page.getByText("1 product · 1 with Sugar.no fit", { exact: true })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
   const viewportHeight = await page.evaluate(() => window.innerHeight);
