@@ -143,22 +143,26 @@ test("sample shelf photo highlights products and shows a two-factor Sugar.no bad
 test("checkout photo uses one multi-product scan instead of an animated product", async ({ page }) => {
   await unlock(page);
   await openDemoScene(page, "Checkout demo");
-  await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
-  await expect(page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
-  await expect(page.getByAltText("Four protein bars on a supermarket checkout conveyor belt beside a cashier")).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("3 products · 0 with Sugar.no fit");
+  await expect(page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(0);
+  await expect(page.getByText("Recognized packages", { exact: true })).toBeVisible();
+  await expect(page.getByAltText("Groceries on a real supermarket checkout conveyor belt")).toBeVisible();
   await page.waitForFunction(() =>
-    [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Real supermarket checkout belt sample with four supported protein snacks"] img')]
+    [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Real supermarket checkout belt sample with three recognized packaged products"] img')]
       .every((image) => image.complete && image.naturalWidth > 0)
   );
-  await waitForAlternativeImages(page);
   await page.screenshot({ path: "docs/screenshots/checkout-mobile.png", fullPage: true });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   const tray = page.getByLabel("Products in this scan");
   await expect(tray).toBeVisible({ timeout: 8_000 });
-  await expect(tray.getByRole("button")).toHaveCount(4);
-  await expect(page.getByText("Compare without starting over")).toBeVisible();
+  await expect(tray.getByRole("button")).toHaveCount(3);
+  await expect(tray.getByText("Sproud", { exact: true })).toBeVisible();
+  await expect(tray.getByText("Schnitzer", { exact: true })).toBeVisible();
+  await expect(tray.getByText("Stockmann", { exact: true })).toBeVisible();
+  await expect(page.getByText("No Sugar.no fit yet.")).toBeVisible();
+  await expect(page.getByText("Product recognized", { exact: true })).toBeVisible();
+  await expect(page.getByText("Compare without starting over")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
-  await waitForAlternativeImages(page);
 });
 
 test("demo chooser supports shelf, checkout and a clear return to live camera", async ({ page }) => {
@@ -168,9 +172,9 @@ test("demo chooser supports shelf, checkout and a clear return to live camera", 
   await page.getByRole("button", { name: "Back to live camera" }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await openDemoScene(page, "Checkout demo");
-  await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
+  await expect(page.getByRole("status")).toContainText("3 products · 0 with Sugar.no fit");
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByText("Compare without starting over")).toBeVisible();
+  await expect(page.getByText("Product recognized", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Saved options" })).toHaveCount(0);
   await page.getByRole("button", { name: "Return to camera" }).click();
