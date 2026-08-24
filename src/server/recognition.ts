@@ -60,28 +60,58 @@ const sampleShelf: ProductDetection[] = [
 
 const sampleCheckout: ProductDetection[] = [
   {
-    productId: "prot-bat-sal-riekst-saldin-barebells-55-g",
-    confidence: 0.98,
-    box: { x: 0.22, y: 0.36, width: 0.2, height: 0.18 },
-    observedText: "Barebells Salty Peanut"
-  },
-  {
-    productId: "prot-bat-barebells-lemon-cheesecake-55-g",
-    confidence: 0.97,
-    box: { x: 0.36, y: 0.38, width: 0.2, height: 0.18 },
-    observedText: "Barebells Lemon Cheesecake"
-  },
-  {
-    productId: "proteina-bat-cepuma-garsa-iconfit-55-g",
-    confidence: 0.96,
-    box: { x: 0.51, y: 0.4, width: 0.2, height: 0.18 },
-    observedText: "ICONFIT Cookie Bliss"
-  },
-  {
-    productId: "proteina-baton-barebells-coco-choco-55-g",
+    productId: "visual:sproud-barista-low-sugar-high-in-protein-drink-made-from-peas-1l",
+    catalogProductId: null,
     confidence: 0.95,
-    box: { x: 0.65, y: 0.42, width: 0.2, height: 0.18 },
-    observedText: "Barebells Coco Choco"
+    box: { x: 0.6996165, y: 0.4544577, width: 0.3003835, height: 0.2709955 },
+    observedText: "Barista Low Sugar High in Protein Drink Made from Peas 1L",
+    identity: {
+      brand: "Sproud",
+      name: "Barista Low Sugar High in Protein Drink Made from Peas 1L",
+      variant: null,
+      packSize: "1L",
+      category: null,
+      matchKind: "visual_only"
+    },
+    shelfPrice: null,
+    retailerOffer: null,
+    nutritionLinkConfidence: null
+  },
+  {
+    productId: "visual:schnitzer-bio-burger-buns",
+    catalogProductId: null,
+    confidence: 0.92,
+    box: { x: 0.109558, y: 0.3864703, width: 0.4120444, height: 0.2015259 },
+    observedText: "Bio Burger Buns",
+    identity: {
+      brand: "Schnitzer",
+      name: "Bio Burger Buns",
+      variant: null,
+      packSize: null,
+      category: null,
+      matchKind: "visual_only"
+    },
+    shelfPrice: null,
+    retailerOffer: null,
+    nutritionLinkConfidence: null
+  },
+  {
+    productId: "visual:stockmann-gailenes-chanterelles",
+    catalogProductId: null,
+    confidence: 0.88,
+    box: { x: 0.3670691, y: 0.5989704, width: 0.4562281, height: 0.2684725 },
+    observedText: "Gailenes Chanterelles",
+    identity: {
+      brand: "Stockmann",
+      name: "Gailenes Chanterelles",
+      variant: null,
+      packSize: null,
+      category: null,
+      matchKind: "visual_only"
+    },
+    shelfPrice: null,
+    retailerOffer: null,
+    nutritionLinkConfidence: null
   }
 ];
 
