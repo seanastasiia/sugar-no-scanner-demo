@@ -9,18 +9,16 @@ describe("Latvia catalog", () => {
     expect(catalog.every((product) => product.retailerUrl.startsWith("https://barbora.lv/produkti/"))).toBe(true);
   });
 
-  it("distinguishes complete three-signal ratings from honest two-signal partial ratings", () => {
+  it("rates all curated products from protein and total sugar", () => {
     const catalog = getCatalog();
     expect(catalog.filter((product) => product.isGolden)).toHaveLength(10);
-    expect(catalog.filter((product) => product.ratingStatus === "complete")).toHaveLength(10);
-    expect(catalog.filter((product) => product.ratingStatus === "partial_overall")).toHaveLength(30);
+    expect(catalog.filter((product) => product.ratingStatus === "complete")).toHaveLength(40);
+    expect(catalog.filter((product) => product.ratingStatus === "partial_overall")).toHaveLength(0);
     for (const product of catalog) {
-      const sourceBackedSignalCount = Object.values(product.nutrientsPer100g).filter(
-        (value) => typeof value === "number" && Number.isFinite(value)
-      ).length;
-      expect(product.ratingSignalCount).toBe(sourceBackedSignalCount);
-      expect(product.matchScore !== null).toBe(sourceBackedSignalCount >= 2);
-      expect(product.ratingStatus).toBe(sourceBackedSignalCount === 3 ? "complete" : "partial_overall");
+      expect(product.ratingSignalCount).toBe(2);
+      expect(product.ratingSignalMask).toEqual(["protein", "inverseSugar"]);
+      expect(product.matchScore).toBeTypeOf("number");
+      expect(product.ratingStatus).toBe("complete");
     }
   });
 });
