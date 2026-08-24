@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Sugar.no Live Scanner",
-  description: "Point your camera at a shelf and compare protein, fiber and sugar with Sugar.no.",
+  description: "Point your camera at a shelf and compare protein and total sugar with Sugar.no.",
   applicationName: "Sugar.no Scanner",
   robots: { index: false, follow: false },
   appleWebApp: {
