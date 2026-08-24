@@ -6,3 +6,5 @@ The redesign uses two public interaction references without copying their brandi
 - [Lóvi scanner demonstration](https://www.linkedin.com/posts/ashagraev_aiindermatology-skincareinnovation-digitaldermatology-ugcPost-7495834066324221952-YY9y/): clear selected-object focus and an explicit visual cue for what will be recognized.
 
 Sugar.no applies those patterns to relative protein, fiber and total-sugar comparison. It uses the same product language as the main app: `Great fit`, `Moderate fit` and `Low fit` describe the three-signal category comparison and never label food as good, bad, healthy or unhealthy.
+
+When several comparable rated products are present, `Best fit in this scan` is a small eyebrow heading above the leading product name. It is not a separate status pill and stays hidden for a one-product scan.

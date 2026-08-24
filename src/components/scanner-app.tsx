@@ -973,7 +973,13 @@ function ProductResult({
     <article className={styles.productResult}>
       <div className={styles.productHeading}>
         <div>
-          <p>{product.brand}</p>
+          {bestInScan && product.matchScore !== null ? (
+            <p className={styles.bestFitHeading}>
+              <Sparkles aria-hidden="true" size={13} />
+              Best fit in this scan
+            </p>
+          ) : null}
+          <p className={styles.productBrand}>{product.brand}</p>
           <h2>{product.shortName}</h2>
         </div>
       </div>
@@ -983,13 +989,6 @@ function ProductResult({
       ) : null}
 
       {product.matchScore !== null ? <SugarNoBadge product={product} /> : null}
-
-      {bestInScan && product.matchScore !== null ? (
-        <div className={styles.bestBadge}>
-          <Sparkles aria-hidden="true" size={15} />
-          Best fit in this scan
-        </div>
-      ) : null}
 
       {product.matchScore === null ? (
         <div className={styles.pendingData}>
@@ -1088,7 +1087,7 @@ function RecognizedProductResult({
     <article className={styles.productResult}>
       <div className={styles.productHeading}>
         <div>
-          <p>{identity.brand || "Recognized package"}</p>
+          <p className={styles.productBrand}>{identity.brand || "Recognized package"}</p>
           <h2>{[identity.name, identity.variant, visiblePackSize].filter(Boolean).join(" · ")}</h2>
         </div>
         <span className={styles.recognizedBadge}>
@@ -1115,7 +1114,7 @@ function LoadingProductResult({ detection }: { detection: ProductDetection }) {
     <article className={styles.productResult} aria-live="polite">
       <div className={styles.productHeading}>
         <div>
-          <p>{identity.brand || "Recognized package"}</p>
+          <p className={styles.productBrand}>{identity.brand || "Recognized package"}</p>
           <h2>{identity.name}</h2>
         </div>
       </div>

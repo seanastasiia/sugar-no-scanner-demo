@@ -51,7 +51,7 @@ The main UI does not show an unexplained number. It presents a Sugar.no badge wi
 
 Each percentile uses all available verified values in the 40-product protein-snack category. A product receives no overall badge state unless its protein, fiber and total sugar are all numeric. A verified `no added sugar` claim is shown separately and never changes the comparison. Similar products rank by format first and internal comparison second; commercial status is not part of recommendation ranking.
 
-For exact Barbora food pages outside that category, the server calculates a separate reference-based quick view at recognition time. It requires page-listed energy, protein and total sugar. Protein uses the EU `source of protein` / `high protein` energy-share thresholds; total sugar uses the EU low-sugar threshold of 5 g/100 g for solids or 2.5 g/100 ml for liquids. Fiber uses the EU source/high-fiber thresholds when Barbora lists a numeric value. Sugar.no's yellow middle sugar band is explicitly defined as up to twice the official low-sugar threshold. The available two or three signal bands are averaged for the shelf summary. `Best fit in this scan` appears only when at least two rated products share the same rating basis; a category-percentile badge is never ranked against a retailer-reference quick view. These nutrition-claim references are not a medical or absolute health score. Adult products and pages without enough nutrition remain unrated. See [Regulation (EC) No 1924/2006](https://eur-lex.europa.eu/legal-content/en/TXT/?uri=CELEX%3A32006R1924).
+For exact Barbora food pages outside that category, the server calculates a separate reference-based quick view at recognition time. It requires page-listed energy, protein and total sugar. Protein uses the EU `source of protein` / `high protein` energy-share thresholds; total sugar uses the EU low-sugar threshold of 5 g/100 g for solids or 2.5 g/100 ml for liquids. Fiber uses the EU source/high-fiber thresholds when Barbora lists a numeric value. Sugar.no's yellow middle sugar band is explicitly defined as up to twice the official low-sugar threshold. The available two or three signal bands are averaged for the shelf summary. `Best fit in this scan` appears as a compact heading above the leading product name only when at least two rated products share the same rating basis; a category-percentile badge is never ranked against a retailer-reference quick view. These nutrition-claim references are not a medical or absolute health score. Adult products and pages without enough nutrition remain unrated. See [Regulation (EC) No 1924/2006](https://eur-lex.europa.eu/legal-content/en/TXT/?uri=CELEX%3A32006R1924).
 
 The comparison page deliberately has no save action. Similar options remain immediately comparable and the exact Barbora link remains available, but the proof of concept does not create or retain a personal product list.
 
@@ -116,6 +116,8 @@ For production-like browser tests, build first and then run:
 npm run build
 E2E_PRODUCTION=1 CI=1 npm run test:e2e
 ```
+
+The Playwright profile blocks service-worker registration so route-level recognition mocks behave the same in dev and production-mode runs. The deployed PWA worker remains enabled and is covered separately by the HTTPS production smoke.
 
 ## API
 

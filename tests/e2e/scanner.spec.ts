@@ -46,6 +46,15 @@ test("sample shelf photo highlights products and shows a three-signal Sugar.no b
   await expect(resultsDialog).toBeVisible();
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   await expect.poll(async () => (await resultsDialog.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(viewportHeight * 0.95);
+  const bestFitHeading = page.getByText("Best fit in this scan", { exact: true });
+  await expect(bestFitHeading).toBeVisible();
+  await expect
+    .poll(() =>
+      bestFitHeading.evaluate((element) =>
+        Boolean(element.parentElement?.querySelector("h2"))
+      )
+    )
+    .toBe(true);
   await page.screenshot({ path: "docs/screenshots/shelf-results-mobile.png" });
   await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Protein", { exact: true })).toBeVisible();

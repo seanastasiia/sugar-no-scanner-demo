@@ -8,7 +8,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 2. Enter the code. Confirm that the first screen says `19,076 Barbora pages indexed` and distinguishes package recognition from retailer-listed Sugar.no nutrition.
 3. Tap `Shelf photo`. Confirm that the camera scene fills the phone and four markers appear directly over the four supported packages: green check, yellow minus or coral alert. The selected marker must also say `Great fit`, `Moderate fit` or `Low fit`.
 4. Confirm that only a compact bottom sheet overlays the shelf. It should say `4 Sugar.no picks`, show product thumbnails and expose `View products` plus a list icon. Tap it and confirm it expands into a full-height comparison page; collapse it and confirm the held shelf returns unchanged.
-5. In the expanded page, confirm that the selected card has one compact Sugar.no badge with separate Protein, Fiber and Sugar signals, source values per 100 g and direction text. Confirm that no unexplained numeric score such as `86` appears.
+5. In the expanded page, confirm that the leading comparable product says `Best fit in this scan` as a small heading above its brand and name, not as a separate pill beneath the Sugar.no badge. Confirm that the selected card has one compact Sugar.no badge with separate Protein, Fiber and Sugar signals, source values per 100 g and direction text. Confirm that no unexplained numeric score such as `86` appears.
 6. Tap each marker and each small product in the tray. Confirm that the corresponding marker gets the white selected ring, its text appears and the product card changes.
 7. Swipe the Similar options cards left and right. Confirm that they are comparable formats and remain usable without horizontal page overflow.
 8. Open the Barbora action. Confirm that the exact SKU page opens in a new tab and that Sugar.no never claims affiliate revenue.
@@ -30,9 +30,10 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 11. Include the product and one clearly associated shelf label in the same frame. Confirm the camera price appears directly beneath the recognized product in the compact sheet and product tray. If an exact Barbora match is cheaper, confirm only the shelf price is crossed out, the current online price plus check time are shown and the action says `Buy cheaper at Barbora`.
 12. Repeat with a non-exact retailer candidate. Confirm only the shelf price remains and there is no retailer link. A Coca-Cola result must never open Pepsi.
 13. Confirm `Great fit / Moderate fit / Low fit` markers appear only for products with a numeric full badge or quick view. A visual-only Coca-Cola or Activia result should have no camera marker and should say that it was identified but not highlighted.
-14. Repeat with an ambiguous label or multiple nearby prices. Confirm Sugar.no hides the shelf price instead of guessing.
-15. Cover the lens or use poor light. Confirm the interface stays usable and does not invent nutrition.
-16. Turn on airplane mode. Confirm that the preview stays local and recognition pauses with an offline message.
+14. Scan one rated product by itself. Confirm `Best fit in this scan` is absent because no comparison took place.
+15. Repeat with an ambiguous label or multiple nearby prices. Confirm Sugar.no hides the shelf price instead of guessing.
+16. Cover the lens or use poor light. Confirm the interface stays usable and does not invent nutrition.
+17. Turn on airplane mode. Confirm that the preview stays local and recognition pauses with an offline message.
 
 ## Saved image and privacy
 

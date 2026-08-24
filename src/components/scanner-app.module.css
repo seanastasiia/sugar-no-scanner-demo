@@ -812,7 +812,7 @@
   min-width: 0;
 }
 
-.productHeading p,
+.productBrand,
 .sectionHeading p {
   margin: 0 0 3px;
   color: #8a3a2c;
@@ -820,6 +820,23 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.bestFitHeading {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 7px;
+  color: #285b42;
+  font-size: 10px;
+  font-weight: 820;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.bestFitHeading svg {
+  flex: 0 0 auto;
 }
 
 .productHeading h2 {
@@ -945,7 +962,6 @@
   font-weight: 760;
 }
 
-.bestBadge,
 .claimBadge {
   display: inline-flex;
   min-height: 32px;
@@ -1408,6 +1424,10 @@
 
   .compactProductPrice > strong,
   .compactProductPrice > small {
+    color: #9dd7b6;
+  }
+
+  .bestFitHeading {
     color: #9dd7b6;
   }
 

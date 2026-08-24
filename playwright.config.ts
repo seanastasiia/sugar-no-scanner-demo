@@ -9,7 +9,9 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: "http://127.0.0.1:3000",
-    trace: "retain-on-failure"
+    trace: "retain-on-failure",
+    // Page-level API mocks must not be bypassed by the production PWA worker.
+    serviceWorkers: "block"
   },
   webServer: {
     command: productionServer ? "npm run start" : "npm run dev",
