@@ -37,4 +37,6 @@ The first production-mode browser attempt returned 10/13 because the registered 
 
 ## Production evidence
 
-Pending deployment and HTTPS smoke for this release.
+- Railway deployment `af6e629e-ec32-447e-b1ae-dc31648a992a`: `SUCCESS`.
+- `GET /api/health`: `ok`, commit `d98101279865b9e53d1b83f8307c2dd9040c3009`.
+- Production Mobile Safari smoke: `Best fit in this scan` appeared exactly once inside the product heading, and the selected result retained one Sugar.no badge.
