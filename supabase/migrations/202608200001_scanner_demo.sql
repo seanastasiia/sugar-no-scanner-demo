@@ -7,7 +7,7 @@ create table if not exists public.products (
   name text not null,
   short_name text not null,
   aliases text[] not null default '{}',
-  format text not null check (format in ('bar', 'cookie', 'truffle', 'puree')),
+  format text not null check (format in ('bar', 'cookie', 'truffle', 'puree', 'other')),
   pack_size_g numeric not null check (pack_size_g > 0),
   gtin text,
   protein_g_100 numeric,

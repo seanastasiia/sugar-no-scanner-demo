@@ -83,6 +83,7 @@ export function barboraPageToScoredProduct(
     shortName: product.title,
     aliases: [],
     format: "other",
+    category: product.category_name_full_path || product.root_category_id || null,
     packSizeG: netAmount(product),
     nutritionBasis: product.comparative_unit?.toLowerCase() === "l" ? "100ml" : "100g",
     energyKcalPer100: energyKcal(product.nutrients),
@@ -115,7 +116,9 @@ export function barboraPageToScoredProduct(
     ...scored,
     matchScore: null,
     matchReason: "missing_nutrition",
+    ratingStatus: "identity_only",
     ratingSignalCount: 0,
+    ratingSignalMask: [],
     criterionScores: null
   };
 }

@@ -14,13 +14,12 @@ export default defineConfig({
     serviceWorkers: "block"
   },
   webServer: {
-    command: productionServer ? "npm run start" : "npm run dev",
+    command: productionServer ? "npm run start" : "npm run dev -- --hostname 127.0.0.1",
     url: "http://127.0.0.1:3000/api/health",
     reuseExistingServer: !process.env.CI,
     env: {
       ...process.env,
-      DEMO_ACCESS_CODE: "e2e-access",
-      DEMO_SESSION_SECRET: "e2e-session-secret-with-at-least-thirty-two-chars",
+      HOSTNAME: "127.0.0.1",
       GEMINI_API_KEY: ""
     }
   },

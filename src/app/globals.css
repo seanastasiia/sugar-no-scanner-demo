@@ -8,6 +8,8 @@
   --border: #ded5c8;
   --focus: #b43b28;
   --shadow: 0 24px 70px rgb(42 31 22 / 12%);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
 }
 
 * {
@@ -27,7 +29,7 @@ body {
     radial-gradient(circle at 85% 8%, rgb(232 97 74 / 13%), transparent 30rem),
     var(--cream);
   color: var(--ink);
-  font-family: var(--font-sans), Inter, system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -47,80 +49,6 @@ a {
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
-}
-
-.access-page {
-  display: grid;
-  min-height: 100dvh;
-  place-items: center;
-  padding: max(28px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
-}
-
-.access-card {
-  width: min(100%, 480px);
-  padding: 34px 30px;
-  border: 1px solid rgb(255 255 255 / 72%);
-  border-radius: 28px;
-  background: rgb(255 253 248 / 92%);
-  box-shadow: var(--shadow);
-}
-
-.access-card h1 {
-  margin: 0;
-  font-size: clamp(40px, 11vw, 62px);
-  letter-spacing: -0.055em;
-  line-height: 0.98;
-}
-
-.access-copy {
-  margin: 22px 0 28px;
-  color: #4e463f;
-}
-
-.access-form {
-  display: grid;
-  gap: 10px;
-}
-
-.access-form label {
-  font-size: 13px;
-  font-weight: 750;
-}
-
-.access-field {
-  display: flex;
-  min-height: 52px;
-  align-items: center;
-  gap: 10px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: #fff;
-}
-
-.access-field:focus-within {
-  border-color: var(--focus);
-  box-shadow: 0 0 0 3px rgb(180 59 40 / 14%);
-}
-
-.access-field input {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-}
-
-.access-error {
-  margin: 0;
-  color: #9d2516;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.access-loading {
-  min-height: 52px;
-  color: var(--muted);
 }
 
 .button {
@@ -273,21 +201,6 @@ a {
       radial-gradient(circle at 85% 8%, rgb(232 97 74 / 12%), transparent 30rem),
       #171513;
     color: #f8f3eb;
-  }
-
-  .access-card {
-    border-color: #3d3833;
-    background: rgb(36 33 30 / 94%);
-  }
-
-  .access-copy,
-  .access-loading {
-    color: #c8bfb5;
-  }
-
-  .access-field {
-    border-color: #514a43;
-    background: #171513;
   }
 
   .button-primary {

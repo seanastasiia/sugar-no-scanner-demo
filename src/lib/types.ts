@@ -4,8 +4,13 @@ export type NutritionBasis = "100g" | "100ml";
 
 export type RatingBasis =
   | "catalog_percentile"
+  | "catalog_percentile_partial"
   | "barbora_reference"
   | "barbora_reference_partial";
+
+export type RatingSignal = "protein" | "fiber" | "inverseSugar";
+
+export type RatingStatus = "complete" | "partial_overall" | "limited_signal" | "identity_only";
 
 export type NutrientDataStatus = "verified" | "secondary" | "pending";
 
@@ -31,6 +36,7 @@ export interface ProductRecord {
   shortName: string;
   aliases: string[];
   format: ProductFormat;
+  category?: string | null;
   packSizeG: number;
   nutritionBasis?: NutritionBasis;
   energyKcalPer100?: number | null;
@@ -46,9 +52,11 @@ export interface ProductRecord {
 
 export interface ScoredProduct extends ProductRecord {
   matchScore: number | null;
-  matchReason: "complete" | "partial_nutrition" | "missing_nutrition";
+  matchReason: "complete" | "partial_nutrition" | "limited_nutrition" | "missing_nutrition";
   ratingBasis: RatingBasis;
+  ratingStatus: RatingStatus;
   ratingSignalCount: number;
+  ratingSignalMask: RatingSignal[];
   criterionScores: {
     protein: number | null;
     fiber: number | null;
@@ -72,6 +80,7 @@ export interface ProductDetection {
   identity?: RecognizedProductIdentity;
   shelfPrice?: ShelfPrice | null;
   retailerOffer?: RetailerOffer | null;
+  nutritionLinkConfidence?: number | null;
 }
 
 export interface RecognizedProductIdentity {

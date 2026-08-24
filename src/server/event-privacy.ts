@@ -1,4 +1,4 @@
-const forbiddenMetadataKey = /(image|frame|photo|base64|data.?url)/i;
+const forbiddenMetadataKey = /(image|frame|photo|base64|data.?url|ocr|observed.?text|raw.?text|label.?text)/i;
 
 export function metadataIsSafe(metadata: Record<string, string | number | boolean | null>): boolean {
   const entries = Object.entries(metadata);

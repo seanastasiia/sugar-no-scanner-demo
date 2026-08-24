@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { isAuthorized } from "@/server/auth";
 import { classifyUserAgent, metadataIsSafe } from "@/server/event-privacy";
+import { readBoundedJson } from "@/server/request-body";
 import { getSupabaseAdmin } from "@/server/supabase";
 
 const eventSchema = z.object({
@@ -13,8 +13,6 @@ const eventSchema = z.object({
     "result_opened",
     "alternative_viewed",
     "retailer_link_clicked",
-    "product_saved",
-    "product_unsaved",
     "permission_denied",
     "recognition_failed"
   ]),
@@ -24,8 +22,7 @@ const eventSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  if (!(await isAuthorized())) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const parsed = eventSchema.safeParse(await request.json().catch(() => null));
+  const parsed = eventSchema.safeParse(await readBoundedJson(request, 32_000).catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "invalid_event" }, { status: 400 });
   if (!metadataIsSafe(parsed.data.metadata)) {
     return NextResponse.json({ error: "unsafe_event_metadata" }, { status: 400 });

@@ -6,19 +6,19 @@ Target length: 2–3 minutes. Use the deterministic shelf and checkout scenes fo
 
 “The hypothesis is simple: make a shelf understandable before purchase, then remain useful after purchase. This is computer vision with an AR-style overlay, not VR.”
 
-Show the private access screen and enter the code.
+Open the public link. The camera-first scanner appears immediately; if camera permission is not available, `Show demo` remains visible.
 
 “For this Latvia proof of concept we index 19,076 Barbora pages, so the camera can name ordinary packaged products. Ten curated snacks have the full three-signal category badge. For an exact food outside that set, we can now build a live two-signal quick view from the nutrition on its exact Barbora page. The model never invents nutrition.”
 
 ## Shelf
 
-Tap `Shelf photo`.
+Tap `Show demo`, then `Shelf demo`.
 
 “One camera view compares what is visible without asking the user to choose protein, fiber or sugar first. Compact markers sit directly over the products in the shelf image. A green check, yellow minus and coral alert make the comparison scannable; Great fit, Moderate fit and Low fit carry the same meaning without relying on color alone.”
 
 Tap two product boxes and show the Sugar.no badge.
 
-“Instead of an unexplained score such as 86, the card shows protein, fiber and total sugar separately. The full curated badge is a relative comparison inside the protein-snack catalog. Outside it, a clearly labelled quick view uses transparent reference bands from the exact retailer page. If fiber is not listed, it stays neutral and the card says two of three — it never pretends to know.”
+“Instead of an unexplained score such as 86, the card shows protein, fiber and total sugar separately. The full curated badge is a relative comparison inside the protein-snack catalog. Outside it, a clearly labelled quick view uses transparent reference bands from the exact retailer page. If any one nutrient is not listed, it stays neutral, the card names the two source-backed signals and says two of three — it never pretends to know.”
 
 Open a similar option.
 
@@ -32,7 +32,7 @@ For the optional live-camera moment, first show several different products acros
 
 ## Checkout
 
-Tap `Checkout photo`.
+Return to live camera, tap `Show demo`, then `Checkout demo`.
 
 “Checkout uses exactly the same comparison behavior as the shelf: one view of the real conveyor belt beside the cashier, four detected packages and colored overlays on the image. We do not tell someone to undo a purchase, shame the basket or add another action to save a product.”
 
@@ -46,4 +46,4 @@ Suggested final line:
 
 ## If recognition fails live
 
-Say: “This is why the investor path includes deterministic scenes through the same API. The live model is being benchmarked separately, and below-threshold frames intentionally return `Not sure`.” Then continue with `Shelf photo`.
+Say: “This is why the investor path includes deterministic scenes through the same API. The live model is being benchmarked separately, and below-threshold frames intentionally return `Not sure`.” Then tap `Show demo` and continue with `Shelf demo`.

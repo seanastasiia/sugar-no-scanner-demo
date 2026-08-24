@@ -1,17 +1,16 @@
 # Sugar.no Live Scanner
 
-Private Latvia proof of concept for camera-based identification and comparison of packaged groceries. It is a wellness discovery tool, not a medical device or an absolute rating of food.
+Public Latvia proof of concept for camera-based identification and comparison of packaged groceries. It is a wellness discovery tool, not a medical device or an absolute rating of food.
 
 - Live demo: [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
 - Public source: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
-- Access: request the private investor code from the repository owner.
+- Entry: opens directly into the camera-first scanner; no access code is required.
 
 ## Current state
 
 The app is a working mobile-first web/PWA concept with:
 
-- a private access-code gate;
-- a brand-only scanner header without a persistent private-demo label; access remains protected by the gate;
+- a public camera-first entry with no password gate or `Private demo` badge;
 - automatic live-camera frame sampling after the user grants permission;
 - full-frame shelf recognition that asks for up to eight distinct readable SKUs in one pass, while repeated facings of one SKU remain grouped;
 - one recognition API for camera, saved images, a deterministic four-item shelf photo and a four-item checkout photo;
@@ -28,15 +27,15 @@ The app is a working mobile-first web/PWA concept with:
 - an automatic focused center retry after an uncertain broad camera pass, with remapped overlays and a separate conservative confidence threshold;
 - an in-scanner Shelf/Checkout switch that changes scenes without restarting the scanner;
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
-- iPhone-sized WebKit end-to-end coverage and committed visual evidence.
+- 21 authored iPhone-sized WebKit scenarios plus deterministic sample scenes; the current managed QA sandbox cannot bind a local test server, so the browser suite remains a release-host/CI gate.
 
-The guaranteed shelf and checkout scenes work without third-party credentials. Live camera/upload recognition names readable packages even outside the scored snack catalog, then searches the Barbora index and checks the matched public product page on demand. The app is deployed from GitHub `main` to Railway with an HTTPS domain and private access-code gate. Production catalog/analytics storage still requires Supabase.
+The guaranteed shelf and checkout scenes work without third-party credentials. Live camera/upload recognition names readable packages even outside the scored snack catalog, then searches the Barbora index and checks the matched public product page on demand. The app is deployed from GitHub `main` to Railway with a public HTTPS camera route. Production catalog/analytics storage still requires Supabase.
 
 ## Product rules
 
 Recognition and nutrition are separate trust levels. Gemini may read any visible package identity and a clearly associated physical shelf-price label. It never supplies nutrition, a Sugar.no score or a retailer price. The server maps the observed identity to the 19,076-entry Barbora page index and verifies the best candidate against the live public page. A curated SKU receives the three-signal category badge. Any other exact food SKU may receive an on-demand quick view only from energy, protein, fiber and total sugar actually listed on that exact Barbora page.
 
-An unknown or data-poor product can therefore show `Product recognized` without receiving a Sugar.no result. Camera boxes and colored shelf markers are reserved for numeric Sugar.no results; identified-but-unrated packages remain available in the result sheet without an `i` marker over the shelf. A two-signal result is labelled `Sugar.no quick view · 2/3`, names fiber as `Not listed` and explains that it is not the full badge. The `Great fit / Moderate fit / Low fit` legend appears only when at least one visible product has a numeric result; otherwise the interface explains that the detected products were not highlighted. The price appears directly under a recognized product only when Gemini reports a separate physical price label, confidence is at least 0.90 and the exact OCR text includes a matching EUR amount. A package number, deposit or online offer cannot create it. A possible retailer candidate is never linked or displayed as a comparison. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. The deal card then says `Cheaper at Barbora` and offers `Buy cheaper at Barbora`; because only one retailer is connected, it never claims `best price`.
+An unknown or data-poor product can therefore show `Product recognized` without receiving a Sugar.no result. Numeric full and partial-overall results use the `Great fit / Moderate fit / Low fit` presentation. One-signal and identity-only detections remain neutral and never show a misleading approval icon or overall fit. A two-signal result is labelled `Sugar.no quick view · 2/3`, names whichever nutrient is not listed and explains which two signals are source-backed. The rating legend appears only when at least one visible product has a numeric result. The price appears directly under a recognized product only when Gemini reports a separate physical price label, confidence is at least 0.90 and the exact OCR text includes a matching EUR amount. A package number, deposit or online offer cannot create it. A possible retailer candidate is never linked or displayed as a comparison. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. The deal card then says `Cheaper at Barbora` and offers `Buy cheaper at Barbora`; because only one retailer is connected, it never claims `best price`.
 
 The scanner remains the primary surface after recognition. A 166 px bottom sheet names the rated picks and exposes a horizontal thumbnail preview without covering most of the shelf. `View products`, the title or the list icon expands that sheet into a full-height, internally scrollable comparison page on phones; collapsing it returns to the held camera frame. While the full page is open, background camera controls are removed from keyboard and screen-reader focus, Escape collapses the page and reduced-motion users receive the same state change without animation.
 
@@ -50,9 +49,9 @@ The implementation keeps a deterministic internal comparison score for ranking:
 
 The main UI does not show an unexplained number. It presents a Sugar.no badge with three separate, text-labelled signals: Protein, Fiber and Sugar. Each signal is `Higher`, `Middle` or `Lower` relative to the verified protein-snack catalog; the sugar direction is inverted so lower total sugar receives the stronger signal. Shelf markers summarize the combined result as `Great fit`, `Moderate fit` or `Low fit`, matching the main Sugar.no product. Green, yellow and coral/red are supporting visual cues paired with icons and text, never the only explanation and never a verdict that food is good or bad.
 
-Each percentile uses all available verified values in the 40-product protein-snack category. A product receives no overall badge state unless its protein, fiber and total sugar are all numeric. A verified `no added sugar` claim is shown separately and never changes the comparison. Similar products rank by format first and internal comparison second; commercial status is not part of recommendation ranking.
+Each percentile uses all available verified values in the 40-product protein-snack category. Three source-backed signals produce a full solid fit; any two produce an explicitly partial dashed fit calculated only from those two values; one or zero signals never produce an overall fit. A verified `no added sugar` claim is shown separately and never changes the comparison. Similar products rank by format first and internal comparison second; commercial status is not part of recommendation ranking.
 
-For exact Barbora food pages outside that category, the server calculates a separate reference-based quick view at recognition time. It requires page-listed energy, protein and total sugar. Protein uses the EU `source of protein` / `high protein` energy-share thresholds; total sugar uses the EU low-sugar threshold of 5 g/100 g for solids or 2.5 g/100 ml for liquids. Fiber uses the EU source/high-fiber thresholds when Barbora lists a numeric value. Sugar.no's yellow middle sugar band is explicitly defined as up to twice the official low-sugar threshold. The available two or three signal bands are averaged for the shelf summary. `Best fit in this scan` appears as a compact heading above the leading product name only when at least two rated products share the same rating basis; a category-percentile badge is never ranked against a retailer-reference quick view. These nutrition-claim references are not a medical or absolute health score. Adult products and pages without enough nutrition remain unrated. See [Regulation (EC) No 1924/2006](https://eur-lex.europa.eu/legal-content/en/TXT/?uri=CELEX%3A32006R1924).
+For exact Barbora food pages outside that category, the server calculates a separate reference-based quick view at recognition time. Protein uses the EU `source of protein` / `high protein` energy-share thresholds; total sugar uses the EU low-sugar threshold of 5 g/100 g for solids or 2.5 g/100 ml for liquids. Fiber uses the EU source/high-fiber thresholds when Barbora lists a numeric value. Sugar.no's yellow middle sugar band is explicitly defined as up to twice the official low-sugar threshold. The available two or three signal bands are averaged for the shelf summary, and the UI lists the actual signal mask. `Best fit in this scan` appears only inside a fair cohort that shares category, per-100 basis, scoring method and at least two common signals; near ties have no winner. These nutrition-claim references are not a medical or absolute health score. Adult products and pages without enough nutrition remain unrated. See [Regulation (EC) No 1924/2006](https://eur-lex.europa.eu/legal-content/en/TXT/?uri=CELEX%3A32006R1924).
 
 The scanner deliberately has no save action. When a trusted shelf label and an exact Barbora SKU prove that the current online price is lower, the compact result replaces that secondary behavior with a one-tap `Buy cheaper` action to the exact Barbora page. Similar options remain immediately comparable, but commercial availability never changes the independent Sugar.no rating or ranking.
 
@@ -77,17 +76,17 @@ npx playwright install webkit
 npm run dev
 ```
 
-Open `http://localhost:3000`. Development allows local access when `DEMO_ACCESS_CODE` is blank. Camera access on a real iPhone requires HTTPS; use the Railway URL for physical-device QA.
+Open `http://localhost:3000`; the scanner starts on the public camera route. Camera access on a real iPhone requires HTTPS; use the Railway URL for physical-device QA.
 
 ## Environment
 
 See `.env.example` for every variable.
 
-- `DEMO_ACCESS_CODE`, `DEMO_SESSION_SECRET`: private investor access. Both are required in production.
 - `GEMINI_API_KEY`, `GEMINI_MODEL`: server-side live recognition. The default is the stable `gemini-3.7-flash` model.
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: server-only catalog and event storage.
 - `RECOGNITION_CONFIDENCE_THRESHOLD`: minimum package-identity confidence before a product is shown; the prototype default is `0.72`.
 - `FOCUSED_RECOGNITION_CONFIDENCE_THRESHOLD`: minimum identity confidence for the automatic central retry; the prototype default is `0.58`.
+- `RECOGNITION_RATE_LIMIT`, `RECOGNITION_RATE_WINDOW_SECONDS`: per-client live recognition allowance; defaults are `36` requests per `60` seconds. Deterministic sample scenes are exempt. A `429` response stops automatic capture and exposes the server-provided retry delay rather than retrying forever.
 - `COMMIT_SHA`: optional local/fallback release identifier. Railway deployments use `RAILWAY_GIT_COMMIT_SHA` automatically.
 
 Never expose service-role or Gemini keys through `NEXT_PUBLIC_*` variables.
@@ -122,7 +121,6 @@ The Playwright profile blocks service-worker registration so route-level recogni
 
 ## API
 
-- `POST /api/auth`: validates the demo code and sets a 12-hour HttpOnly cookie.
 - `POST /api/recognize`: accepts a bounded image data URL or deterministic sample source; returns package identity, normalized boxes, optional camera-read shelf price, exact/possible retailer offer state and `imageStored: false`.
 - `GET /api/products/:id`: returns curated nutrition or an on-demand exact-Barbora quick view plus independent alternatives when available.
 - `POST /api/events`: stores bounded metadata only and rejects raw-image-like fields.
@@ -174,7 +172,7 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 
 ## Privacy
 
-- Camera starts only after a user action and browser permission.
+- The public scanner requests camera permission on entry; the browser remains the authority and denial exposes `Enable camera` plus `Show demo`.
 - Frames are resized in-browser and at most one recognition request runs at a time.
 - Sugar.no does not persist raw frames; Gemini receives a transient frame when live recognition is enabled.
 - Package text and camera-read prices are returned to the current browser session but are not added to analytics metadata.
@@ -197,7 +195,7 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 
 ## Sample-scene assets
 
-`public/samples/latvia-shelf.jpg` and `public/samples/latvia-checkout.jpg` are AI-generated or AI-composited concept photos created for this private prototype. The checkout fixture uses [Enkhjin photography's supermarket-belt photo on Unsplash](https://unsplash.com/photos/groceries-are-on-a-conveyor-belt-at-a-checkout-jng9usOa_J0) as its licensed environment reference, then places the four demo snack packs on the belt beside the cashier. Neither sample contains baked-in Sugar.no overlays; the app renders every marker and selection state from the recognition response. These images make the interaction reproducible without third-party credentials, but they do not measure recognition accuracy.
+`public/samples/latvia-shelf.jpg` and `public/samples/latvia-checkout.jpg` are AI-generated or AI-composited concept photos created for this prototype. The checkout fixture uses [Enkhjin photography's supermarket-belt photo on Unsplash](https://unsplash.com/photos/groceries-are-on-a-conveyor-belt-at-a-checkout-jng9usOa_J0) as its licensed environment reference, then places the four demo snack packs on the belt beside the cashier. Neither sample contains baked-in Sugar.no overlays; the app renders every marker and selection state from the recognition response. These images make the interaction reproducible without third-party credentials, but they do not measure recognition accuracy.
 
 ## Known limitations
 

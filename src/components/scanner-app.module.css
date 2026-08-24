@@ -276,6 +276,17 @@
   backdrop-filter: blur(10px);
 }
 
+.stageTopbar > .demoTrigger {
+  display: inline-flex;
+  width: auto;
+  min-width: 120px;
+  padding: 0 14px;
+  gap: 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .sampleSwitch {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -325,6 +336,29 @@
   text-align: center;
   backdrop-filter: blur(12px);
   transition: bottom 220ms ease;
+}
+
+.stageStatus > span {
+  min-width: 0;
+}
+
+.recognitionRetry {
+  display: inline-flex;
+  min-width: 92px;
+  min-height: 44px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: -8px -13px -8px 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border: 0;
+  border-left: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 0 999px 999px 0;
+  background: rgb(255 255 255 / 13%);
+  color: #ffffff;
+  font: inherit;
 }
 
 .stageWithResults .stageStatus {
@@ -389,10 +423,42 @@
   transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease, opacity 180ms ease;
 }
 
+.completenessFull {
+  border-style: solid;
+}
+
+.completenessPartial {
+  border-width: 3px;
+  border-style: dashed;
+}
+
+.completenessLimited {
+  border-style: dashed;
+  border-color: rgb(255 255 255 / 76%);
+  background: rgb(17 17 17 / 10%);
+}
+
+.completenessIdentified {
+  border-style: solid;
+  border-color: rgb(255 255 255 / 62%);
+  background: rgb(17 17 17 / 7%);
+}
+
 .selectedBox {
   border-color: #ffffff;
   background: color-mix(in srgb, var(--tone, #ffffff) 14%, transparent);
   box-shadow: 0 0 0 3px var(--tone), 0 12px 34px rgb(0 0 0 / 32%);
+}
+
+.bestBox {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 4px rgb(255 255 255 / 92%), 0 14px 36px rgb(0 0 0 / 38%);
+}
+
+.bestBox span {
+  width: 54px;
+  height: 54px;
+  border-width: 4px;
 }
 
 .detectionBox span {
@@ -427,6 +493,26 @@
   line-height: 14px;
   transform: translateX(-50%);
   white-space: nowrap;
+}
+
+.detectionBox span small {
+  position: absolute;
+  top: 74px;
+  left: 50%;
+  min-height: 20px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgb(17 17 17 / 82%);
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 780;
+  line-height: 14px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.completenessFull:not(.selectedBox):not(.bestBox) span small {
+  opacity: 0;
 }
 
 .detectionBox:not(.selectedBox) span strong {
@@ -496,6 +582,19 @@
   background: rgb(255 255 255 / 12%);
   color: #ffffff;
   font-weight: 700;
+}
+
+.privacyNoteStage {
+  position: absolute;
+  z-index: 9;
+  right: 16px;
+  bottom: 12px;
+  left: 16px;
+  margin: 0;
+  color: rgb(255 255 255 / 68%);
+  font-size: 10px;
+  font-weight: 650;
+  text-align: center;
 }
 
 .resultsSheet {
@@ -580,6 +679,53 @@
   background: transparent;
   color: var(--ink);
   text-align: left;
+}
+
+.sheetTitleStatic {
+  display: grid;
+  min-width: 0;
+  min-height: 44px;
+  align-content: center;
+  gap: 2px;
+}
+
+.sheetTitleStatic strong {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 820;
+  letter-spacing: -0.025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheetTitleStatic span {
+  color: #716860;
+  font-size: 10px;
+  font-weight: 680;
+}
+
+.sheetActions {
+  display: flex;
+  gap: 8px;
+}
+
+.sheetActions button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fffdf8;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.resultsCollapsed .sheetChrome {
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .sheetTitleButton strong {
@@ -1374,7 +1520,119 @@
 
 .samplePhoto {
   object-fit: cover;
-  object-position: center 43%;
+  object-position: center;
+}
+
+.demoBackdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  align-items: end;
+  padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  background: rgb(0 0 0 / 48%);
+}
+
+.demoDialog {
+  width: min(100%, 520px);
+  margin: 0 auto;
+  padding: 18px;
+  border-radius: 24px;
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 32%);
+}
+
+.demoHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.demoHeading p {
+  margin: 0 0 3px;
+  color: #8a3a2c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.demoHeading h2 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.demoHeading button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  cursor: pointer;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: #fffdf8;
+  color: var(--ink);
+}
+
+.demoChoices {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.demoChoices button,
+.demoUpload {
+  display: grid;
+  min-height: 64px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fffdf8;
+  color: var(--ink);
+  text-align: left;
+}
+
+.demoChoices span {
+  display: grid;
+  gap: 2px;
+}
+
+.demoChoices small {
+  color: #716860;
+  font-size: 11px;
+}
+
+.demoUpload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.backToLive {
+  display: inline-flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  cursor: pointer;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ink);
+  color: var(--cream);
+  font-weight: 800;
 }
 
 .spin {

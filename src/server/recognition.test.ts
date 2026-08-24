@@ -7,7 +7,9 @@ import {
   matchCatalogProduct,
   recognitionInstruction,
   recognitionConfidenceThreshold,
-  recognizeProducts
+  recognizeProducts,
+  resolveVisibleDetections,
+  type ProviderDetection
 } from "./recognition";
 
 const originalKey = process.env.GEMINI_API_KEY;
@@ -149,5 +151,79 @@ describe("matchCatalogProduct", () => {
         catalog
       )
     ).toBeNull();
+  });
+});
+
+function providerDetection(index: number, overrides: Partial<ProviderDetection> = {}): ProviderDetection {
+  const label = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"][index - 1] || `Extra${index}`;
+  return {
+    brand: `Brand${label}`,
+    productName: `Snack ${label} 50 g`,
+    searchQuery: `Brand${label} Snack ${label} 50 g`,
+    confidence: 0.9,
+    box: { x: index / 10, y: 0.2, width: 0.08, height: 0.4 },
+    shelfPriceCents: 0,
+    shelfPriceText: "",
+    shelfPriceConfidence: 0,
+    shelfPriceLabelVisible: false,
+    ...overrides
+  };
+}
+
+describe("resolveVisibleDetections", () => {
+  it("attempts retailer resolution for the seventh and eighth identities with bounded concurrency", async () => {
+    const attempted: string[] = [];
+    let active = 0;
+    let peak = 0;
+    const detections = await resolveVisibleDetections(
+      Array.from({ length: 8 }, (_, index) => providerDetection(index + 1)),
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async (input) => {
+          attempted.push(input.name);
+          active += 1;
+          peak = Math.max(peak, active);
+          await Promise.resolve();
+          active -= 1;
+          return null;
+        }
+      },
+      3
+    );
+
+    expect(attempted).toHaveLength(8);
+    expect(attempted).toContain("Snack Seven 50 g");
+    expect(attempted).toContain("Snack Eight 50 g");
+    expect(peak).toBeLessThanOrEqual(3);
+    expect(detections).toHaveLength(8);
+  });
+
+  it("deduplicates repeated facings after every facing receives the same resolution path", async () => {
+    let attempts = 0;
+    const detections = await resolveVisibleDetections(
+      [
+        providerDetection(1, {
+          brand: "Coca-Cola",
+          productName: "Coca-Cola Original Taste 330 ml",
+          searchQuery: "Coca-Cola Original 330 ml"
+        }),
+        providerDetection(2, {
+          brand: "Coca Cola",
+          productName: "Coca Cola Original 330 ml",
+          searchQuery: "Coca-Cola Original Taste 330 ml"
+        })
+      ],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => {
+          attempts += 1;
+          return null;
+        }
+      }
+    );
+    expect(attempts).toBe(2);
+    expect(detections).toHaveLength(1);
   });
 });

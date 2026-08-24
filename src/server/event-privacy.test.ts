@@ -9,6 +9,8 @@ describe("metadataIsSafe", () => {
   it.each<Record<string, string | number | boolean | null>>([
     { imageDataUrl: "data:image/jpeg;base64,abc" },
     { rawFrame: "abc" },
+    { ocrText: "product label" },
+    { observedText: "visible package copy" },
     { note: "data:image/png;base64,abc" },
     { note: "x".repeat(501) }
   ])("rejects image-like or oversized metadata: %o", (metadata) => {

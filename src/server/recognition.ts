@@ -29,6 +29,8 @@ const providerResponseSchema = z.object({
   )
 });
 
+export type ProviderDetection = z.infer<typeof providerResponseSchema>["detections"][number];
+
 const sampleShelf: ProductDetection[] = [
   {
     productId: "prot-bat-sal-riekst-saldin-barebells-55-g",
@@ -153,6 +155,13 @@ export function matchCatalogProduct(
   observed: { brand: string; name: string; variant: string; packSize: string; observedText: string },
   catalog: ScoredProduct[]
 ): ScoredProduct | null {
+  return matchCatalogProductWithConfidence(observed, catalog)?.product || null;
+}
+
+export function matchCatalogProductWithConfidence(
+  observed: { brand: string; name: string; variant: string; packSize: string; observedText: string },
+  catalog: ScoredProduct[]
+): { product: ScoredProduct; confidence: number } | null {
   const observedBrand = normalizeIdentityText(observed.brand).replaceAll(" ", "");
   const queryTokens = identityTokens(
     `${observed.brand} ${observed.name} ${observed.variant} ${observed.packSize} ${observed.observedText}`
@@ -167,7 +176,9 @@ export function matchCatalogProduct(
       return { product, score: matches / queryTokens.size + 0.35 };
     })
     .sort((left, right) => right.score - left.score);
-  return ranked[0] && ranked[0].score >= 0.9 ? ranked[0].product : null;
+  return ranked[0] && ranked[0].score >= 0.9
+    ? { product: ranked[0].product, confidence: Math.min(1, ranked[0].score) }
+    : null;
 }
 
 function genericProductId(brand: string, name: string, variant: string): string {
@@ -200,6 +211,106 @@ export function recognitionInstruction(focusMode: boolean): string {
     `Return at most one box per distinct front-facing SKU and do not enumerate repeated or blurry background packages. ` +
     `Boxes use x, y, width and height normalized from 0 to 1.`
   );
+}
+
+export interface DetectionResolutionDependencies {
+  getOfferBySlug: typeof getBarboraOfferBySlug;
+  resolveOffer: typeof resolveBarboraOffer;
+}
+
+const defaultResolutionDependencies: DetectionResolutionDependencies = {
+  getOfferBySlug: getBarboraOfferBySlug,
+  resolveOffer: resolveBarboraOffer
+};
+
+async function mapWithConcurrency<T, R>(
+  values: T[],
+  concurrency: number,
+  mapper: (value: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(values.length);
+  let nextIndex = 0;
+  const workerCount = Math.min(Math.max(1, concurrency), values.length);
+  await Promise.all(
+    Array.from({ length: workerCount }, async () => {
+      while (nextIndex < values.length) {
+        const index = nextIndex++;
+        results[index] = await mapper(values[index], index);
+      }
+    })
+  );
+  return results;
+}
+
+/**
+ * Resolves all visible identities, including the seventh and eighth detections,
+ * while bounding outbound Barbora lookups. The vision model supplies identity
+ * only; nutrition is linked exclusively through a sufficiently confident
+ * catalog or exact retailer match.
+ */
+export async function resolveVisibleDetections(
+  visible: ProviderDetection[],
+  catalog: ScoredProduct[],
+  dependencies: DetectionResolutionDependencies = defaultResolutionDependencies,
+  concurrency = 3
+): Promise<ProductDetection[]> {
+  const resolved = await mapWithConcurrency(visible, concurrency, async (detection): Promise<ProductDetection> => {
+    const packSize = extractPackSize(detection.productName);
+    const observedIdentity = {
+      brand: detection.brand,
+      name: detection.productName,
+      variant: "",
+      packSize,
+      observedText: detection.productName
+    };
+    const initialCatalogMatch = matchCatalogProductWithConfidence(observedIdentity, catalog);
+    const lookupInput: BarboraLookupInput = {
+      brand: detection.brand,
+      name: detection.productName,
+      variant: "",
+      packSize,
+      searchTerms: [detection.searchQuery]
+    };
+    const retailerOffer = initialCatalogMatch
+      ? await dependencies.getOfferBySlug(initialCatalogMatch.product.id, lookupInput).catch(() => null)
+      : await dependencies.resolveOffer(lookupInput).catch(() => null);
+    const exactRetailerOffer = retailerOffer?.exactSku ? retailerOffer : null;
+    const knownProduct =
+      initialCatalogMatch?.product ||
+      (exactRetailerOffer ? catalog.find((product) => product.id === exactRetailerOffer.slug) || null : null);
+    const nutritionLinkConfidence = initialCatalogMatch?.confidence ?? exactRetailerOffer?.matchConfidence ?? null;
+    const productId =
+      knownProduct?.id ||
+      (exactRetailerOffer
+        ? `barbora:${exactRetailerOffer.slug}`
+        : genericProductId(detection.brand, detection.productName, ""));
+    return {
+      productId,
+      catalogProductId: knownProduct?.id || null,
+      confidence: detection.confidence,
+      box: detection.box,
+      observedText: detection.productName,
+      identity: {
+        brand: detection.brand,
+        name: detection.productName,
+        variant: null,
+        packSize: packSize || null,
+        category: null,
+        matchKind: knownProduct ? "verified_catalog" : exactRetailerOffer ? "barbora" : "visual_only"
+      },
+      shelfPrice: isTrustedShelfPriceDetection(detection)
+        ? {
+            amount: detection.shelfPriceCents / 100,
+            currency: "EUR",
+            observedText: detection.shelfPriceText,
+            confidence: detection.shelfPriceConfidence
+          }
+        : null,
+      retailerOffer,
+      nutritionLinkConfidence
+    };
+  });
+  return dedupeProductDetections(resolved);
 }
 
 export async function recognizeProducts(input: {
@@ -320,66 +431,7 @@ export async function recognizeProducts(input: {
       })
     );
   }
-  const resolvedDetections = await Promise.all(
-    visible.map(async (detection, detectionIndex): Promise<ProductDetection> => {
-      const packSize = extractPackSize(detection.productName);
-      const observedIdentity = {
-        brand: detection.brand,
-        name: detection.productName,
-        variant: "",
-        packSize,
-        observedText: detection.productName
-      };
-      const initialKnownProduct = matchCatalogProduct(observedIdentity, input.catalog);
-      const lookupInput: BarboraLookupInput = {
-        brand: detection.brand,
-        name: detection.productName,
-        variant: "",
-        packSize,
-        searchTerms: [detection.searchQuery]
-      };
-      const retailerOffer = initialKnownProduct
-        ? await getBarboraOfferBySlug(initialKnownProduct.id, lookupInput).catch(() => null)
-        : detectionIndex < 6
-          ? await resolveBarboraOffer(lookupInput).catch(() => null)
-          : null;
-      const exactRetailerOffer = retailerOffer?.exactSku ? retailerOffer : null;
-      const knownProduct =
-        initialKnownProduct ||
-        (exactRetailerOffer ? input.catalog.find((product) => product.id === exactRetailerOffer.slug) || null : null);
-      const productId =
-        knownProduct?.id ||
-        (exactRetailerOffer
-          ? `barbora:${exactRetailerOffer.slug}`
-          : genericProductId(detection.brand, detection.productName, ""));
-      return {
-        productId,
-        catalogProductId: knownProduct?.id || null,
-        confidence: detection.confidence,
-        box: detection.box,
-        observedText: detection.productName,
-        identity: {
-          brand: detection.brand,
-          name: detection.productName,
-          variant: null,
-          packSize: packSize || null,
-          category: null,
-          matchKind: knownProduct ? "verified_catalog" : exactRetailerOffer ? "barbora" : "visual_only"
-        },
-        shelfPrice:
-          isTrustedShelfPriceDetection(detection)
-            ? {
-                amount: detection.shelfPriceCents / 100,
-                currency: "EUR",
-                observedText: detection.shelfPriceText,
-                confidence: detection.shelfPriceConfidence
-              }
-            : null,
-        retailerOffer
-      };
-    })
-  );
-  const detections = dedupeProductDetections(resolvedDetections);
+  const detections = await resolveVisibleDetections(visible, input.catalog);
 
   return {
     requestId: input.requestId,

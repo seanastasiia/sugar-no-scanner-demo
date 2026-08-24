@@ -1,8 +1,55 @@
-import type { ProductRecord, ScoredProduct } from "./types";
+import type { ProductRecord, RatingSignal, ScoredProduct } from "./types";
 
-function hasCompleteNutrition(product: ProductRecord): boolean {
-  const values = Object.values(product.nutrientsPer100g);
-  return values.every((value) => typeof value === "number" && Number.isFinite(value));
+type CriterionScores = NonNullable<ScoredProduct["criterionScores"]>;
+
+const ratingSignals: RatingSignal[] = ["protein", "fiber", "inverseSugar"];
+
+function isFiniteNumber(value: number | null | undefined): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function signalMask(scores: CriterionScores): RatingSignal[] {
+  return ratingSignals.filter((signal) => isFiniteNumber(scores[signal]));
+}
+
+function buildScoredProduct(
+  product: ProductRecord,
+  scores: CriterionScores,
+  completeBasis: ScoredProduct["ratingBasis"],
+  partialBasis: ScoredProduct["ratingBasis"]
+): ScoredProduct {
+  const mask = signalMask(scores);
+  const availableScores = mask.map((signal) => scores[signal] as number);
+  const matchScore =
+    availableScores.length >= 2
+      ? Math.round(availableScores.reduce((sum, score) => sum + score, 0) / availableScores.length)
+      : null;
+  const ratingStatus =
+    mask.length === 3
+      ? "complete"
+      : mask.length === 2
+        ? "partial_overall"
+        : mask.length === 1
+          ? "limited_signal"
+          : "identity_only";
+
+  return {
+    ...product,
+    matchScore,
+    matchReason:
+      ratingStatus === "complete"
+        ? "complete"
+        : ratingStatus === "partial_overall"
+          ? "partial_nutrition"
+          : ratingStatus === "limited_signal"
+            ? "limited_nutrition"
+            : "missing_nutrition",
+    ratingBasis: mask.length === 3 ? completeBasis : partialBasis,
+    ratingStatus,
+    ratingSignalCount: mask.length,
+    ratingSignalMask: mask,
+    criterionScores: mask.length ? scores : null
+  };
 }
 
 function percentileRank(value: number, population: number[]): number {
@@ -25,31 +72,17 @@ export function scoreCatalog(products: ProductRecord[]): ScoredProduct[] {
     .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
 
   return products.map((product) => {
-    if (!hasCompleteNutrition(product)) {
-      return {
-        ...product,
-        matchScore: null,
-        matchReason: "missing_nutrition",
-        ratingBasis: "catalog_percentile",
-        ratingSignalCount: Object.values(product.nutrientsPer100g).filter(
-          (value) => typeof value === "number" && Number.isFinite(value)
-        ).length,
-        criterionScores: null
-      };
-    }
-
-    const protein = percentileRank(product.nutrientsPer100g.proteinG as number, proteins);
-    const fiber = percentileRank(product.nutrientsPer100g.fiberG as number, fibers);
-    const inverseSugar = 100 - percentileRank(product.nutrientsPer100g.totalSugarG as number, sugars);
-
-    return {
-      ...product,
-      matchScore: Math.round((protein + fiber + inverseSugar) / 3),
-      matchReason: "complete",
-      ratingBasis: "catalog_percentile",
-      ratingSignalCount: 3,
-      criterionScores: { protein, fiber, inverseSugar }
-    };
+    const { proteinG, fiberG, totalSugarG } = product.nutrientsPer100g;
+    return buildScoredProduct(
+      product,
+      {
+        protein: isFiniteNumber(proteinG) ? percentileRank(proteinG, proteins) : null,
+        fiber: isFiniteNumber(fiberG) ? percentileRank(fiberG, fibers) : null,
+        inverseSugar: isFiniteNumber(totalSugarG) ? 100 - percentileRank(totalSugarG, sugars) : null
+      },
+      "catalog_percentile",
+      "catalog_percentile_partial"
+    );
   });
 }
 
@@ -88,32 +121,82 @@ export function scoreBarboraProduct(product: ProductRecord): ScoredProduct {
   const hasSugar = typeof totalSugarG === "number" && Number.isFinite(totalSugarG);
   const hasEnergy = typeof energyKcal === "number" && Number.isFinite(energyKcal) && energyKcal > 0;
 
-  if (!hasProtein || !hasSugar || !hasEnergy) {
-    return {
-      ...product,
-      matchScore: null,
-      matchReason: "missing_nutrition",
-      ratingBasis: "barbora_reference_partial",
-      ratingSignalCount: [hasProtein && hasEnergy, hasFiber && hasEnergy, hasSugar].filter(Boolean).length,
-      criterionScores: null
-    };
+  return buildScoredProduct(
+    product,
+    {
+      protein: hasProtein && hasEnergy ? proteinReferenceScore(proteinG, energyKcal) : null,
+      fiber: hasFiber && hasEnergy ? fiberReferenceScore(fiberG, energyKcal) : null,
+      inverseSugar: hasSugar ? inverseSugarReferenceScore(totalSugarG, product.nutritionBasis) : null
+    },
+    "barbora_reference",
+    "barbora_reference_partial"
+  );
+}
+
+export interface FairComparisonCohort {
+  key: string;
+  productIds: string[];
+  signalMask: RatingSignal[];
+  scores: Record<string, number>;
+  winnerId: string | null;
+}
+
+export interface FairComparisonResult {
+  cohorts: FairComparisonCohort[];
+  winnerIds: string[];
+}
+
+function comparisonMethod(product: ScoredProduct): "catalog_percentile" | "barbora_reference" {
+  return product.ratingBasis.startsWith("catalog_") ? "catalog_percentile" : "barbora_reference";
+}
+
+function comparisonCategory(product: ScoredProduct): string {
+  const explicitCategory = product.category?.trim().toLowerCase();
+  if (explicitCategory) return explicitCategory;
+  if (product.format !== "other") return product.format;
+  // Unknown-category retailer items must not become an accidental mega-cohort.
+  return `unknown:${product.id}`;
+}
+
+/**
+ * Compares only like-for-like products. A cohort must share category, per-100
+ * basis and scoring method, and every member must have at least two of the same
+ * source-backed signals. Winners are cohort-local; cross-cohort winners would
+ * imply a comparison the source data cannot support.
+ */
+export function compareFairCohorts(products: ScoredProduct[], tieThreshold = 5): FairComparisonResult {
+  const groups = new Map<string, ScoredProduct[]>();
+  for (const product of products) {
+    const key = [comparisonCategory(product), product.nutritionBasis || "100g", comparisonMethod(product)].join("|");
+    groups.set(key, [...(groups.get(key) || []), product]);
   }
 
-  const protein = proteinReferenceScore(proteinG, energyKcal);
-  const fiber = hasFiber ? fiberReferenceScore(fiberG, energyKcal) : null;
-  const inverseSugar = inverseSugarReferenceScore(totalSugarG, product.nutritionBasis);
-  const availableScores = [protein, fiber, inverseSugar].filter(
-    (score): score is number => typeof score === "number"
-  );
+  const cohorts = [...groups.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .flatMap(([key, members]): FairComparisonCohort[] => {
+      const stableMembers = [...members].sort((left, right) => left.id.localeCompare(right.id));
+      if (stableMembers.length < 2) return [];
+      const commonSignals = ratingSignals.filter((signal) =>
+        stableMembers.every((product) => isFiniteNumber(product.criterionScores?.[signal]))
+      );
+      if (commonSignals.length < 2) return [];
+      const scores = Object.fromEntries(
+        stableMembers.map((product) => [
+          product.id,
+          Math.round(
+            commonSignals.reduce((sum, signal) => sum + (product.criterionScores?.[signal] as number), 0) /
+              commonSignals.length
+          )
+        ])
+      );
+      const ranked = stableMembers
+        .map((product) => ({ id: product.id, score: scores[product.id] }))
+        .sort((left, right) => right.score - left.score || left.id.localeCompare(right.id));
+      const winnerId = ranked[0].score - ranked[1].score >= tieThreshold ? ranked[0].id : null;
+      return [{ key, productIds: stableMembers.map((product) => product.id), signalMask: commonSignals, scores, winnerId }];
+    });
 
-  return {
-    ...product,
-    matchScore: Math.round(availableScores.reduce((sum, score) => sum + score, 0) / availableScores.length),
-    matchReason: fiber === null ? "partial_nutrition" : "complete",
-    ratingBasis: fiber === null ? "barbora_reference_partial" : "barbora_reference",
-    ratingSignalCount: availableScores.length,
-    criterionScores: { protein, fiber, inverseSugar }
-  };
+  return { cohorts, winnerIds: cohorts.flatMap((cohort) => (cohort.winnerId ? [cohort.winnerId] : [])) };
 }
 
 export function rankSimilarProducts(

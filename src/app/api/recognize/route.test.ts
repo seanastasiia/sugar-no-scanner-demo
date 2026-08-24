@@ -1,0 +1,62 @@
+import { describe, expect, it, vi } from "vitest";
+import { createRecognizePost } from "./route";
+
+function request(body: unknown, headers: Record<string, string> = {}) {
+  return new Request("https://scanner.example/api/recognize", {
+    method: "POST",
+    headers: { "content-type": "application/json", ...headers },
+    body: JSON.stringify(body)
+  });
+}
+
+function matchedResponse(source: "camera" | "upload" | "sample-shelf" | "sample-conveyor") {
+  return {
+    requestId: "request-test",
+    status: "matched" as const,
+    detections: [],
+    latencyMs: 1,
+    model: source.startsWith("sample-") ? "sample" : "provider",
+    imageStored: false as const
+  };
+}
+
+describe("public recognition route", () => {
+  it("serves a sample without a password cookie and never rate-limits samples", async () => {
+    const recognize = vi.fn(async (input: { source: "camera" | "upload" | "sample-shelf" | "sample-conveyor" }) =>
+      matchedResponse(input.source)
+    );
+    const post = createRecognizePost({
+      listProducts: async () => [],
+      recognize,
+      limiter: { consume: () => ({ allowed: false, remaining: 0, retryAfterSeconds: 60 }) },
+      requestId: () => "request-test"
+    });
+    const response = await post(request({ source: "sample-shelf" }));
+    expect(response.status).toBe(200);
+    expect(recognize).toHaveBeenCalledOnce();
+    expect(await response.json()).toMatchObject({ status: "matched", imageStored: false });
+  });
+
+  it("returns 429 for live recognition above the public limit", async () => {
+    const recognize = vi.fn();
+    const post = createRecognizePost({
+      listProducts: async () => [],
+      recognize,
+      limiter: { consume: () => ({ allowed: false, remaining: 0, retryAfterSeconds: 27 }) }
+    });
+    const response = await post(
+      request({ source: "camera", imageDataUrl: "data:image/jpeg;base64,YWJj" })
+    );
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("27");
+    expect(await response.json()).toEqual({ error: "rate_limited", retryAfterSeconds: 27 });
+    expect(recognize).not.toHaveBeenCalled();
+  });
+
+  it("rejects declared oversized bodies before parsing", async () => {
+    const post = createRecognizePost();
+    const response = await post(request({}, { "content-length": "3000001" }));
+    expect(response.status).toBe(413);
+    expect(await response.json()).toEqual({ error: "request_too_large" });
+  });
+});

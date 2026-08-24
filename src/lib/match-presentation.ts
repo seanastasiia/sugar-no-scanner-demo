@@ -1,6 +1,7 @@
-import type { ScoredProduct } from "./types";
+import type { RatingSignal, ScoredProduct } from "./types";
 
 export type MatchTone = "strong" | "middle" | "lower" | "pending";
+export type SignalCompleteness = "full" | "partial" | "limited" | "identified";
 
 const MATCH_TONE_LABELS: Record<MatchTone, string> = {
   strong: "Great fit",
@@ -16,6 +17,41 @@ export interface MatchCriterion {
   tone: MatchTone;
 }
 
+export interface OverlayPresentation {
+  label: string;
+  tone: MatchTone;
+  completeness: SignalCompleteness;
+  completenessLabel: string;
+  signalCount: number;
+}
+
+export function globalBestProductId(comparison: { cohorts: unknown[]; winnerIds: string[] }): string | undefined {
+  return comparison.cohorts.length === 1 && comparison.winnerIds.length === 1
+    ? comparison.winnerIds[0]
+    : undefined;
+}
+
+const signalLabels: Record<RatingSignal, string> = {
+  protein: "protein",
+  fiber: "fiber",
+  inverseSugar: "total sugar"
+};
+
+function joinSignalLabels(labels: string[]) {
+  if (labels.length <= 1) return labels[0] || "nutrition";
+  return `${labels.slice(0, -1).join(", ")} and ${labels.at(-1)}`;
+}
+
+export function partialNutritionExplanation(signalMask: RatingSignal[]): string {
+  const available = signalMask.map((signal) => signalLabels[signal]);
+  const missing = (Object.keys(signalLabels) as RatingSignal[])
+    .filter((signal) => !signalMask.includes(signal))
+    .map((signal) => signalLabels[signal]);
+  const availableText = joinSignalLabels(available);
+  const missingText = joinSignalLabels(missing);
+  return `${availableText[0]?.toUpperCase() || "N"}${availableText.slice(1)} ${available.length === 1 ? "is" : "are"} source-backed. ${missingText[0]?.toUpperCase() || "N"}${missingText.slice(1)} ${missing.length === 1 ? "is" : "are"} not listed, so this is not the full three-signal fit.`;
+}
+
 function percentileTone(value: number): Exclude<MatchTone, "pending"> {
   if (value >= 67) return "strong";
   if (value >= 34) return "middle";
@@ -29,6 +65,37 @@ export function overallMatchPresentation(score: number | null): { label: string;
 
 export function matchToneLabel(tone: MatchTone): string {
   return MATCH_TONE_LABELS[tone];
+}
+
+export function overlayMatchPresentation(product?: ScoredProduct): OverlayPresentation {
+  if (!product) {
+    return {
+      label: "Identified",
+      tone: "pending",
+      completeness: "identified",
+      completenessLabel: "Nutrition checking",
+      signalCount: 0
+    };
+  }
+
+  const signalCount = Math.max(0, Math.min(3, product.ratingSignalCount));
+  if (signalCount <= 1) {
+    return {
+      label: signalCount === 1 ? "Limited view" : "Identified",
+      tone: "pending",
+      completeness: signalCount === 1 ? "limited" : "identified",
+      completenessLabel: signalCount === 1 ? "1/3 signal" : "Nutrition checking",
+      signalCount
+    };
+  }
+
+  const scorePresentation = overallMatchPresentation(product.matchScore);
+  return {
+    ...scorePresentation,
+    completeness: signalCount === 3 ? "full" : "partial",
+    completenessLabel: `${signalCount}/3 signals`,
+    signalCount
+  };
 }
 
 export function matchCriteria(product: ScoredProduct): MatchCriterion[] {

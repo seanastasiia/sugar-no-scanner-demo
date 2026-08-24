@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Sugar.no Live Scanner",
     short_name: "Sugar.no Scan",
-    description: "Private Latvia scanner proof of concept.",
+    description: "Open the camera to compare visible Latvian grocery products with Sugar.no.",
     start_url: "/",
     display: "standalone",
     background_color: "#f2ede4",
