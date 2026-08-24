@@ -671,20 +671,6 @@ test("live camera groups repeated packs, holds the result and replaces it only a
     recognitionRequests += 1;
     const request = route.request().postDataJSON() as { focusMode?: boolean };
     focusModes.push(Boolean(request.focusMode));
-    if (currentProduct === "coke" && !request.focusMode) {
-      await route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify({
-          requestId: `broad-not-sure-${recognitionRequests}`,
-          status: "not_sure",
-          latencyMs: 800,
-          model: "gemini-3.7-flash",
-          imageStored: false,
-          detections: []
-        })
-      });
-      return;
-    }
     const identities =
       currentProduct === "coke"
         ? ["Coca-Cola Original Taste", "Coca Cola Original", "Coca-Cola Original Taste can", "Coca-Cola"]
@@ -731,7 +717,7 @@ test("live camera groups repeated packs, holds the result and replaces it only a
   await expect(page.getByLabel("Products in this scan")).toHaveCount(0);
   await page.waitForTimeout(2_500);
   expect(recognitionRequests).toBe(2);
-  expect(focusModes).toEqual([false, true]);
+  expect(focusModes).toEqual([false, false]);
 
   currentProduct = "activia";
   await page.getByRole("button", { name: "Scan again" }).click();
@@ -739,8 +725,8 @@ test("live camera groups repeated packs, holds the result and replaces it only a
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Activia Forest Berries Yogurt/ })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toHaveCount(0);
-  expect(recognitionRequests).toBe(3);
-  expect(focusModes).toEqual([false, true, false]);
+  expect(recognitionRequests).toBe(4);
+  expect(focusModes).toEqual([false, false, false, false]);
 });
 
 test("a product outside the scored catalog is named and receives an honest price comparison", async ({ page }) => {
