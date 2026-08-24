@@ -25,7 +25,7 @@ function page(overrides: Partial<BarboraPageProduct> = {}): BarboraPageProduct {
 }
 
 describe("Barbora on-demand product rating", () => {
-  it("converts exact retailer nutrition into a traceable two-signal result", () => {
+  it("converts exact retailer nutrition into a complete two-factor result", () => {
     const product = barboraPageToScoredProduct(page(), "2026-08-21T12:00:00.000Z");
 
     expect(product).toMatchObject({
@@ -34,7 +34,7 @@ describe("Barbora on-demand product rating", () => {
       energyKcalPer100: 594,
       packSizeG: 140,
       matchScore: 38,
-      matchReason: "partial_nutrition",
+      matchReason: "complete",
       ratingSignalCount: 2,
       nutrientsPer100g: { proteinG: 22, fiberG: null, totalSugarG: 14 }
     });
