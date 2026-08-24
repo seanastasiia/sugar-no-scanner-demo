@@ -60,25 +60,25 @@ const sampleCheckout: ProductDetection[] = [
   {
     productId: "prot-bat-sal-riekst-saldin-barebells-55-g",
     confidence: 0.98,
-    box: { x: 0.01, y: 0.35, width: 0.24, height: 0.31 },
+    box: { x: 0.22, y: 0.36, width: 0.2, height: 0.18 },
     observedText: "Barebells Salty Peanut"
   },
   {
     productId: "prot-bat-barebells-lemon-cheesecake-55-g",
     confidence: 0.97,
-    box: { x: 0.25, y: 0.36, width: 0.24, height: 0.31 },
+    box: { x: 0.36, y: 0.38, width: 0.2, height: 0.18 },
     observedText: "Barebells Lemon Cheesecake"
   },
   {
     productId: "proteina-bat-cepuma-garsa-iconfit-55-g",
     confidence: 0.96,
-    box: { x: 0.5, y: 0.35, width: 0.24, height: 0.32 },
+    box: { x: 0.51, y: 0.4, width: 0.2, height: 0.18 },
     observedText: "ICONFIT Cookie Bliss"
   },
   {
     productId: "proteina-baton-barebells-coco-choco-55-g",
     confidence: 0.95,
-    box: { x: 0.75, y: 0.36, width: 0.24, height: 0.32 },
+    box: { x: 0.65, y: 0.42, width: 0.2, height: 0.18 },
     observedText: "Barebells Coco Choco"
   }
 ];
@@ -179,6 +179,29 @@ function extractPackSize(value: string): string {
   return value.match(/\b\d+(?:[.,]\d+)?\s*(?:kg|g|ml|l|cl|pcs?|gab)\b/i)?.[0] || "";
 }
 
+export function recognitionInstruction(focusMode: boolean): string {
+  const scope = focusMode
+    ? `This is a center crop after a broad scan was uncertain. Identify the most prominent readable package in the crop. ` +
+      `Repeated copies of the same package are one SKU; return it once rather than returning an empty result. `
+    : `Scan the complete frame from left to right and top to bottom. Identify every distinct clearly readable front-facing ` +
+      `packaged retail SKU, including several different products on the same shelf, up to the response limit. ` +
+      `Do not stop after the central or most prominent package. Include that package as a fallback, but also return readable ` +
+      `products elsewhere in the frame. Repeated facings of the same SKU are one product type and must be returned once. `;
+
+  return (
+    scope +
+    `Read the front label and return the exact visible brand plus one productName containing the product, variant or flavor and pack size. ` +
+    `searchQuery should repeat the identity using useful English or Latvian equivalents of foreign flavor words for retailer matching. ` +
+    `Only when a separate physical shelf price label outside the package is clearly visible and associated with that exact package, ` +
+    `set shelfPriceLabelVisible true and return its EUR price in cents, the exact observed price text including € or EUR, and a separate confidence. ` +
+    `Otherwise set shelfPriceLabelVisible false, price cents and confidence to zero, and price text to an empty string. ` +
+    `Never treat nutrition claims, pack size, deposit text or any number printed on the package as a shelf price. ` +
+    `Return an empty detections array rather than guessing when no product identity is readable. ` +
+    `Return at most one box per distinct front-facing SKU and do not enumerate repeated or blurry background packages. ` +
+    `Boxes use x, y, width and height normalized from 0 to 1.`
+  );
+}
+
 export async function recognizeProducts(input: {
   imageDataUrl?: string;
   source: ScanSource;
@@ -221,20 +244,7 @@ export async function recognizeProducts(input: {
     model,
     contents: [
       createPartFromText(
-        (focusMode
-          ? `This is a center crop after a broad scan was uncertain. Identify the most prominent readable package in the crop. ` +
-            `Repeated copies of the same package are one SKU; return it once rather than returning an empty result. `
-          : `Identify every clearly visible packaged retail product, even when it is not in a supplied catalog. ` +
-            `Always include the most prominent central readable SKU, and treat repeated copies of it as one product type. `) +
-          `Read the front label and return the exact visible brand plus one productName containing the product, variant or flavor and pack size. ` +
-          `searchQuery should repeat the identity using useful English or Latvian equivalents of foreign flavor words for retailer matching. ` +
-          `Only when a separate physical shelf price label outside the package is clearly visible and associated with that exact package, ` +
-          `set shelfPriceLabelVisible true and return its EUR price in cents, the exact observed price text including € or EUR, and a separate confidence. ` +
-          `Otherwise set shelfPriceLabelVisible false, price cents and confidence to zero, and price text to an empty string. ` +
-          `Never treat nutrition claims, pack size, deposit text or any number printed on the package as a shelf price. ` +
-          `Return an empty detections array rather than guessing when the product identity is unreadable. ` +
-          `Return at most one box per distinct front-facing SKU and do not enumerate repeated or blurry background packages. ` +
-          `Boxes use x, y, width and height normalized from 0 to 1.`
+        recognitionInstruction(focusMode)
       ),
       createPartFromBase64(base64, mimeType)
     ],

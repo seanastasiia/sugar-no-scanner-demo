@@ -12,6 +12,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Camera occupies the primary viewport area | The scanner stage owns `100dvh`; WebKit asserts at least 95% of a 375×812 viewport, while the compact result sheet overlays only the bottom edge | Pass locally |
 | Result sheet expands into a page | Recognition opens a compact 166 px sheet with product thumbnails; an explicit control expands it to an accessible full-height dialog, hides background controls from focus and collapses back to camera | Pass locally |
 | Uncertain broad frame gets a focused retry | Mobile Safari regression returns `not_sure` for the broad pass, verifies the automatic `focusMode=true` request, remaps its box and then holds the matched result; threshold unit tests cover broad 0.72 versus focused 0.58 | Pass locally |
+| Several products from one live shelf frame | Broad recognition is instructed to scan the complete frame and return up to eight distinct readable front-facing SKUs; unit coverage verifies the prompt contract and Mobile Safari renders three different rated products in one held result | Pass as logic |
 | Repeated facings count once | Server and client normalize same-SKU detections; unit test merges four Coca-Cola descriptions and live-camera WebKit test renders one unique product | Pass locally |
 | Live result remains readable | Successful camera recognition pauses the frame and requests until `Scan again`; WebKit test confirms no background replacement and then a clean new result | Pass locally |
 | Conflicting retailer brand | Coca-Cola/Pepsi brand regression is rejected before any offer is returned; possible matches have no UI link | Pass locally |
@@ -23,7 +24,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Badge calculation and missing-data rule | Unit tests cover category percentiles, EU-reference bands, solid/liquid sugar thresholds, partial fiber, adult pages and no-data pages | Pass |
 | Exact Barbora link and current price | Live page parser, brand guard, candidate-margin tests and UI end-to-end assertions allow only an exact SKU to drive the `Cheaper at Barbora` action or crossed-out shelf price | Pass locally |
 | Shelf demo | One photorealistic concept image returns four deterministic detections with compact icon markers and a collapsed thumbnail sheet; the legend and product comparison appear on expansion | Pass as concept |
-| Checkout demo | One photorealistic checkout concept image returns four deterministic detections through the same camera-first overlay and expandable-sheet interaction as the shelf | Pass as concept |
+| Checkout demo | One photorealistic checkout-belt concept image clearly shows the cashier/register context and returns four aligned deterministic detections through the same camera-first overlay and expandable-sheet interaction as the shelf | Pass as concept |
 | Shelf/checkout navigation | A segmented control changes between both sample scenes without closing the scanner | Pass locally |
 | No save actions | Product, checkout and Similar options results expose comparison and retailer actions without Save buttons or a persisted product list | Pass locally |
 | Repeated-frame de-duplication | Unit tests retain one tray entry per SKU across repeated live-camera detections | Pass as logic |

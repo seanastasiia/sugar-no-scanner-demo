@@ -13,6 +13,7 @@ The app is a working mobile-first web/PWA concept with:
 - a private access-code gate;
 - a brand-only scanner header without a persistent private-demo label; access remains protected by the gate;
 - automatic live-camera frame sampling after the user grants permission;
+- full-frame shelf recognition that asks for up to eight distinct readable SKUs in one pass, while repeated facings of one SKU remain grouped;
 - one recognition API for camera, saved images, a deterministic four-item shelf photo and a four-item checkout photo;
 - a reproducible index of 19,076 Barbora Latvia product pages for package naming and retailer lookup;
 - a curated nutrition catalog of 40 protein snacks, including 10 golden products with independently sourced fiber and a deterministic three-signal category badge;
@@ -41,7 +42,7 @@ The scanner remains the primary surface after recognition. A 166 px bottom sheet
 
 Repeated facings are grouped by verified catalog ID, exact retailer SKU or normalized brand/product identity. After a successful live-camera scan, the captured frame and result are held while the user reads. `Scan again` clears the previous result and resumes analysis for the next product; detections from different moments are not accumulated into one tray.
 
-Live camera recognition starts with the full scene. If that broad pass returns no supported detection, the next stable frame is automatically cropped to the central guide and analysed with a focused prompt and a lower `0.58` identity threshold. Successful boxes are mapped back to the full camera coordinates. This preserves broad shelf comparison first while giving a clear central package a second path without requiring a shutter button or another user action.
+Live camera recognition starts with the full scene. The broad prompt explicitly scans the shelf left-to-right and top-to-bottom, returns up to eight distinct readable front-facing SKUs and does not stop after the central package; repeated facings are grouped by identity. If that broad pass returns no supported detection, the next stable frame is automatically cropped to the central guide and analysed with a focused prompt and a lower `0.58` identity threshold. Successful boxes are mapped back to the full camera coordinates. This preserves multi-product shelf comparison first while giving one clear central package a second path without requiring a shutter button or another user action.
 
 The implementation keeps a deterministic internal comparison score for ranking:
 
@@ -196,7 +197,7 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 
 ## Sample-scene assets
 
-`public/samples/latvia-shelf.jpg` and `public/samples/latvia-checkout.jpg` are AI-generated concept photos created for this private prototype. They deliberately contain no Sugar.no overlays; the app renders every marker and selection state from the recognition response. These images make the interaction reproducible without third-party credentials, but they do not measure recognition accuracy.
+`public/samples/latvia-shelf.jpg` and `public/samples/latvia-checkout.jpg` are AI-generated or AI-composited concept photos created for this private prototype. The checkout fixture uses [Enkhjin photography's supermarket-belt photo on Unsplash](https://unsplash.com/photos/groceries-are-on-a-conveyor-belt-at-a-checkout-jng9usOa_J0) as its licensed environment reference, then places the four demo snack packs on the belt beside the cashier. Neither sample contains baked-in Sugar.no overlays; the app renders every marker and selection state from the recognition response. These images make the interaction reproducible without third-party credentials, but they do not measure recognition accuracy.
 
 ## Known limitations
 

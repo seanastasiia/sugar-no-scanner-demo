@@ -81,9 +81,9 @@ test("checkout photo uses one multi-product scan instead of an animated product"
   await page.getByRole("button", { name: /Checkout photo/ }).click();
   await expect(page.getByRole("status")).toContainText("4 unique products recognized on checkout");
   await expect(page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open Sugar.no-rated"]')).toHaveCount(4);
-  await expect(page.getByAltText("Four protein bars on a supermarket checkout belt")).toBeVisible();
+  await expect(page.getByAltText("Four protein bars on a supermarket checkout conveyor belt beside a cashier")).toBeVisible();
   await page.waitForFunction(() =>
-    [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Sample checkout photo with four supported protein snacks"] img')]
+    [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Real supermarket checkout belt sample with four supported protein snacks"] img')]
       .every((image) => image.complete && image.naturalWidth > 0)
   );
   await waitForAlternativeImages(page);
@@ -215,6 +215,67 @@ test("saved images are resized client-side and fail closed without a provider ke
   await expect(page.getByRole("status")).toContainText("Live recognition needs the Gemini key");
   await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
   await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
+});
+
+test("a broad live shelf scan keeps several different Sugar.no-rated products in one result", async ({ page }) => {
+  await page.addInitScript(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 640;
+    canvas.height = 960;
+    const context = canvas.getContext("2d");
+    context?.fillRect(0, 0, canvas.width, canvas.height);
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: async () => canvas.captureStream(5) }
+    });
+  });
+  await unlock(page);
+
+  await page.route("**/api/recognize", async (route) => {
+    const request = route.request().postDataJSON() as { focusMode?: boolean };
+    expect(Boolean(request.focusMode)).toBe(false);
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: "multi-product-live-shelf",
+        status: "matched",
+        latencyMs: 1_200,
+        model: "gemini-3.7-flash",
+        imageStored: false,
+        detections: [
+          {
+            productId: "prot-bat-sal-riekst-saldin-barebells-55-g",
+            catalogProductId: "prot-bat-sal-riekst-saldin-barebells-55-g",
+            confidence: 0.97,
+            box: { x: 0.06, y: 0.22, width: 0.25, height: 0.48 },
+            observedText: "Barebells Salty Peanut"
+          },
+          {
+            productId: "prot-bat-barebells-lemon-cheesecake-55-g",
+            catalogProductId: "prot-bat-barebells-lemon-cheesecake-55-g",
+            confidence: 0.95,
+            box: { x: 0.37, y: 0.2, width: 0.25, height: 0.5 },
+            observedText: "Barebells Lemon Cheesecake"
+          },
+          {
+            productId: "proteina-bat-cepuma-garsa-iconfit-55-g",
+            catalogProductId: "proteina-bat-cepuma-garsa-iconfit-55-g",
+            confidence: 0.93,
+            box: { x: 0.68, y: 0.23, width: 0.25, height: 0.47 },
+            observedText: "ICONFIT Cookie Bliss"
+          }
+        ]
+      })
+    });
+  });
+
+  await page.getByRole("button", { name: "Start live camera" }).click();
+  await expect(page.getByRole("status")).toContainText("3 unique products recognized", { timeout: 10_000 });
+  const scanner = page.getByLabel("Live camera scanner");
+  await expect(scanner.locator('button[aria-label^="Open Sugar.no-rated"]')).toHaveCount(3);
+  await expect(page.getByText("3 Sugar.no picks", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Open product results", exact: true }).click();
+  await expect(page.getByLabel("Products in this scan").getByRole("button")).toHaveCount(3);
 });
 
 test("live camera groups repeated packs, holds the result and replaces it only after Scan again", async ({ page }) => {

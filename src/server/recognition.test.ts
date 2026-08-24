@@ -5,6 +5,7 @@ import {
   fitBoxToFrame,
   isTrustedShelfPriceDetection,
   matchCatalogProduct,
+  recognitionInstruction,
   recognitionConfidenceThreshold,
   recognizeProducts
 } from "./recognition";
@@ -83,6 +84,23 @@ describe("recognitionConfidenceThreshold", () => {
     expect(recognitionConfidenceThreshold(true, { FOCUSED_RECOGNITION_CONFIDENCE_THRESHOLD: "invalid" })).toBe(
       0.58
     );
+  });
+});
+
+describe("recognitionInstruction", () => {
+  it("asks the broad pass to scan the whole shelf for several distinct SKUs", () => {
+    const instruction = recognitionInstruction(false);
+    expect(instruction).toContain("complete frame from left to right and top to bottom");
+    expect(instruction).toContain("several different products on the same shelf");
+    expect(instruction).toContain("Do not stop after the central or most prominent package");
+    expect(instruction).toContain("Repeated facings of the same SKU are one product type");
+  });
+
+  it("keeps the uncertain retry focused on one centered package", () => {
+    const instruction = recognitionInstruction(true);
+    expect(instruction).toContain("center crop");
+    expect(instruction).toContain("most prominent readable package");
+    expect(instruction).not.toContain("complete frame from left to right and top to bottom");
   });
 });
 

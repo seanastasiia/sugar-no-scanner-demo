@@ -265,7 +265,7 @@ export function ScannerApp() {
       if (inFlightRef.current || !navigator.onLine) return;
       inFlightRef.current = true;
       setRecognitionState("scanning");
-      setStatusMessage("Reading the package…");
+      setStatusMessage("Reading visible products…");
       try {
         const response = await fetch("/api/recognize", {
           method: "POST",
@@ -385,7 +385,7 @@ export function ScannerApp() {
       await videoRef.current.play();
       setCameraState("live");
       setRecognitionState("idle");
-      setStatusMessage("Hold a package and its price label in the frame");
+      setStatusMessage("Hold products and price labels steady");
       track("scan_started", "camera");
       scanTimerRef.current = setInterval(captureStableFrame, 650);
     } catch (error) {
@@ -412,7 +412,7 @@ export function ScannerApp() {
     setRecognitionState("idle");
     setResultLocked(false);
     setResultsExpanded(false);
-    setStatusMessage("Hold a package and its price label in the frame");
+    setStatusMessage("Hold products and price labels steady");
     const video = videoRef.current;
     if (!video || !streamRef.current) {
       void startCamera();
@@ -971,11 +971,11 @@ function ShelfScene() {
 
 function CheckoutScene() {
   return (
-    <div className={styles.checkoutScene} aria-label="Sample checkout photo with four supported protein snacks">
+    <div className={styles.checkoutScene} aria-label="Real supermarket checkout belt sample with four supported protein snacks">
       <Image
         className={styles.samplePhoto}
         src="/samples/latvia-checkout.jpg"
-        alt="Four protein bars on a supermarket checkout belt"
+        alt="Four protein bars on a supermarket checkout conveyor belt beside a cashier"
         fill
         sizes="100vw"
         priority

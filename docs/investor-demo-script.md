@@ -28,13 +28,13 @@ Open the Barbora CTA, then return.
 
 “The retailer action is deliberately secondary. If the camera can associate a shelf label with an exact package, its price appears under the recognized product and we check the live Barbora page. We cross out the shelf price and say `Buy cheaper at Barbora` only when the exact online SKU is genuinely cheaper. With one retailer this is a Barbora price check, not the best price, and we do not claim affiliate revenue that does not exist.”
 
-For the optional live-camera moment, show several facings of one SKU. Explain that repeated cans count as one product type and that the successful frame is held while the viewer reads. Tap `Scan again` before showing a different product; the new scan replaces the old one instead of accumulating it.
+For the optional live-camera moment, first show several different products across one shelf and explain that the broad pass scans the whole frame rather than only the center. Then show several facings of one SKU: repeated cans count as one product type and the successful frame is held while the viewer reads. Tap `Scan again` before showing a different product; the new scan replaces the old one instead of accumulating it.
 
 ## Checkout
 
 Tap `Checkout photo`.
 
-“Checkout uses exactly the same comparison behavior as the shelf: one view of the whole belt, several detected packages and colored overlays on the image. We do not tell someone to undo a purchase, shame the basket or add another action to save a product.”
+“Checkout uses exactly the same comparison behavior as the shelf: one view of the real conveyor belt beside the cashier, four detected packages and colored overlays on the image. We do not tell someone to undo a purchase, shame the basket or add another action to save a product.”
 
 ## Close
 

@@ -24,16 +24,17 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 5. Confirm the camera owns the full browser viewport. After a match, only the compact bottom sheet may cover it; product details should appear only after explicitly opening the sheet.
 6. Point at a clear food outside the 40 curated snacks. If the exact Barbora page lists energy, protein and total sugar, confirm a marker appears and the card says `Sugar.no quick view · 2/3`; fiber must say `Not listed`, not `Lower`. If the page lacks enough nutrition, confirm the product is named without a marker or invented score.
 7. If the first broad pass is uncertain, keep one package inside the central guide. Confirm the status changes to `Trying a closer center read…` and the result appears without pressing a shutter or restarting the camera.
-8. Put several identical facings of one SKU in the frame. Confirm the status and tray count them as one unique product, not one product per package.
-9. After a successful live scan, move the phone. Confirm the captured frame and result stay fixed while being read. Tap `Scan again`, show a different product and confirm the old result is replaced rather than accumulated.
-10. With no physical shelf label in the frame, confirm no `Price check` card, retailer price or price prompt appears.
-11. Include the product and one clearly associated shelf label in the same frame. Confirm the camera price appears directly beneath the recognized product in the compact sheet and product tray. If an exact Barbora match is cheaper, confirm the compact sheet shows a one-tap `Buy cheaper` action with the online price. It must open the exact SKU directly. In the expanded comparison, confirm only the shelf price is crossed out, the current online price plus check time are shown and the action says `Buy cheaper at Barbora`.
-12. Repeat with a non-exact retailer candidate. Confirm only the shelf price remains and there is no retailer link. A Coca-Cola result must never open Pepsi.
-13. Confirm `Great fit / Moderate fit / Low fit` markers appear only for products with a numeric full badge or quick view. A visual-only Coca-Cola or Activia result should have no camera marker and should say that it was identified but not highlighted.
-14. Scan one rated product by itself. Confirm `Best fit in this scan` is absent because no comparison took place.
-15. Repeat with an ambiguous label or multiple nearby prices. Confirm Sugar.no hides the shelf price instead of guessing.
-16. Cover the lens or use poor light. Confirm the interface stays usable and does not invent nutrition.
-17. Turn on airplane mode. Confirm that the preview stays local and recognition pauses with an offline message.
+8. Point at a shelf containing at least three different front-facing readable products. Confirm one broad pass returns several distinct products at once rather than only the center package; up to eight distinct SKUs may be returned.
+9. Put several identical facings of one SKU in the frame. Confirm the status and tray count them as one unique product, not one product per package.
+10. After a successful live scan, move the phone. Confirm the captured frame and result stay fixed while being read. Tap `Scan again`, show a different product and confirm the old result is replaced rather than accumulated.
+11. With no physical shelf label in the frame, confirm no `Price check` card, retailer price or price prompt appears.
+12. Include the product and one clearly associated shelf label in the same frame. Confirm the camera price appears directly beneath the recognized product in the compact sheet and product tray. If an exact Barbora match is cheaper, confirm the compact sheet shows a one-tap `Buy cheaper` action with the online price. It must open the exact SKU directly. In the expanded comparison, confirm only the shelf price is crossed out, the current online price plus check time are shown and the action says `Buy cheaper at Barbora`.
+13. Repeat with a non-exact retailer candidate. Confirm only the shelf price remains and there is no retailer link. A Coca-Cola result must never open Pepsi.
+14. Confirm `Great fit / Moderate fit / Low fit` markers appear only for products with a numeric full badge or quick view. A visual-only Coca-Cola or Activia result should have no camera marker and should say that it was identified but not highlighted.
+15. Scan one rated product by itself. Confirm `Best fit in this scan` is absent because no comparison took place.
+16. Repeat with an ambiguous label or multiple nearby prices. Confirm Sugar.no hides the shelf price instead of guessing.
+17. Cover the lens or use poor light. Confirm the interface stays usable and does not invent nutrition.
+18. Turn on airplane mode. Confirm that the preview stays local and recognition pauses with an offline message.
 
 ## Saved image and privacy
 
