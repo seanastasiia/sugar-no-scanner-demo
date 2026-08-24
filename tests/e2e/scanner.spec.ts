@@ -16,8 +16,12 @@ async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
 
 async function waitForAlternativeImages(page: Page) {
   await page.waitForFunction(() => {
-    const images = [...document.querySelectorAll<HTMLImageElement>('img[alt=""]')];
-    return images.length > 0 && images.every((image) => image.complete && image.naturalWidth > 0);
+    const images = [...document.querySelectorAll<HTMLImageElement>('img[alt=""]')].filter((image) => {
+      const url = new URL(image.currentSrc || image.src, window.location.href);
+      const optimizedSource = url.searchParams.get("url");
+      return !optimizedSource?.startsWith("http");
+    });
+    return images.every((image) => image.complete && image.naturalWidth > 0);
   });
 }
 
@@ -84,7 +88,7 @@ test("public root opens directly into the camera-first experience", async ({ pag
   await expect(page.getByText("Private demo", { exact: true })).toHaveCount(0);
 });
 
-test("sample shelf photo highlights products and shows a three-signal Sugar.no badge", async ({ page }) => {
+test("sample shelf photo highlights products and shows a two-factor Sugar.no badge", async ({ page }) => {
   await unlock(page);
   await openDemoScene(page, "Shelf demo");
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
@@ -115,7 +119,7 @@ test("sample shelf photo highlights products and shows a three-signal Sugar.no b
   await page.screenshot({ path: "docs/screenshots/shelf-results-mobile.png" });
   await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Protein", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Sugar.no badge").getByText("Fiber", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Sugar.no badge").getByText("Fiber", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Sugar.no badge").getByText("Sugar", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Shelf marker legend").getByText("Great fit", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Shelf marker legend").getByText("Moderate fit", { exact: true })).toBeVisible();
@@ -263,118 +267,6 @@ test("saved images are resized client-side and fail closed without a provider ke
   await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
 });
 
-for (const scenario of [
-  {
-    name: "protein and fiber",
-    mask: ["protein", "fiber"],
-    nutrients: { proteinG: 24, fiberG: 8, totalSugarG: null },
-    criteria: { protein: 100, fiber: 100, inverseSugar: null },
-    missingCriterion: "Sugar",
-    expectedCopy:
-      "Protein and fiber are source-backed. Total sugar is not listed, so this is not the full three-signal fit."
-  },
-  {
-    name: "protein and sugar",
-    mask: ["protein", "inverseSugar"],
-    nutrients: { proteinG: 24, fiberG: null, totalSugarG: 3 },
-    criteria: { protein: 100, fiber: null, inverseSugar: 100 },
-    missingCriterion: "Fiber",
-    expectedCopy:
-      "Protein and total sugar are source-backed. Fiber is not listed, so this is not the full three-signal fit."
-  },
-  {
-    name: "fiber and sugar",
-    mask: ["fiber", "inverseSugar"],
-    nutrients: { proteinG: null, fiberG: 8, totalSugarG: 3 },
-    criteria: { protein: null, fiber: 100, inverseSugar: 100 },
-    missingCriterion: "Protein",
-    expectedCopy:
-      "Fiber and total sugar are source-backed. Protein is not listed, so this is not the full three-signal fit."
-  }
-] as const) {
-  test(`partial quick view explains the actual ${scenario.name} signal mask`, async ({ page }) => {
-    const productId = `barbora:qa-${scenario.name.replaceAll(" ", "-")}`;
-    await page.route("**/api/recognize", async (route) => {
-      await route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify({
-          requestId: `partial-${scenario.name}`,
-          status: "matched",
-          latencyMs: 800,
-          model: "qa-mock",
-          imageStored: false,
-          detections: [
-            {
-              productId,
-              catalogProductId: productId,
-              confidence: 0.97,
-              box: { x: 0.18, y: 0.16, width: 0.64, height: 0.68 },
-              observedText: `QA ${scenario.name}`,
-              identity: {
-                brand: "QA",
-                name: `QA ${scenario.name}`,
-                variant: null,
-                packSize: "100 g",
-                category: "Snack",
-                matchKind: "barbora"
-              },
-              shelfPrice: null,
-              retailerOffer: null
-            }
-          ]
-        })
-      });
-    });
-    await page.route("**/api/products/**", async (route) => {
-      await route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify({
-          product: {
-            id: productId,
-            retailerProductId: productId.slice("barbora:".length),
-            brand: "QA",
-            name: `QA ${scenario.name}`,
-            shortName: `QA ${scenario.name}`,
-            aliases: [],
-            format: "other",
-            packSizeG: 100,
-            nutritionBasis: "100g",
-            energyKcalPer100: 300,
-            gtin: null,
-            nutrientsPer100g: scenario.nutrients,
-            noAddedSugarClaim: false,
-            imageUrl: null,
-            retailerUrl: `https://barbora.lv/produkti/${productId.slice("barbora:".length)}`,
-            sources: [],
-            isGolden: false,
-            accent: "coral",
-            matchScore: 100,
-            matchReason: "partial_nutrition",
-            ratingBasis: "barbora_reference_partial",
-            ratingStatus: "partial_overall",
-            ratingSignalCount: 2,
-            ratingSignalMask: scenario.mask,
-            criterionScores: scenario.criteria
-          },
-          alternatives: []
-        })
-      });
-    });
-
-    await unlock(page);
-    await chooseSavedPhoto(page, `${scenario.name.replaceAll(" ", "-")}.png`);
-    await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
-    await page.getByRole("button", { name: "View all", exact: true }).click();
-    const badge = page.getByLabel("Sugar.no badge");
-    await expect(badge.getByText("Sugar.no quick view · 2/3", { exact: true })).toBeVisible();
-    await expect(badge.getByText(scenario.missingCriterion, { exact: true })).toBeVisible();
-    await expect(badge.getByText("Not listed", { exact: true })).toBeVisible();
-    await expect(
-      page.getByText("Quick view · 2 of 3 signals", { exact: true }).locator("..")
-    ).toContainText(scenario.expectedCopy);
-  });
-}
-
 test("one-signal and identity-only products remain neutral without an overall fit", async ({ page }) => {
   const limitedId = "barbora:qa-protein-only";
   const identityId = "barbora:qa-identity-only";
@@ -438,7 +330,7 @@ test("one-signal and identity-only products remain neutral without an overall fi
           ratingStatus: limited ? "limited_signal" : "identity_only",
           ratingSignalCount: limited ? 1 : 0,
           ratingSignalMask: limited ? ["protein"] : [],
-          criterionScores: limited ? { protein: 100, fiber: null, inverseSugar: null } : null
+          criterionScores: limited ? { protein: 100, inverseSugar: null } : null
         },
         alternatives: []
       })
@@ -454,7 +346,7 @@ test("one-signal and identity-only products remain neutral without an overall fi
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByText("No Sugar.no fit yet.", { exact: true })).toBeVisible();
   await expect(page.getByText(/available in the results without a camera marker/)).toBeVisible();
-  await expect(page.getByText("Limited view · 1 of 3 signals", { exact: true })).toBeVisible();
+  await expect(page.getByText("Limited view · 1 of 2 signals", { exact: true })).toBeVisible();
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await page.getByLabel("Products in this scan").getByRole("button", { name: /QA identity only/ }).click();
   await expect(page.getByText("Identified, not rated", { exact: true })).toBeVisible();
@@ -842,7 +734,7 @@ test("a product outside the scored catalog is named and receives an honest price
   await expect(page.getByLabel("Product result preview").getByRole("link", { name: /Buy .* cheaper at Barbora/ })).toHaveCount(0);
 });
 
-test("an exact Barbora food gets an on-demand two-signal Sugar.no quick view", async ({ page }) => {
+test("an exact Barbora food gets an on-demand two-factor Sugar.no fit", async ({ page }) => {
   await unlock(page);
   const productId = "barbora:zemesrieksti-estrella-ar-medu-140-g";
   await page.route("**/api/recognize", async (route) => {
@@ -909,12 +801,12 @@ test("an exact Barbora food gets an on-demand two-signal Sugar.no quick view", a
           isGolden: false,
           accent: "coral",
           matchScore: 38,
-          matchReason: "partial_nutrition",
-          ratingBasis: "barbora_reference_partial",
-          ratingStatus: "partial_overall",
+          matchReason: "complete",
+          ratingBasis: "barbora_reference",
+          ratingStatus: "complete",
           ratingSignalCount: 2,
           ratingSignalMask: ["protein", "inverseSugar"],
-          criterionScores: { protein: 55, fiber: null, inverseSugar: 20 }
+          criterionScores: { protein: 55, inverseSugar: 20 }
         },
         alternatives: []
       })
@@ -926,22 +818,18 @@ test("an exact Barbora food gets an on-demand two-signal Sugar.no quick view", a
 
   await expect(page.getByRole("status")).toContainText("Products found. Checking Sugar.no signals");
   await expect(page.getByText("Checking nutrition…", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label*="2/3 signals"]')).toHaveCount(1);
+  await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label*="2/2 signals"]')).toHaveCount(1);
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   await expect.poll(async () => (await resultsDialog.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(viewportHeight * 0.95);
   const badge = page.getByLabel("Sugar.no badge");
-  await expect(badge.getByText("Sugar.no quick view · 2/3", { exact: true })).toBeVisible();
+  await expect(badge.getByText("Sugar.no fit", { exact: true })).toBeVisible();
   await expect(badge.getByText("22g", { exact: true })).toBeVisible();
   await expect(badge.getByText("14g", { exact: true })).toBeVisible();
-  await expect(badge.getByText("Not listed", { exact: true })).toBeVisible();
-  await expect(page.getByText("Values per 100 g · 2 of 3 source-backed signals", { exact: true })).toBeVisible();
-  await expect(page.getByText("Quick view · 2 of 3 signals", { exact: true })).toBeVisible();
-  await expect(
-    page.getByText("Protein and total sugar are source-backed. Fiber is not listed, so this is not the full three-signal fit.")
-  ).toBeVisible();
+  await expect(badge.getByText("Fiber", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Values per 100 g · 2 of 2 source-backed signals", { exact: true })).toBeVisible();
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
   await page.screenshot({ path: "docs/screenshots/barbora-quick-view-mobile.png" });
