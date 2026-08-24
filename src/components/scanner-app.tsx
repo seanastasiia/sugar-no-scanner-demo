@@ -803,29 +803,59 @@ export function ScannerApp() {
                   {sheetPreviewIds.map((id) => {
                     const item = products[id]?.product;
                     const detection = detectionById[id];
+                    const retailerOffer = detection?.retailerOffer?.exactSku
+                      ? detection.retailerOffer
+                      : null;
+                    const cheaperOffer =
+                      detection?.shelfPrice &&
+                      retailerOffer &&
+                      retailerOffer.price < detection.shelfPrice.amount
+                        ? retailerOffer
+                        : null;
                     return (
-                      <button
-                        type="button"
+                      <article
+                        className={`${styles.sheetPreviewCard} ${cheaperOffer ? styles.sheetPreviewCardDeal : ""}`}
                         key={id}
-                        onClick={() => {
-                          setSelectedId(id);
-                          setResultsExpanded(true);
-                          track("result_opened", source, id);
-                        }}
                       >
-                        <div className={styles.sheetPreviewThumb} aria-hidden="true">
-                          {item?.imageUrl ? <Image src={item.imageUrl} alt="" fill sizes="42px" /> : null}
-                        </div>
-                        <div className={styles.sheetPreviewCopy}>
-                          <span>{item?.brand || detection?.identity?.brand || "Product"}</span>
-                          {item && hasSugarNoRating(item) ? (
-                            <MatchPill product={item} />
-                          ) : (
-                            <small>{loadingProductIds.includes(id) ? "Checking nutrition…" : "Identified"}</small>
-                          )}
-                          <CompactProductPrice detection={detection} />
-                        </div>
-                      </button>
+                        <button
+                          className={styles.sheetPreviewOpen}
+                          type="button"
+                          onClick={() => {
+                            setSelectedId(id);
+                            setResultsExpanded(true);
+                            track("result_opened", source, id);
+                          }}
+                        >
+                          <div className={styles.sheetPreviewThumb} aria-hidden="true">
+                            {item?.imageUrl ? <Image src={item.imageUrl} alt="" fill sizes="42px" /> : null}
+                          </div>
+                          <div className={styles.sheetPreviewCopy}>
+                            <span>{item?.brand || detection?.identity?.brand || "Product"}</span>
+                            {item && hasSugarNoRating(item) ? (
+                              <MatchPill product={item} />
+                            ) : (
+                              <small>{loadingProductIds.includes(id) ? "Checking nutrition…" : "Identified"}</small>
+                            )}
+                            <CompactProductPrice detection={detection} />
+                          </div>
+                        </button>
+                        {cheaperOffer ? (
+                          <a
+                            className={styles.sheetPreviewBuy}
+                            href={cheaperOffer.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Buy ${item?.shortName || detection?.identity?.name || "product"} cheaper at Barbora for €${cheaperOffer.price.toFixed(2)}`}
+                            onClick={() =>
+                              track("retailer_link_clicked", source, id, { placement: "compact_price_cta" })
+                            }
+                          >
+                            <span>Buy cheaper</span>
+                            <strong>€{cheaperOffer.price.toFixed(2)}</strong>
+                            <ArrowUpRight aria-hidden="true" size={15} />
+                          </a>
+                        ) : null}
+                      </article>
                     );
                   })}
                 </div>

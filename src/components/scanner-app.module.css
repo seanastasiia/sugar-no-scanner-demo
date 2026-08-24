@@ -547,7 +547,8 @@
 
 .sheetIconButton,
 .sheetTitleButton,
-.sheetPreview button {
+.sheetPreviewOpen,
+.sheetPreviewBuy {
   cursor: pointer;
   transition: background-color 180ms ease, border-color 180ms ease, opacity 180ms ease;
 }
@@ -565,7 +566,8 @@
 
 .sheetIconButton:active,
 .sheetTitleButton:active,
-.sheetPreview button:active {
+.sheetPreviewOpen:active,
+.sheetPreviewBuy:active {
   opacity: 0.65;
 }
 
@@ -603,19 +605,67 @@
   scrollbar-width: none;
 }
 
-.sheetPreview button {
+.sheetPreviewCard {
   display: grid;
   min-width: 158px;
   min-height: 72px;
-  grid-template-columns: 42px minmax(0, 1fr);
-  align-items: center;
-  gap: 9px;
-  padding: 8px 10px 8px 8px;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 15px;
   background: #fffdf8;
   color: #625950;
+}
+
+.sheetPreviewCardDeal {
+  min-width: 258px;
+  grid-template-columns: minmax(0, 1fr) 94px;
+}
+
+.sheetPreviewOpen {
+  display: grid;
+  min-width: 0;
+  min-height: 70px;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px 8px 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
   text-align: left;
+}
+
+.sheetPreviewBuy {
+  display: grid;
+  min-width: 94px;
+  min-height: 70px;
+  grid-template-columns: minmax(0, 1fr) 15px;
+  align-content: center;
+  align-items: center;
+  gap: 2px 5px;
+  padding: 9px;
+  border: 0;
+  border-left: 1px solid rgb(255 255 255 / 18%);
+  background: var(--ink);
+  color: var(--cream);
+  text-decoration: none;
+}
+
+.sheetPreviewBuy span {
+  grid-column: 1 / -1;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.sheetPreviewBuy strong {
+  overflow: visible;
+  color: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .sheetPreviewThumb {
@@ -646,7 +696,7 @@
   white-space: nowrap;
 }
 
-.sheetPreview button small {
+.sheetPreviewOpen small {
   font-size: 10px;
   font-weight: 750;
 }
@@ -1398,7 +1448,7 @@
   }
 
   .sheetIconButton,
-  .sheetPreview button,
+  .sheetPreviewCard,
   .sheetPreviewThumb,
   .demoGrid button,
   .nutrient,

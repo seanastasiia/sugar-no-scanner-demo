@@ -386,6 +386,16 @@ test("a product outside the scored catalog is named and receives an honest price
   await expect(
     page.getByLabel("Product result preview").getByLabel("Shelf price €1.69, Barbora €0.99, cheaper at Barbora")
   ).toBeVisible();
+  const compactBuy = page.getByLabel("Product result preview").getByRole("link", {
+    name: "Buy Zero Peach cheaper at Barbora for €0.99"
+  });
+  await expect(compactBuy).toBeVisible();
+  await expect(compactBuy).toHaveAttribute(
+    "href",
+    "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
+  );
+  expect((await compactBuy.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  await page.screenshot({ path: "docs/screenshots/price-cta-compact-mobile.png" });
   await page.getByRole("button", { name: "Open product results", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Zero Peach.*Pesca & Clementina.*330 ml/ })).toBeVisible();
   await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open Sugar.no-rated"]')).toHaveCount(0);
@@ -421,6 +431,7 @@ test("a product outside the scored catalog is named and receives an honest price
   await expect(comparison.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "none");
   await expect(comparison.getByText("Cheaper at Barbora", { exact: true })).toHaveCount(0);
   await expect(comparison.getByRole("link")).toHaveCount(0);
+  await expect(page.getByLabel("Product result preview").getByRole("link", { name: /Buy .* cheaper at Barbora/ })).toHaveCount(0);
 
   exactSku = true;
   includeShelfPrice = false;
@@ -438,6 +449,7 @@ test("a product outside the scored catalog is named and receives an honest price
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
   await expect(page.getByLabel(/Shelf price €/)).toHaveCount(0);
   await expect(page.getByText(/Keep the package and its shelf label/)).toHaveCount(0);
+  await expect(page.getByLabel("Product result preview").getByRole("link", { name: /Buy .* cheaper at Barbora/ })).toHaveCount(0);
 });
 
 test("an exact Barbora food gets an on-demand two-signal Sugar.no quick view", async ({ page }) => {

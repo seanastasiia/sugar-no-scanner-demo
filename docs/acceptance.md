@@ -31,6 +31,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Permission denied | Mocked WebKit browser scenario verifies explanation and retry | Pass locally |
 | Saved-image fallback | Client resize and provider-unavailable state tested | Pass locally |
 | Shelf-price comparison | UI regression proves a trusted €1.69 shelf price appears beneath the recognized product and is crossed out only for an exact €0.99 Barbora match | Pass as logic |
+| One-tap cheaper purchase | A trusted cheaper exact SKU exposes a 44 px or larger `Buy cheaper` link in the compact camera sheet; possible matches and frames without a shelf label expose no purchase action | Pass locally |
 | Live shelf-label OCR | Real Gemini call on the concept shelf identified six distinct front-facing products and associated €1.79/€2.29 labels in 7,159 ms; physical Latvia benchmark is absent | Partially measured |
 | Production build | `next build` succeeds | Pass locally |
 | Focus top-1 ≥ 90% on 10 real packshots | Gemini is configured and one production concept-image call succeeds; the 10-packshot benchmark has not been run | Not measured |
