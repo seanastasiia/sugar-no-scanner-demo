@@ -1,5 +1,7 @@
 # Bugs
 
+- **2026-08-24: the expanded results repeated fit states and signal limitations in three separate explanatory blocks.** The top fit legend, its marker-scope copy and the duplicate limited-signal explanation card are removed. Product markers, tray pills and the Sugar.no Protein/Sugar badge keep the result understandable without the extra chrome.
+
 - **2026-08-24: the expanded comparison header showed two arrows for the same collapse action.** The duplicate left arrow is removed. One 44 px right-side arrow remains, while the text title stays tappable as an accessible return target.
 
 This file is the running record of scanner defects found and resolved.
