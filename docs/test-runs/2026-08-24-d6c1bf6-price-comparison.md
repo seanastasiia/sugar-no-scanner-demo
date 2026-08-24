@@ -42,4 +42,7 @@
 
 ## Production verification
 
-- Pending Railway deployment, health check and authenticated production WebKit smoke.
+- Railway deployment: `ac3d48bf-f78a-4413-aa43-579be2752c49`, status `SUCCESS`.
+- `/api/health`: `status=ok`, commit `6393f59d6b8e43111b7b2471399cc037d251d1d4`.
+- Authenticated production iPhone/WebKit smoke with service-worker interception disabled: HTTP 200 auth, one compact trusted-price line, `line-through` on the €1.69 shelf price, one exact `Buy cheaper at Barbora · €0.99` link and zero visible source/limits accordions.
+- An initial browser-fixture smoke timed out because the production service worker intercepted the upload request before Playwright routing. The same deployed code passed after blocking service workers, which is the correct isolation for a mocked-network browser smoke; the production health endpoint remained healthy throughout.
