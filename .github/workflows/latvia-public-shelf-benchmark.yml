@@ -31,9 +31,13 @@ jobs:
         run: npx playwright install --with-deps webkit
 
       - name: Run Mobile Safari acceptance suite
+        id: mobile_safari
+        continue-on-error: true
         run: CI=1 npm run test:e2e
 
       - name: Download public Latvia shelf and checkout references
+        id: public_references
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
@@ -68,6 +72,9 @@ jobs:
           echo "BENCH_DIR=${bench_dir}" >> "${GITHUB_ENV}"
 
       - name: Run deployed recognition benchmark
+        id: recognition_benchmark
+        if: always() && steps.public_references.outcome == 'success'
+        continue-on-error: true
         run: |
           npm run benchmark:recognition -- \
             --endpoint https://sugar-no-scanner-demo-production.up.railway.app/api/recognize \
@@ -89,3 +96,22 @@ jobs:
           path: ${{ runner.temp }}/latvia-public-shelf-benchmark.json
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Upload Mobile Safari failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-safari-report
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Enforce acceptance gates
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.mobile_safari.outcome }}" = "success"
+          test "${{ steps.public_references.outcome }}" = "success"
+          test "${{ steps.recognition_benchmark.outcome }}" = "success"
