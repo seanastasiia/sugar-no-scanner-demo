@@ -13,6 +13,7 @@ This file is the running record of scanner defects found and resolved.
 
 ## Resolved
 
+- **2026-08-24: first-run partial-fit WebKit checks could exceed the generic five-second assertion window while the upload result and nutrition payload hydrated, then pass immediately on retry.** The acceptance wait now uses the same explicit ten-second recognition budget as the live shelf scenarios, so cold CI startup is not mistaken for a product failure.
 - **2026-08-24: an identity-only API payload with `ratingBasis: null` could crash fair-comparison rendering in Mobile Safari.** Fair cohort construction now ignores any product without a rating basis, at least two signals and criterion scores. The product remains identified in the result list, but it cannot enter or break Sugar.no comparison ranking.
 - **2026-08-24: the Mobile Safari camera harness could remain at `Waiting for camera permission…` because WebKit never advanced the synthetic video to a playable frame.** The shared camera mock now supplies deterministic video readiness and safe canvas frames, so broad shelf, completion-retry, provider-failure, rate-limit and repeated-pack scenarios exercise the actual automatic capture loop in CI.
 - **2026-08-24: saved-photo acceptance could try to populate a hidden file input before the demo chooser finished opening.** The helper now waits for and scopes the file input to the visible demo dialog, removing upload races across partial-rating and price-comparison tests.
