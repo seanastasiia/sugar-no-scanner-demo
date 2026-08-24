@@ -19,6 +19,7 @@ Code and product-documentation SHA before this evidence-only commit: `3abe65a934
 | `npm run verify` | Pass: ESLint, TypeScript, 16 Vitest files / 80 tests, Next.js production build and standalone asset preparation |
 | `npm run catalog:validate` | Pass: 40 rows, 40 complete two-factor records, 10 records with optional raw fiber, 19,076 Barbora slugs |
 | `npx playwright test --list` | Pass: 18 authored Mobile Safari scenarios discovered |
+| GitHub Mobile Safari run #8 | Found one real 4.34:1 compact-name contrast defect and one cold-hydration flake; both fixes were added before the final rerun |
 | Local Playwright execution | Not run: the managed QA sandbox cannot bind the required local web server; GitHub WebKit is the browser release gate |
 
 ## Product checks after deploy
