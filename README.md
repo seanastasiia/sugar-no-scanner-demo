@@ -21,6 +21,7 @@ The app is a working mobile-first web/PWA concept with:
 - photorealistic concept scenes with compact green-check, yellow-minus and coral-alert markers placed only over products with a numeric Sugar.no result;
 - a camera-first full-viewport scanner with Sugar.no overlays and a compact bottom results sheet that shows product thumbnails, then expands into a dedicated comparison page;
 - normalized detection boxes, a de-duplicated checkout tray, similar options and exact Barbora product links;
+- product cards in the expanded tray name the exact recognized SKU or variant, so several products from one brand remain distinguishable;
 - camera-read shelf prices shown directly under recognized products, plus a live Barbora offer lookup with source time and fail-closed exact-SKU state;
 - same-SKU grouping so repeated facings such as four Coca-Cola cans count as one unique product;
 - a held live-camera result with an explicit `Scan again` action, so moving the phone cannot replace the result while it is being read;
