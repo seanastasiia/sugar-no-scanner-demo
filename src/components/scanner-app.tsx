@@ -29,7 +29,6 @@ import {
 import {
   globalBestProductId,
   matchCriteria,
-  matchToneLabel,
   overlayMatchPresentation,
   type MatchTone,
   type SignalCompleteness
@@ -678,7 +677,6 @@ export function ScannerApp() {
   );
   const selectedDetection = selectedId ? detectionById[selectedId] : undefined;
   const loadedTray = tray.map((id) => products[id]?.product).filter(Boolean) as ScoredProduct[];
-  const hasScoredProducts = loadedTray.some((product) => product.matchScore !== null);
   const ratedDetections = useMemo(
     () =>
       detections.filter(
@@ -686,7 +684,6 @@ export function ScannerApp() {
       ),
     [detections, products]
   );
-  const unratedDetectionCount = detections.length - ratedDetections.length;
   const fairComparison = useMemo(() => compareFairCohorts(loadedTray), [loadedTray]);
   const bestId = globalBestProductId(fairComparison);
   const ratedCount = ratedDetections.length;
@@ -1024,26 +1021,14 @@ export function ScannerApp() {
                     >
                         <RefreshCw aria-hidden="true" size={16} /> Scan again
                     </button>
-                    {hasScoredProducts ? (
-                      <>
-                        <div className={styles.summarySignals} aria-label="Shelf marker legend">
-                          <span className={styles.toneStrong}><Check aria-hidden="true" size={13} /> {matchToneLabel("strong")}</span>
-                          <span className={styles.toneMiddle}><Minus aria-hidden="true" size={13} /> {matchToneLabel("middle")}</span>
-                          <span className={styles.toneLower}><ArrowDown aria-hidden="true" size={13} /> {matchToneLabel("lower")}</span>
-                        </div>
-                        <p className={styles.markerScopeNote}>
-                          Outlines show products with both protein and total sugar available.
-                          {unratedDetectionCount > 0 ? ` ${unratedDetectionCount} identified package${unratedDetectionCount === 1 ? "" : "s"} remain available in the results without a camera marker.` : ""}
-                        </p>
-                      </>
-                    ) : (
+                    {ratedCount === 0 ? (
                       <div className={styles.ratingNotice}>
                         <Info aria-hidden="true" size={15} />
                         <span>
                           <strong>No Sugar.no fit yet.</strong> {detections.length} {detections.length === 1 ? "package is" : "packages are"} still available in the results without a camera marker.
                         </span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
 
                   {tray.length > 1 ? (
@@ -1230,16 +1215,6 @@ function ProductResult({
           <span>
             <strong>Identified, not rated</strong>
             This product does not have source-backed protein or total sugar data yet. Missing values are not invented.
-          </span>
-        </div>
-      ) : null}
-
-      {product.ratingStatus === "limited_signal" ? (
-        <div className={styles.pendingData}>
-          <ScanLine aria-hidden="true" size={18} />
-          <span>
-            <strong>Limited view · 1 of 2 signals</strong>
-            Sugar.no shows the verified signal, but does not turn one nutrient into an overall fit.
           </span>
         </div>
       ) : null}
