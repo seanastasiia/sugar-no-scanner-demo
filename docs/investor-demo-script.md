@@ -8,17 +8,17 @@ Target length: 2–3 minutes. Use the deterministic shelf and checkout scenes fo
 
 Open the public link. The camera-first scanner appears immediately; if camera permission is not available, `Show demo` remains visible.
 
-“For this Latvia proof of concept we index 19,076 Barbora pages, so the camera can name ordinary packaged products. Ten curated snacks have the full three-signal category badge. For an exact food outside that set, we can now build a live two-signal quick view from the nutrition on its exact Barbora page. The model never invents nutrition.”
+“For this Latvia proof of concept we index 19,076 Barbora pages, so the camera can name ordinary packaged products. All 40 curated snacks have a two-factor category fit based on protein and total sugar. For an exact food outside that set, we can build the same source-aware view when its Barbora page lists energy, protein and total sugar. The model never invents nutrition.”
 
 ## Shelf
 
 Tap `Show demo`, then `Shelf demo`.
 
-“One camera view compares what is visible without asking the user to choose protein, fiber or sugar first. Compact markers sit directly over the products in the shelf image. A green check, yellow minus and coral alert make the comparison scannable; Great fit, Moderate fit and Low fit carry the same meaning without relying on color alone.”
+“One camera view compares what is visible without asking the user to choose a goal first. Compact markers sit directly over the products in the shelf image. A green check, yellow minus and coral alert make the comparison scannable; Great fit, Moderate fit and Low fit carry the same meaning without relying on color alone.”
 
 Tap two product boxes and show the Sugar.no badge.
 
-“Instead of an unexplained score such as 86, the card shows protein, fiber and total sugar separately. The full curated badge is a relative comparison inside the protein-snack catalog. Outside it, a clearly labelled quick view uses transparent reference bands from the exact retailer page. If any one nutrient is not listed, it stays neutral, the card names the two source-backed signals and says two of three — it never pretends to know.”
+“Instead of an unexplained score such as 86, the card shows protein and total sugar separately. We removed fiber from this version because retailer pages often do not list it. The curated badge is a relative comparison inside the protein-snack catalog; outside it, the same two factors use transparent reference bands from the exact retailer page.”
 
 Open a similar option.
 
@@ -42,7 +42,7 @@ Return to live camera, tap `Show demo`, then `Checkout demo`.
 
 Suggested final line:
 
-> We can name an ordinary package, build a source-aware Sugar.no view and check an online offer in one camera flow. The Latvia prototype indexes 19,076 Barbora pages, gives ten curated products a full three-signal badge and can create a transparent two-signal quick view for other exact food pages. The next validation is real-store identity and result coverage, not a claim that all indexed pages are rated foods.
+> We can name an ordinary package, build a source-aware Sugar.no view and check an online offer in one camera flow. The Latvia prototype indexes 19,076 Barbora pages, gives all 40 curated products a protein-and-sugar fit and can create the same transparent view for other exact food pages with sufficient source data. The next validation is real-store identity and result coverage, not a claim that all indexed pages are rated foods.
 
 ## If recognition fails live
 
