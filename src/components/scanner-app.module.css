@@ -922,34 +922,6 @@
   letter-spacing: 0;
 }
 
-.summarySignals {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.summarySignals span {
-  display: inline-flex;
-  min-height: 26px;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: var(--tone-soft);
-  color: var(--tone-text);
-  font-size: 9px;
-  font-weight: 800;
-}
-
-.markerScopeNote {
-  margin: 0;
-  color: #665e57;
-  font-size: 10px;
-  line-height: 1.4;
-}
-
 .tray {
   display: flex;
   gap: 8px;
@@ -1770,8 +1742,7 @@
     background: rgb(23 21 19 / 94%);
   }
 
-  .sheetTitleButton span,
-  .markerScopeNote {
+  .sheetTitleButton span {
     color: #beb5ab;
   }
 }
