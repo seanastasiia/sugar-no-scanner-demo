@@ -2,7 +2,7 @@ import type { ProductRecord, RatingSignal, ScoredProduct } from "./types";
 
 type CriterionScores = NonNullable<ScoredProduct["criterionScores"]>;
 
-const ratingSignals: RatingSignal[] = ["protein", "fiber", "inverseSugar"];
+const ratingSignals: RatingSignal[] = ["protein", "inverseSugar"];
 
 function isFiniteNumber(value: number | null | undefined): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -21,15 +21,13 @@ function buildScoredProduct(
   const mask = signalMask(scores);
   const availableScores = mask.map((signal) => scores[signal] as number);
   const matchScore =
-    availableScores.length >= 2
+    availableScores.length === 2
       ? Math.round(availableScores.reduce((sum, score) => sum + score, 0) / availableScores.length)
       : null;
   const ratingStatus =
-    mask.length === 3
+    mask.length === 2
       ? "complete"
-      : mask.length === 2
-        ? "partial_overall"
-        : mask.length === 1
+      : mask.length === 1
           ? "limited_signal"
           : "identity_only";
 
@@ -39,12 +37,10 @@ function buildScoredProduct(
     matchReason:
       ratingStatus === "complete"
         ? "complete"
-        : ratingStatus === "partial_overall"
-          ? "partial_nutrition"
-          : ratingStatus === "limited_signal"
+        : ratingStatus === "limited_signal"
             ? "limited_nutrition"
             : "missing_nutrition",
-    ratingBasis: mask.length === 3 ? completeBasis : partialBasis,
+    ratingBasis: mask.length === 2 ? completeBasis : partialBasis,
     ratingStatus,
     ratingSignalCount: mask.length,
     ratingSignalMask: mask,
@@ -64,20 +60,16 @@ export function scoreCatalog(products: ProductRecord[]): ScoredProduct[] {
   const proteins = products
     .map((product) => product.nutrientsPer100g.proteinG)
     .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
-  const fibers = products
-    .map((product) => product.nutrientsPer100g.fiberG)
-    .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
   const sugars = products
     .map((product) => product.nutrientsPer100g.totalSugarG)
     .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
 
   return products.map((product) => {
-    const { proteinG, fiberG, totalSugarG } = product.nutrientsPer100g;
+    const { proteinG, totalSugarG } = product.nutrientsPer100g;
     return buildScoredProduct(
       product,
       {
         protein: isFiniteNumber(proteinG) ? percentileRank(proteinG, proteins) : null,
-        fiber: isFiniteNumber(fiberG) ? percentileRank(fiberG, fibers) : null,
         inverseSugar: isFiniteNumber(totalSugarG) ? 100 - percentileRank(totalSugarG, sugars) : null
       },
       "catalog_percentile",
@@ -90,13 +82,6 @@ function proteinReferenceScore(proteinG: number, energyKcal: number): number {
   const proteinEnergyShare = energyKcal > 0 ? ((proteinG * 4) / energyKcal) * 100 : 0;
   if (proteinEnergyShare >= 20) return 100;
   if (proteinEnergyShare >= 12) return 55;
-  return 20;
-}
-
-function fiberReferenceScore(fiberG: number, energyKcal: number): number {
-  const perHundredKcal = energyKcal > 0 ? (fiberG / energyKcal) * 100 : 0;
-  if (fiberG >= 6 || perHundredKcal >= 3) return 100;
-  if (fiberG >= 3 || perHundredKcal >= 1.5) return 55;
   return 20;
 }
 
@@ -114,10 +99,9 @@ function inverseSugarReferenceScore(totalSugarG: number, basis: ProductRecord["n
  * and not a medical or absolute health score.
  */
 export function scoreBarboraProduct(product: ProductRecord): ScoredProduct {
-  const { proteinG, fiberG, totalSugarG } = product.nutrientsPer100g;
+  const { proteinG, totalSugarG } = product.nutrientsPer100g;
   const energyKcal = product.energyKcalPer100;
   const hasProtein = typeof proteinG === "number" && Number.isFinite(proteinG);
-  const hasFiber = typeof fiberG === "number" && Number.isFinite(fiberG);
   const hasSugar = typeof totalSugarG === "number" && Number.isFinite(totalSugarG);
   const hasEnergy = typeof energyKcal === "number" && Number.isFinite(energyKcal) && energyKcal > 0;
 
@@ -125,7 +109,6 @@ export function scoreBarboraProduct(product: ProductRecord): ScoredProduct {
     product,
     {
       protein: hasProtein && hasEnergy ? proteinReferenceScore(proteinG, energyKcal) : null,
-      fiber: hasFiber && hasEnergy ? fiberReferenceScore(fiberG, energyKcal) : null,
       inverseSugar: hasSugar ? inverseSugarReferenceScore(totalSugarG, product.nutritionBasis) : null
     },
     "barbora_reference",
