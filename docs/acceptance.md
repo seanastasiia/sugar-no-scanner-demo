@@ -6,7 +6,8 @@ Status reflects reproducible evidence in this repository, not the intended final
 | --- | --- | --- |
 | Public camera-first entry | Proxy unit test allows `/`, recognition and product APIs without a session; `/access` redirects to `/`; browser regression asserts that no code field or `Private demo` copy remains | Pass locally |
 | 40 Latvia SKUs | Generated catalog validation and unit test | Pass |
-| Broad Barbora discovery | Reproducible public-sitemap index contains 19,076 unique product slugs | Pass as index |
+| Broad Barbora discovery | Reproducible public-sitemap index contains 18,554 unique product slugs | Pass as discovery index |
+| Active food source coverage | 9,707 active non-adult food SKUs; 7,433 exact pages (76.57%) have energy, protein and total sugar | Pass as catalog-data coverage, not visual accuracy |
 | On-demand Barbora nutrition | An exact food SKU is fetched after recognition; unit tests require source-backed energy, protein and total sugar for the two-factor fit. Protein-only, sugar-only and identity-only states remain neutral | Pass locally |
 | Exact Open Food Facts fallback | A visible barcode uses the official product-by-code API; strict text fallback requires matching brand, variant and pack size. Wrong Coke variant and wrong pack-size regressions fail closed | Unit pass; live barcode check pass |
 | Nutrition-label recovery | An unrated package exposes one `Scan nutrition label` action. The follow-up API requires the selected identity and accepts only a high-confidence per-100 table with adjacent OCR evidence for kcal, protein and sugars; the Mobile Safari journey ends in a source-labelled fit | Pass locally |

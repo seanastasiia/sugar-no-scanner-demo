@@ -8,7 +8,7 @@ Target length: 2–3 minutes. Use the deterministic shelf and checkout scenes fo
 
 Open the public link. The camera-first scanner appears immediately; if camera permission is not available, `Show demo` remains visible.
 
-“For this Latvia proof of concept we index 19,076 Barbora pages, so the camera can name ordinary packaged products. All 40 curated snacks have a two-factor category fit based on protein and total sugar. For an exact food outside that set, we can build the same source-aware view when its Barbora page lists energy, protein and total sugar. The model never invents nutrition.”
+“For this Latvia proof of concept we indexed 9,707 active non-adult Barbora food products. 7,433 exact pages — 76.57% — already contain the source-backed energy, protein and total sugar needed for an automatic Sugar.no fit. The original 40 snacks remain a deterministic category benchmark, not the scanner's coverage ceiling. The model never invents nutrition.”
 
 ## Shelf
 
@@ -42,7 +42,7 @@ Return to live camera, tap `Show demo`, then `Checkout demo`.
 
 Suggested final line:
 
-> We can name an ordinary package, build a source-aware Sugar.no view and check an online offer in one camera flow. The Latvia prototype indexes 19,076 Barbora pages, gives all 40 curated products a protein-and-sugar fit and can create the same transparent view for other exact food pages with sufficient source data. The next validation is real-store identity and result coverage, not a claim that all indexed pages are rated foods.
+> We can name an ordinary package, build a source-aware Sugar.no view and check an online offer in one camera flow. The Latvia prototype ships a local index of 9,707 active Barbora food products, with automatic Protein/Sugar fits available for 7,433 exact pages. The next validation is real-store identity accuracy across those candidates; 76.57% is catalog-data coverage, not a claim that every package on every Latvia shelf will be recognized.
 
 ## If recognition fails live
 

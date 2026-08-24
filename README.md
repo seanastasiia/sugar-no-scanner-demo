@@ -14,9 +14,10 @@ The app is a working mobile-first web/PWA concept with:
 - automatic live-camera frame sampling after the user grants permission;
 - full-frame shelf recognition that asks for up to eight distinct readable SKUs in one pass, while repeated facings of one SKU remain grouped;
 - one recognition API for camera, saved images, a deterministic four-item shelf photo and a real checkout photo with three visually recognized packaged products;
-- a reproducible index of 19,076 Barbora Latvia product pages for package naming and retailer lookup;
-- a curated nutrition catalog of 40 protein snacks with a deterministic two-factor category badge based on protein and total sugar;
-- on-demand Sugar.no quick views for exact Barbora food pages that list energy, protein and total sugar, without preloading all 19,076 pages;
+- a reproducible active-food index generated from 9,707 non-adult products across Barbora Latvia's main grocery sections;
+- a checked-in broad nutrition snapshot of 7,433 exact products with source-backed energy, protein and total sugar (76.57% of the active-food index), plus the deployed counts in `/api/health`;
+- a curated nutrition catalog of 40 protein snacks used only as the deterministic category-percentile benchmark, not as the scanner's coverage ceiling;
+- on-demand Sugar.no quick views for exact products in the broad snapshot, with one live Barbora page read for current price and availability;
 - on-demand two-factor Sugar.no fits for exact Barbora foods when energy, protein and total sugar are available;
 - exact GTIN/EAN nutrition fallback through Open Food Facts, with strict variant and pack-size guards;
 - a dedicated `Scan nutrition label` recovery step that reads one clear per-100 table when no exact product record can supply a fit;
@@ -33,11 +34,11 @@ The app is a working mobile-first web/PWA concept with:
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
 - 19 authored iPhone-sized WebKit scenarios plus deterministic sample scenes, including the complete unknown-package-to-label-to-fit recovery path.
 
-The guaranteed shelf and checkout scenes work without third-party credentials. Live camera/upload recognition names readable packages even outside the scored snack catalog, then checks the curated catalog, an exact Barbora page and an exact Open Food Facts record. If none supplies both required factors, the result says `Needs nutrition label` and offers one functional camera action instead of ending at `Identified`. The app is deployed from GitHub `main` to Railway with a public HTTPS camera route. Production catalog/analytics storage still requires Supabase.
+The guaranteed shelf and checkout scenes work without third-party credentials. Live camera/upload recognition names readable packages, then checks the curated benchmark, the broad exact-Barbora nutrition snapshot and an exact Open Food Facts record. If none supplies both required factors, the result says `Needs nutrition label` and offers one functional camera action instead of ending at `Identified`. The app is deployed from GitHub `main` to Railway with a public HTTPS camera route. Production catalog/analytics storage still requires Supabase.
 
 ## Product rules
 
-Recognition and nutrition are separate trust levels. During the main scan Gemini may read a visible package identity, a clearly printed EAN/UPC and a clearly associated physical shelf-price label. Nutrition is then hydrated only from the curated catalog, a verified exact Barbora page or an exact Open Food Facts barcode/product record. If those sources fail, the user can deliberately scan the package's nutrition table: the model transcribes only one visible per-100 table, and the server rejects serving-only, low-confidence, implausible or OCR-inconsistent values. AI never fills missing nutrition, calculates a retailer price or invents a Sugar.no fit.
+Recognition and nutrition are separate trust levels. During the main scan Gemini may read a visible package identity, a clearly printed EAN/UPC and a clearly associated physical shelf-price label. Nutrition is then hydrated only from the curated benchmark, an exact product in the broad Barbora nutrition snapshot or an exact Open Food Facts barcode/product record. The local matcher requires compatible brand, rare variant words and pack or multipack size plus a clear runner-up margin; ambiguous candidates never receive a retailer link or fit. If those sources fail, the user can deliberately scan the package's nutrition table: the model transcribes only one visible per-100 table, and the server rejects serving-only, low-confidence, implausible or OCR-inconsistent values. AI never fills missing nutrition, calculates a retailer price or invents a Sugar.no fit.
 
 An unknown or data-poor product therefore remains named in the result, but its primary state is `Needs nutrition label`, with a 48 px `Scan nutrition label` action. A successful follow-up replaces only that pending identity with a complete source-labelled result while keeping the other products from the held shelf in the comparison; failure keeps the neutral state and asks for a clearer view rather than guessing. A complete two-factor result uses the `Great fit / Moderate fit / Low fit` presentation. A product with only protein or only total sugar remains neutral and never shows a misleading approval icon or overall fit. Fiber may remain in raw source records, but it is not displayed and never affects the rating. The expanded result summary does not repeat a fit legend or marker explanation; the fit stays attached to each product marker, ranked row and badge. The price appears directly under a recognized product only when Gemini reports a separate physical price label, confidence is at least 0.90 and the exact OCR text includes a matching EUR amount. A package number, deposit or online offer cannot create it. A possible retailer candidate is never linked or displayed as a comparison. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. The deal card then says `Cheaper at Barbora` and offers `Buy cheaper at Barbora`; because only one retailer is connected, it never claims `best price`.
 
@@ -110,7 +111,9 @@ npm run build
 npm run verify
 npm run catalog:sync
 npm run catalog:sync:barbora-index
+npm run catalog:sync:barbora-nutrition
 npm run catalog:validate
+npm run catalog:validate:barbora-coverage
 npm run benchmark:focus
 npm run benchmark:recognition -- --help
 npm run supabase:seed
@@ -130,15 +133,19 @@ The Playwright profile blocks service-worker registration so route-level recogni
 - `POST /api/recognize`: accepts a bounded image data URL or deterministic sample source. `mode: products` returns package identity, optional barcode, normalized boxes, optional camera-read shelf price and exact retailer state. `mode: nutrition-label` requires the selected package identity and may return a source-backed inline fit only from one trusted per-100 table. Both modes return `imageStored: false`.
 - `GET /api/products/:id`: returns curated nutrition, an on-demand exact-Barbora quick view or an exact Open Food Facts barcode record plus independent alternatives when available.
 - `POST /api/events`: stores bounded metadata only and rejects raw-image-like fields.
-- `GET /api/health`: Railway health check with commit metadata.
+- `GET /api/health`: Railway health check with commit metadata and the deployed active-food / automatic-fit catalog counts.
 
 ## Catalog
 
-`npm run catalog:sync` refreshes exactly 40 scored products from public Barbora Latvia pages. The existing `data/fiber-overrides.json` remains a raw-data compatibility source, but fiber is not used by the Sugar.no fit. `npm run catalog:sync:barbora-index` refreshes the product slugs published in Barbora's public sitemap; the current snapshot contains 19,076 pages. `npm run catalog:validate` checks both datasets, uniqueness, exact retailer links and nutrition completeness.
+`npm run catalog:sync` refreshes the 40-product protein-snack benchmark from public Barbora Latvia pages. The existing `data/fiber-overrides.json` remains a raw-data compatibility source, but fiber is not used by the Sugar.no fit. `npm run catalog:sync:barbora-index` refreshes the discovery slugs published in Barbora's public sitemap.
 
-The broad index intentionally stores no price or nutrition snapshot. After a package is read, the server fetches only the top candidate product pages, rejects candidates whose retailer brand conflicts with the observed package, parses the current public `window.product` payload and caches it for five minutes. The same exact page may produce a two-factor fit when it lists sufficient food nutrition. This keeps provenance and timestamp explicit without claiming inventory, affiliate status or cross-retailer best price.
+`npm run catalog:sync:barbora-nutrition` first enumerates current non-adult products from the main grocery sections, then resumes a rate-limited read of exact public product pages. It keeps only pages with energy, protein and total sugar and writes compact, timestamped `data/barbora-food-product-index.generated.json` and `data/barbora-nutrition-index.generated.json` artifacts. Temporary checkpoints are ignored by Git; an interrupted sync resumes without treating rate-limited pages as complete. `npm run catalog:validate:barbora-coverage` checks breadth, completeness, adult exclusion and duplicates. The generated snapshots are committed with the app so production startup and matching do not depend on crawling Barbora.
 
-The 19,076-entry sitemap includes non-food, alcohol and pages without nutrition, so it is not a 19,076-product nutrition database. EU labels usually give energy, protein and total sugar, which is why the prototype now limits the fit to protein and total sugar. No missing value is generated by AI.
+The current checked-in snapshot contains 9,707 active non-adult food SKUs, 7,433 of which have the three source fields required for an automatic two-factor fit: 76.57% catalog-data coverage across 817 brands and 276 retailer categories. This is source-data coverage, not measured visual-recognition accuracy. The curated 40-product set remains the protein-snack percentile cohort; broad products use the documented reference bands.
+
+After a package is read, matching happens locally against the broad nutrition snapshot. Brand, distinctive variant tokens, English/Latvian equivalents and pack size are weighted separately. Only a clear exact winner triggers one current Barbora product-page request for price/availability; ambiguous candidates fail closed and proceed to the strict Open Food Facts fallback. This keeps provenance and timestamp explicit without claiming inventory, affiliate status or cross-retailer best price.
+
+The sitemap includes non-food, alcohol, stale pages and pages without nutrition, so its raw count is never presented as rated-food coverage. The release reports the active-food denominator and complete automatic-fit numerator separately. EU labels usually give energy, protein and total sugar, which is why the prototype limits the fit to protein and total sugar. No missing value is generated by AI.
 
 Open Food Facts is a secondary public product source, not an accuracy promise. Barcode lookup is exact; text lookup is accepted only when brand, product/variant tokens and pack size agree. The server requires energy, protein and total sugars from the same returned record and caches the result for 30 minutes. See the official [Open Food Facts API documentation](https://openfoodfacts.github.io/documentation/docs/Product-Opener/api/) and [product-by-code endpoint](https://openfoodfacts.github.io/documentation/docs/Product-Opener/v3/products/get-api-v3-product-code/).
 

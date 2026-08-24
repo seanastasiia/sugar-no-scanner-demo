@@ -1,5 +1,9 @@
 import productSlugs from "../../data/barbora-product-index.generated.json";
 import type { RetailerOffer } from "@/lib/types";
+import {
+  listIndexedBarboraNutrition,
+  type BarboraNutritionIndexProduct
+} from "./barbora-nutrition-index";
 
 export interface BarboraLookupInput {
   brand: string;
@@ -39,6 +43,22 @@ const stopWords = new Set([
 ]);
 
 const synonymMap: Record<string, string[]> = {
+  mayonnaise: ["majoneze", "mayo"],
+  majoneze: ["mayonnaise", "mayo"],
+  mayo: ["mayonnaise", "majoneze"],
+  garlic: ["kiploku"],
+  kiploku: ["garlic"],
+  cheese: ["siera", "siers"],
+  siera: ["cheese", "siers"],
+  yogurt: ["jogurts", "yoghurt"],
+  yoghurt: ["jogurts", "yogurt"],
+  jogurts: ["yogurt", "yoghurt"],
+  milk: ["piens"],
+  piens: ["milk"],
+  classic: ["klasiska", "klasiskais"],
+  klasiska: ["classic", "klasiskais"],
+  original: ["originala", "originalais"],
+  originala: ["original", "originalais"],
   pesca: ["peach", "persiku"],
   peach: ["pesca", "persiku"],
   clementina: ["clementine", "klementinu"],
@@ -109,6 +129,125 @@ function lookupQuery(input: BarboraLookupInput): string {
   return [input.brand, input.name, input.variant, input.packSize, ...input.searchTerms].filter(Boolean).join(" ");
 }
 
+interface CanonicalQuantity {
+  amount: number;
+  dimension: "solid" | "liquid";
+  count: number;
+}
+
+function canonicalQuantity(value: string): CanonicalQuantity | null {
+  const normalized = value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replaceAll("×", "x")
+    .replaceAll(",", ".")
+    .replace(/[^a-z0-9.]+/g, " ")
+    .trim();
+  const multi = normalized.match(/(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*(kg|g|ml|cl|l)\b/);
+  const match = multi || normalized.match(/(\d+(?:\.\d+)?)\s*(kg|g|ml|cl|l)\b/);
+  if (!match) return null;
+  const count = multi ? Number.parseInt(match[1], 10) : 1;
+  const numeric = Number.parseFloat(match[multi ? 2 : 1]);
+  const unit = match[multi ? 3 : 2];
+  const factor = unit === "kg" || unit === "l" ? 1_000 : unit === "cl" ? 10 : 1;
+  return {
+    amount: count * numeric * factor,
+    dimension: unit === "ml" || unit === "cl" || unit === "l" ? "liquid" : "solid",
+    count
+  };
+}
+
+function expandedTokens(value: string): string[] {
+  return [
+    ...new Set(
+      tokens(value).flatMap((token) => [token, ...(synonymMap[token] || [])])
+    )
+  ];
+}
+
+function weightedCoverage(query: string[], candidate: Set<string>, frequencies: Map<string, number>, size: number): number {
+  if (!query.length) return 0;
+  let matched = 0;
+  let total = 0;
+  for (const token of query) {
+    const frequency = frequencies.get(token) || 0;
+    const weight = Math.max(1, Math.log((size + 1) / (frequency + 1)) + 1);
+    total += weight;
+    if (
+      candidate.has(token) ||
+      [...candidate].some((candidateToken) =>
+        token.length >= 5 && candidateToken.length >= 5
+          ? candidateToken.startsWith(token) || token.startsWith(candidateToken)
+          : false
+      )
+    ) {
+      matched += weight;
+    }
+  }
+  return total ? matched / total : 0;
+}
+
+interface PreparedBarboraIndex {
+  candidateTokens: string[][];
+  frequencies: Map<string, number>;
+}
+
+const preparedIndexes = new WeakMap<BarboraNutritionIndexProduct[], PreparedBarboraIndex>();
+
+function prepareBarboraIndex(products: BarboraNutritionIndexProduct[]): PreparedBarboraIndex {
+  const cached = preparedIndexes.get(products);
+  if (cached) return cached;
+  const candidateTokens = products.map((product) => {
+    const candidateBrandTokens = new Set(expandedTokens(product.brand));
+    return expandedTokens(`${product.title} ${product.slug.replaceAll("-", " ")}`)
+      .filter((token) => !candidateBrandTokens.has(token) && !/^\d+$/.test(token));
+  });
+  const frequencies = new Map<string, number>();
+  candidateTokens.forEach((candidate) => {
+    new Set(candidate).forEach((token) => frequencies.set(token, (frequencies.get(token) || 0) + 1));
+  });
+  const prepared = { candidateTokens, frequencies };
+  preparedIndexes.set(products, prepared);
+  return prepared;
+}
+
+export function rankIndexedBarboraCandidates(
+  input: BarboraLookupInput,
+  products: BarboraNutritionIndexProduct[] = listIndexedBarboraNutrition(),
+  limit = 5
+): RankedBarboraCandidate[] {
+  const observedBrand = normalizeRetailText(input.brand);
+  if (observedBrand.replaceAll(" ", "").length < 3) return [];
+  const brandTokens = new Set(expandedTokens(input.brand));
+  const queryTokens = expandedTokens([input.name, input.variant, ...input.searchTerms].filter(Boolean).join(" "))
+    .filter((token) => !brandTokens.has(token) && !/^\d+$/.test(token));
+  const observedQuantity = canonicalQuantity([input.packSize, input.name].filter(Boolean).join(" "));
+  const { candidateTokens, frequencies } = prepareBarboraIndex(products);
+
+  return products
+    .flatMap((product, index): RankedBarboraCandidate[] => {
+      if (!retailerBrandMatches(input.brand, product.brand)) return [];
+      const candidateQuantity = canonicalQuantity(`${product.packSize} ${product.title}`);
+      if (observedQuantity && candidateQuantity) {
+        if (observedQuantity.dimension !== candidateQuantity.dimension) return [];
+        if ((observedQuantity.count > 1) !== (candidateQuantity.count > 1)) return [];
+        const difference = Math.abs(observedQuantity.amount - candidateQuantity.amount) /
+          Math.max(observedQuantity.amount, candidateQuantity.amount);
+        if (difference > 0.06) return [];
+      }
+      const candidate = new Set(candidateTokens[index]);
+      const nameCoverage = weightedCoverage(queryTokens, candidate, frequencies, products.length);
+      const reverseTokens = [...candidate].filter((token) => (frequencies.get(token) || 0) < products.length * 0.08);
+      const reverseCoverage = weightedCoverage(reverseTokens, new Set(queryTokens), frequencies, products.length);
+      const packBonus = observedQuantity && candidateQuantity ? 0.08 : 0;
+      const score = Math.min(1, 0.24 + nameCoverage * 0.58 + reverseCoverage * 0.1 + packBonus);
+      return score >= 0.52 ? [{ slug: product.slug, score }] : [];
+    })
+    .sort((left, right) => right.score - left.score || left.slug.localeCompare(right.slug))
+    .slice(0, limit);
+}
+
 export function rankBarboraCandidates(
   input: BarboraLookupInput,
   slugs: string[] = productSlugs as string[],
@@ -170,7 +309,10 @@ export function parseBarboraProductPage(html: string): BarboraPageProduct {
 }
 
 const productPageCache = new Map<string, { expiresAt: number; product: BarboraPageProduct }>();
-const knownProductSlugs = new Set(productSlugs as string[]);
+const knownProductSlugs = new Set([
+  ...(productSlugs as string[]),
+  ...listIndexedBarboraNutrition().map((product) => product.slug)
+]);
 
 export async function getBarboraProductBySlug(slug: string): Promise<BarboraPageProduct | null> {
   if (!knownProductSlugs.has(slug)) return null;
@@ -222,15 +364,12 @@ export async function getBarboraOfferBySlug(slug: string, input: BarboraLookupIn
 }
 
 export async function resolveBarboraOffer(input: BarboraLookupInput): Promise<RetailerOffer | null> {
-  const candidates = rankBarboraCandidates(input, productSlugs as string[], 3);
-  const offers = (await Promise.all(candidates.map((candidate) => fetchOffer(candidate.slug, input, candidate.score)))).filter(
-    (offer): offer is RetailerOffer => Boolean(offer)
-  );
-  const ranked = offers.sort((left, right) => right.matchConfidence - left.matchConfidence);
-  const best = ranked[0];
-  if (!best || best.matchConfidence < 0.45) return null;
-  return {
-    ...best,
-    exactSku: isExactBarboraMatch(best.matchConfidence, ranked[1]?.matchConfidence || 0)
-  };
+  const indexedCandidates = rankIndexedBarboraCandidates(input);
+  const best = indexedCandidates[0];
+  if (!best || !isExactBarboraMatch(best.score, indexedCandidates[1]?.score || 0)) return null;
+  // The local index already contains the full title, brand, pack and nutrition
+  // evidence. Only an exact text match earns one live page read for current
+  // price/availability; ambiguous candidates never trigger speculative network
+  // fetches or retailer links.
+  return getBarboraOfferBySlug(best.slug, input);
 }

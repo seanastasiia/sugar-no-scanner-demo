@@ -2,6 +2,7 @@ import { getCatalog, getProductWithAlternatives } from "@/lib/catalog";
 import { scoreCatalog } from "@/lib/scoring";
 import type { ProductRecord, ScoredProduct } from "@/lib/types";
 import { getRatedBarboraProduct } from "./barbora-product-rating";
+import { getIndexedBarboraProductWithAlternatives } from "./barbora-nutrition-index";
 import { getOpenFoodFactsProductByBarcode } from "./open-food-facts";
 import { getSupabaseAdmin } from "./supabase";
 
@@ -82,6 +83,8 @@ export async function productWithAlternatives(id: string) {
   }
   if (id.startsWith("barbora:")) {
     try {
+      const indexed = getIndexedBarboraProductWithAlternatives(id.slice("barbora:".length));
+      if (indexed) return indexed;
       const product = await getRatedBarboraProduct(id.slice("barbora:".length));
       return product ? { product, alternatives: [] } : null;
     } catch {

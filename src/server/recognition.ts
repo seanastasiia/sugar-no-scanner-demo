@@ -322,7 +322,11 @@ function genericProductId(brand: string, name: string, variant: string): string 
 }
 
 function extractPackSize(value: string): string {
-  return value.match(/\b\d+(?:[.,]\d+)?\s*(?:kg|g|ml|l|cl|pcs?|gab)\b/i)?.[0] || "";
+  return (
+    value.match(/\b\d+\s*[x×]\s*\d+(?:[.,]\d+)?\s*(?:kg|g|ml|l|cl|pcs?|gab)\b/i)?.[0] ||
+    value.match(/\b\d+(?:[.,]\d+)?\s*(?:kg|g|ml|l|cl|pcs?|gab)\b/i)?.[0] ||
+    ""
+  );
 }
 
 export function recognitionInstruction(focusMode: boolean): string {
@@ -336,7 +340,8 @@ export function recognitionInstruction(focusMode: boolean): string {
 
   return (
     scope +
-    `Read the front label and return the exact visible brand plus one productName containing the product, variant or flavor and pack size. ` +
+    `Read the front label and preserve every clearly visible distinguishing word in productName: exact brand, product type, variant or flavor, ` +
+    `and exact pack size or multipack count. Do not omit a readable size and do not guess one that is not visible. ` +
     `searchQuery should repeat the identity using useful English or Latvian equivalents of foreign flavor words for retailer matching. ` +
     `If a complete EAN-8, EAN-13 or UPC barcode number is clearly readable, return only its digits in barcode; otherwise return an empty string. ` +
     `Only when a separate physical shelf price label outside the package is clearly visible and associated with that exact package, ` +
@@ -409,13 +414,17 @@ export async function resolveVisibleDetections(
       packSize,
       searchTerms: [detection.searchQuery]
     };
-    const [retailerOffer, openFoodFactsCandidate] = initialCatalogMatch
-      ? [await dependencies.getOfferBySlug(initialCatalogMatch.product.id, lookupInput).catch(() => null), null]
-      : await Promise.all([
-          dependencies.resolveOffer(lookupInput).catch(() => null),
-          dependencies.resolveOpenFoodFacts(lookupInput, detection.barcode).catch(() => null)
-        ]);
+    const retailerOffer = initialCatalogMatch
+      ? await dependencies.getOfferBySlug(initialCatalogMatch.product.id, lookupInput).catch(() => null)
+      : await dependencies.resolveOffer(lookupInput).catch(() => null);
     const exactRetailerOffer = retailerOffer?.exactSku ? retailerOffer : null;
+    // Barbora is the Latvia-primary source and its broad local index is free to
+    // query. Use Open Food Facts only after that exact-SKU path fails so a shelf
+    // does not spend the community search API's strict per-IP request budget on
+    // products that are already resolved locally.
+    const openFoodFactsCandidate = initialCatalogMatch || exactRetailerOffer
+      ? null
+      : await dependencies.resolveOpenFoodFacts(lookupInput, detection.barcode).catch(() => null);
     const knownProduct =
       initialCatalogMatch?.product ||
       (exactRetailerOffer ? catalog.find((product) => product.id === exactRetailerOffer.slug) || null : null);

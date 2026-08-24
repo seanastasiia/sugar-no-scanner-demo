@@ -268,4 +268,43 @@ describe("resolveVisibleDetections", () => {
       identity: { matchKind: "open_food_facts" }
     });
   });
+
+  it("promotes an exact broad Barbora nutrition match outside the 40-product catalog", async () => {
+    let openFoodFactsAttempts = 0;
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, { brand: "SPILVA", productName: "Siera majonēze 250 g" })],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => ({
+          retailer: "Barbora",
+          slug: "majoneze-siera-spilva-250-g",
+          title: "Majonēze SPILVA ar siera garšu 250g",
+          brand: "SPILVA",
+          url: "https://barbora.lv/produkti/majoneze-siera-spilva-250-g",
+          price: 1.69,
+          currency: "EUR",
+          unitPrice: 6.76,
+          unit: "kg",
+          imageUrl: null,
+          checkedAt: "2026-08-25T00:00:00.000Z",
+          matchConfidence: 0.94,
+          exactSku: true
+        }),
+        resolveOpenFoodFacts: async () => {
+          openFoodFactsAttempts += 1;
+          return null;
+        }
+      }
+    );
+
+    expect(detections[0]).toMatchObject({
+      productId: "barbora:majoneze-siera-spilva-250-g",
+      catalogProductId: null,
+      nutritionLinkConfidence: 0.94,
+      identity: { matchKind: "barbora" },
+      retailerOffer: { exactSku: true }
+    });
+    expect(openFoodFactsAttempts).toBe(0);
+  });
 });

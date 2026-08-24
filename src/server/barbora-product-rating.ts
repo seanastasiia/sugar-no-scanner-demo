@@ -6,6 +6,10 @@ import {
   type BarboraNutrient,
   type BarboraPageProduct
 } from "./barbora-catalog";
+import {
+  getIndexedBarboraNutrition,
+  indexedBarboraProductToScoredProduct
+} from "./barbora-nutrition-index";
 
 function nutrientAmount(
   nutrients: BarboraNutrient[] | undefined,
@@ -124,6 +128,8 @@ export function barboraPageToScoredProduct(
 }
 
 export async function getRatedBarboraProduct(slug: string): Promise<ScoredProduct | null> {
+  const indexed = getIndexedBarboraNutrition(slug);
+  if (indexed) return indexedBarboraProductToScoredProduct(indexed);
   const product = await getBarboraProductBySlug(slug);
   return product ? barboraPageToScoredProduct(product) : null;
 }

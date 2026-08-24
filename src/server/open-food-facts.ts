@@ -228,7 +228,7 @@ async function searchProducts(input: BarboraLookupInput): Promise<OpenFoodFactsP
     headers: { "content-type": "application/json", "user-agent": USER_AGENT },
     body: JSON.stringify({
       q: query,
-      page_size: 10,
+      page_size: 30,
       fields: [
         "code",
         "product_name",

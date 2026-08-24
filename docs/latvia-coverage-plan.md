@@ -1,6 +1,6 @@
 # Latvia product coverage plan
 
-Checked: 2026-08-21
+Checked: 2026-08-25
 
 ## Two different coverage metrics
 
@@ -9,11 +9,14 @@ Checked: 2026-08-21
 Current proof-of-concept state:
 
 - Gemini can name readable packages outside the curated catalog.
-- 19,076 Barbora Latvia product-page slugs are indexed for retailer discovery.
-- 40 protein-snack records contain sourced protein and total sugar.
-- all 40 receive the two-factor Sugar.no fit because both protein and total sugar are sourced.
-- exact Barbora food pages with listed energy, protein and total sugar can receive the same runtime two-factor fit; fiber is not a rating input.
+- the broad sitemap remains a discovery list, while a separate active non-adult food index is generated from Barbora's main grocery sections.
+- a reproducible snapshot stores exact title, brand, category, pack size, image and source-backed energy, protein and total sugar for every eligible active food page; `/api/health` reports both the food-index denominator and automatic-fit count for the deployed commit.
+- the checked-in 2026-08-25 snapshot contains 9,707 active non-adult food SKUs and 7,433 complete automatic-fit records: 76.57% source-data coverage across 817 brands and 276 retailer categories.
+- 40 protein-snack records remain as the deterministic category-percentile benchmark, not the Latvia coverage ceiling.
+- exact products in the broad snapshot receive a runtime two-factor reference fit; fiber is not a rating input.
 - records without enough nutrition and non-food pages remain unrated; a food package can recover through one explicit scan of its printed per-100 nutrition table.
+
+The pre-expansion public smoke found 20 distinct package identities across five Latvia scenes but only 5 automatic ratings. On the two close mayonnaise shelves, 4 of 12 identities were rated. The other three scenes include alcohol, cleaning products and distant checkout views, so the 25% aggregate is a release smoke baseline rather than a grocery accuracy estimate.
 
 ## External data check
 
@@ -37,7 +40,7 @@ Official references:
 ## Recommended coverage pipeline
 
 1. **Run barcode and visual recognition together.** EAN-13/EAN-8 gives the strongest exact-SKU key when a barcode is visible. Native `BarcodeDetector` cannot be the only web implementation because browser support is limited; use a tested EAN-capable WebAssembly/JavaScript fallback on iPhone Safari.
-2. **Resolve the SKU through a source ladder.** Query a reviewed Sugar.no/Supabase record first, then check an exact Barbora page and an exact or strict separately attributed Open Food Facts record. If neither resolves, retain the visual identity as `Needs nutrition label`. Never let Gemini fill missing nutrition.
+2. **Resolve the SKU through a source ladder.** Query a reviewed Sugar.no/Supabase record first, then the local broad Barbora nutrition snapshot, and only then an exact or strict separately attributed Open Food Facts record. The Barbora matcher uses brand, rare variant tokens, multilingual equivalents and exact pack or multipack size; a clear winner earns one live page read for current price. If no source resolves, retain the visual identity as `Needs nutrition label`. Never let Gemini fill missing nutrition.
 3. **Read sourced nutrition on demand.** Exact Barbora and Open Food Facts records can produce the two-factor reference view from energy, protein and total sugars. As the final recovery, the user may scan one printed per-100 nutrition table; that read is accepted only with matching OCR evidence. Fiber may remain in a raw record when a source supplies it, but it does not affect the fit.
 4. **Add a label fallback.** If the SKU is known but a required nutrient is missing, ask the user to show the nutrition table. AI may transcribe the label into a review screen, but the rating becomes verified only after source validation. Raw images remain unsaved.
 5. **Compare inside a category.** A yogurt, cola and protein bar must not share one percentile population. Store a reviewed category and calculate protein and inverse total sugar against that category's current sourced distribution.
@@ -46,7 +49,7 @@ Official references:
 
 ## Realistic proof target
 
-Do not promise “almost every Latvian product” yet. For the next validation, choose 200 products from real Rimi, Maxima and Barbora shelves across 8–10 categories and measure:
+Do not promise “almost every Latvian product” yet. The broad snapshot materially increases automatic-fit candidates, but Rimi/Lidl/Stockmann private labels, products absent from Barbora, unreadable variants and pages without complete nutrition can still require barcode or label recovery. For the next validation, choose 200 products from real Rimi, Maxima and Barbora shelves across 8–10 categories and measure:
 
 - exact identity top-1 accuracy;
 - percentage with a complete protein-and-sugar rating;

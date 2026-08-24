@@ -19,7 +19,9 @@
     "verify": "npm run lint && npm run typecheck && npm test && npm run build",
     "catalog:sync": "tsx scripts/sync-barbora.ts",
     "catalog:sync:barbora-index": "tsx scripts/sync-barbora-index.ts",
+    "catalog:sync:barbora-nutrition": "tsx scripts/sync-barbora-nutrition-index.ts",
     "catalog:validate": "tsx scripts/validate-catalog.ts",
+    "catalog:validate:barbora-coverage": "tsx scripts/validate-barbora-coverage.ts",
     "benchmark:focus": "tsx scripts/benchmark-focus.ts",
     "benchmark:recognition": "node --import tsx scripts/benchmark-recognition.ts",
     "supabase:seed": "tsx scripts/seed-supabase.ts"
