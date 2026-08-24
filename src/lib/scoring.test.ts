@@ -270,6 +270,24 @@ describe("compareFairCohorts", () => {
     });
     expect(compareFairCohorts([low, sugarFiber]).cohorts).toEqual([]);
   });
+
+  it("ignores an identity-only product with missing rating metadata", () => {
+    const identityOnly = {
+      ...comparable("identity", "protein bar", "100g", "barbora_reference_partial", {
+        protein: null,
+        fiber: null,
+        inverseSugar: null
+      }),
+      ratingBasis: null as unknown as ScoredProduct["ratingBasis"],
+      ratingStatus: "identity_only" as const,
+      ratingSignalCount: 0,
+      ratingSignalMask: [],
+      criterionScores: null
+    };
+
+    expect(() => compareFairCohorts([high, identityOnly])).not.toThrow();
+    expect(compareFairCohorts([high, identityOnly])).toEqual({ cohorts: [], winnerIds: [] });
+  });
 });
 
 describe("rankSimilarProducts", () => {
