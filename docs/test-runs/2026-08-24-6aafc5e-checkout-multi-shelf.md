@@ -39,3 +39,13 @@ The new WebKit scenario returns three different curated products from one broad 
 4. Show several facings of one SKU and confirm they still count as one unique product.
 
 The deterministic checkout fixture proves the interaction only. Physical-shelf recall and real checkout-belt accuracy remain unmeasured until an in-store benchmark is recorded.
+
+## Production smoke
+
+- Railway deployment `64002a26-88b4-469e-9ad7-595cdb993597`: `SUCCESS`.
+- `GET /api/health`: `status=ok`, commit `7cc9e91c924af536446c614633a8d66a1e6e1d4e`.
+- Protected checkout asset: authenticated request returned the expected 941 x 1671 JPEG.
+- Authenticated deterministic checkout recognition: `matched`, four detections, `imageStored=false`.
+- Authenticated real `gemini-3.7-flash` upload of the shelf concept image: `matched`, eight returned detections, 5,012 ms, `imageStored=false`.
+
+The eight-result production call confirms that the broad model path can return several products from one complete shelf frame. Because the image is still a concept fixture, this is implementation evidence rather than a physical-store recall benchmark.
