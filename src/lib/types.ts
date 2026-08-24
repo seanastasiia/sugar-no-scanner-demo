@@ -8,7 +8,7 @@ export type RatingBasis =
   | "barbora_reference"
   | "barbora_reference_partial";
 
-export type RatingSignal = "protein" | "fiber" | "inverseSugar";
+export type RatingSignal = "protein" | "inverseSugar";
 
 export type RatingStatus = "complete" | "partial_overall" | "limited_signal" | "identity_only";
 
@@ -59,7 +59,6 @@ export interface ScoredProduct extends ProductRecord {
   ratingSignalMask: RatingSignal[];
   criterionScores: {
     protein: number | null;
-    fiber: number | null;
     inverseSugar: number | null;
   } | null;
 }
