@@ -32,7 +32,6 @@ import {
   matchCriteria,
   matchToneLabel,
   overlayMatchPresentation,
-  partialNutritionExplanation,
   type MatchTone,
   type SignalCompleteness
 } from "@/lib/match-presentation";
@@ -1037,7 +1036,7 @@ export function ScannerApp() {
                           <span className={styles.toneLower}><ArrowDown aria-hidden="true" size={13} /> {matchToneLabel("lower")}</span>
                         </div>
                         <p className={styles.markerScopeNote}>
-                          Solid outlines use all 3 signals; dashed outlines show a partial fit.
+                          Outlines show products with both protein and total sugar available.
                           {unratedDetectionCount > 0 ? ` ${unratedDetectionCount} identified package${unratedDetectionCount === 1 ? "" : "s"} remain available in the results without a camera marker.` : ""}
                         </p>
                       </>
@@ -1234,7 +1233,7 @@ function ProductResult({
           <Info aria-hidden="true" size={18} />
           <span>
             <strong>Identified, not rated</strong>
-            This product does not have a source-backed protein, fiber or sugar signal yet. Missing values are not invented.
+            This product does not have source-backed protein or total sugar data yet. Missing values are not invented.
           </span>
         </div>
       ) : null}
@@ -1243,18 +1242,8 @@ function ProductResult({
         <div className={styles.pendingData}>
           <ScanLine aria-hidden="true" size={18} />
           <span>
-            <strong>Limited view · 1 of 3 signals</strong>
+            <strong>Limited view · 1 of 2 signals</strong>
             Sugar.no shows the verified signal, but does not turn one nutrient into an overall fit.
-          </span>
-        </div>
-      ) : null}
-
-      {product.matchReason === "partial_nutrition" ? (
-        <div className={styles.pendingData}>
-          <Info aria-hidden="true" size={18} />
-          <span>
-            <strong>Quick view · 2 of 3 signals</strong>
-            {partialNutritionExplanation(product.ratingSignalMask)}
           </span>
         </div>
       ) : null}
@@ -1467,7 +1456,6 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
   const criteria = matchCriteria(product);
   const values = {
     protein: product.nutrientsPer100g.proteinG,
-    fiber: product.nutrientsPer100g.fiberG,
     sugar: product.nutrientsPer100g.totalSugarG
   };
   return (
@@ -1476,11 +1464,7 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
         <div>
           <small>{product.ratingBasis.startsWith("catalog_") ? "Sugar.no badge" : "Exact Barbora nutrition"}</small>
           <strong>
-            {product.ratingStatus === "complete"
-              ? "Sugar.no fit"
-              : product.ratingStatus === "partial_overall"
-                ? "Sugar.no quick view · 2/3"
-                : "Sugar.no limited view · 1/3"}
+            {product.ratingStatus === "complete" ? "Sugar.no fit" : "Sugar.no limited view · 1/2"}
           </strong>
         </div>
         <span className={toneClass(presentation.tone)}>{presentation.label}</span>
@@ -1498,7 +1482,7 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
       <p className={styles.perHundred}>
         {product.ratingBasis === "catalog_percentile" && product.ratingStatus === "complete"
           ? "Values per 100 g · Compared with protein snacks in this demo"
-          : `Values per ${product.nutritionBasis === "100ml" ? "100 ml" : "100 g"} · ${product.ratingSignalCount} of 3 source-backed signals`}
+          : `Values per ${product.nutritionBasis === "100ml" ? "100 ml" : "100 g"} · ${product.ratingSignalCount} of 2 source-backed signals`}
       </p>
     </section>
   );
@@ -1509,7 +1493,7 @@ function MatchPill({ product }: { product: ScoredProduct }) {
   return (
     <em className={`${styles.matchPill} ${toneClass(presentation.tone)}`}>
       {presentation.label}
-      {product.ratingSignalCount > 0 && product.ratingSignalCount < 3 ? ` · ${product.ratingSignalCount}/3` : ""}
+      {product.ratingSignalCount > 0 && product.ratingSignalCount < 2 ? ` · ${product.ratingSignalCount}/2` : ""}
     </em>
   );
 }
