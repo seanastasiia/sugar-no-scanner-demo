@@ -1,0 +1,91 @@
+name: Latvia public shelf benchmark
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: latvia-public-shelf-benchmark
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Verify source, tests and production build
+        run: npm run verify
+
+      - name: Install Mobile Safari engine
+        run: npx playwright install --with-deps webkit
+
+      - name: Run Mobile Safari acceptance suite
+        run: CI=1 npm run test:e2e
+
+      - name: Download public Latvia shelf and checkout references
+        shell: bash
+        run: |
+          set -euo pipefail
+          bench_dir="${RUNNER_TEMP}/sugar-no-latvia-public-benchmark"
+          mkdir -p "${bench_dir}"
+
+          curl --fail --location --retry 3 --silent --show-error \
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/16-08-30-Mayonnaise-Supermarkt-Riga-RR2_3843.jpg/1280px-16-08-30-Mayonnaise-Supermarkt-Riga-RR2_3843.jpg' \
+            --output "${bench_dir}/riga-mayonnaise-3843.jpg"
+          curl --fail --location --retry 3 --silent --show-error \
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/16-08-30-Mayonnaise-Supermarkt-Riga-RR2_3846.jpg/1280px-16-08-30-Mayonnaise-Supermarkt-Riga-RR2_3846.jpg' \
+            --output "${bench_dir}/riga-mayonnaise-3846.jpg"
+          curl --fail --location --retry 3 --silent --show-error \
+            'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Interiors_of_Rimi_supermarket_in_Bauska_01.jpg/960px-Interiors_of_Rimi_supermarket_in_Bauska_01.jpg' \
+            --output "${bench_dir}/rimi-bauska-interior.jpg"
+          curl --fail --location --retry 3 --silent --show-error \
+            'https://static.lsm.lv/media/2023/03/large/1/kitc.jpg' \
+            --output "${bench_dir}/latvia-checkout-lsm.jpg"
+          curl --fail --location --retry 3 --silent --show-error \
+            'https://rimibaltic-web-res.cloudinary.com/image/upload/v1/web-cms/PgOYkgyRWOfEfEUjg2mVeJ6Qkk8BzqUnY74v8BaI.jpg' \
+            --output "${bench_dir}/rimi-skanste-checkout.jpg"
+
+          printf '%s\n' \
+            '{"cases":[' \
+            "{\"id\":\"riga-mayonnaise-3843\",\"imagePath\":\"${bench_dir}/riga-mayonnaise-3843.jpg\"}," \
+            "{\"id\":\"riga-mayonnaise-3846\",\"imagePath\":\"${bench_dir}/riga-mayonnaise-3846.jpg\"}," \
+            "{\"id\":\"rimi-bauska-interior\",\"imagePath\":\"${bench_dir}/rimi-bauska-interior.jpg\"}," \
+            "{\"id\":\"latvia-checkout-lsm\",\"imagePath\":\"${bench_dir}/latvia-checkout-lsm.jpg\"}," \
+            "{\"id\":\"rimi-skanste-checkout\",\"imagePath\":\"${bench_dir}/rimi-skanste-checkout.jpg\"}" \
+            ']}' > "${bench_dir}/manifest.json"
+
+          echo "BENCH_DIR=${bench_dir}" >> "${GITHUB_ENV}"
+
+      - name: Run deployed recognition benchmark
+        run: |
+          npm run benchmark:recognition -- \
+            --endpoint https://sugar-no-scanner-demo-production.up.railway.app/api/recognize \
+            --manifest "${BENCH_DIR}/manifest.json" \
+            --output "${RUNNER_TEMP}/latvia-public-shelf-benchmark.json"
+
+      - name: Print metadata-only evidence
+        if: always()
+        run: |
+          if [[ -f "${RUNNER_TEMP}/latvia-public-shelf-benchmark.json" ]]; then
+            cat "${RUNNER_TEMP}/latvia-public-shelf-benchmark.json"
+          fi
+
+      - name: Upload metadata-only report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: latvia-public-shelf-benchmark
+          path: ${{ runner.temp }}/latvia-public-shelf-benchmark.json
+          if-no-files-found: warn
+          retention-days: 14
