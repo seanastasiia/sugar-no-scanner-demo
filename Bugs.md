@@ -12,6 +12,7 @@ This file is the running record of scanner defects found and resolved.
 
 ## Resolved
 
+- **2026-08-24: price comparison was hidden too deep and generic source disclosures cluttered the investor flow.** A trusted camera price now appears beneath the recognized product in the compact sheet and tray. For a cheaper exact Barbora SKU, the shelf price is crossed out and the result says `Cheaper at Barbora` with a `Buy cheaper at Barbora` action. The visible `Data sources and limits` and `How this result was made` accordions were removed; the underlying confidence, exact-SKU and no-invention safeguards remain enforced in code and documented internally.
 - **2026-08-21: save controls competed with the core scan and comparison flow.** Product, checkout and Similar options save buttons, the local saved list and its toast were removed. Recognition, comparison and exact retailer actions are unchanged.
 - **2026-08-21: scanner fit labels differed from the main Sugar.no product.** All current markers, pills, legends, cards and accessibility labels now use the shared `Great fit`, `Moderate fit` and `Low fit` taxonomy from one presentation source; score thresholds and colors are unchanged.
 - **2026-08-21: the persistent `Private demo` header badge competed with the camera.** The scanner header now shows only the Sugar.no wordmark; the access-code gate and privacy protections are unchanged.

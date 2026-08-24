@@ -56,6 +56,7 @@ test("sample shelf photo highlights products and shows a three-signal Sugar.no b
   await expect(page.getByLabel("Shelf marker legend").getByText("Low fit", { exact: true })).toBeVisible();
   await expect(page.getByText("Values per 100 g · Compared with protein snacks in this demo")).toBeVisible();
   await expect(page.getByText(/Sugar\.no Match \d+/)).toHaveCount(0);
+  await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
   const retailer = page.getByRole("link", { name: /View at Barbora/ });
   await expect(retailer).toHaveAttribute("href", /^https:\/\/barbora\.lv\/produkti\//);
   await expect(page.getByText(/\b(good|bad|unhealthy)\b/i)).toHaveCount(0);
@@ -373,20 +374,26 @@ test("a product outside the scored catalog is named and receives an honest price
     )
   });
   await expect(page.getByRole("status")).toContainText("1 unique product recognized");
+  await expect(
+    page.getByLabel("Product result preview").getByLabel("Shelf price €1.69, Barbora €0.99, cheaper at Barbora")
+  ).toBeVisible();
   await page.getByRole("button", { name: "Open product results", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Zero Peach.*Pesca & Clementina.*330 ml/ })).toBeVisible();
   await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open Sugar.no-rated"]')).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await expect(page.getByText("No Sugar.no rating in this scan.")).toBeVisible();
   const comparison = page.getByLabel("Price comparison");
-  await expect(comparison.getByText("Cheaper online")).toBeVisible();
-  await expect(comparison.getByText("Save €0.70")).toBeVisible();
+  await expect(comparison.getByText("Cheaper at Barbora", { exact: true })).toBeVisible();
+  await expect(comparison.getByText("€0.70 less")).toBeVisible();
   await expect(comparison.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "line-through");
-  await expect(comparison.getByRole("link", { name: /View at Barbora · €0.99/ })).toHaveAttribute(
+  await expect(comparison.getByRole("link", { name: /Buy cheaper at Barbora · €0.99/ })).toHaveAttribute(
     "href",
     "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
   );
   await expect(page.getByText(/no health or Match score is invented/i)).toBeVisible();
+  await expect(page.getByText("How this result was made", { exact: true })).toHaveCount(0);
+  await comparison.scrollIntoViewIfNeeded();
+  await comparison.screenshot({ path: "docs/screenshots/price-comparison-mobile.png" });
 
   exactSku = false;
   await page.getByRole("button", { name: "Return to camera" }).click();
@@ -403,7 +410,7 @@ test("a product outside the scored catalog is named and receives an honest price
   await expect(comparison.getByText("Shelf price", { exact: true })).toBeVisible();
   await expect(comparison.getByText("Possible Barbora match")).toHaveCount(0);
   await expect(comparison.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "none");
-  await expect(comparison.getByText("Cheaper online")).toHaveCount(0);
+  await expect(comparison.getByText("Cheaper at Barbora", { exact: true })).toHaveCount(0);
   await expect(comparison.getByRole("link")).toHaveCount(0);
 
   exactSku = true;
@@ -420,6 +427,7 @@ test("a product outside the scored catalog is named and receives an honest price
   });
   await page.getByRole("button", { name: "Open product results", exact: true }).click();
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
+  await expect(page.getByLabel(/Shelf price €/)).toHaveCount(0);
   await expect(page.getByText(/Keep the package and its shelf label/)).toHaveCount(0);
 });
 
@@ -526,6 +534,7 @@ test("an exact Barbora food gets an on-demand two-signal Sugar.no quick view", a
   await expect(page.getByText("Values per 100 g · 2 of 3 source-backed signals", { exact: true })).toBeVisible();
   await expect(page.getByText("Quick view · 2 of 3 signals", { exact: true })).toBeVisible();
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
   await page.screenshot({ path: "docs/screenshots/barbora-quick-view-mobile.png" });
   const accessibility = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])

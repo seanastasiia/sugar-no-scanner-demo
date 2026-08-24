@@ -27,7 +27,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 8. Put several identical facings of one SKU in the frame. Confirm the status and tray count them as one unique product, not one product per package.
 9. After a successful live scan, move the phone. Confirm the captured frame and result stay fixed while being read. Tap `Scan again`, show a different product and confirm the old result is replaced rather than accumulated.
 10. With no physical shelf label in the frame, confirm no `Price check` card, retailer price or price prompt appears.
-11. Include the product and one clearly associated shelf label in the same frame. Confirm the camera price appears. If an exact Barbora match is cheaper, confirm only the shelf price is crossed out and the current online price plus check time are shown.
+11. Include the product and one clearly associated shelf label in the same frame. Confirm the camera price appears directly beneath the recognized product in the compact sheet and product tray. If an exact Barbora match is cheaper, confirm only the shelf price is crossed out, the current online price plus check time are shown and the action says `Buy cheaper at Barbora`.
 12. Repeat with a non-exact retailer candidate. Confirm only the shelf price remains and there is no retailer link. A Coca-Cola result must never open Pepsi.
 13. Confirm `Great fit / Moderate fit / Low fit` markers appear only for products with a numeric full badge or quick view. A visual-only Coca-Cola or Activia result should have no camera marker and should say that it was identified but not highlighted.
 14. Repeat with an ambiguous label or multiple nearby prices. Confirm Sugar.no hides the shelf price instead of guessing.
@@ -39,7 +39,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 1. Choose `Use a saved shelf or checkout photo` and select a large phone photo.
 2. Confirm it is resized on-device and either returns a readable package identity or an honest uncertainty state.
 3. In Supabase, inspect `scan_events` for the session. Confirm it contains metadata only: no image, base64, URL to an uploaded frame or full user-agent.
-4. Confirm source links and dates are visible under `Data sources and limits`.
+4. Confirm the product result contains no visible `Data sources and limits` or `How this result was made` accordion; source verification remains an internal data and QA responsibility.
 
 ## Product decision questions
 

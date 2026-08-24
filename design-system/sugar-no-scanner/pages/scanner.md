@@ -23,9 +23,11 @@ This page overrides `../MASTER.md` for the live camera, sample shelf and sample 
 - Pull the cream results sheet over the lower edge of the scene with a visible drag handle.
 - First show product count, marker legend and a horizontally scrollable product tray.
 - The selected result contains brand/name and a `Sugar.no badge` with three criteria: Protein, Fiber and Sugar. It has no save control.
+- When a trusted physical shelf label is associated with a product, show its price directly beneath that product in the compact preview, tray and expanded result. Cross it out only when an exact current Barbora offer is lower, then use the explicit `Cheaper at Barbora` label and `Buy cheaper at Barbora` action.
 - Each criterion includes actual value per 100 g, direction text and color support.
 - `Similar options` is a horizontally scrollable row of compact cards. Retailer CTA remains secondary.
 - Checkout uses the same comparison pattern as Shelf and does not ask the user to undo the basket or save a product.
+- Keep source provenance and prototype limitations in internal QA documentation rather than a visible `Data sources and limits` accordion in the investor flow.
 
 ## Interaction and accessibility
 

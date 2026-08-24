@@ -823,6 +823,7 @@ export function ScannerApp() {
                           ) : (
                             <small>{loadingProductIds.includes(id) ? "Checking nutrition…" : "Identified"}</small>
                           )}
+                          <CompactProductPrice detection={detection} />
                         </div>
                       </button>
                     );
@@ -885,6 +886,7 @@ export function ScannerApp() {
                             ) : (
                               <small>{loadingProductIds.includes(id) ? "Checking nutrition…" : "Identified"}</small>
                             )}
+                            <CompactProductPrice detection={detection} />
                           </button>
                         );
                       })}
@@ -976,11 +978,11 @@ function ProductResult({
         </div>
       </div>
 
-      {product.matchScore !== null ? <SugarNoBadge product={product} /> : null}
-
       {detection?.shelfPrice ? (
         <PriceComparison detection={detection} onRetailer={() => onRetailer(product.id)} />
       ) : null}
+
+      {product.matchScore !== null ? <SugarNoBadge product={product} /> : null}
 
       {bestInScan && product.matchScore !== null ? (
         <div className={styles.bestBadge}>
@@ -1066,25 +1068,6 @@ function ProductResult({
           <ArrowUpRight aria-hidden="true" size={19} />
         </a>
       ) : null}
-      <details className={styles.sources}>
-        <summary>Data sources and limits</summary>
-        <p>
-          {product.ratingBasis === "catalog_percentile"
-            ? "The badge compares these products with this demo category."
-            : "The quick view uses transparent EU nutrition-claim reference thresholds; Sugar.no's middle sugar band is up to twice the low-sugar threshold."}{" "}
-          It is not a medical or absolute health score.
-        </p>
-        <ul>
-          {product.sources.map((source) => (
-            <li key={source.url}>
-              <a href={source.url} target="_blank" rel="noopener noreferrer">
-                {source.label}
-              </a>{" "}
-              · checked {source.checkedAt}
-            </li>
-          ))}
-        </ul>
-      </details>
     </article>
   );
 }
@@ -1122,14 +1105,6 @@ function RecognizedProductResult({
           Sugar.no nutrition is not verified for this product yet, so no health or Match score is invented.
         </span>
       </div>
-
-      <details className={styles.sources}>
-        <summary>How this result was made</summary>
-        <p>
-          The package name was read from this frame. A retailer comparison appears only when the shelf label is visible
-          and the Barbora SKU is exact.
-        </p>
-      </details>
     </article>
   );
 }
@@ -1166,10 +1141,13 @@ function PriceComparison({ detection, onRetailer }: { detection: ProductDetectio
     : null;
 
   return (
-    <section className={styles.priceComparison} aria-label="Price comparison">
+    <section
+      className={`${styles.priceComparison} ${cheaperOnline ? styles.priceComparisonDeal : ""}`}
+      aria-label="Price comparison"
+    >
       <div className={styles.priceHeading}>
-        <span>{cheaperOnline ? "Cheaper online" : offer ? "Price check" : "Shelf price"}</span>
-        {savings > 0 ? <strong>Save €{savings.toFixed(2)}</strong> : null}
+        <span>{cheaperOnline ? "Cheaper at Barbora" : offer ? "Barbora price check" : "Shelf price"}</span>
+        {savings > 0 ? <strong>€{savings.toFixed(2)} less</strong> : null}
       </div>
       <div className={styles.priceValues}>
         <div>
@@ -1198,7 +1176,7 @@ function PriceComparison({ detection, onRetailer }: { detection: ProductDetectio
           >
             <span>
               <small>Current online offer</small>
-              View at Barbora · €{offer.price.toFixed(2)}
+              {cheaperOnline ? "Buy cheaper at Barbora" : "View at Barbora"} · €{offer.price.toFixed(2)}
             </span>
             <ArrowUpRight aria-hidden="true" size={19} />
           </a>
@@ -1207,6 +1185,34 @@ function PriceComparison({ detection, onRetailer }: { detection: ProductDetectio
         <p>No exact online match. The camera-read shelf price is shown without a retailer link.</p>
       )}
     </section>
+  );
+}
+
+function CompactProductPrice({ detection }: { detection?: ProductDetection }) {
+  const shelfPrice = detection?.shelfPrice;
+  if (!shelfPrice) return null;
+  const offer = detection.retailerOffer?.exactSku ? detection.retailerOffer : null;
+  const cheaperAtBarbora = Boolean(offer && offer.price < shelfPrice.amount);
+  const accessibleLabel = cheaperAtBarbora && offer
+    ? `Shelf price €${shelfPrice.amount.toFixed(2)}, Barbora €${offer.price.toFixed(2)}, cheaper at Barbora`
+    : `Shelf price €${shelfPrice.amount.toFixed(2)}`;
+
+  return (
+    <div className={styles.compactProductPrice} role="group" aria-label={accessibleLabel}>
+      {cheaperAtBarbora ? (
+        <s className={styles.compactCrossedPrice}>€{shelfPrice.amount.toFixed(2)}</s>
+      ) : (
+        <span>€{shelfPrice.amount.toFixed(2)}</span>
+      )}
+      {cheaperAtBarbora && offer ? (
+        <>
+          <strong>€{offer.price.toFixed(2)}</strong>
+          <small>Barbora</small>
+        </>
+      ) : (
+        <small>shelf</small>
+      )}
+    </div>
   );
 }
 
