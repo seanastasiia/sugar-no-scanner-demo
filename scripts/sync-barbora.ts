@@ -162,10 +162,13 @@ async function main() {
   await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, `${JSON.stringify(products, null, 2)}\n`, "utf8");
 
-  const complete = products.filter((product) => product.nutrientsPer100g.fiberG !== null).length;
+  const complete = products.filter(
+    (product) => product.nutrientsPer100g.proteinG !== null && product.nutrientsPer100g.totalSugarG !== null
+  ).length;
+  const withFiber = products.filter((product) => product.nutrientsPer100g.fiberG !== null).length;
   console.log(`Wrote ${products.length} Latvia products to ${outputPath}`);
-  console.log(`Complete Match nutrition: ${complete}/${products.length}`);
-  console.log(`Pending independently sourced fiber: ${products.length - complete}`);
+  console.log(`Complete two-factor fit nutrition: ${complete}/${products.length}`);
+  console.log(`Optional raw fiber data: ${withFiber}/${products.length}`);
 }
 
 main().catch((error) => {
