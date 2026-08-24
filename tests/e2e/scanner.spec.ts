@@ -427,11 +427,11 @@ test("one-signal and identity-only products remain neutral without an overall fi
   await chooseSavedPhoto(page, "limited-and-identity.png");
   await expect(page.getByText("2 products · 0 with Sugar.no fit", { exact: true })).toBeVisible();
   const scanner = page.getByLabel("Saved shelf or checkout photo scanner");
-  await expect(scanner.locator('button[aria-label*="Limited view, 1/3 signal"]')).toHaveCount(1);
-  await expect(scanner.locator('button[aria-label*="Identified, Nutrition checking"]')).toHaveCount(1);
+  await expect(scanner.locator('button[aria-label^="Open "]')).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByText("No Sugar.no fit yet.", { exact: true })).toBeVisible();
+  await expect(page.getByText(/available in the results without a camera marker/)).toBeVisible();
   await expect(page.getByText("Limited view · 1 of 3 signals", { exact: true })).toBeVisible();
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await page.getByLabel("Products in this scan").getByRole("button", { name: /QA identity only/ }).click();

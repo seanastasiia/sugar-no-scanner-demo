@@ -21,6 +21,7 @@
     "catalog:sync:barbora-index": "tsx scripts/sync-barbora-index.ts",
     "catalog:validate": "tsx scripts/validate-catalog.ts",
     "benchmark:focus": "tsx scripts/benchmark-focus.ts",
+    "benchmark:recognition": "node --import tsx scripts/benchmark-recognition.ts",
     "supabase:seed": "tsx scripts/seed-supabase.ts"
   },
   "dependencies": {

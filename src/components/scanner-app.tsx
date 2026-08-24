@@ -833,7 +833,7 @@ export function ScannerApp() {
               </div>
             ) : null}
 
-            {detections.map((detection) => {
+            {ratedDetections.map((detection) => {
               const product = products[detection.productId]?.product;
               const presentation = overlayMatchPresentation(product);
               const displayName = product?.name || detection.identity?.name || detection.observedText || "product";
@@ -1040,14 +1040,14 @@ export function ScannerApp() {
                         </div>
                         <p className={styles.markerScopeNote}>
                           Solid outlines use all 3 signals; dashed outlines show a partial fit.
-                          {unratedDetectionCount > 0 ? ` ${unratedDetectionCount} identified package${unratedDetectionCount === 1 ? "" : "s"} stay neutral.` : ""}
+                          {unratedDetectionCount > 0 ? ` ${unratedDetectionCount} identified package${unratedDetectionCount === 1 ? "" : "s"} remain available in the results without a camera marker.` : ""}
                         </p>
                       </>
                     ) : (
                       <div className={styles.ratingNotice}>
                         <Info aria-hidden="true" size={15} />
                         <span>
-                          <strong>No Sugar.no fit yet.</strong> {detections.length} {detections.length === 1 ? "package is" : "packages are"} still shown with a neutral outline.
+                          <strong>No Sugar.no fit yet.</strong> {detections.length} {detections.length === 1 ? "package is" : "packages are"} still available in the results without a camera marker.
                         </span>
                       </div>
                     )}
@@ -1086,6 +1086,7 @@ export function ScannerApp() {
                     <ProductResult
                       payload={selectedPayload}
                       detection={selectedDetection}
+                      bestInScan={selectedPayload.product.id === bestId}
                       onAlternative={(id) => {
                         manualSelectionRef.current = true;
                         setSelectedId(id);
@@ -1195,11 +1196,13 @@ function CheckoutScene({ onLoad }: { onLoad: (dimensions: MediaDimensions) => vo
 function ProductResult({
   payload,
   detection,
+  bestInScan,
   onAlternative,
   onRetailer
 }: {
   payload: ProductPayload;
   detection?: ProductDetection;
+  bestInScan: boolean;
   onAlternative: (id: string) => void;
   onRetailer: (id: string) => void;
 }) {
@@ -1208,6 +1211,11 @@ function ProductResult({
     <article className={styles.productResult}>
       <div className={styles.productHeading}>
         <div>
+          {bestInScan ? (
+            <p className={styles.bestFitHeading}>
+              <Check aria-hidden="true" size={13} /> Best fit in this scan
+            </p>
+          ) : null}
           <p className={styles.productBrand}>{product.brand}</p>
           <h2>{product.shortName}</h2>
         </div>
