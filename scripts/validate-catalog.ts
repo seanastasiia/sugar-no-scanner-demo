@@ -47,14 +47,16 @@ async function main() {
   if (new Set(barboraIndex).size !== barboraIndex.length) {
     throw new Error("Barbora index slugs must be unique");
   }
-  const complete = products.filter((product) => Object.values(product.nutrientsPer100g).every(Number.isFinite));
-  const missingFiber = products.filter((product) => product.nutrientsPer100g.fiberG === null);
+  const complete = products.filter(
+    (product) => Number.isFinite(product.nutrientsPer100g.proteinG) && Number.isFinite(product.nutrientsPer100g.totalSugarG)
+  );
+  const withFiber = products.filter((product) => Number.isFinite(product.nutrientsPer100g.fiberG));
   console.log(`Catalog rows: ${products.length}`);
-  console.log(`Complete Match nutrition: ${complete.length}`);
-  console.log(`Pending fiber verification: ${missingFiber.length}`);
+  console.log(`Complete two-factor fit nutrition: ${complete.length}`);
+  console.log(`Optional raw fiber data: ${withFiber.length}`);
   console.log(`Barbora product index: ${barboraIndex.length}`);
   if (process.argv.includes("--require-complete") && complete.length !== products.length) {
-    throw new Error("Catalog is not ready for public Match scores");
+    throw new Error("Catalog is not ready for public two-factor fit scores");
   }
 }
 
