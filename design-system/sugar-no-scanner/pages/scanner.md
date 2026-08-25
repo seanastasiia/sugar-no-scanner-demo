@@ -1,44 +1,40 @@
 # Scanner page override
 
-This page overrides `../MASTER.md` for the live camera, sample shelf and sample checkout experiences.
+This page extends `../MASTER.md` for live camera, saved shelf photos and checkout photos.
 
-## Reference pattern
+## Camera-first hierarchy
 
-- Use Checkit's camera-first hierarchy: the scene is the primary surface, detected packages are annotated in place, and product details arrive in a compact bottom sheet.
-- Use Lóvi's focus clarity: make the selected object visually unmistakable and show what the system is acting on.
-- Do not copy either product's visual identity, language or branding. Keep Sugar.no cream, ink and coral as the surrounding product system.
+- The scene is the primary surface; product details begin in a compact bottom sheet.
+- Live camera and saved images use the same recognition/result model, but saved images have no decorative crop corners because they do not define the analyzed region.
+- Shelf and checkout both support several distinct SKUs in one frame. Repeated facings of one SKU count once.
+- Keep the initial mobile scene at least 60% of the visible scanner area before the user expands results.
 
-## Scene and overlays
+## Markers
 
-- Show one photorealistic source scene for both shelf and checkout samples. Checkout uses the same multi-product scan pattern as shelf.
-- Keep the camera/image stage at least 60% of the initial mobile viewport when results exist.
-- Every supported package gets one bounded hit target with a border and central marker.
-- Marker states are `Great fit`, `Moderate fit` and `Low fit`, matching the Sugar.no product taxonomy. A recognized identity without a complete fit remains in the result sheet and receives no camera marker.
-- State must never depend on color alone: pair green with a check, yellow with a minus and red/coral with an alert icon. Selected state adds a white ring and visible text.
-- These states are relative within the protein-snack catalog, not good/bad or healthy/unhealthy judgments.
-- Never show the internal numeric comparison score in the user interface.
+- Render a camera marker only when a product has a numeric Sugar.no fit.
+- Use a state-colored package outline and state-colored icon circle without a white ring.
+- Pair `Great fit` with a check, `Moderate fit` with a minus and `Low fit` with a down arrow.
+- Use the text label only where it stays readable; the expanded sheet carries the complete explanation.
+- Identified-but-unrated products remain in the result list as `Needs nutrition label` and have no camera marker.
 
-## Bottom sheet
+## Bottom sheet and ranking
 
-- Pull the cream results sheet over the lower edge of the scene with a visible drag handle.
-- First show product count and a compact best-first preview. Expanding the sheet reveals a vertical ranking, not a second horizontal carousel.
-- Order complete Protein/Sugar fits from higher to lower internal score and keep `Great fit`, `Moderate fit` or `Low fit` visible on every row. Preserve stable scan order for ties. Products without a full fit must appear last as `Needs nutrition label` without a rank number.
-- The selected rated result contains brand/name and a two-criterion `Sugar.no badge`: Protein and Sugar. It has no save control.
-- The selected unrated result has one primary recovery action: `Scan nutrition label`. Keep it at least 48 px high, explain that the user should turn the pack around, and replace the pending state only after a trusted per-100 table is read.
-- When a trusted physical shelf label is associated with a product, show its price directly beneath that product in the compact preview, ranked row and expanded result. Cross it out only when an exact current Barbora offer is lower, then use the explicit `Cheaper at Barbora` label and `Buy cheaper at Barbora` action.
-- Each criterion includes actual value per 100 g, direction text and color support.
-- `Similar options` is a horizontally scrollable row of compact cards. Retailer CTA remains secondary.
-- Checkout uses the same comparison pattern as Shelf and does not ask the user to undo the basket or save a product.
-- Keep source provenance and prototype limitations in internal QA documentation rather than a visible `Data sources and limits` accordion in the investor flow.
+- Collapsed: count, rated count, best-first summary, `View all`, `Scan again` and compact product previews.
+- Expanded: full-height comparison page with a vertical best-fit-first ranking.
+- The selected rated result shows brand/name, Protein and total Sugar per 100 g.
+- The selected unrated result has one primary recovery action: `Scan nutrition label`.
+- `Similar options` stays a horizontal row; the main detected-product ranking is vertical.
+- Checkout uses the same comparison pattern and never asks the user to undo or save a purchase.
 
-## Interaction and accessibility
+## Price behavior
 
-- All actionable targets are at least 44 x 44 px and have visible focus styles.
-- Keep the header and controls legible over photos with a restrained black-to-transparent gradient and translucent control surfaces.
-- Support safe areas, portrait widths down to 375 px, phone landscape, 125% text, dark mode and reduced motion.
-- Avoid persistent animation, color-only meaning, horizontal page overflow and package labels that collide on narrow products.
+- A shelf price appears only when a physical price label is clearly associated with the SKU.
+- Cross out the shelf price only when an exact current Barbora offer for the same SKU is cheaper.
+- Use `Cheaper at Barbora` and `Buy cheaper on Barbora`; possible matches cannot drive a price claim or link.
 
-## Demo evidence boundary
+## Accessibility and evidence
 
-- Generated sample photos and deterministic boxes demonstrate the interaction only.
-- Never present them as computer-vision accuracy evidence; real shelf and checkout benchmarks require physical test materials and the live provider.
+- Controls are at least 44 px and respect safe areas, 320 px width, landscape, enlarged text and reduced motion.
+- Camera controls use a restrained scrim and translucent black capsules.
+- Generated sample scenes prove the interaction, not real-world recognition accuracy.
+- Keep confidence, source and prototype-limit details in internal QA documentation rather than the investor flow.

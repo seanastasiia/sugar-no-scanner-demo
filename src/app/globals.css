@@ -1,15 +1,16 @@
 :root {
-  --cream: #f2ede4;
-  --cream-raised: #fffdf8;
-  --ink: #111111;
-  --coral: #e8614a;
-  --coral-soft: #ffecea;
-  --muted: #6f655d;
-  --border: #ded5c8;
-  --focus: #b43b28;
-  --shadow: 0 24px 70px rgb(42 31 22 / 12%);
+  --cream: #f2f2f7;
+  --cream-raised: #ffffff;
+  --ink: #000000;
+  --coral: #f14e58;
+  --coral-action: #b4232d;
+  --coral-soft: #fff0f1;
+  --muted: #636366;
+  --border: #c7c7cc;
+  --focus: #0a84ff;
+  --shadow: 0 22px 54px rgb(0 0 0 / 14%);
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-serif: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * {
@@ -27,9 +28,7 @@ body {
   min-width: 320px;
   min-height: 100dvh;
   margin: 0;
-  background:
-    radial-gradient(circle at 85% 8%, rgb(232 97 74 / 13%), transparent 30rem),
-    var(--cream);
+  background: var(--cream);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 16px;
@@ -60,14 +59,14 @@ a {
   justify-content: center;
   gap: 9px;
   border: 0;
-  border-radius: 14px;
+  border-radius: 18px;
   font-weight: 800;
   cursor: pointer;
 }
 
 .button-primary {
   margin-top: 6px;
-  background: var(--ink);
+  background: var(--coral-action);
   color: #fff;
 }
 
@@ -86,9 +85,9 @@ a {
 .foundation-card {
   width: min(100%, 520px);
   padding: 32px;
-  border: 1px solid rgb(255 255 255 / 72%);
-  border-radius: 28px;
-  background: rgb(255 253 248 / 86%);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  background: var(--cream-raised);
   box-shadow: var(--shadow);
 }
 
@@ -109,7 +108,7 @@ a {
   padding: 7px 11px;
   border-radius: 999px;
   background: var(--coral-soft);
-  color: #a62f1e;
+  color: #b4232d;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -134,7 +133,7 @@ a {
 .lede {
   max-width: 440px;
   margin: 24px 0;
-  color: #4e463f;
+  color: var(--muted);
   font-size: 17px;
 }
 
@@ -186,33 +185,31 @@ a {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --cream: #171513;
-    --cream-raised: #24211e;
-    --ink: #f8f3eb;
-    --muted: #beb5ab;
-    --border: #49433d;
+    --cream: #f2f2f7;
+    --cream-raised: #ffffff;
+    --ink: #000000;
+    --muted: #636366;
+    --border: #c7c7cc;
   }
 
   html {
-    background: #171513;
-    color-scheme: dark;
+    background: var(--cream);
+    color-scheme: light;
   }
 
   body {
-    background:
-      radial-gradient(circle at 85% 8%, rgb(232 97 74 / 12%), transparent 30rem),
-      #171513;
-    color: #f8f3eb;
+    background: var(--cream);
+    color: var(--ink);
   }
 
   .button-primary {
-    background: #f8f3eb;
-    color: #171513;
+    background: var(--coral-action);
+    color: #ffffff;
   }
 
   .eyebrow {
-    background: #40241f;
-    color: #ffad9d;
+    background: var(--coral-soft);
+    color: #b4232d;
   }
 }
 

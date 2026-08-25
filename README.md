@@ -18,6 +18,7 @@ The app is a working mobile-first web/PWA concept with:
 
 - a public camera-first entry with no password gate or `Private demo` badge;
 - the official white Sugar.no symbol and wordmark sourced from the current `sugar.no` website, stored locally as a first-party SVG so scanner branding does not depend on a third-party runtime request;
+- a source-aligned visual system extracted locally from the supplied Sugar.no Figma file: `#F2F2F7` system background, white surfaces, `#F14E58` brand coral, SF Pro-compatible system typography and 40 px mobile sheet corners;
 - automatic live-camera frame sampling after the user grants permission;
 - a progressive live-camera path: the first stable frame is attempted about 120 ms after the preview becomes playable, Gemini's package identities are shown immediately, and optional live Barbora/Open Food Facts resolution continues in the background without blocking the held result;
 - full-frame shelf recognition that asks for up to eight distinct readable SKUs in one pass, while repeated facings of one SKU remain grouped;
@@ -48,6 +49,16 @@ The app is a working mobile-first web/PWA concept with:
 The guaranteed shelf and checkout scenes work without third-party credentials. The checkout fixture carries official manufacturer nutrition for Sproud and Schnitzer plus an explicitly labelled generic raw-chanterelle composition reference for the Stockmann pack, so all three pinned identities produce visible Sugar.no fit markers. Live camera/upload recognition names readable packages, then checks the curated benchmark, the broad exact-Barbora nutrition snapshot and an exact Open Food Facts record. If none supplies both required factors, the result says `Needs nutrition label` and offers one functional camera action instead of ending at `Identified`. The app is deployed from GitHub `main` to Railway with a public HTTPS camera route. The broad prototype catalog is a versioned server-side JSON snapshot so recognition is fast and reproducible without a runtime database dependency; Supabase remains the production schema for managed catalog workflows and analytics.
 
 A dense landscape shelf photo is analyzed as one complete frame plus three overlapping row close-ups. A long portrait screenshot is likewise analyzed once in full plus three overlapping vertical sections; ordinary portrait and focused package photos still use one request. Saved-image recognition is explicitly told that the image may be a supermarket shelf, checkout scene or online-grocery page, so each readable retailer card can become a distinct SKU while an online-page price can never masquerade as a physical shelf label. The client remaps all section boxes to the original image, merges repeated identities and prefers a source-backed exact SKU over an overlapping generic visual read. When a saved image returns several products, the merged result opens directly as one vertical best-fit-first list. The decorative camera crop corners are hidden for saved images because they do not define the analysis region. Exact fit data remains fail-closed: section zoom improves readable flavor/pack evidence, while Barbora nutrition is attached only after deterministic text/quantity matching or a high-confidence comparison with the constrained candidate packshot.
+
+## Design source and Pen handoff
+
+- Editable Pen file: [`design/sugar-no-scanner.pen`](design/sugar-no-scanner.pen).
+- Source-derived rules: [`design-system/sugar-no-scanner/MASTER.md`](design-system/sugar-no-scanner/MASTER.md) and [`design-system/sugar-no-scanner/pages/scanner.md`](design-system/sugar-no-scanner/pages/scanner.md).
+- Supporting image files in `design/` exist only so the Pen mockup remains portable and editable.
+- The original `sugar .fig` stays outside the repository and was parsed locally; it was not uploaded to a design service.
+- The Pen file contains foundations, the collapsed camera-first shelf result and the expanded full-comparison state.
+- To inspect the pre-redesign implementation, use the immutable Git tag `pre-pen-style-2026-08-25` at commit `62f62bf8a3b626d2ac65064a7c98b92ee28c1ab6`.
+- Do not export Pen-generated code into the application. The production implementation remains the tested Next.js component and CSS module; Pen is the editable visual reference.
 
 ## Product rules
 
