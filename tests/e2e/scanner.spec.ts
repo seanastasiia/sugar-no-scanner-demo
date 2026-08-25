@@ -71,6 +71,30 @@ async function chooseSavedPhoto(page: Page, name = "qa-shelf.png") {
   });
 }
 
+async function chooseLandscapeSavedPhoto(page: Page, name = "qa-landscape-shelf.jpg") {
+  const base64 = await page.evaluate(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas unavailable");
+    context.fillStyle = "#193b5a";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "#f4d35e";
+    context.fillRect(80, 80, 260, 420);
+    context.fillRect(450, 80, 260, 420);
+    return canvas.toDataURL("image/jpeg", 0.8).split(",")[1];
+  });
+  await page.getByRole("button", { name: "Show demo" }).click();
+  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  await expect(chooser).toBeVisible();
+  await chooser.locator('input[type="file"]').setInputFiles({
+    name,
+    mimeType: "image/jpeg",
+    buffer: Buffer.from(base64, "base64")
+  });
+}
+
 async function mockLiveCamera(page: Page) {
   await page.addInitScript(() => {
     const canvas = document.createElement("canvas");
@@ -360,6 +384,70 @@ test("saved images are resized client-side and fail closed without a provider ke
   await expect(page.getByRole("status")).toContainText("Recognition is unavailable");
   await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
   await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
+});
+
+test("a landscape saved shelf is scanned as a full frame plus three row close-ups", async ({ page }) => {
+  const exactId = "prot-bat-sal-riekst-saldin-barebells-55-g";
+  let recognitionRequests = 0;
+  await page.route("**/api/recognize", async (route) => {
+    recognitionRequests += 1;
+    const detections = recognitionRequests === 1
+      ? [{
+          productId: "visual:barebells-protein-bar",
+          catalogProductId: null,
+          confidence: 0.89,
+          box: { x: 0.1, y: 0.08, width: 0.8, height: 0.42 },
+          observedText: "Barebells protein bar",
+          identity: {
+            brand: "Barebells",
+            name: "Barebells protein bar",
+            variant: null,
+            packSize: null,
+            category: null,
+            matchKind: "visual_only"
+          },
+          shelfPrice: null,
+          retailerOffer: null
+        }]
+      : recognitionRequests === 2
+        ? [{
+            productId: exactId,
+            catalogProductId: exactId,
+            confidence: 0.97,
+            box: { x: 0.2, y: 0.16, width: 0.32, height: 0.56 },
+            observedText: "Barebells Salty Peanut 55g",
+            identity: {
+              brand: "Barebells",
+              name: "Barebells Salty Peanut 55g",
+              variant: "Salty Peanut",
+              packSize: "55g",
+              category: "protein bar",
+              matchKind: "verified_catalog"
+            },
+            shelfPrice: null,
+            retailerOffer: null
+          }]
+        : [];
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: `landscape-pass-${recognitionRequests}`,
+        status: detections.length ? "matched" : "not_sure",
+        latencyMs: 300,
+        model: "qa-mock",
+        imageStored: false,
+        detections
+      })
+    });
+  });
+
+  await unlock(page);
+  await chooseLandscapeSavedPhoto(page);
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
+  expect(recognitionRequests).toBe(4);
+  await page.getByRole("button", { name: "View all", exact: true }).click();
+  await expect(page.getByRole("heading", { name: /BAREBELLS/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Barebells protein bar/ })).toHaveCount(0);
 });
 
 test("one-signal and identity-only products remain neutral without an overall fit", async ({ page }) => {

@@ -32,6 +32,7 @@ const stopWords = new Set([
   "ar",
   "and",
   "bez",
+  "classic",
   "dz",
   "dzeriens",
   "drink",
@@ -39,6 +40,9 @@ const stopWords = new Set([
   "g",
   "gazets",
   "italian",
+  "klasika",
+  "klasiska",
+  "klasiskais",
   "l",
   "ml",
   "product",
@@ -51,6 +55,17 @@ const stopWords = new Set([
 ]);
 
 const synonymMap: Record<string, string[]> = {
+  tuna: ["tonno", "tunzivs"],
+  tonno: ["tuna", "tunzivs"],
+  tunzivs: ["tuna", "tonno"],
+  brine: ["sava", "sula"],
+  olive: ["oliva", "olivella"],
+  oliva: ["olive", "olivella"],
+  olivella: ["olive", "oliva"],
+  chocolate: ["sokolades"],
+  sokolades: ["chocolate"],
+  banana: ["bananu"],
+  bananu: ["banana"],
   mayonnaise: ["majoneze", "mayo"],
   majoneze: ["mayonnaise", "mayo"],
   mayo: ["mayonnaise", "majoneze"],
@@ -109,6 +124,16 @@ function tokenWeight(token: string): number {
   return 1;
 }
 
+function tokenMatches(left: string, right: string): boolean {
+  if (left === right) return true;
+  if (left.length >= 5 && right.length >= 5 && (left.startsWith(right) || right.startsWith(left))) return true;
+  const shorter = Math.min(left.length, right.length);
+  if (shorter < 5) return false;
+  let prefix = 0;
+  while (prefix < shorter && left[prefix] === right[prefix]) prefix += 1;
+  return prefix >= shorter - 1;
+}
+
 function scoreText(query: string, candidate: string, brand = ""): number {
   const queryTokens = tokens(query);
   const candidateTokens = new Set(tokens(candidate));
@@ -117,11 +142,8 @@ function scoreText(query: string, candidate: string, brand = ""): number {
   const matched = queryTokens.reduce(
     (sum, token) =>
       sum +
-      ([token, ...(synonymMap[token] || [])].some((alternative) => candidateTokens.has(alternative)) ||
-      [...candidateTokens].some((candidateToken) =>
-        token.length >= 5 && candidateToken.length >= 5
-          ? candidateToken.startsWith(token) || token.startsWith(candidateToken)
-          : false
+      ([token, ...(synonymMap[token] || [])].some((alternative) =>
+        [...candidateTokens].some((candidateToken) => tokenMatches(alternative, candidateToken))
       )
         ? tokenWeight(token)
         : 0),
@@ -150,17 +172,22 @@ function canonicalQuantity(value: string): CanonicalQuantity | null {
     .toLowerCase()
     .replaceAll("×", "x")
     .replaceAll(",", ".")
-    .replace(/[^a-z0-9.]+/g, " ")
+    .replace(/[^a-z0-9.+]+/g, " ")
     .trim();
   const multi = normalized.match(/(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*(kg|g|ml|cl|l)\b/);
+  const promotion = normalized.match(/\b(\d+)\s*\+\s*(\d+)\b/);
   const match = multi || normalized.match(/(\d+(?:\.\d+)?)\s*(kg|g|ml|cl|l)\b/);
   if (!match) return null;
-  const count = multi ? Number.parseInt(match[1], 10) : 1;
+  const count = multi
+    ? Number.parseInt(match[1], 10)
+    : promotion
+      ? Number.parseInt(promotion[1], 10) + Number.parseInt(promotion[2], 10)
+      : 1;
   const numeric = Number.parseFloat(match[multi ? 2 : 1]);
   const unit = match[multi ? 3 : 2];
   const factor = unit === "kg" || unit === "l" ? 1_000 : unit === "cl" ? 10 : 1;
   return {
-    amount: count * numeric * factor,
+    amount: (multi ? count * numeric : numeric) * factor,
     dimension: unit === "ml" || unit === "cl" || unit === "l" ? "liquid" : "solid",
     count
   };
@@ -183,12 +210,7 @@ function weightedCoverage(query: string[], candidate: Set<string>, frequencies: 
     const weight = Math.max(1, Math.log((size + 1) / (frequency + 1)) + 1);
     total += weight;
     if (
-      candidate.has(token) ||
-      [...candidate].some((candidateToken) =>
-        token.length >= 5 && candidateToken.length >= 5
-          ? candidateToken.startsWith(token) || token.startsWith(candidateToken)
-          : false
-      )
+      [...candidate].some((candidateToken) => tokenMatches(token, candidateToken))
     ) {
       matched += weight;
     }

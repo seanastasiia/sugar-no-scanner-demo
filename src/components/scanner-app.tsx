@@ -37,6 +37,7 @@ import {
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { hasSugarNoRating } from "@/lib/rating-visibility";
 import { compareFairCohorts } from "@/lib/scoring";
+import { mergeUploadScanResults, uploadScanCrops, type UploadScanCrop } from "@/lib/upload-scan";
 import type {
   ProductDetection,
   RecognitionMode,
@@ -73,7 +74,41 @@ function retryAfterSeconds(value: string | null): number {
   return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : 30;
 }
 
-async function imageFileToDataUrl(file: File): Promise<string> {
+interface PreparedUploadFrame {
+  crop: UploadScanCrop;
+  imageDataUrl: string;
+}
+
+function imageCropToDataUrl(image: HTMLImageElement, crop: UploadScanCrop): string {
+  const sourceWidth = image.naturalWidth * crop.width;
+  const sourceHeight = image.naturalHeight * crop.height;
+  let scale = Math.min(1, 1280 / Math.max(sourceWidth, sourceHeight));
+  let dataUrl = "";
+  do {
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+    canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Image canvas is unavailable");
+    context.drawImage(
+      image,
+      image.naturalWidth * crop.x,
+      image.naturalHeight * crop.y,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+    dataUrl = canvas.toDataURL("image/jpeg", 0.78);
+    scale *= 0.8;
+  } while (dataUrl.length > 2_650_000 && scale > 0.25);
+  if (dataUrl.length > 2_650_000) throw new Error("Image remains too large after resizing");
+  return dataUrl;
+}
+
+async function imageFileToScanFrames(file: File): Promise<PreparedUploadFrame[]> {
   const sourceUrl = URL.createObjectURL(file);
   try {
     const image = document.createElement("img");
@@ -84,21 +119,10 @@ async function imageFileToDataUrl(file: File): Promise<string> {
       image.onerror = () => reject(new Error("Image could not be decoded"));
     });
 
-    let scale = Math.min(1, 1280 / Math.max(image.naturalWidth, image.naturalHeight));
-    let dataUrl = "";
-    do {
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("Image canvas is unavailable");
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      dataUrl = canvas.toDataURL("image/jpeg", 0.78);
-      scale *= 0.8;
-    } while (dataUrl.length > 2_650_000 && scale > 0.25);
-
-    if (dataUrl.length > 2_650_000) throw new Error("Image remains too large after resizing");
-    return dataUrl;
+    return uploadScanCrops(image.naturalWidth, image.naturalHeight).map((crop) => ({
+      crop,
+      imageDataUrl: imageCropToDataUrl(image, crop)
+    }));
   } finally {
     URL.revokeObjectURL(sourceUrl);
   }
@@ -471,6 +495,69 @@ export function ScannerApp() {
     [applyRecognition, pauseRecognitionLoop, track]
   );
 
+  const recognizeUploadFrames = useCallback(
+    async (frames: PreparedUploadFrame[]) => {
+      if (inFlightRef.current) return;
+      inFlightRef.current = true;
+      const startedAt = performance.now();
+      setRecognitionState("scanning");
+      setStatusMessage(frames.length > 1 ? "Reading the shelf row by row…" : "Reading visible products…");
+      try {
+        const outcomes = await Promise.all(
+          frames.map(async (frame) => {
+            try {
+              const response = await fetch("/api/recognize", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ source: "upload", imageDataUrl: frame.imageDataUrl })
+              });
+              if (response.status === 429) {
+                return {
+                  kind: "rate_limited" as const,
+                  retrySeconds: retryAfterSeconds(response.headers.get("retry-after"))
+                };
+              }
+              if (!response.ok) return { kind: "error" as const, status: response.status };
+              return {
+                kind: "success" as const,
+                crop: frame.crop,
+                response: (await response.json()) as RecognitionResponse
+              };
+            } catch {
+              return { kind: "error" as const, status: 0 };
+            }
+          })
+        );
+        const successful = outcomes.flatMap((outcome) =>
+          outcome.kind === "success" ? [{ crop: outcome.crop, response: outcome.response }] : []
+        );
+        if (!successful.length) {
+          const limited = outcomes.find((outcome) => outcome.kind === "rate_limited");
+          pauseRecognitionLoop();
+          setRecognitionState(limited ? "rate_limited" : "error");
+          setStatusMessage(
+            limited
+              ? `Scanning paused. Try again in ${limited.retrySeconds}s or open the demo.`
+              : "The scan paused. Try again."
+          );
+          track("recognition_failed", "upload", undefined, {
+            message: limited ? "rate_limited" : "upload_multi_pass_failed",
+            frameCount: frames.length
+          });
+          return;
+        }
+        const merged = mergeUploadScanResults(successful);
+        applyRecognition(
+          { ...merged, latencyMs: Math.round(performance.now() - startedAt) },
+          "upload"
+        );
+      } finally {
+        inFlightRef.current = false;
+      }
+    },
+    [applyRecognition, pauseRecognitionLoop, track]
+  );
+
   const stopActiveCapture = useCallback(() => {
     cameraRequestRef.current += 1;
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
@@ -724,10 +811,10 @@ export function ScannerApp() {
     setRecognitionState("scanning");
     setStatusMessage("Preparing image privately on this device…");
     try {
-      const result = await imageFileToDataUrl(file);
-      setPreviewUrl(result);
+      const frames = await imageFileToScanFrames(file);
+      setPreviewUrl(frames[0]?.imageDataUrl || null);
       track("scan_started", "upload");
-      void recognize({ source: "upload", imageDataUrl: result });
+      void recognizeUploadFrames(frames);
     } catch {
       setRecognitionState("error");
       setStatusMessage("This image could not be prepared. Try a JPEG or PNG.");

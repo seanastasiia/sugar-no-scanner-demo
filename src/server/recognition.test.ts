@@ -3,6 +3,7 @@ import { getCatalog } from "@/lib/catalog";
 import {
   DEFAULT_GEMINI_MODEL,
   applyBarboraCandidateConfirmations,
+  needsVisualCandidateConfirmation,
   fitBoxToFrame,
   isTrustedShelfPriceDetection,
   matchCatalogProduct,
@@ -220,6 +221,21 @@ describe("candidate confirmation", () => {
 
     expect(confirmed[0].confirmedBarboraSlug).toBe("allowed-b");
     expect(confirmed[1].confirmedBarboraSlug).toBeUndefined();
+  });
+
+  it("visually checks one plausible indexed candidate instead of discarding it below text-only exactness", () => {
+    expect(
+      needsVisualCandidateConfirmation(
+        { detectionIndex: 0, candidates: [{ ...candidate("selga-caramel"), score: 0.58 }] },
+        true
+      )
+    ).toBe(true);
+    expect(
+      needsVisualCandidateConfirmation({ detectionIndex: 0, candidates: [{ ...candidate("selga-caramel"), score: 0.58 }] })
+    ).toBe(false);
+    expect(
+      needsVisualCandidateConfirmation({ detectionIndex: 0, candidates: [{ ...candidate("weak"), score: 0.51 }] }, true)
+    ).toBe(false);
   });
 });
 

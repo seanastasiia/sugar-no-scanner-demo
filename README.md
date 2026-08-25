@@ -34,9 +34,11 @@ The app is a working mobile-first web/PWA concept with:
 - an automatic focused center retry after an uncertain broad camera pass, with remapped overlays and a separate conservative confidence threshold;
 - an in-scanner Shelf/Checkout switch that changes scenes without restarting the scanner;
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
-- 20 authored Mobile Safari scenarios plus deterministic sample scenes, including the complete unknown-package-to-label-to-fit recovery path and a responsive matrix for iPhone 17 Pro portrait/landscape, a large iPhone and a small iPhone.
+- 21 authored Mobile Safari scenarios plus deterministic sample scenes, including the complete unknown-package-to-label-to-fit recovery path, landscape saved-shelf multi-pass recognition and a responsive matrix for iPhone 17 Pro portrait/landscape, a large iPhone and a small iPhone.
 
 The guaranteed shelf and checkout scenes work without third-party credentials. Live camera/upload recognition names readable packages, then checks the curated benchmark, the broad exact-Barbora nutrition snapshot and an exact Open Food Facts record. If none supplies both required factors, the result says `Needs nutrition label` and offers one functional camera action instead of ending at `Identified`. The app is deployed from GitHub `main` to Railway with a public HTTPS camera route. Production catalog/analytics storage still requires Supabase.
+
+A landscape saved shelf photo is analyzed as one complete frame plus three overlapping row close-ups. The client remaps all row boxes to the original photo, merges repeated identities and prefers a source-backed exact SKU over an overlapping generic visual read. Portrait or focused product photos still use one request. Exact fit data remains fail-closed: row zoom improves readable flavor/pack evidence, while Barbora nutrition is attached only after deterministic text/quantity matching or a high-confidence comparison with the constrained candidate packshot.
 
 ## Product rules
 

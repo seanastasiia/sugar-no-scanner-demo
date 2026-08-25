@@ -120,4 +120,76 @@ describe("Barbora product lookup", () => {
 
     expect(candidates).toEqual([]);
   });
+
+  it("handles Latvian word endings when ranking an exact Selga flavor", () => {
+    const candidates = rankIndexedBarboraCandidates(
+      {
+        brand: "Selga",
+        name: "Selga Classic Cepumi ar iebiezināta piena garšu",
+        variant: "",
+        packSize: "",
+        searchTerms: ["Selga cepumi ar iebiezināta piena garšu"]
+      },
+      [
+        {
+          slug: "cepumi-selga-ar-iebiez-pienu-180-g",
+          title: "Cepumi SELGA ar iebiezināto pienu 180g",
+          brand: "SELGA",
+          category: "Cepumi",
+          packSize: "180g",
+          nutritionBasis: "100g",
+          energyKcal: 426,
+          proteinG: 8.3,
+          totalSugarG: 22,
+          imageUrl: null,
+          isAdult: false,
+          checkedAt: "2026-08-25"
+        },
+        {
+          slug: "cepumi-selga-ar-karamelu-garsu-180-g",
+          title: "Cepumi SELGA ar karameļu garšu 180g",
+          brand: "SELGA",
+          category: "Cepumi",
+          packSize: "180g",
+          nutritionBasis: "100g",
+          energyKcal: 426,
+          proteinG: 8.4,
+          totalSugarG: 23,
+          imageUrl: null,
+          isAdult: false,
+          checkedAt: "2026-08-25"
+        }
+      ]
+    );
+    expect(candidates[0]?.slug).toBe("cepumi-selga-ar-iebiez-pienu-180-g");
+  });
+
+  it("treats a 3+1 promotional pack as four units for an observed 4x80g shelf pack", () => {
+    const candidates = rankIndexedBarboraCandidates(
+      {
+        brand: "Rio Mare",
+        name: "Tonno all'Olio di Oliva 4x80g",
+        variant: "olive oil",
+        packSize: "4x80g",
+        searchTerms: ["Rio Mare tuna olive oil"]
+      },
+      [
+        {
+          slug: "tunzivs-olivella-3-1-rio-mare-320-g",
+          title: "Tunzivs olīveļļā 3+1 RIO MARE 320g",
+          brand: "RIO MARE",
+          category: "Tuncis",
+          packSize: "320g",
+          nutritionBasis: "100g",
+          energyKcal: 403,
+          proteinG: 17.5,
+          totalSugarG: 0,
+          imageUrl: null,
+          isAdult: false,
+          checkedAt: "2026-08-25"
+        }
+      ]
+    );
+    expect(candidates[0]?.slug).toBe("tunzivs-olivella-3-1-rio-mare-320-g");
+  });
 });

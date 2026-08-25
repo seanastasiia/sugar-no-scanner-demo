@@ -74,6 +74,16 @@ export interface CandidateConfirmationChoice {
 
 export type ConfirmedProviderDetection = ProviderDetection & { confirmedBarboraSlug?: string };
 
+export function needsVisualCandidateConfirmation(
+  set: CandidateConfirmationSet,
+  allowSingleCandidate = false
+): boolean {
+  const best = set.candidates[0];
+  if (!best || best.score < (allowSingleCandidate ? 0.52 : 0.62)) return false;
+  if (set.candidates.length === 1) return allowSingleCandidate;
+  return !isExactBarboraMatch(best.score, set.candidates[1]?.score || 0);
+}
+
 const nutritionLabelResponseSchema = z.object({
   basis: z.enum(["100g", "100ml", "unknown"]),
   energyKcal: z.number().min(0).max(1_000),
@@ -446,17 +456,14 @@ async function confirmAmbiguousBarboraCandidates(input: {
   mimeType: string;
   base64: string;
   detections: ProviderDetection[];
+  allowSingleCandidate?: boolean;
 }): Promise<ConfirmedProviderDetection[]> {
   const sets = input.detections
     .map((detection, detectionIndex): CandidateConfirmationSet => ({
       detectionIndex,
       candidates: visualBarboraCandidates(lookupInputForDetection(detection), 3)
     }))
-    .filter((set) => {
-      const best = set.candidates[0];
-      if (!best || best.score < 0.62 || set.candidates.length < 2) return false;
-      return !isExactBarboraMatch(best.score, set.candidates[1]?.score || 0);
-    })
+    .filter((set) => needsVisualCandidateConfirmation(set, Boolean(input.allowSingleCandidate)))
     .sort((left, right) => (right.candidates[0]?.score || 0) - (left.candidates[0]?.score || 0))
     .slice(0, 4);
   if (!sets.length) return input.detections;
@@ -801,7 +808,8 @@ export async function recognizeProducts(input: {
     model,
     mimeType,
     base64,
-    detections: visible
+    detections: visible,
+    allowSingleCandidate: input.source === "upload"
   });
   const detections = await resolveVisibleDetections(confirmedVisible, input.catalog);
 
