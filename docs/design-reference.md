@@ -14,3 +14,5 @@ The checkout fixture must be visually unmistakable as a supermarket conveyor, no
 When several comparable rated products are present, `Best fit in this scan` is a small eyebrow heading above the leading product name. It is not a separate status pill and stays hidden for a one-product scan.
 
 The compact sheet keeps a short best-first preview. Expanding it turns the recognized set into a vertical `Best fit first` list rather than another horizontal carousel. Each rated row carries its rank, plain-language fit and the two verified inputs. Products without a complete fit remain useful but sit after the ranking as `Needs nutrition label`, without a number or inferred nutrition, and expose one clear label-scan recovery action.
+
+Saved images use the same result hierarchy but not the live-camera framing decoration. A long retailer-page screenshot is read in full and through overlapping sections, then every pass is merged into one de-duplicated vertical product list. The white corner guide is intentionally absent because it does not crop a saved file and would falsely imply that content outside the guide is ignored.

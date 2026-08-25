@@ -9,16 +9,18 @@ export interface UploadScanResult {
 }
 
 const fullFrame: UploadScanCrop = { x: 0, y: 0, width: 1, height: 1 };
+const overlappingSections: UploadScanCrop[] = [
+  { x: 0, y: 0, width: 1, height: 0.48 },
+  { x: 0, y: 0.25, width: 1, height: 0.5 },
+  { x: 0, y: 0.52, width: 1, height: 0.48 }
+];
 
 export function uploadScanCrops(width: number, height: number): UploadScanCrop[] {
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return [fullFrame];
-  if (width < height * 1.15) return [fullFrame];
-  return [
-    fullFrame,
-    { x: 0, y: 0, width: 1, height: 0.48 },
-    { x: 0, y: 0.25, width: 1, height: 0.5 },
-    { x: 0, y: 0.52, width: 1, height: 0.48 }
-  ];
+  const isLongPortrait = height >= width * 1.6;
+  const isDenseLandscape = width >= height * 1.15;
+  if (!isLongPortrait && !isDenseLandscape) return [fullFrame];
+  return [fullFrame, ...overlappingSections];
 }
 
 export function remapUploadDetection(detection: ProductDetection, crop: UploadScanCrop): ProductDetection {

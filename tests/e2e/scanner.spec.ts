@@ -116,6 +116,80 @@ async function chooseLandscapeSavedPhoto(page: Page, name = "qa-landscape-shelf.
   });
 }
 
+async function chooseLongPortraitSavedPhoto(page: Page, name = "qa-online-store-page.jpg") {
+  const base64 = await page.evaluate(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 900;
+    canvas.height = 2000;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas unavailable");
+    context.fillStyle = "#f4f0e7";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    for (let index = 0; index < 3; index += 1) {
+      context.fillStyle = index % 2 ? "#d9ecf2" : "#f7d9cf";
+      context.fillRect(80, 120 + index * 620, 740, 480);
+      context.fillStyle = "#202020";
+      context.font = "42px sans-serif";
+      context.fillText(`Product card ${index + 1}`, 160, 220 + index * 620);
+    }
+    return canvas.toDataURL("image/jpeg", 0.8).split(",")[1];
+  });
+  await page.getByRole("button", { name: "Show demo" }).click();
+  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  await expect(chooser).toBeVisible();
+  await chooser.locator('input[type="file"]').setInputFiles({
+    name,
+    mimeType: "image/jpeg",
+    buffer: Buffer.from(base64, "base64")
+  });
+}
+
+function ratedInlineProduct(input: {
+  id: string;
+  brand: string;
+  name: string;
+  score: number;
+  protein: number;
+  sugar: number;
+}) {
+  return {
+    id: input.id,
+    retailerProductId: input.id.replace(/^barbora:/, ""),
+    brand: input.brand,
+    name: input.name,
+    shortName: input.name,
+    aliases: [],
+    format: "other",
+    category: "Grocery",
+    packSizeG: 100,
+    nutritionBasis: "100g",
+    energyKcalPer100: 120,
+    gtin: null,
+    nutrientsPer100g: { proteinG: input.protein, fiberG: null, totalSugarG: input.sugar },
+    noAddedSugarClaim: false,
+    imageUrl: null,
+    retailerUrl: `https://barbora.lv/produkti/${input.id.replace(/^barbora:/, "")}`,
+    sources: [
+      {
+        label: "Barbora Latvia",
+        url: `https://barbora.lv/produkti/${input.id.replace(/^barbora:/, "")}`,
+        checkedAt: "2026-08-25T00:00:00.000Z",
+        fields: ["identity", "protein", "totalSugar"],
+        status: "verified"
+      }
+    ],
+    isGolden: false,
+    accent: "coral",
+    matchScore: input.score,
+    matchReason: "complete",
+    ratingBasis: "barbora_reference",
+    ratingStatus: "complete",
+    ratingSignalCount: 2,
+    ratingSignalMask: ["protein", "inverseSugar"],
+    criterionScores: { protein: input.score, inverseSugar: input.score }
+  };
+}
+
 async function mockLiveCamera(page: Page) {
   await page.addInitScript(() => {
     const canvas = document.createElement("canvas");
@@ -521,6 +595,91 @@ test("a landscape saved shelf is scanned as a full frame plus three row close-up
   await expect(page.getByRole("heading", { name: /Barebells protein bar/ })).toHaveCount(0);
 });
 
+test("a long online-store screenshot is scanned in four passes and opens one merged product list", async ({ page }) => {
+  const baltaisId = "barbora:biezp-krems-protein-baltais-persiku-300-g";
+  const stracciatellaId = "barbora:proteina-biezp-krems-vanil-baltais-200-g";
+  const junglePopId = "barbora:zeleja-jungle-pop-kivi-115-g";
+  const products = {
+    [baltaisId]: ratedInlineProduct({
+      id: baltaisId,
+      brand: "BALTAIS",
+      name: "Protein Fit peach 300g",
+      score: 91,
+      protein: 10,
+      sugar: 4
+    }),
+    [stracciatellaId]: ratedInlineProduct({
+      id: stracciatellaId,
+      brand: "BALTAIS",
+      name: "Protein Fit Stracciatella 200g",
+      score: 84,
+      protein: 12,
+      sugar: 5
+    }),
+    [junglePopId]: ratedInlineProduct({
+      id: junglePopId,
+      brand: "JUNGLE POP",
+      name: "Kiwi jelly 115g",
+      score: 40,
+      protein: 0,
+      sugar: 14
+    })
+  };
+  let recognitionRequests = 0;
+  await page.route("**/api/recognize", async (route) => {
+    recognitionRequests += 1;
+    const id = recognitionRequests <= 2
+      ? baltaisId
+      : recognitionRequests === 3
+        ? stracciatellaId
+        : junglePopId;
+    const product = products[id];
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: `portrait-pass-${recognitionRequests}`,
+        status: "matched",
+        latencyMs: 350,
+        model: "qa-mock",
+        imageStored: false,
+        detections: [
+          {
+            productId: id,
+            catalogProductId: id,
+            confidence: recognitionRequests === 1 ? 0.94 : 0.97,
+            box: { x: 0.12, y: 0.12, width: 0.76, height: 0.26 },
+            observedText: `${product.brand} ${product.name}`,
+            identity: {
+              brand: product.brand,
+              name: product.name,
+              variant: null,
+              packSize: null,
+              category: "Grocery",
+              matchKind: "barbora"
+            },
+            shelfPrice: null,
+            retailerOffer: null,
+            inlineProduct: product
+          }
+        ]
+      })
+    });
+  });
+
+  await unlock(page);
+  await chooseLongPortraitSavedPhoto(page);
+  const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
+  await expect(resultsDialog).toBeVisible({ timeout: 10_000 });
+  expect(recognitionRequests).toBe(4);
+  const ranking = resultsDialog.getByLabel("Products ranked by Sugar.no fit");
+  await expect(ranking.getByRole("button")).toHaveCount(3);
+  await expect(ranking.getByRole("button", { name: /BALTAIS Protein Fit peach 300g/ })).toHaveCount(1);
+  await expect(ranking.getByRole("button", { name: /BALTAIS Protein Fit Stracciatella 200g/ })).toHaveCount(1);
+  await expect(ranking.getByRole("button", { name: /JUNGLE POP Kiwi jelly 115g/ })).toHaveCount(1);
+  await expect(page.getByTestId("scan-guide")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+});
+
 test("one-signal and identity-only products remain neutral without an overall fit", async ({ page }) => {
   const limitedId = "barbora:qa-protein-only";
   const identityId = "barbora:qa-identity-only";
@@ -593,11 +752,11 @@ test("one-signal and identity-only products remain neutral without an overall fi
 
   await unlock(page);
   await chooseSavedPhoto(page, "limited-and-identity.png");
-  await expect(page.getByRole("status")).toContainText("2 products · 0 with Sugar.no fit");
-  const scanner = page.getByLabel("Saved shelf or checkout photo scanner");
-  await expect(scanner.locator('button[aria-label^="Open "]')).toHaveCount(0);
+  const savedResults = page.getByRole("dialog", { name: "Products from this scan" });
+  await expect(savedResults).toBeVisible({ timeout: 10_000 });
+  await expect(savedResults.getByText("2 products need nutrition labels", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("rated-detection-marker")).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
-  await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Scan labels to compare" })).toBeVisible();
   await expect(page.getByText("Turn a pack around and scan its per-100 nutrition table", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Sugar.no limited view · 1/2", { exact: true })).toBeVisible();

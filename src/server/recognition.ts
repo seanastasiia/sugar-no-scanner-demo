@@ -504,7 +504,12 @@ function extractPackSize(value: string): string {
   );
 }
 
-export function recognitionInstruction(focusMode: boolean): string {
+type RecognitionScene = "live-camera" | "saved-image";
+
+export function recognitionInstruction(
+  focusMode: boolean,
+  scene: RecognitionScene = "live-camera"
+): string {
   const scope = focusMode
     ? `This is a center crop after a broad scan was uncertain. Identify the most prominent readable package in the crop. ` +
       `Repeated copies of the same package are one SKU; return it once rather than returning an empty result. `
@@ -512,9 +517,18 @@ export function recognitionInstruction(focusMode: boolean): string {
       `packaged retail SKU, including several different products on the same shelf, up to the response limit. ` +
       `Do not stop after the central or most prominent package. Include that package as a fallback, but also return readable ` +
       `products elsewhere in the frame. Repeated facings of the same SKU are one product type and must be returned once. `;
+  const savedImageContext =
+    scene === "saved-image"
+      ? `This saved image may be a supermarket shelf, a checkout photo, a long screenshot, or an online grocery or catalog page. ` +
+        `On an online-store page, treat every visible product card as a candidate SKU. Read each product image together with its ` +
+        `adjacent title, brand, variant and pack size, and return one detection for every distinct readable product card. ` +
+        `Merge repeated copies of the same card or SKU rather than counting them twice. A price shown on an online-store page is not ` +
+        `a physical shelf price label and must never be returned as shelfPrice. `
+      : "";
 
   return (
     scope +
+    savedImageContext +
     `Read the front label and preserve every clearly visible distinguishing word in productName: exact brand, product type, variant or flavor, ` +
     `and exact pack size or multipack count. Do not omit a readable size and do not guess one that is not visible. ` +
     `searchQuery should repeat the identity using useful English or Latvian equivalents of foreign flavor words for retailer matching. ` +
@@ -857,7 +871,7 @@ export async function recognizeProducts(input: {
     model,
     contents: [
       createPartFromText(
-        recognitionInstruction(focusMode)
+        recognitionInstruction(focusMode, input.source === "upload" ? "saved-image" : "live-camera")
       ),
       createPartFromBase64(base64, mimeType)
     ],

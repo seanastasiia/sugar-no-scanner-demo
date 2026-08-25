@@ -415,7 +415,7 @@ export function ScannerApp() {
         videoRef.current?.pause();
         setResultLocked(true);
       }
-      setResultsExpanded(false);
+      setResultsExpanded(eventSource === "upload" && ids.length > 1);
       setStatusMessage(nutritionMode ? "Nutrition label read. Building Sugar.no fit…" : "Products found. Checking Sugar.no signals…");
       setTray(ids);
       manualSelectionRef.current = false;
@@ -499,7 +499,9 @@ export function ScannerApp() {
       inFlightRef.current = true;
       const startedAt = performance.now();
       setRecognitionState("scanning");
-      setStatusMessage(frames.length > 1 ? "Reading the shelf row by row…" : "Reading visible products…");
+      setStatusMessage(
+        frames.length > 1 ? "Reading the full image and close-up sections…" : "Reading visible products…"
+      );
       try {
         const outcomes = await Promise.all(
           frames.map(async (frame) => {
@@ -1018,8 +1020,8 @@ export function ScannerApp() {
               </div>
             ) : null}
 
-            {source === "camera" || source === "upload" ? (
-              <div className={styles.scanGuide} aria-hidden="true">
+            {source === "camera" ? (
+              <div className={styles.scanGuide} data-testid="scan-guide" aria-hidden="true">
                 <i />
                 <i />
                 <i />
@@ -1038,6 +1040,7 @@ export function ScannerApp() {
               return (
                 <button
                   className={`${styles.detectionBox} ${toneClass(presentation.tone)} ${completenessClass(presentation.completeness)} ${selectedId === detection.productId ? styles.selectedBox : ""} ${isBest ? styles.bestBox : ""}`}
+                  data-testid="rated-detection-marker"
                   style={{
                     left: `${mappedBox.x * 100}%`,
                     top: `${mappedBox.y * 100}%`,

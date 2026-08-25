@@ -32,14 +32,16 @@ function response(detections: ProductDetection[]): RecognitionResponse {
 }
 
 describe("multi-pass uploaded shelf recognition", () => {
-  it("uses one frame for focused/portrait photos and overlapping row crops for landscape shelves", () => {
+  it("uses one frame for ordinary portraits and four passes for dense shelves or long screenshots", () => {
     expect(uploadScanCrops(800, 1200)).toEqual([{ x: 0, y: 0, width: 1, height: 1 }]);
-    expect(uploadScanCrops(1200, 800)).toEqual([
+    const fourPassLayout = [
       { x: 0, y: 0, width: 1, height: 1 },
       { x: 0, y: 0, width: 1, height: 0.48 },
       { x: 0, y: 0.25, width: 1, height: 0.5 },
       { x: 0, y: 0.52, width: 1, height: 0.48 }
-    ]);
+    ];
+    expect(uploadScanCrops(1200, 800)).toEqual(fourPassLayout);
+    expect(uploadScanCrops(900, 2000)).toEqual(fourPassLayout);
   });
 
   it("maps a row-crop detection back onto the original photo", () => {
@@ -70,5 +72,63 @@ describe("multi-pass uploaded shelf recognition", () => {
       { crop: { x: 0, y: 0, width: 1, height: 1 }, response: response([exact]) }
     ]);
     expect(merged.detections).toEqual([exact]);
+  });
+
+  it("merges duplicate cards across long-page sections while retaining distinct products", () => {
+    const baltais = detection({
+      productId: "barbora:biezp-krems-protein-baltais-persiku-300-g",
+      catalogProductId: "barbora:biezp-krems-protein-baltais-persiku-300-g",
+      confidence: 0.97,
+      observedText: "Baltais Protein Fit peach 300g",
+      identity: {
+        brand: "Baltais",
+        name: "Protein Fit peach 300g",
+        variant: "Peach",
+        packSize: "300g",
+        category: "Dairy dessert",
+        matchKind: "barbora"
+      }
+    });
+    const stracciatella = detection({
+      productId: "barbora:proteina-biezp-krems-vanil-baltais-200-g",
+      catalogProductId: "barbora:proteina-biezp-krems-vanil-baltais-200-g",
+      confidence: 0.95,
+      observedText: "Baltais Protein Fit Stracciatella 200g",
+      box: { x: 0.2, y: 0.3, width: 0.25, height: 0.3 },
+      identity: {
+        brand: "Baltais",
+        name: "Protein Fit Stracciatella 200g",
+        variant: "Stracciatella",
+        packSize: "200g",
+        category: "Dairy dessert",
+        matchKind: "barbora"
+      }
+    });
+    const junglePop = detection({
+      productId: "visual:jungle-pop-kiwi-115-g",
+      confidence: 0.91,
+      observedText: "Jungle Pop kiwi 115g",
+      box: { x: 0.4, y: 0.35, width: 0.3, height: 0.35 },
+      identity: {
+        brand: "Jungle Pop",
+        name: "Jungle Pop kiwi 115g",
+        variant: "Kiwi",
+        packSize: "115g",
+        category: "Jelly",
+        matchKind: "visual_only"
+      }
+    });
+    const merged = mergeUploadScanResults([
+      { crop: { x: 0, y: 0, width: 1, height: 1 }, response: response([baltais]) },
+      { crop: { x: 0, y: 0, width: 1, height: 0.48 }, response: response([baltais]) },
+      { crop: { x: 0, y: 0.25, width: 1, height: 0.5 }, response: response([stracciatella]) },
+      { crop: { x: 0, y: 0.52, width: 1, height: 0.48 }, response: response([junglePop]) }
+    ]);
+
+    expect(merged.detections.map((item) => item.productId)).toEqual([
+      baltais.productId,
+      stracciatella.productId,
+      junglePop.productId
+    ]);
   });
 });

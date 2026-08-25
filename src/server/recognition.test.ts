@@ -147,6 +147,15 @@ describe("recognitionInstruction", () => {
     expect(instruction).toContain("most prominent readable package");
     expect(instruction).not.toContain("complete frame from left to right and top to bottom");
   });
+
+  it("treats a saved online-store screenshot as a list of product cards", () => {
+    const instruction = recognitionInstruction(false, "saved-image");
+    expect(instruction).toContain("long screenshot");
+    expect(instruction).toContain("online grocery or catalog page");
+    expect(instruction).toContain("every visible product card as a candidate SKU");
+    expect(instruction).toContain("adjacent title, brand, variant and pack size");
+    expect(instruction).toContain("not a physical shelf price label");
+  });
 });
 
 describe("isTrustedShelfPriceDetection", () => {
