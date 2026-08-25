@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
 import foodProductIndex from "../../../../data/barbora-food-product-index.generated.json";
 import nutritionIndex from "../../../../data/barbora-nutrition-index.generated.json";
+import { investorCategoryForRetailPath } from "@/lib/supported-categories";
+import type { BarboraNutritionIndexProduct } from "@/server/barbora-nutrition-index";
 
 export const dynamic = "force-dynamic";
 
 export function GET() {
+  const investorPack = (nutritionIndex as BarboraNutritionIndexProduct[]).reduce(
+    (counts, product) => {
+      const category = investorCategoryForRetailPath(product.category);
+      if (category) counts[category] += 1;
+      return counts;
+    },
+    { snacks: 0, dairy_desserts: 0 }
+  );
   return NextResponse.json(
     {
       status: "ok",
@@ -12,7 +22,12 @@ export function GET() {
       commit: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.COMMIT_SHA || "local",
       catalog: {
         activeFoodProducts: foodProductIndex.length,
-        productsWithAutomaticFit: nutritionIndex.length
+        productsWithAutomaticFit: nutritionIndex.length,
+        investorPack: {
+          ...investorPack,
+          total: investorPack.snacks + investorPack.dairy_desserts,
+          nutritionSignals: ["protein", "totalSugar"]
+        }
       },
       timestamp: new Date().toISOString()
     },

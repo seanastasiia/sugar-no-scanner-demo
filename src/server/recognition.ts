@@ -2,6 +2,7 @@ import { GoogleGenAI, ThinkingLevel, createPartFromBase64, createPartFromText } 
 import { z } from "zod";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { scoreReferenceProduct } from "@/lib/scoring";
+import type { InvestorCategory } from "@/lib/supported-categories";
 import type {
   ProductRecord,
   ProductDetection,
@@ -33,6 +34,7 @@ const providerResponseSchema = z.object({
       brand: z.string().max(80),
       productName: z.string().max(180),
       searchQuery: z.string().max(240),
+      retailCategory: z.enum(["snack", "dairy_dessert", "other"]),
       barcode: z.string().max(14),
       confidence: z.number().min(0).max(1),
       box: z.object({
@@ -531,6 +533,8 @@ export function recognitionInstruction(
     savedImageContext +
     `Read the front label and preserve every clearly visible distinguishing word in productName: exact brand, product type, variant or flavor, ` +
     `and exact pack size or multipack count. Do not omit a readable size and do not guess one that is not visible. ` +
+    `Classify retailCategory as snack for packaged sweet or salty snacks, dairy_dessert for yogurts, puddings, sweet curd creams or glazed curd snacks, ` +
+    `and other for everything else. ` +
     `searchQuery should repeat the identity using useful English or Latvian equivalents of foreign flavor words for retailer matching. ` +
     `If a complete EAN-8, EAN-13 or UPC barcode number is clearly readable, return only its digits in barcode; otherwise return an empty string. ` +
     `Only when a separate physical shelf price label outside the package is clearly visible and associated with that exact package, ` +
@@ -545,12 +549,19 @@ export function recognitionInstruction(
 
 function lookupInputForDetection(detection: ProviderDetection): BarboraLookupInput {
   const packSize = extractPackSize(detection.productName);
+  const categoryHint: InvestorCategory | null =
+    detection.retailCategory === "snack"
+      ? "snacks"
+      : detection.retailCategory === "dairy_dessert"
+        ? "dairy_desserts"
+        : null;
   return {
     brand: detection.brand,
     name: detection.productName,
     variant: "",
     packSize,
-    searchTerms: [detection.searchQuery]
+    searchTerms: [detection.searchQuery],
+    categoryHint
   };
 }
 
@@ -621,6 +632,7 @@ async function confirmAmbiguousBarboraCandidates(input: {
     const detection = input.detections[set.detectionIndex];
     return [
       `Detection ${set.detectionIndex}: observed "${detection.brand} ${detection.productName}"; ` +
+        `coarse category ${detection.retailCategory}; ` +
         `box x=${detection.box.x.toFixed(3)}, y=${detection.box.y.toFixed(3)}, ` +
         `w=${detection.box.width.toFixed(3)}, h=${detection.box.height.toFixed(3)}.`,
       ...set.candidates.map(
@@ -787,7 +799,12 @@ export async function resolveVisibleDetections(
         name: detection.productName,
         variant: null,
         packSize: packSize || null,
-        category: null,
+        category:
+          detection.retailCategory === "snack"
+            ? "Packaged snacks"
+            : detection.retailCategory === "dairy_dessert"
+              ? "Dairy desserts"
+              : null,
         searchQuery: detection.searchQuery,
         barcode: detection.barcode || null,
         matchKind: knownProduct
@@ -902,6 +919,7 @@ export async function recognizeProducts(input: {
                 "brand",
                 "productName",
                 "searchQuery",
+                "retailCategory",
                 "barcode",
                 "confidence",
                 "box",
@@ -914,6 +932,7 @@ export async function recognizeProducts(input: {
                 brand: { type: "string", maxLength: 80 },
                 productName: { type: "string", maxLength: 180 },
                 searchQuery: { type: "string", maxLength: 240 },
+                retailCategory: { type: "string", enum: ["snack", "dairy_dessert", "other"] },
                 barcode: { type: "string", maxLength: 14 },
                 confidence: { type: "number", minimum: 0, maximum: 1 },
                 shelfPriceCents: { type: "integer", minimum: 0, maximum: 1000000 },

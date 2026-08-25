@@ -64,12 +64,19 @@ interface ResolveRouteDependencies {
 
 function toProviderDetection(detection: z.infer<typeof detectionSchema>): ConfirmedProviderDetection {
   const identity = detection.identity;
+  const retailCategory =
+    identity.category === "Packaged snacks"
+      ? "snack"
+      : identity.category === "Dairy desserts"
+        ? "dairy_dessert"
+        : "other";
   return {
     brand: identity.brand,
     productName: identity.name,
     searchQuery:
       identity.searchQuery || [identity.brand, identity.name, identity.variant, identity.packSize].filter(Boolean).join(" "),
     barcode: identity.barcode || "",
+    retailCategory,
     confidence: detection.confidence,
     box: detection.box,
     shelfPriceCents: detection.shelfPrice ? Math.round(detection.shelfPrice.amount * 100) : 0,

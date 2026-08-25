@@ -124,6 +124,7 @@ describe("recognitionInstruction", () => {
     expect(instruction).toContain("several different products on the same shelf");
     expect(instruction).toContain("Do not stop after the central or most prominent package");
     expect(instruction).toContain("Repeated facings of the same SKU are one product type");
+    expect(instruction).toContain("retailCategory as snack");
     expect(instruction).toContain("EAN-8, EAN-13 or UPC barcode");
   });
 
@@ -212,6 +213,7 @@ function providerDetection(index: number, overrides: Partial<ProviderDetection> 
     brand: `Brand${label}`,
     productName: `Snack ${label} 50 g`,
     searchQuery: `Brand${label} Snack ${label} 50 g`,
+    retailCategory: "snack",
     barcode: "",
     confidence: 0.9,
     box: { x: index / 10, y: 0.2, width: 0.08, height: 0.4 },

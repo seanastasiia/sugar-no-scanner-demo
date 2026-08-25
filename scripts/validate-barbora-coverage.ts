@@ -1,6 +1,7 @@
 import foodSlugs from "../data/barbora-food-product-index.generated.json";
 import nutritionProducts from "../data/barbora-nutrition-index.generated.json";
 import type { BarboraNutritionIndexProduct } from "../src/server/barbora-nutrition-index";
+import { investorCategoryForRetailPath } from "../src/lib/supported-categories";
 
 const products = nutritionProducts as BarboraNutritionIndexProduct[];
 const uniqueSlugs = new Set(products.map((product) => product.slug));
@@ -22,6 +23,14 @@ const categories = new Set(products.map((product) => product.category).filter(Bo
 const brands = new Set(products.map((product) => product.brand).filter(Boolean));
 const coverage = foodSlugs.length ? products.length / foodSlugs.length : 0;
 const staleProducts = products.filter((product) => !activeFoodSlugs.has(product.slug));
+const investorPack = products.reduce(
+  (counts, product) => {
+    const category = investorCategoryForRetailPath(product.category);
+    if (category) counts[category] += 1;
+    return counts;
+  },
+  { snacks: 0, dairy_desserts: 0 }
+);
 
 const report = {
   activeFoodProducts: foodSlugs.length,
@@ -31,7 +40,11 @@ const report = {
   categories: categories.size,
   duplicateSlugs: products.length - uniqueSlugs.size,
   invalidProducts: invalid.length,
-  staleProducts: staleProducts.length
+  staleProducts: staleProducts.length,
+  investorPack: {
+    ...investorPack,
+    total: investorPack.snacks + investorPack.dairy_desserts
+  }
 };
 
 console.log(JSON.stringify(report, null, 2));
@@ -42,3 +55,7 @@ if (coverage < 0.6) throw new Error(`Automatic fit coverage ${(coverage * 100).t
 if (uniqueSlugs.size !== products.length) throw new Error("Duplicate Barbora nutrition slugs found");
 if (invalid.length) throw new Error(`${invalid.length} invalid or adult products found in nutrition index`);
 if (staleProducts.length) throw new Error(`${staleProducts.length} nutrition products are outside the active food index`);
+if (investorPack.snacks < 1_500) throw new Error(`Expected at least 1,500 rated snack SKUs, received ${investorPack.snacks}`);
+if (investorPack.dairy_desserts < 200) {
+  throw new Error(`Expected at least 200 rated dairy-dessert SKUs, received ${investorPack.dairy_desserts}`);
+}

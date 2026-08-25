@@ -404,7 +404,10 @@ test("checkout demo cancels an in-flight live-camera read before showing determi
 
 test("demo chooser supports shelf, checkout and a clear return to live camera", async ({ page }) => {
   await unlock(page);
-  await openDemoScene(page, "Shelf demo");
+  await page.getByRole("button", { name: "Show demo" }).click();
+  await expect(page.getByText("Investor test aisles", { exact: true })).toBeVisible();
+  await expect(page.getByText("2,073 rated Barbora products: packaged snacks and dairy desserts", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Shelf demo" }).click();
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
   await page.getByRole("button", { name: "Back to live camera" }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();

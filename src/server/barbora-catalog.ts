@@ -1,4 +1,5 @@
 import productSlugs from "../../data/barbora-product-index.generated.json";
+import { investorCategoryForRetailPath, type InvestorCategory } from "@/lib/supported-categories";
 import type { RetailerOffer } from "@/lib/types";
 import {
   getIndexedBarboraNutrition,
@@ -12,6 +13,7 @@ export interface BarboraLookupInput {
   variant: string;
   packSize: string;
   searchTerms: string[];
+  categoryHint?: InvestorCategory | null;
 }
 
 export interface RankedBarboraCandidate {
@@ -32,7 +34,6 @@ const stopWords = new Set([
   "ar",
   "and",
   "bez",
-  "classic",
   "dz",
   "dzeriens",
   "drink",
@@ -73,22 +74,70 @@ const synonymMap: Record<string, string[]> = {
   kiploku: ["garlic"],
   cheese: ["siera", "siers"],
   siera: ["cheese", "siers"],
+  cookie: ["cepumi", "biscuit"],
+  cookies: ["cepumi", "biscuits"],
+  biscuit: ["cepumi", "cookie"],
+  biscuits: ["cepumi", "cookies"],
+  cepumi: ["cookie", "cookies", "biscuit", "biscuits"],
   yogurt: ["jogurts", "yoghurt"],
   yoghurt: ["jogurts", "yogurt"],
   jogurts: ["yogurt", "yoghurt"],
   milk: ["piens"],
   piens: ["milk"],
+  curd: ["biezpiena", "biezpiens"],
+  biezpiena: ["curd", "biezpiens"],
+  biezpiens: ["curd", "biezpiena"],
+  dessert: ["deserts"],
+  deserts: ["dessert"],
+  pudding: ["pudins"],
+  pudins: ["pudding"],
   classic: ["klasiska", "klasiskais"],
   klasiska: ["classic", "klasiskais"],
   original: ["originala", "originalais"],
   originala: ["original", "originalais"],
   pesca: ["peach", "persiku"],
   peach: ["pesca", "persiku"],
+  persiku: ["peach", "pesca"],
+  strawberry: ["zemenu"],
+  zemenu: ["strawberry"],
+  raspberry: ["avenu"],
+  avenu: ["raspberry"],
+  blueberry: ["mellenu"],
+  mellenu: ["blueberry"],
+  cherry: ["kirsu"],
+  kirsu: ["cherry"],
+  vanilla: ["vanilas"],
+  vanilas: ["vanilla"],
+  caramel: ["karamelu"],
+  karamelu: ["caramel"],
+  coconut: ["kokosriekstu"],
+  kokosriekstu: ["coconut"],
   clementina: ["clementine", "klementinu"],
   clementine: ["clementina", "klementinu"],
   limone: ["lemon", "citronu"],
   lemon: ["limone", "citronu"]
 };
+
+const flavorTokens = new Set([
+  "avenu",
+  "bananu",
+  "caramel",
+  "cherry",
+  "chocolate",
+  "citronu",
+  "coconut",
+  "karamelu",
+  "kirsu",
+  "kokosriekstu",
+  "lemon",
+  "mellenu",
+  "persiku",
+  "raspberry",
+  "sokolades",
+  "strawberry",
+  "vanilas",
+  "zemenu"
+]);
 
 export function normalizeRetailText(value: string): string {
   return value
@@ -253,11 +302,20 @@ export function rankIndexedBarboraCandidates(
   const queryTokens = expandedTokens([input.name, input.variant, ...input.searchTerms].filter(Boolean).join(" "))
     .filter((token) => !brandTokens.has(token) && !/^\d+$/.test(token));
   const observedQuantity = canonicalQuantity([input.packSize, input.name].filter(Boolean).join(" "));
-  const { candidateTokens, frequencies } = prepareBarboraIndex(products);
+  const scopedProducts = input.categoryHint
+    ? products.filter((product) => investorCategoryForRetailPath(product.category) === input.categoryHint)
+    : products;
+  const rankingProducts = scopedProducts.length ? scopedProducts : products;
+  const { candidateTokens, frequencies } = prepareBarboraIndex(rankingProducts);
 
-  return products
+  const ranked = rankingProducts
     .flatMap((product, index): RankedBarboraCandidate[] => {
-      if (!retailerBrandMatches(input.brand, product.brand)) return [];
+      const observedBrandTokens = tokens(input.brand);
+      const titleTokens = tokens(product.title);
+      const titleContainsObservedBrand =
+        observedBrandTokens.length > 0 &&
+        observedBrandTokens.every((token) => titleTokens.some((candidateToken) => tokenMatches(token, candidateToken)));
+      if (!retailerBrandMatches(input.brand, product.brand) && !titleContainsObservedBrand) return [];
       const candidateQuantity = canonicalQuantity(`${product.packSize} ${product.title}`);
       if (observedQuantity && candidateQuantity) {
         if (observedQuantity.dimension !== candidateQuantity.dimension) return [];
@@ -267,15 +325,24 @@ export function rankIndexedBarboraCandidates(
         if (difference > 0.06) return [];
       }
       const candidate = new Set(candidateTokens[index]);
-      const nameCoverage = weightedCoverage(queryTokens, candidate, frequencies, products.length);
-      const reverseTokens = [...candidate].filter((token) => (frequencies.get(token) || 0) < products.length * 0.08);
-      const reverseCoverage = weightedCoverage(reverseTokens, new Set(queryTokens), frequencies, products.length);
+      const nameCoverage = weightedCoverage(queryTokens, candidate, frequencies, rankingProducts.length);
+      const reverseTokens = [...candidate].filter(
+        (token) => (frequencies.get(token) || 0) < rankingProducts.length * 0.08
+      );
+      const reverseCoverage = weightedCoverage(reverseTokens, new Set(queryTokens), frequencies, rankingProducts.length);
       const packBonus = observedQuantity && candidateQuantity ? 0.08 : 0;
-      const score = Math.min(1, 0.24 + nameCoverage * 0.58 + reverseCoverage * 0.1 + packBonus);
+      const classicBonus = queryTokens.some((token) => ["classic", "klasiska", "klasiskais"].includes(token)) &&
+        ![...candidate].some((token) => flavorTokens.has(token))
+        ? 0.14
+        : 0;
+      const score = Math.min(1, 0.24 + nameCoverage * 0.58 + reverseCoverage * 0.1 + packBonus + classicBonus);
       return score >= 0.52 ? [{ slug: product.slug, score }] : [];
     })
     .sort((left, right) => right.score - left.score || left.slug.localeCompare(right.slug))
     .slice(0, limit);
+  return ranked.length || !input.categoryHint
+    ? ranked
+    : rankIndexedBarboraCandidates({ ...input, categoryHint: null }, products, limit);
 }
 
 export function visualBarboraCandidates(input: BarboraLookupInput, limit = 3): VisualBarboraCandidate[] {

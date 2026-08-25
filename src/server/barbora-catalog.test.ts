@@ -164,6 +164,87 @@ describe("Barbora product lookup", () => {
     expect(candidates[0]?.slug).toBe("cepumi-selga-ar-iebiez-pienu-180-g");
   });
 
+  it("uses the supported dairy-dessert pack when the front sub-brand differs from the manufacturer brand", () => {
+    const candidates = rankIndexedBarboraCandidates(
+      {
+        brand: "ProteinFit",
+        name: "Protein Fit peach curd cream 300g",
+        variant: "peach",
+        packSize: "300g",
+        searchTerms: ["ProteinFit persiku biezpiena krēms"],
+        categoryHint: "dairy_desserts"
+      },
+      [
+        {
+          slug: "biezp-krems-protein-baltais-persiku-300-g",
+          title: "Biezpiena krēms Protein BALTAIS persiku 300g",
+          brand: "BALTAIS",
+          category: "Piena produkti un olas/Biezpiena produkti/Saldais biezpiens",
+          packSize: "300g",
+          nutritionBasis: "100g",
+          energyKcal: 80,
+          proteinG: 10,
+          totalSugarG: 4,
+          imageUrl: null,
+          isAdult: false,
+          checkedAt: "2026-08-25"
+        },
+        {
+          slug: "proteinfit-baltais-chocolate-300-g",
+          title: "Biezpiena krēms ProteinFit BALTAIS šokolādes 300g",
+          brand: "BALTAIS",
+          category: "Piena produkti un olas/Biezpiena produkti/Saldais biezpiens",
+          packSize: "300g",
+          nutritionBasis: "100g",
+          energyKcal: 90,
+          proteinG: 10,
+          totalSugarG: 5,
+          imageUrl: null,
+          isAdult: false,
+          checkedAt: "2026-08-25"
+        }
+      ]
+    );
+
+    expect(candidates[0]?.slug).toBe("biezp-krems-protein-baltais-persiku-300-g");
+  });
+
+  it("keeps a clearly read classic snack ahead of same-brand flavored variants", () => {
+    const base = {
+      brand: "SELGA",
+      category: "Bakaleja/Saldumi/Cepumi iepakojumos",
+      packSize: "180g",
+      nutritionBasis: "100g" as const,
+      energyKcal: 420,
+      proteinG: 7,
+      totalSugarG: 20,
+      imageUrl: null,
+      isAdult: false,
+      checkedAt: "2026-08-25"
+    };
+    const candidates = rankIndexedBarboraCandidates(
+      {
+        brand: "SELGA",
+        name: "Selga Classic biscuits 180g",
+        variant: "classic",
+        packSize: "180g",
+        searchTerms: ["Selga cepumi classic"],
+        categoryHint: "snacks"
+      },
+      [
+        { ...base, slug: "cepumi-selga-180-g", title: "Cepumi SELGA 180g" },
+        {
+          ...base,
+          slug: "cepumi-selga-ar-sokolades-garsu-180-g",
+          title: "Cepumi SELGA ar šokolādes garšu 180g"
+        }
+      ]
+    );
+
+    expect(candidates[0]?.slug).toBe("cepumi-selga-180-g");
+    expect(isExactBarboraMatch(candidates[0]?.score || 0, candidates[1]?.score || 0)).toBe(true);
+  });
+
   it("treats a 3+1 promotional pack as four units for an observed 4x80g shelf pack", () => {
     const candidates = rankIndexedBarboraCandidates(
       {
