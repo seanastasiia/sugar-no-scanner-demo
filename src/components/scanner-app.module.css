@@ -372,50 +372,6 @@
   bottom: calc(var(--collapsed-sheet-height) + var(--sheet-clearance) + env(safe-area-inset-bottom));
 }
 
-.scanGuide {
-  position: absolute;
-  z-index: 1;
-  inset: 25% 17%;
-  opacity: 0.68;
-  pointer-events: none;
-}
-
-.scanGuide i {
-  position: absolute;
-  width: 36px;
-  height: 36px;
-  border-color: #ffffff;
-  border-style: solid;
-}
-
-.scanGuide i:nth-child(1) {
-  top: 0;
-  left: 0;
-  border-width: 2px 0 0 2px;
-  border-radius: 10px 0 0;
-}
-
-.scanGuide i:nth-child(2) {
-  top: 0;
-  right: 0;
-  border-width: 2px 2px 0 0;
-  border-radius: 0 10px 0 0;
-}
-
-.scanGuide i:nth-child(3) {
-  bottom: 0;
-  left: 0;
-  border-width: 0 0 2px 2px;
-  border-radius: 0 0 0 10px;
-}
-
-.scanGuide i:nth-child(4) {
-  right: 0;
-  bottom: 0;
-  border-width: 0 2px 2px 0;
-  border-radius: 0 0 10px;
-}
-
 .detectionBox {
   position: absolute;
   z-index: 5;

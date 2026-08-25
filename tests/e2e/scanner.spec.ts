@@ -232,6 +232,7 @@ test("public root opens directly into the camera-first experience", async ({ pag
   await expectOfficialSugarNoLogo(page);
   await expect(page.getByText("Camera permission is off")).toBeVisible();
   await expect(page.getByRole("button", { name: "Enable camera" })).toBeVisible();
+  await expect(page.getByTestId("scan-guide")).toHaveCount(0);
   await page.goto("/access");
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByLabel("Investor access code")).toHaveCount(0);

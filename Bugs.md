@@ -13,6 +13,7 @@ This file tracks open limitations and only the most recent resolved regressions.
 
 ## Recently resolved
 
+- **2026-08-25: four decorative camera corners implied that only the center rectangle was analyzed.** The guide is removed from live camera and saved-photo views; recognition still reads the full scene and keeps real product boxes after detection.
 - **2026-08-25: dense scans looked mostly broken when eight identities produced only two fits.** Results are now capped at five distinct high-confidence SKUs. Missing nutrition is checked through exact local, retailer, Open Food Facts and cited web sources; the nutrition-label scan action was removed.
 - **2026-08-25: a cold grounded lookup could hit the original 12-second timeout.** The background bound is now 18 seconds, duplicate query terms are removed and the first identity result remains non-blocking.
 - **2026-08-25: the rejected Pen/Figma theme reached production.** Production was restored to the accepted pre-Pen visual system. The obsolete experiment is removed from the active tree and remains recoverable in Git.

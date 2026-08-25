@@ -1151,15 +1151,6 @@ export function ScannerApp() {
               </div>
             ) : null}
 
-            {source === "camera" ? (
-              <div className={styles.scanGuide} data-testid="scan-guide" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-                <i />
-              </div>
-            ) : null}
-
             {ratedDetections.map((detection) => {
               const product = products[detection.productId]?.product;
               const presentation = overlayMatchPresentation(product);
