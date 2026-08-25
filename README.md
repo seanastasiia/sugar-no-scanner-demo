@@ -21,6 +21,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
 - A crossed-out shelf price and `Buy cheaper at Barbora` appear only when the exact Barbora SKU is currently cheaper.
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
+- The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
 
 ## Trust rules
 

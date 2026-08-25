@@ -13,6 +13,7 @@ This file tracks open limitations and only the most recent resolved regressions.
 
 ## Recently resolved
 
+- **2026-08-25: the demo chooser included a redundant investor-coverage card above its actions.** The card is removed so the three demo actions begin directly under the heading.
 - **2026-08-25: the expanded comparison control used an upward chevron that conflicted with the intended navigation cue.** The control now shows a downward chevron while keeping the same collapse action and accessible label.
 - **2026-08-25: expanded multi-product results repeated the leading rating in a large `Best fit in this scan` block.** The ranked list is now the single comparison source; similar options and price actions remain directly below it.
 - **2026-08-25: four decorative camera corners implied that only the center rectangle was analyzed.** The guide is removed from live camera and saved-photo views; recognition still reads the full scene and keeps real product boxes after detection.

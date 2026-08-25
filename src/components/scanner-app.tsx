@@ -1495,10 +1495,6 @@ export function ScannerApp() {
                 <X aria-hidden="true" size={20} />
               </button>
             </div>
-            <div className={styles.investorScope}>
-              <strong>Investor test aisles</strong>
-              <span>2,073 rated Barbora products: packaged snacks and dairy desserts</span>
-            </div>
             <div className={styles.demoChoices}>
               <button type="button" onClick={startShelf}>
                 <Layers3 aria-hidden="true" size={22} />
