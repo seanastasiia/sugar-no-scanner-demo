@@ -3,6 +3,7 @@
 Public Latvia proof of concept for camera-based identification and comparison of packaged groceries. It is a wellness discovery tool, not a medical device or an absolute rating of food.
 
 - Live demo: [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
+- Latest Sugar.no Figma/Pen visual-system evidence: [docs/test-runs/2026-08-25-figma-pen-redesign.md](docs/test-runs/2026-08-25-figma-pen-redesign.md)
 - Latest live-camera latency evidence: [docs/test-runs/2026-08-25-camera-speed.md](docs/test-runs/2026-08-25-camera-speed.md)
 - Latest checkout active-camera race release evidence: [docs/test-runs/2026-08-25-checkout-camera-race.md](docs/test-runs/2026-08-25-checkout-camera-race.md)
 - Latest long-portrait retailer-page release evidence: [docs/test-runs/2026-08-25-long-portrait-store-page.md](docs/test-runs/2026-08-25-long-portrait-store-page.md)
@@ -235,6 +236,8 @@ The app uses the checked-in local catalog and structured server logs when Supaba
 ## Railway and release
 
 `railway.json` builds with Railpack, runs the standalone Next server from `.next/standalone/server.js` and checks `/api/health`. The `postbuild` lifecycle copies `public` and `.next/static` into the standalone artifact.
+
+Railway CLI 5.43.4 currently warns that `railway.json` Config as Code should be migrated to `.railway/railway.ts` before 1 December 2026. The checked-in configuration still works for this release; migration is intentionally not bundled into a visual redesign.
 
 Railway must set `HOSTNAME=0.0.0.0` so its proxy and health checker can reach the standalone Next.js server.
 
