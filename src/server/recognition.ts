@@ -12,6 +12,7 @@ import type {
 import {
   getBarboraOfferBySlug,
   isExactBarboraMatch,
+  resolveIndexedBarboraCandidate,
   resolveBarboraOffer,
   visualBarboraCandidates,
   type BarboraLookupInput,
@@ -531,12 +532,14 @@ export interface DetectionResolutionDependencies {
   getOfferBySlug: typeof getBarboraOfferBySlug;
   resolveOffer: typeof resolveBarboraOffer;
   resolveOpenFoodFacts: typeof resolveOpenFoodFactsProduct;
+  resolveIndexedCandidate?: typeof resolveIndexedBarboraCandidate;
 }
 
 const defaultResolutionDependencies: DetectionResolutionDependencies = {
   getOfferBySlug: getBarboraOfferBySlug,
   resolveOffer: resolveBarboraOffer,
-  resolveOpenFoodFacts: resolveOpenFoodFactsProduct
+  resolveOpenFoodFacts: resolveOpenFoodFactsProduct,
+  resolveIndexedCandidate: resolveIndexedBarboraCandidate
 };
 
 async function mapWithConcurrency<T, R>(
@@ -581,30 +584,39 @@ export async function resolveVisibleDetections(
     };
     const initialCatalogMatch = matchCatalogProductWithConfidence(observedIdentity, catalog);
     const lookupInput = lookupInputForDetection(detection);
+    const indexedBarboraMatch = initialCatalogMatch
+      ? null
+      : detection.confirmedBarboraSlug
+        ? { slug: detection.confirmedBarboraSlug, score: 1 }
+        : (dependencies.resolveIndexedCandidate || resolveIndexedBarboraCandidate)(lookupInput);
     const retailerOffer = initialCatalogMatch
       ? await dependencies.getOfferBySlug(initialCatalogMatch.product.id, lookupInput).catch(() => null)
-      : detection.confirmedBarboraSlug
-        ? await dependencies.getOfferBySlug(detection.confirmedBarboraSlug, lookupInput).catch(() => null)
-      : await dependencies.resolveOffer(lookupInput).catch(() => null);
+      : indexedBarboraMatch
+        ? await dependencies.getOfferBySlug(indexedBarboraMatch.slug, lookupInput).catch(() => null)
+        : await dependencies.resolveOffer(lookupInput).catch(() => null);
     const exactRetailerOffer = retailerOffer?.exactSku ? retailerOffer : null;
     // Barbora is the Latvia-primary source and its broad local index is free to
     // query. Use Open Food Facts only after that exact-SKU path fails so a shelf
     // does not spend the community search API's strict per-IP request budget on
     // products that are already resolved locally.
-    const openFoodFactsCandidate = initialCatalogMatch || exactRetailerOffer
+    const openFoodFactsCandidate = initialCatalogMatch || indexedBarboraMatch || exactRetailerOffer
       ? null
       : await dependencies.resolveOpenFoodFacts(lookupInput, detection.barcode).catch(() => null);
     const knownProduct =
       initialCatalogMatch?.product ||
       (exactRetailerOffer ? catalog.find((product) => product.id === exactRetailerOffer.slug) || null : null);
-    const openFoodFacts = knownProduct || exactRetailerOffer ? null : openFoodFactsCandidate;
+    const openFoodFacts = knownProduct || indexedBarboraMatch || exactRetailerOffer ? null : openFoodFactsCandidate;
     const resolvedProduct = knownProduct || openFoodFacts?.product || null;
     const nutritionLinkConfidence =
-      initialCatalogMatch?.confidence ?? exactRetailerOffer?.matchConfidence ?? openFoodFacts?.confidence ?? null;
+      initialCatalogMatch?.confidence ??
+      indexedBarboraMatch?.score ??
+      exactRetailerOffer?.matchConfidence ??
+      openFoodFacts?.confidence ??
+      null;
     const productId =
       resolvedProduct?.id ||
-      (exactRetailerOffer
-        ? `barbora:${exactRetailerOffer.slug}`
+      (indexedBarboraMatch || exactRetailerOffer
+        ? `barbora:${indexedBarboraMatch?.slug || exactRetailerOffer!.slug}`
         : genericProductId(detection.brand, detection.productName, ""));
     return {
       productId,
@@ -620,7 +632,7 @@ export async function resolveVisibleDetections(
         category: null,
         matchKind: knownProduct
           ? "verified_catalog"
-          : exactRetailerOffer
+          : indexedBarboraMatch || exactRetailerOffer
             ? "barbora"
             : openFoodFacts
               ? "open_food_facts"

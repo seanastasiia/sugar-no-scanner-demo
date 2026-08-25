@@ -322,6 +322,7 @@ describe("resolveVisibleDetections", () => {
           matchConfidence: 0.94,
           exactSku: true
         }),
+        resolveIndexedCandidate: () => ({ slug: "majoneze-siera-spilva-250-g", score: 0.94 }),
         resolveOpenFoodFacts: async () => {
           openFoodFactsAttempts += 1;
           return null;
@@ -334,7 +335,32 @@ describe("resolveVisibleDetections", () => {
       catalogProductId: null,
       nutritionLinkConfidence: 0.94,
       identity: { matchKind: "barbora" },
-      retailerOffer: { exactSku: true }
+      retailerOffer: null
+    });
+    expect(openFoodFactsAttempts).toBe(0);
+  });
+
+  it("keeps an exact broad nutrition match when the live retailer price page is unavailable", async () => {
+    let openFoodFactsAttempts = 0;
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, { brand: "ORBIT", productName: "Refreshers Spearmint gum" })],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveIndexedCandidate: () => ({ slug: "kosl-gum-refresh-spearmint-orbit-15-6-g", score: 0.85 }),
+        resolveOpenFoodFacts: async () => {
+          openFoodFactsAttempts += 1;
+          return null;
+        }
+      }
+    );
+
+    expect(detections[0]).toMatchObject({
+      productId: "barbora:kosl-gum-refresh-spearmint-orbit-15-6-g",
+      nutritionLinkConfidence: 0.85,
+      identity: { matchKind: "barbora" },
+      retailerOffer: null
     });
     expect(openFoodFactsAttempts).toBe(0);
   });

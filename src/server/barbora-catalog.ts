@@ -272,6 +272,13 @@ export function visualBarboraCandidates(input: BarboraLookupInput, limit = 3): V
   });
 }
 
+export function resolveIndexedBarboraCandidate(input: BarboraLookupInput): RankedBarboraCandidate | null {
+  const candidates = rankIndexedBarboraCandidates(input, listIndexedBarboraNutrition(), 2);
+  const best = candidates[0];
+  if (!best || !isExactBarboraMatch(best.score, candidates[1]?.score || 0)) return null;
+  return best;
+}
+
 export function rankBarboraCandidates(
   input: BarboraLookupInput,
   slugs: string[] = productSlugs as string[],
@@ -388,9 +395,8 @@ export async function getBarboraOfferBySlug(slug: string, input: BarboraLookupIn
 }
 
 export async function resolveBarboraOffer(input: BarboraLookupInput): Promise<RetailerOffer | null> {
-  const indexedCandidates = rankIndexedBarboraCandidates(input);
-  const best = indexedCandidates[0];
-  if (!best || !isExactBarboraMatch(best.score, indexedCandidates[1]?.score || 0)) return null;
+  const best = resolveIndexedBarboraCandidate(input);
+  if (!best) return null;
   // The local index already contains the full title, brand, pack and nutrition
   // evidence. Only an exact text match earns one live page read for current
   // price/availability; ambiguous candidates never trigger speculative network
