@@ -3,6 +3,7 @@
 Public Latvia proof of concept for camera-based identification and comparison of packaged groceries. It is a wellness discovery tool, not a medical device or an absolute rating of food.
 
 - Live demo: [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
+- Latest five-product automatic web-enrichment evidence: [docs/test-runs/2026-08-25-five-product-web-enrichment.md](docs/test-runs/2026-08-25-five-product-web-enrichment.md)
 - Latest production-design rollback evidence: [docs/test-runs/2026-08-25-pen-style-rollback.md](docs/test-runs/2026-08-25-pen-style-rollback.md)
 - Archived Figma/Pen visual experiment (not active in production): [docs/test-runs/2026-08-25-figma-pen-redesign.md](docs/test-runs/2026-08-25-figma-pen-redesign.md)
 - Latest live-camera latency evidence: [docs/test-runs/2026-08-25-camera-speed.md](docs/test-runs/2026-08-25-camera-speed.md)
