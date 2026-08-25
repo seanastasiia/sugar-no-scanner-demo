@@ -112,6 +112,9 @@ const synonymMap: Record<string, string[]> = {
   karamelu: ["caramel"],
   coconut: ["kokosriekstu"],
   kokosriekstu: ["coconut"],
+  condensed: ["iebiezinata", "kondenseta"],
+  iebiezinata: ["condensed", "kondenseta"],
+  kondenseta: ["condensed", "iebiezinata"],
   clementina: ["clementine", "klementinu"],
   clementine: ["clementina", "klementinu"],
   limone: ["lemon", "citronu"],
@@ -138,6 +141,8 @@ const flavorTokens = new Set([
   "vanilas",
   "zemenu"
 ]);
+
+const productLineTokens = new Set(["cirks", "gimenei", "mini", "nature", "treat"]);
 
 export function normalizeRetailText(value: string): string {
   return value
@@ -299,8 +304,13 @@ export function rankIndexedBarboraCandidates(
   const observedBrand = normalizeRetailText(input.brand);
   if (observedBrand.replaceAll(" ", "").length < 3) return [];
   const brandTokens = new Set(expandedTokens(input.brand));
-  const queryTokens = expandedTokens([input.name, input.variant, ...input.searchTerms].filter(Boolean).join(" "))
+  const rawQueryTokens = expandedTokens([input.name, input.variant, ...input.searchTerms].filter(Boolean).join(" "))
     .filter((token) => !brandTokens.has(token) && !/^\d+$/.test(token));
+  const classicQuery = rawQueryTokens.some((token) => ["classic", "klasiska", "klasiskais"].includes(token));
+  const queryContainsFlavor = rawQueryTokens.some((token) => flavorTokens.has(token));
+  const queryTokens = queryContainsFlavor
+    ? rawQueryTokens.filter((token) => !["classic", "klasiska", "klasiskais"].includes(token))
+    : rawQueryTokens;
   const observedQuantity = canonicalQuantity([input.packSize, input.name].filter(Boolean).join(" "));
   const scopedProducts = input.categoryHint
     ? products.filter((product) => investorCategoryForRetailPath(product.category) === input.categoryHint)
@@ -331,11 +341,17 @@ export function rankIndexedBarboraCandidates(
       );
       const reverseCoverage = weightedCoverage(reverseTokens, new Set(queryTokens), frequencies, rankingProducts.length);
       const packBonus = observedQuantity && candidateQuantity ? 0.08 : 0;
-      const classicBonus = queryTokens.some((token) => ["classic", "klasiska", "klasiskais"].includes(token)) &&
+      const classicBonus = classicQuery && !queryContainsFlavor &&
         ![...candidate].some((token) => flavorTokens.has(token))
         ? 0.14
         : 0;
-      const score = Math.min(1, 0.24 + nameCoverage * 0.58 + reverseCoverage * 0.1 + packBonus + classicBonus);
+      const lineConflictPenalty = classicQuery && [...candidate].some((token) => productLineTokens.has(token))
+        ? 0.18
+        : 0;
+      const score = Math.min(
+        1,
+        0.24 + nameCoverage * 0.58 + reverseCoverage * 0.1 + packBonus + classicBonus - lineConflictPenalty
+      );
       return score >= 0.52 ? [{ slug: product.slug, score }] : [];
     })
     .sort((left, right) => right.score - left.score || left.slug.localeCompare(right.slug))
@@ -475,7 +491,8 @@ async function fetchOffer(slug: string, input: BarboraLookupInput, indexScore: n
 }
 
 export function isExactBarboraMatch(bestConfidence: number, runnerUpConfidence: number): boolean {
-  return bestConfidence >= 0.72 && bestConfidence - runnerUpConfidence >= 0.08;
+  const margin = bestConfidence - runnerUpConfidence;
+  return (bestConfidence >= 0.72 && margin >= 0.08) || (bestConfidence >= 0.82 && margin >= 0.06);
 }
 
 export async function getBarboraOfferBySlug(slug: string, input: BarboraLookupInput): Promise<RetailerOffer | null> {

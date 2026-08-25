@@ -21,12 +21,14 @@ The 2,073 count is source-data coverage, not a claim that every package is visua
 
 - `npm run lint`: passed.
 - `npm run typecheck`: passed.
-- `npm test`: 22 files, 120 tests passed.
+- `npm test`: 22 files, 121 tests passed.
 - `npm run catalog:validate:barbora-coverage`: passed with the counts above.
 - `npm run build`: Next.js production build passed.
 - `CI=1 npm run test:e2e`: 24 Mobile Safari scenarios passed, including the iPhone 17 Pro portrait and landscape matrix, multi-product shelf recognition, progressive enrichment and the investor-scope chooser.
 
 Matcher fixtures verify an exact Kārums vanilla curd snack, a `ProteinFit` front sub-brand resolving to its exact BALTAIS dairy record and a classic SELGA package remaining ahead of same-brand flavored variants. An incorrect coarse aisle hint falls back to the broad catalog rather than hiding a valid non-pack result.
+
+A four-pass production replay of the existing dense SELGA shelf returned 23 row-level identities and 9 exact rated results before the browser's cross-crop merge. It also exposed `Classic` being read as a product line alongside a specific flavor. The matcher now ignores that line only when a concrete flavor is present, penalizes conflicting `Mini`, `Treat` or `Nature` lines and keeps its exact-match margin fail-closed. Products visibly present on the shelf but absent from the current Barbora snapshot remain unrated.
 
 ## Product acceptance check
 

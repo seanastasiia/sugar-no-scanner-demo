@@ -36,6 +36,7 @@ describe("Barbora product lookup", () => {
 
   it("requires both a confidence threshold and a clear candidate margin for exact-SKU status", () => {
     expect(isExactBarboraMatch(0.78, 0.65)).toBe(true);
+    expect(isExactBarboraMatch(0.82, 0.75)).toBe(true);
     expect(isExactBarboraMatch(0.75, 0.71)).toBe(false);
     expect(isExactBarboraMatch(0.9, 0.87)).toBe(false);
   });
@@ -243,6 +244,47 @@ describe("Barbora product lookup", () => {
 
     expect(candidates[0]?.slug).toBe("cepumi-selga-180-g");
     expect(isExactBarboraMatch(candidates[0]?.score || 0, candidates[1]?.score || 0)).toBe(true);
+  });
+
+  it("treats Classic as a packaging line when a specific snack flavor is readable", () => {
+    const base = {
+      brand: "SELGA",
+      category: "Bakaleja/Saldumi/Cepumi iepakojumos",
+      nutritionBasis: "100g" as const,
+      energyKcal: 420,
+      proteinG: 7,
+      totalSugarG: 20,
+      imageUrl: null,
+      isAdult: false,
+      checkedAt: "2026-08-25"
+    };
+    const candidates = rankIndexedBarboraCandidates(
+      {
+        brand: "SELGA",
+        name: "Selga Classic chocolate biscuits",
+        variant: "chocolate",
+        packSize: "",
+        searchTerms: ["SELGA Classic cepumi ar šokolādes garšu"],
+        categoryHint: "snacks"
+      },
+      [
+        { ...base, slug: "cepumi-selga-180-g", title: "Cepumi SELGA 180g", packSize: "180g" },
+        {
+          ...base,
+          slug: "cepumi-selga-ar-sokolades-garsu-180-g",
+          title: "Cepumi SELGA ar šokolādes garšu 180g",
+          packSize: "180g"
+        },
+        {
+          ...base,
+          slug: "cepumi-selga-mini-ar-sokolad-garsu-250-g",
+          title: "Cepumi Mini SELGA ar šokolādes garšu 250g",
+          packSize: "250g"
+        }
+      ]
+    );
+
+    expect(candidates[0]?.slug).toBe("cepumi-selga-ar-sokolades-garsu-180-g");
   });
 
   it("falls back to the broad index when the coarse aisle hint is wrong", () => {
