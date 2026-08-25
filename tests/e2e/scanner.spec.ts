@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 async function unlock(page: Page) {
@@ -6,6 +6,32 @@ async function unlock(page: Page) {
   await page.waitForLoadState("networkidle");
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
+}
+
+async function expectInsideViewport(page: Page, locator: Locator) {
+  const bounds = await locator.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      left: rect.left,
+      right: rect.right,
+      top: rect.top,
+      bottom: rect.bottom,
+      width: rect.width,
+      height: rect.height,
+      viewportWidth: window.visualViewport?.width || window.innerWidth,
+      viewportHeight: window.visualViewport?.height || window.innerHeight
+    };
+  });
+  expect(bounds.left).toBeGreaterThanOrEqual(-1);
+  expect(bounds.top).toBeGreaterThanOrEqual(-1);
+  expect(bounds.right).toBeLessThanOrEqual(bounds.viewportWidth + 1);
+  expect(bounds.bottom).toBeLessThanOrEqual(bounds.viewportHeight + 1);
+}
+
+async function expectNoDocumentOverflow(page: Page) {
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)
+  ).toBe(true);
 }
 
 async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
@@ -227,6 +253,57 @@ test("scanner remains operable at narrow portrait and phone landscape sizes", as
   await page.getByRole("button", { name: "Collapse product results" }).click();
   await expect(page.getByRole("button", { name: "Back to live camera" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async ({ page }) => {
+  await page.setViewportSize({ width: 402, height: 874 });
+  await unlock(page);
+  await openDemoScene(page, "Shelf demo");
+  await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
+
+  const sheet = page.locator("aside");
+  const status = page.getByRole("status");
+  const viewAll = page.getByRole("button", { name: "View all", exact: true });
+  const scanAgain = page.getByRole("button", { name: "Scan again" });
+
+  await expectInsideViewport(page, sheet);
+  await expectInsideViewport(page, status);
+  await expectInsideViewport(page, viewAll);
+  await expectInsideViewport(page, scanAgain);
+  expect((await viewAll.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  expect((await scanAgain.boundingBox())?.width).toBeGreaterThanOrEqual(44);
+  await expectNoDocumentOverflow(page);
+  await page.screenshot({ path: "docs/screenshots/iphone-17-pro-camera.png" });
+
+  await viewAll.click();
+  const dialog = page.getByRole("dialog", { name: "Products from this scan" });
+  await expectInsideViewport(page, dialog);
+  await expectInsideViewport(page, page.getByRole("button", { name: "Return to camera" }));
+  await expectInsideViewport(page, page.getByRole("button", { name: "Collapse product results" }));
+  await expectNoDocumentOverflow(page);
+  await page.screenshot({ path: "docs/screenshots/iphone-17-pro-results.png" });
+
+  const viewports = [
+    { width: 440, height: 956, label: "large portrait" },
+    { width: 375, height: 667, label: "small portrait" },
+    { width: 874, height: 402, label: "iPhone 17 Pro landscape" }
+  ];
+  for (const viewport of viewports) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await expectInsideViewport(page, dialog);
+    await expectInsideViewport(page, page.getByRole("button", { name: "Collapse product results" }));
+    await expectNoDocumentOverflow(page);
+    await page.getByRole("button", { name: "Collapse product results" }).click();
+    await expectInsideViewport(page, sheet);
+    await expectInsideViewport(page, status);
+    await expectInsideViewport(page, page.getByRole("button", { name: "View all", exact: true }));
+    await expectInsideViewport(page, page.getByRole("button", { name: "Scan again" }));
+    await expectNoDocumentOverflow(page);
+    if (viewport.label === "iPhone 17 Pro landscape") {
+      await page.screenshot({ path: "docs/screenshots/iphone-17-pro-landscape.png" });
+    }
+    await page.getByRole("button", { name: "View all", exact: true }).click();
+  }
 });
 
 test("sample response and analytics reject raw image storage", async ({ page }) => {

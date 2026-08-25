@@ -34,7 +34,7 @@ The app is a working mobile-first web/PWA concept with:
 - an automatic focused center retry after an uncertain broad camera pass, with remapped overlays and a separate conservative confidence threshold;
 - an in-scanner Shelf/Checkout switch that changes scenes without restarting the scanner;
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
-- 19 authored iPhone-sized WebKit scenarios plus deterministic sample scenes, including the complete unknown-package-to-label-to-fit recovery path.
+- 20 authored Mobile Safari scenarios plus deterministic sample scenes, including the complete unknown-package-to-label-to-fit recovery path and a responsive matrix for iPhone 17 Pro portrait/landscape, a large iPhone and a small iPhone.
 
 The guaranteed shelf and checkout scenes work without third-party credentials. Live camera/upload recognition names readable packages, then checks the curated benchmark, the broad exact-Barbora nutrition snapshot and an exact Open Food Facts record. If none supplies both required factors, the result says `Needs nutrition label` and offers one functional camera action instead of ending at `Identified`. The app is deployed from GitHub `main` to Railway with a public HTTPS camera route. Production catalog/analytics storage still requires Supabase.
 
@@ -85,6 +85,8 @@ npm run dev
 ```
 
 Open `http://localhost:3000`; the scanner starts on the public camera route. Camera access on a real iPhone requires HTTPS; use the Railway URL for physical-device QA.
+
+The scanner is pinned to the browser viewport with `top/right/bottom/left` constraints instead of relying on a cached `100dvh` height. Horizontal gutters include all four iOS safe-area insets. On phone widths the compact sheet keeps `View all` visible and collapses `Scan again` to one labelled 44 px icon button; intentional product rails remain horizontally swipeable without widening the document.
 
 ## Environment
 
@@ -240,6 +242,7 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 - [Monetization notes](docs/monetization-research.md)
 - [Mobile screenshots](docs/screenshots)
 - [Camera-first collapsed sheet](docs/screenshots/shelf-mobile.png) and [expanded result page](docs/screenshots/shelf-results-mobile.png)
+- [iPhone 17 Pro camera](docs/screenshots/iphone-17-pro-camera.png), [full results](docs/screenshots/iphone-17-pro-results.png) and [landscape](docs/screenshots/iphone-17-pro-landscape.png)
 - [On-demand exact-Barbora quick view](docs/screenshots/barbora-quick-view-mobile.png)
 - [Nutrition-label recovery result](docs/screenshots/nutrition-label-fit-mobile.png)
 - [Recognized product price comparison](docs/screenshots/price-comparison-mobile.png)

@@ -1,5 +1,7 @@
 .app {
+  width: 100%;
   min-height: 100dvh;
+  overflow-x: clip;
   background:
     radial-gradient(circle at 90% 2%, rgb(232 97 74 / 18%), transparent 25rem),
     var(--cream);
@@ -16,7 +18,7 @@
   height: calc(62px + env(safe-area-inset-top));
   align-items: flex-end;
   justify-content: flex-start;
-  padding: 0 20px 14px;
+  padding: 0 max(20px, env(safe-area-inset-right)) 14px max(20px, env(safe-area-inset-left));
   background: linear-gradient(to bottom, rgb(242 237 228 / 96%), rgb(242 237 228 / 82%));
   backdrop-filter: blur(16px);
   transition: background-color 180ms ease, color 180ms ease;
@@ -209,14 +211,22 @@
 }
 
 .experience {
-  position: relative;
-  height: 100dvh;
-  min-height: 100dvh;
-  overflow: hidden;
+  --collapsed-sheet-height: 158px;
+  --sheet-clearance: 12px;
+
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: 100vw;
+  height: auto;
+  min-height: 0;
+  overflow: clip;
 }
 
 .stage {
   position: relative;
+  width: 100%;
+  max-width: 100vw;
   height: 100%;
   isolation: isolate;
   overflow: hidden;
@@ -246,8 +256,8 @@
   position: absolute;
   z-index: 10;
   top: calc(70px + env(safe-area-inset-top));
-  right: 14px;
-  left: 14px;
+  right: max(14px, env(safe-area-inset-right));
+  left: max(14px, env(safe-area-inset-left));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -319,9 +329,9 @@
 .stageStatus {
   position: absolute;
   z-index: 10;
-  right: 16px;
+  right: max(16px, env(safe-area-inset-right));
   bottom: 42px;
-  left: 16px;
+  left: max(16px, env(safe-area-inset-left));
   display: flex;
   min-height: 44px;
   align-items: center;
@@ -362,7 +372,7 @@
 }
 
 .stageWithResults .stageStatus {
-  bottom: calc(178px + env(safe-area-inset-bottom));
+  bottom: calc(var(--collapsed-sheet-height) + var(--sheet-clearance) + env(safe-area-inset-bottom));
 }
 
 .scanGuide {
@@ -587,9 +597,9 @@
 .privacyNoteStage {
   position: absolute;
   z-index: 9;
-  right: 16px;
+  right: max(16px, env(safe-area-inset-right));
   bottom: 12px;
-  left: 16px;
+  left: max(16px, env(safe-area-inset-left));
   margin: 0;
   color: rgb(255 255 255 / 68%);
   font-size: 10px;
@@ -603,6 +613,8 @@
   right: 0;
   bottom: 0;
   left: 0;
+  width: 100%;
+  max-width: 100vw;
   min-width: 0;
   border-radius: 26px 26px 0 0;
   background: var(--cream);
@@ -611,15 +623,16 @@
 }
 
 .resultsCollapsed {
-  height: calc(166px + env(safe-area-inset-bottom));
+  height: calc(var(--collapsed-sheet-height) + env(safe-area-inset-bottom));
   overflow: hidden;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 .resultsExpanded {
   top: 0;
-  height: 100dvh;
-  overflow: auto;
+  height: auto;
+  overflow-x: clip;
+  overflow-y: auto;
   border-radius: 0;
   overscroll-behavior: contain;
 }
@@ -629,11 +642,11 @@
   z-index: 30;
   top: 0;
   display: grid;
-  min-height: 70px;
+  min-height: 68px;
   grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 10px max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
   background: color-mix(in srgb, var(--cream) 94%, transparent);
   backdrop-filter: blur(16px);
 }
@@ -641,7 +654,7 @@
 .resultsExpanded .sheetChrome {
   min-height: calc(66px + env(safe-area-inset-top));
   grid-template-columns: minmax(0, 1fr) 44px;
-  padding-top: calc(8px + env(safe-area-inset-top));
+  padding: calc(8px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left));
   border-bottom: 1px solid var(--border);
 }
 
@@ -725,6 +738,10 @@
   font-weight: 800;
 }
 
+.sheetActions button > svg {
+  flex: 0 0 auto;
+}
+
 .resultsCollapsed .sheetChrome {
   grid-template-columns: minmax(0, 1fr) auto;
 }
@@ -747,15 +764,17 @@
 .sheetPreview {
   display: flex;
   gap: 8px;
-  padding: 0 16px 10px;
+  max-width: 100%;
+  padding: 0 max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
   scrollbar-width: none;
 }
 
 .sheetPreviewCard {
   display: grid;
   min-width: 158px;
-  min-height: 72px;
+  min-height: 68px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 15px;
@@ -771,7 +790,7 @@
 .sheetPreviewOpen {
   display: grid;
   min-width: 0;
-  min-height: 70px;
+  min-height: 66px;
   grid-template-columns: 42px minmax(0, 1fr);
   align-items: center;
   gap: 9px;
@@ -785,7 +804,7 @@
 .sheetPreviewBuy {
   display: grid;
   min-width: 94px;
-  min-height: 70px;
+  min-height: 66px;
   grid-template-columns: minmax(0, 1fr) 15px;
   align-content: center;
   align-items: center;
@@ -850,9 +869,10 @@
 
 .sheetContent {
   width: min(100%, 720px);
-  min-height: calc(100dvh - 70px);
+  min-width: 0;
+  min-height: calc(100dvh - 70px - env(safe-area-inset-top));
   margin: 0 auto;
-  padding: 16px 18px max(34px, env(safe-area-inset-bottom));
+  padding: 16px max(18px, env(safe-area-inset-right)) max(34px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
 }
 
 .scanSummary {
@@ -1622,7 +1642,7 @@
   inset: 0;
   display: grid;
   align-items: end;
-  padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   background: rgb(0 0 0 / 48%);
 }
 
@@ -1767,9 +1787,70 @@
   }
 }
 
+@media (max-width: 420px) {
+  .sheetActions {
+    gap: 6px;
+  }
+
+  .sheetActions button {
+    padding: 0 10px;
+  }
+
+  .sheetActions .compactScanAgain {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .compactScanAgain span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .scanSummary > div:first-child {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 3px 10px;
+  }
+
+  .scanSummary > div:first-child span {
+    text-align: left;
+  }
+}
+
+@media (max-height: 720px) and (max-width: 759px) {
+  .experience {
+    --collapsed-sheet-height: 150px;
+  }
+
+  .sheetChrome {
+    min-height: 64px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .sheetPreviewCard {
+    min-height: 64px;
+  }
+
+  .sheetPreviewOpen,
+  .sheetPreviewBuy {
+    min-height: 62px;
+  }
+}
+
 @media (max-height: 500px) and (max-width: 759px) {
+  .experience {
+    --collapsed-sheet-height: 86px;
+  }
+
   .resultsCollapsed {
-    height: calc(86px + env(safe-area-inset-bottom));
+    height: calc(var(--collapsed-sheet-height) + env(safe-area-inset-bottom));
   }
 
   .resultsCollapsed .sheetPreview {
@@ -1777,7 +1858,7 @@
   }
 
   .stageWithResults .stageStatus {
-    bottom: calc(94px + env(safe-area-inset-bottom));
+    bottom: calc(var(--collapsed-sheet-height) + 8px + env(safe-area-inset-bottom));
   }
 }
 
