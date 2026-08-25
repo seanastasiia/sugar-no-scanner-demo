@@ -12,6 +12,7 @@ Public Latvia proof of concept for camera-based identification and comparison of
 The app is a working mobile-first web/PWA concept with:
 
 - a public camera-first entry with no password gate or `Private demo` badge;
+- the official white Sugar.no symbol and wordmark sourced from the current `sugar.no` website, stored locally as a first-party SVG so scanner branding does not depend on a third-party runtime request;
 - automatic live-camera frame sampling after the user grants permission;
 - full-frame shelf recognition that asks for up to eight distinct readable SKUs in one pass, while repeated facings of one SKU remain grouped;
 - one recognition API for camera, saved images, a deterministic four-item shelf photo and a real checkout photo with three visually recognized packaged products;

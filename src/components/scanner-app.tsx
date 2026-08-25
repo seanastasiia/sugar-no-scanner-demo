@@ -959,9 +959,15 @@ export function ScannerApp() {
   return (
     <main className={styles.app}>
       <header className={`${styles.header} ${styles.scannerHeader}`}>
-        <div className={styles.wordmark} aria-label="Sugar dot no">
-          Sugar<span>.no</span>
-        </div>
+        <Image
+          className={styles.wordmark}
+          src="/brand/sugar-no-logo-white.svg"
+          alt="Sugar.no"
+          width={137}
+          height={26.07}
+          priority
+          unoptimized
+        />
       </header>
 
       <section className={styles.experience} aria-label={`${sourceLabel(source)} scanner`}>

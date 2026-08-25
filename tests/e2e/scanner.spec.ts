@@ -34,6 +34,27 @@ async function expectNoDocumentOverflow(page: Page) {
   ).toBe(true);
 }
 
+async function expectOfficialSugarNoLogo(page: Page) {
+  const logo = page.getByAltText("Sugar.no", { exact: true });
+  await expect(logo).toHaveCount(1);
+  await expect(logo).toBeVisible();
+  const details = await logo.evaluate((element) => {
+    const image = element as HTMLImageElement;
+    const rect = image.getBoundingClientRect();
+    return {
+      pathname: new URL(image.currentSrc || image.src, window.location.href).pathname,
+      naturalWidth: image.naturalWidth,
+      naturalHeight: image.naturalHeight,
+      ratio: rect.width / rect.height
+    };
+  });
+  expect(details.pathname).toBe("/brand/sugar-no-logo-white.svg");
+  expect(details.naturalWidth).toBeGreaterThan(0);
+  expect(details.naturalHeight).toBeGreaterThan(0);
+  expect(details.ratio).toBeCloseTo(137 / 26.07, 2);
+  await expectInsideViewport(page, logo);
+}
+
 async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   await page.getByRole("button", { name: "Show demo" }).click();
   const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
@@ -134,6 +155,7 @@ test("public root opens directly into the camera-first experience", async ({ pag
     });
   });
   await unlock(page);
+  await expectOfficialSugarNoLogo(page);
   await expect(page.getByText("Camera permission is off")).toBeVisible();
   await expect(page.getByRole("button", { name: "Enable camera" })).toBeVisible();
   await page.goto("/access");
@@ -278,6 +300,7 @@ test("comparison remains usable with reduced motion, dark mode and enlarged text
 test("scanner remains operable at narrow portrait and phone landscape sizes", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await unlock(page);
+  await expectOfficialSugarNoLogo(page);
   await openDemoScene(page, "Shelf demo");
   const portraitStage = page.getByLabel("Shelf photo scanner").locator(":scope > div").first();
   const portraitStageBox = await portraitStage.boundingBox();
@@ -291,6 +314,7 @@ test("scanner remains operable at narrow portrait and phone landscape sizes", as
   await expect(page.locator('[role="dialog"] svg.lucide-chevron-down')).toHaveCount(0);
 
   await page.setViewportSize({ width: 812, height: 375 });
+  await expectOfficialSugarNoLogo(page);
   await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
   await page.getByRole("button", { name: "Collapse product results" }).click();
   await expect(page.getByRole("button", { name: "Back to live camera" })).toBeVisible();
@@ -300,6 +324,7 @@ test("scanner remains operable at narrow portrait and phone landscape sizes", as
 test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async ({ page }) => {
   await page.setViewportSize({ width: 402, height: 874 });
   await unlock(page);
+  await expectOfficialSugarNoLogo(page);
   await openDemoScene(page, "Shelf demo");
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
 
@@ -332,6 +357,7 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
   ];
   for (const viewport of viewports) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await expectOfficialSugarNoLogo(page);
     await expectInsideViewport(page, dialog);
     await expectInsideViewport(page, page.getByRole("button", { name: "Collapse product results" }));
     await expectNoDocumentOverflow(page);

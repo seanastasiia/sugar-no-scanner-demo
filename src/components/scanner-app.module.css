@@ -32,13 +32,10 @@
 }
 
 .wordmark {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.045em;
-}
-
-.wordmark span {
-  color: var(--coral);
+  display: block;
+  width: 116px;
+  height: auto;
+  flex: 0 0 auto;
 }
 
 .intro {

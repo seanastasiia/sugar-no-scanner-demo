@@ -4,7 +4,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 
 ## Core investor path
 
-1. Open the link. Confirm that it goes directly to the camera-first scanner with no access-code form or `Private demo` label.
+1. Open the link. Confirm that it goes directly to the camera-first scanner with no access-code form or `Private demo` label. The top-left brand must be the official white Sugar.no symbol plus wordmark from `sugar.no`, not styled text, and it must stay fully visible in portrait and landscape.
 2. Confirm the camera permission prompt begins immediately and `Show demo` remains visible if permission is denied or the camera is unavailable.
 3. Tap `Show demo`, then `Shelf demo`. Confirm that the camera scene fills the phone and four markers appear directly over the four supported packages. Rated markers must say `Great fit`, `Moderate fit` or `Low fit`; neutral identities must not masquerade as rated picks.
 4. Confirm that only a compact bottom sheet overlays the shelf. It should say `4 products · 4 with Sugar.no fit`, show product thumbnails and expose `View all`. Tap it and confirm it expands into a full-height comparison page; collapse it and confirm the held shelf returns unchanged.
