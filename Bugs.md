@@ -1,5 +1,7 @@
 # Bugs
 
+- **2026-08-25: camera markers repeated `2/2 signals` and selected/best products gained a heavy white frame.** The redundant signal pill was removed from the camera overlay and its accessibility label. Selected and best markers now keep only the semantic fit-colored package outline plus stable shadow, while detailed Protein/Sugar evidence remains in the comparison sheet.
+
 - **2026-08-24: multi-product results appeared as an unordered horizontal tray, so users could not immediately see which product fit them more or less.** The expanded comparison now presents one vertical `Best fit first` list. Products with a complete Protein/Sugar fit are sorted high to low, every rated row keeps the plain-language `Great / Moderate / Low fit` label and verified values, and unrated identities stay last as `Needs nutrition label` without a fabricated rank.
 
 - **2026-08-24: the production-mode shelf-completion regression used a fixed 2.5-second pause and could inspect the request count just before the browser scheduled its second frame.** The test now waits for the actual second request with a bounded five-second poll, preserving the same product assertion without a timing race.

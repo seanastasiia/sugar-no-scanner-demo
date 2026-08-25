@@ -1048,12 +1048,11 @@ export function ScannerApp() {
                     setSelectedId(detection.productId);
                     track("result_opened", source, detection.productId);
                   }}
-                  aria-label={`Open ${displayName}: ${presentation.label}, ${presentation.completenessLabel}${isBest ? ", best in this scan" : ""}`}
+                  aria-label={`Open ${displayName}: ${presentation.label}${isBest ? ", best in this scan" : ""}`}
                 >
                   <span>
                     <OverlayToneIcon tone={presentation.tone} />
                     <strong>{isBest ? `Best · ${presentation.label}` : presentation.label}</strong>
-                    <small>{presentation.completenessLabel}</small>
                   </span>
                 </button>
               );

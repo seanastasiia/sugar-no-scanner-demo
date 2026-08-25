@@ -455,14 +455,14 @@
 }
 
 .selectedBox {
-  border-color: #ffffff;
+  border-color: var(--tone, #ffffff);
   background: color-mix(in srgb, var(--tone, #ffffff) 14%, transparent);
-  box-shadow: 0 0 0 3px var(--tone), 0 12px 34px rgb(0 0 0 / 32%);
+  box-shadow: 0 12px 34px rgb(0 0 0 / 32%);
 }
 
 .bestBox {
-  border-color: #ffffff;
-  box-shadow: 0 0 0 4px rgb(255 255 255 / 92%), 0 14px 36px rgb(0 0 0 / 38%);
+  border-color: var(--tone, #ffffff);
+  box-shadow: 0 14px 36px rgb(0 0 0 / 38%);
 }
 
 .bestBox span {
@@ -503,26 +503,6 @@
   line-height: 14px;
   transform: translateX(-50%);
   white-space: nowrap;
-}
-
-.detectionBox span small {
-  position: absolute;
-  top: 74px;
-  left: 50%;
-  min-height: 20px;
-  padding: 3px 7px;
-  border-radius: 999px;
-  background: rgb(17 17 17 / 82%);
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 780;
-  line-height: 14px;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-
-.completenessFull:not(.selectedBox):not(.bestBox) span small {
-  opacity: 0;
 }
 
 .detectionBox:not(.selectedBox) span strong {

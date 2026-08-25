@@ -23,7 +23,7 @@ The app is a working mobile-first web/PWA concept with:
 - on-demand two-factor Sugar.no fits for exact Barbora foods when energy, protein and total sugar are available;
 - exact GTIN/EAN nutrition fallback through Open Food Facts, with strict variant and pack-size guards;
 - a dedicated `Scan nutrition label` recovery step that reads one clear per-100 table when no exact product record can supply a fit;
-- photorealistic concept scenes with compact green-check, yellow-minus and coral-alert markers placed only over products with a numeric Sugar.no result;
+- photorealistic concept scenes with compact green-check, yellow-minus and coral-alert markers placed only over products with a numeric Sugar.no result; camera markers use one fit label and the fit-colored package outline, without a redundant `2/2 signals` pill or a white selected/best ring;
 - a camera-first full-viewport scanner with Sugar.no overlays and a compact bottom results sheet that shows product thumbnails, then expands into a dedicated comparison page;
 - normalized detection boxes, de-duplicated scan results, similar options and exact Barbora product links;
 - a vertical expanded ranking that puts the highest verified Sugar.no fit first, keeps `Great / Moderate / Low fit` attached to every rated row and places unrated identities last as `Needs nutrition label`;

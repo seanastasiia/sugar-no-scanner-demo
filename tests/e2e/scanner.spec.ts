@@ -154,6 +154,24 @@ test("sample shelf photo highlights products and shows a two-factor Sugar.no bad
     [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Sample shelf photo with four supported protein snacks"] img')]
       .every((image) => image.complete && image.naturalWidth > 0)
   );
+  const shelfOverlay = page.getByLabel("Shelf photo scanner");
+  await expect(shelfOverlay.getByText("2/2 signals", { exact: true })).toHaveCount(0);
+  const bestMarker = shelfOverlay.locator('button[aria-label*="best in this scan"]').first();
+  const bestChrome = await bestMarker.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { borderColor: style.borderColor, boxShadow: style.boxShadow };
+  });
+  expect(bestChrome.borderColor).not.toBe("rgb(255, 255, 255)");
+  expect(bestChrome.boxShadow).not.toContain("rgb(255, 255, 255)");
+  const moderateMarker = shelfOverlay.locator('button[aria-label*="Moderate fit"]').first();
+  await moderateMarker.click();
+  const selectedChrome = await moderateMarker.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { borderColor: style.borderColor, boxShadow: style.boxShadow };
+  });
+  expect(selectedChrome.borderColor).not.toBe("rgb(255, 255, 255)");
+  expect(selectedChrome.boxShadow).not.toContain("rgb(255, 255, 255)");
+  await bestMarker.click();
   await waitForAlternativeImages(page);
   await page.screenshot({ path: "docs/screenshots/shelf-mobile.png", fullPage: true });
   await page.getByRole("button", { name: "View all", exact: true }).click();
@@ -1132,7 +1150,17 @@ test("an exact Barbora food gets an on-demand two-factor Sugar.no fit", async ({
 
   await expect(page.getByRole("status")).toContainText("Products found. Checking Sugar.no signals");
   await expect(page.getByText("Checking nutrition…", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label*="2/2 signals"]')).toHaveCount(1);
+  const cameraOverlay = page.getByLabel("Saved shelf or checkout photo scanner");
+  const ratedMarker = cameraOverlay.locator('button[aria-label^="Open "]').first();
+  await expect(ratedMarker).toBeVisible();
+  await expect(ratedMarker).not.toHaveAttribute("aria-label", /signals/i);
+  await expect(cameraOverlay.getByText("2/2 signals", { exact: true })).toHaveCount(0);
+  const markerChrome = await ratedMarker.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { borderColor: style.borderColor, boxShadow: style.boxShadow };
+  });
+  expect(markerChrome.borderColor).not.toBe("rgb(255, 255, 255)");
+  expect(markerChrome.boxShadow).not.toContain("rgb(255, 255, 255)");
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
