@@ -25,7 +25,13 @@
 - `git diff --check` — pass.
 - Visual evidence inspected at the original 1170 × 1992 size: `docs/screenshots/shelf-mobile.png` and `docs/screenshots/shelf-results-mobile.png`. The compact preview shows the crossed demo value and retailer CTA without obscuring the camera; the expanded best-first list preserves the same two prices on the exact Barebells row.
 
-Production commit, deployment ID and health response are recorded below after the GitHub and Railway checks.
+## Production release
+
+- Behavior commit: `122cc7a3dd014b3c811c3ca988751fd65027cd6d`, pushed to GitHub `main`.
+- Direct Railway deployment: `98757f8a-6101-4ed0-81eb-281e93f32b5b` — `SUCCESS`.
+- `GET /api/health` — pass: `status=ok`, `commit=122cc7a3dd014b3c811c3ca988751fd65027cd6d`.
+- Production `POST /api/recognize` with `source=sample-shelf` — pass: four detections; the first exact Barebells SKU returns `Demo shelf price €3.49`, exact retailer offer €2.79 and the verified Barbora product URL.
+- Production browser smoke — pass: compact sheet reports `4 products · 4 with Sugar.no fit`; €3.49 is visibly `line-through`, €2.79 is visible and `Buy cheaper` points to the exact product page.
 
 ## Product check after deployment
 
