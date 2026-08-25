@@ -19,7 +19,13 @@
 - Browser assertions verify one visible `img` with `alt="Sugar.no"`, the local `/brand/sugar-no-logo-white.svg` path, a decoded image, the source aspect ratio and complete viewport containment.
 - Visual evidence: `docs/screenshots/iphone-17-pro-camera.png`, `docs/screenshots/iphone-17-pro-results.png` and `docs/screenshots/iphone-17-pro-landscape.png`.
 
-Release commit, Railway deployment and production health check are recorded after deployment below.
+## Release evidence
+
+- Behavior commit: `7b12aaf948485a9a18704c8a0f400c5df921d2c7`, pushed to GitHub `main`.
+- Direct Railway deployment: `76796ba7-a3d9-4998-bbd3-efd9fd391375` — `SUCCESS`.
+- Production health: `/api/health` returned `status: ok` and the exact behavior commit above.
+- Production asset: `/brand/sugar-no-logo-white.svg` returned HTTP 200 with `content-type: image/svg+xml`.
+- Production HTML contains the local SVG path, `alt="Sugar.no"`, `width="137"` and `height="26.07"`.
 
 ## Product check after deployment
 
