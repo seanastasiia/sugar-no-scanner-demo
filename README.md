@@ -8,6 +8,7 @@ Public Latvia proof of concept for camera-based identification and comparison of
 - Latest long-portrait retailer-page release evidence: [docs/test-runs/2026-08-25-long-portrait-store-page.md](docs/test-runs/2026-08-25-long-portrait-store-page.md)
 - Latest checkout-demo release evidence: [docs/test-runs/2026-08-25-checkout-demo-rated-products.md](docs/test-runs/2026-08-25-checkout-demo-rated-products.md)
 - Latest broad Latvia coverage evidence: [docs/test-runs/2026-08-25-broad-latvia-coverage.md](docs/test-runs/2026-08-25-broad-latvia-coverage.md)
+- Latest investor snack/dairy pack evidence: [docs/test-runs/2026-08-25-investor-category-pack.md](docs/test-runs/2026-08-25-investor-category-pack.md)
 - Public source: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
 - Entry: opens directly into the camera-first scanner; no access code is required.
 

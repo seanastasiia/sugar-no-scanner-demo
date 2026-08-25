@@ -245,6 +245,37 @@ describe("Barbora product lookup", () => {
     expect(isExactBarboraMatch(candidates[0]?.score || 0, candidates[1]?.score || 0)).toBe(true);
   });
 
+  it("falls back to the broad index when the coarse aisle hint is wrong", () => {
+    const candidates = rankIndexedBarboraCandidates(
+      {
+        brand: "SPILVA",
+        name: "Siera majonēze 250g",
+        variant: "cheese",
+        packSize: "250g",
+        searchTerms: ["SPILVA cheese mayonnaise"],
+        categoryHint: "dairy_desserts"
+      },
+      [
+        {
+          slug: "majoneze-siera-spilva-250-g",
+          title: "Majonēze SPILVA ar siera garšu 250g",
+          brand: "SPILVA",
+          category: "Piena produkti un olas/Majonēze/Majonēze",
+          packSize: "250g",
+          nutritionBasis: "100g",
+          energyKcal: 600,
+          proteinG: 1.2,
+          totalSugarG: 3,
+          imageUrl: null,
+          isAdult: false,
+          checkedAt: "2026-08-25"
+        }
+      ]
+    );
+
+    expect(candidates[0]?.slug).toBe("majoneze-siera-spilva-250-g");
+  });
+
   it("treats a 3+1 promotional pack as four units for an observed 4x80g shelf pack", () => {
     const candidates = rankIndexedBarboraCandidates(
       {
