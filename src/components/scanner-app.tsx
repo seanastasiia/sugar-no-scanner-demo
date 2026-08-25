@@ -181,6 +181,7 @@ export function ScannerApp() {
   const streamRef = useRef<MediaStream | null>(null);
   const scanTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inFlightRef = useRef(false);
+  const recognitionAbortRef = useRef<AbortController | null>(null);
   const lowResFrameRef = useRef<Uint8ClampedArray | null>(null);
   const focusRetryRef = useRef(false);
   const shelfCompletionRetryRef = useRef(false);
@@ -446,6 +447,8 @@ export function ScannerApp() {
     }) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
+      const controller = new AbortController();
+      recognitionAbortRef.current = controller;
       setRecognitionState("scanning");
       setStatusMessage(
         payload.mode === "nutrition-label" ? "Reading protein and sugars from the nutrition table…" : "Reading visible products…"
@@ -454,8 +457,10 @@ export function ScannerApp() {
         const response = await fetch("/api/recognize", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: controller.signal
         });
+        if (controller.signal.aborted) return;
         if (response.status === 429) {
           const retrySeconds = retryAfterSeconds(response.headers.get("retry-after"));
           pauseRecognitionLoop();
@@ -471,6 +476,7 @@ export function ScannerApp() {
         }
         if (!response.ok) throw new Error(`Recognition returned ${response.status}`);
         const result = (await response.json()) as RecognitionResponse;
+        if (controller.signal.aborted) return;
         applyRecognition(
           payload.focusMode ? remapRecognitionFromCrop(result) : result,
           payload.source,
@@ -478,6 +484,7 @@ export function ScannerApp() {
           payload.mode === "nutrition-label"
         );
       } catch (error) {
+        if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
         pauseRecognitionLoop();
         shelfCompletionRetryRef.current = false;
         setResultLocked(Boolean(provisionalResponseRef.current));
@@ -487,7 +494,10 @@ export function ScannerApp() {
           message: error instanceof Error ? error.message : "unknown"
         });
       } finally {
-        inFlightRef.current = false;
+        if (recognitionAbortRef.current === controller) {
+          recognitionAbortRef.current = null;
+          inFlightRef.current = false;
+        }
       }
     },
     [applyRecognition, pauseRecognitionLoop, track]
@@ -497,6 +507,8 @@ export function ScannerApp() {
     async (frames: PreparedUploadFrame[]) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
+      const controller = new AbortController();
+      recognitionAbortRef.current = controller;
       const startedAt = performance.now();
       setRecognitionState("scanning");
       setStatusMessage(
@@ -509,8 +521,10 @@ export function ScannerApp() {
               const response = await fetch("/api/recognize", {
                 method: "POST",
                 headers: { "content-type": "application/json" },
-                body: JSON.stringify({ source: "upload", imageDataUrl: frame.imageDataUrl })
+                body: JSON.stringify({ source: "upload", imageDataUrl: frame.imageDataUrl }),
+                signal: controller.signal
               });
+              if (controller.signal.aborted) return { kind: "cancelled" as const };
               if (response.status === 429) {
                 return {
                   kind: "rate_limited" as const,
@@ -524,10 +538,12 @@ export function ScannerApp() {
                 response: (await response.json()) as RecognitionResponse
               };
             } catch {
+              if (controller.signal.aborted) return { kind: "cancelled" as const };
               return { kind: "error" as const, status: 0 };
             }
           })
         );
+        if (controller.signal.aborted) return;
         const successful = outcomes.flatMap((outcome) =>
           outcome.kind === "success" ? [{ crop: outcome.crop, response: outcome.response }] : []
         );
@@ -552,7 +568,10 @@ export function ScannerApp() {
           "upload"
         );
       } finally {
-        inFlightRef.current = false;
+        if (recognitionAbortRef.current === controller) {
+          recognitionAbortRef.current = null;
+          inFlightRef.current = false;
+        }
       }
     },
     [applyRecognition, pauseRecognitionLoop, track]
@@ -560,6 +579,9 @@ export function ScannerApp() {
 
   const stopActiveCapture = useCallback(() => {
     cameraRequestRef.current += 1;
+    recognitionAbortRef.current?.abort();
+    recognitionAbortRef.current = null;
+    inFlightRef.current = false;
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
     scanTimerRef.current = null;
     streamRef.current?.getTracks().forEach((trackItem) => trackItem.stop());

@@ -364,6 +364,44 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
 });
 
+test("checkout demo cancels an in-flight live-camera read before showing deterministic results", async ({ page }) => {
+  await mockLiveCamera(page);
+  let cameraRequests = 0;
+  await page.route("**/api/recognize", async (route) => {
+    const body = route.request().postDataJSON() as { source?: string };
+    if (body.source !== "camera") {
+      await route.continue();
+      return;
+    }
+    cameraRequests += 1;
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+    try {
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          requestId: "stale-live-camera-read",
+          status: "not_sure",
+          latencyMs: 1_500,
+          model: "qa-delayed-camera",
+          imageStored: false,
+          detections: []
+        })
+      });
+    } catch {
+      // The corrected flow aborts this stale request when the demo source is selected.
+    }
+  });
+
+  await unlock(page);
+  await expect.poll(() => cameraRequests, { timeout: 8_000 }).toBeGreaterThan(0);
+  await openDemoScene(page, "Checkout demo");
+  await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit", { timeout: 8_000 });
+  await page.waitForTimeout(1_800);
+  await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
+  await expect(page.getByText("Trying a closer center read…", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(3);
+});
+
 test("demo chooser supports shelf, checkout and a clear return to live camera", async ({ page }) => {
   await unlock(page);
   await openDemoScene(page, "Shelf demo");
