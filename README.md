@@ -13,6 +13,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - A scan keeps at most five distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
 - Rated products are ordered best fit first and use `Great fit`, `Moderate fit`, or `Low fit`.
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.
+- The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Open Food Facts match, then exact Google Search-grounded web nutrition.
 - Internet enrichment runs after the first identity result. It is bounded to 18 seconds and never receives or stores the camera image.

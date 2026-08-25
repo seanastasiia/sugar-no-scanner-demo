@@ -6,7 +6,7 @@ import {
   ArrowDown,
   Camera,
   Check,
-  ChevronUp,
+  ChevronDown,
   CircleAlert,
   FileImage,
   Info,
@@ -1257,7 +1257,7 @@ export function ScannerApp() {
                       onClick={closeResults}
                       aria-label="Collapse product results"
                     >
-                      <ChevronUp aria-hidden="true" size={20} />
+                      <ChevronDown aria-hidden="true" size={20} />
                     </button>
                   </>
                 ) : (

@@ -444,8 +444,8 @@ test("scanner remains operable at narrow portrait and phone landscape sizes", as
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByLabel("Products ranked by Sugar.no fit")).toBeVisible();
   await expect(page.getByRole("button", { name: "Collapse product results" })).toHaveCount(1);
-  await expect(page.locator('[role="dialog"] svg.lucide-chevron-up')).toHaveCount(1);
-  await expect(page.locator('[role="dialog"] svg.lucide-chevron-down')).toHaveCount(0);
+  await expect(page.locator('[role="dialog"] svg.lucide-chevron-down')).toHaveCount(1);
+  await expect(page.locator('[role="dialog"] svg.lucide-chevron-up')).toHaveCount(0);
 
   await page.setViewportSize({ width: 812, height: 375 });
   await expectOfficialSugarNoLogo(page);
