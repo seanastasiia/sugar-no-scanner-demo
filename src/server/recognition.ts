@@ -553,6 +553,8 @@ export function recognitionInstruction(
     `Only when a separate physical shelf price label outside the package is clearly visible and associated with that exact package, ` +
     `set shelfPriceLabelVisible true and return its EUR price in cents, the exact observed price digits plus any visible currency, and a separate confidence. ` +
     `A Latvian shelf label may omit the € symbol; a clear comma-decimal amount such as 0,99 is still valid when it is visibly printed on a separate shelf label. ` +
+    `The label must be on the immediate shelf edge for that package and horizontally aligned with it. Do not use distant header or promotion labels; ` +
+    `when two labels could plausibly belong to the package, mark the shelf price as not visible instead of guessing. ` +
     `Otherwise set shelfPriceLabelVisible false, price cents and confidence to zero, and price text to an empty string. ` +
     `Never treat nutrition claims, pack size, deposit text or any number printed on the package as a shelf price. ` +
     `Return an empty detections array rather than guessing when no product identity is readable. ` +

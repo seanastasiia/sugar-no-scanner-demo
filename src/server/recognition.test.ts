@@ -131,6 +131,8 @@ describe("recognitionInstruction", () => {
     expect(instruction).toContain("box2d [ymin, xmin, ymax, xmax]");
     expect(instruction).toContain("excluding shelf labels, display trays, neighboring facings and empty space");
     expect(instruction).toContain("may omit the € symbol");
+    expect(instruction).toContain("immediate shelf edge");
+    expect(instruction).toContain("distant header or promotion labels");
   });
 
   it("requires one printed per-100 column for the nutrition fallback", () => {
