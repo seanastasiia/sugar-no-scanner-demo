@@ -38,4 +38,13 @@
 4. Open `View all` and confirm rated products sort first. Generic/unavailable retailer products may remain `Needs nutrition label`; they must not borrow another flavor's nutrition.
 5. Confirm markers align with the original full photo and repeated facings do not create repeated cards for the same exact SKU.
 
-Production evidence is added only after GitHub main and Railway release verification.
+## Production evidence
+
+- Behavior commit: `1a50a82c4615db23950dda8713344a1332eafa99` on GitHub `main`.
+- Railway deployment: `7c7062f7-fad8-45ff-bc6b-351d42231304`, status `SUCCESS`.
+- Production health: `status=ok`, reported commit `1a50a82c4615db23950dda8713344a1332eafa99`, 9,707 active food products and 7,433 products with automatic fit.
+- The two exact reported files were uploaded through the production `Use saved photo` control. Each landscape photo made four recognition reads: full frame plus three overlapping shelf rows.
+- Tuna shelf: 16 unique results rendered, 10 with source-backed Sugar.no fit. Confirmed results included Kaija, Calvo and Rio Mare variants; rated products were sorted first.
+- Biscuit shelf: 16 unique results rendered, 6 exact Selga variants with source-backed Sugar.no fit. Unconfirmed variants remained visible without borrowed nutrition.
+- The UI completed automatically, opened the full comparison sheet and preserved the original-photo marker coordinate system.
+- Production result screenshots were inspected locally from temporary QA output. They were not committed, and the two source photos were not stored in the repository or analytics.
