@@ -1453,7 +1453,7 @@ export function ScannerApp() {
                     <ProductResult
                       payload={selectedPayload}
                       detection={selectedDetection}
-                      bestInScan={selectedPayload.product.id === bestId}
+                      showSummary={tray.length === 1}
                       onAlternative={(id) => {
                         manualSelectionRef.current = true;
                         setSelectedId(id);
@@ -1567,38 +1567,35 @@ function CheckoutScene({ onLoad }: { onLoad: (dimensions: MediaDimensions) => vo
 function ProductResult({
   payload,
   detection,
-  bestInScan,
+  showSummary,
   onAlternative,
   onRetailer
 }: {
   payload: ProductPayload;
   detection?: ProductDetection;
-  bestInScan: boolean;
+  showSummary: boolean;
   onAlternative: (id: string) => void;
   onRetailer: (id: string) => void;
 }) {
   const { product, alternatives } = payload;
   return (
     <article className={styles.productResult}>
-      <div className={styles.productHeading}>
-        <div>
-          {bestInScan ? (
-            <p className={styles.bestFitHeading}>
-              <Check aria-hidden="true" size={13} /> Best fit in this scan
-            </p>
-          ) : null}
-          <p className={styles.productBrand}>{product.brand}</p>
-          <h2>{product.shortName}</h2>
+      {showSummary ? (
+        <div className={styles.productHeading}>
+          <div>
+            <p className={styles.productBrand}>{product.brand}</p>
+            <h2>{product.shortName}</h2>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {detection?.shelfPrice ? (
         <PriceComparison detection={detection} onRetailer={() => onRetailer(product.id)} />
       ) : null}
 
-      {product.ratingSignalCount > 0 ? <SugarNoBadge product={product} /> : null}
+      {showSummary && product.ratingSignalCount > 0 ? <SugarNoBadge product={product} /> : null}
 
-      {product.ratingStatus === "identity_only" ? (
+      {showSummary && product.ratingStatus === "identity_only" ? (
         <div className={styles.pendingDataAction}>
           <Info aria-hidden="true" size={18} />
           <span>
@@ -1608,7 +1605,7 @@ function ProductResult({
         </div>
       ) : null}
 
-      {product.noAddedSugarClaim ? (
+      {showSummary && product.noAddedSugarClaim ? (
         <div className={styles.claimBadge}>
           <Check aria-hidden="true" size={15} /> No added sugar claim on source label
         </div>

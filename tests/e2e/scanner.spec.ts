@@ -239,7 +239,7 @@ test("public root opens directly into the camera-first experience", async ({ pag
   await expect(page.getByText("Private demo", { exact: true })).toHaveCount(0);
 });
 
-test("sample shelf photo highlights products and shows a two-factor Sugar.no badge", async ({ page }) => {
+test("sample shelf photo highlights products and ranks two-factor Sugar.no fits", async ({ page }) => {
   await unlock(page);
   await openDemoScene(page, "Shelf demo");
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
@@ -292,20 +292,10 @@ test("sample shelf photo highlights products and shows a two-factor Sugar.no bad
   await expect(resultsDialog.getByRole("heading", { name: "Best fit first" })).toBeVisible();
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   await expect.poll(async () => (await resultsDialog.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(viewportHeight * 0.95);
-  const bestFitHeading = page.getByText("Best fit in this scan", { exact: true });
-  await expect(bestFitHeading).toBeVisible();
-  await expect
-    .poll(() =>
-      bestFitHeading.evaluate((element) =>
-        Boolean(element.parentElement?.querySelector("h2"))
-      )
-    )
-    .toBe(true);
+  await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await page.screenshot({ path: "docs/screenshots/shelf-results-mobile.png" });
-  await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
-  await expect(page.getByLabel("Sugar.no badge").getByText("Protein", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Sugar.no badge").getByText("Fiber", { exact: true })).toHaveCount(0);
-  await expect(page.getByLabel("Sugar.no badge").getByText("Sugar", { exact: true })).toBeVisible();
+  await expect(resultsDialog.getByLabel("Sugar.no badge")).toHaveCount(0);
+  await expect(resultsDialog.getByText("Similar options", { exact: true })).toBeVisible();
   const shelfPriceComparison = page.getByLabel("Price comparison");
   await expect(shelfPriceComparison.getByText("Cheaper at Barbora", { exact: true })).toBeVisible();
   await expect(shelfPriceComparison.getByText("Demo shelf price", { exact: true })).toBeVisible();
@@ -320,7 +310,7 @@ test("sample shelf photo highlights products and shows a two-factor Sugar.no bad
   );
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await expect(page.getByText("Outlines show products with both protein and total sugar available.", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("Values per 100 g · Compared with protein snacks in this demo")).toBeVisible();
+  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g/).first()).toBeVisible();
   await expect(page.getByText(/Sugar\.no Match \d+/)).toHaveCount(0);
   await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/\b(good|bad|unhealthy)\b/i)).toHaveCount(0);
@@ -356,11 +346,12 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
   await page.waitForTimeout(300);
   await page.screenshot({ path: "docs/screenshots/checkout-results-mobile.png" });
-  await expect(page.getByText("Manufacturer nutrition", { exact: true })).toBeVisible();
+  await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("Sugar.no badge")).toHaveCount(0);
+  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g/)).toHaveCount(3);
   await expect(page.getByText("Needs nutrition label", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await ranking.getByRole("button", { name: /STOCKMANN Fresh chanterelles/ }).click();
-  await expect(page.getByText("Food composition reference", { exact: true })).toBeVisible();
   await expect(page.getByText("Compare without starting over")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
 });
@@ -435,7 +426,7 @@ test("comparison remains usable with reduced motion, dark mode and enlarged text
   await expect(page.getByRole("heading", { name: "Saved options" })).toHaveCount(0);
   await openDemoScene(page, "Shelf demo");
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
+  await expect(page.getByLabel("Products ranked by Sugar.no fit")).toBeVisible();
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
@@ -451,14 +442,14 @@ test("scanner remains operable at narrow portrait and phone landscape sizes", as
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
+  await expect(page.getByLabel("Products ranked by Sugar.no fit")).toBeVisible();
   await expect(page.getByRole("button", { name: "Collapse product results" })).toHaveCount(1);
   await expect(page.locator('[role="dialog"] svg.lucide-chevron-up')).toHaveCount(1);
   await expect(page.locator('[role="dialog"] svg.lucide-chevron-down')).toHaveCount(0);
 
   await page.setViewportSize({ width: 812, height: 375 });
   await expectOfficialSugarNoLogo(page);
-  await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
+  await expect(page.getByLabel("Products ranked by Sugar.no fit")).toBeVisible();
   await page.getByRole("button", { name: "Collapse product results" }).click();
   await expect(page.getByRole("button", { name: "Back to live camera" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -905,10 +896,10 @@ test("an unrated package can receive a Sugar.no fit from automatic online enrich
   await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Other Other Snack, nutrition not verified online/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
-  const badge = page.getByLabel("Sugar.no badge");
-  await expect(badge.getByText("Verified web nutrition", { exact: true })).toBeVisible();
-  await expect(badge.getByText("2.1g", { exact: true })).toBeVisible();
-  await expect(badge.getByText("1.8g", { exact: true })).toBeVisible();
+  const ranking = page.getByLabel("Products ranked by Sugar.no fit");
+  await expect(ranking.getByRole("button", { name: /Rank 1, Sproud Sproud Barista 1L, Great fit/ })).toBeVisible();
+  await expect(ranking.getByText("Protein 2.1g · Sugar 1.8g", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Sugar.no badge")).toHaveCount(0);
 });
 
 test("a broad live shelf scan keeps several different Sugar.no-rated products in one result", async ({ page }) => {
