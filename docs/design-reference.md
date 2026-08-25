@@ -9,7 +9,7 @@ Sugar.no applies those patterns to relative protein and total-sugar comparison. 
 
 The broad camera pass follows the multi-product shelf pattern: it scans the complete frame, can return up to eight distinct readable front-facing SKUs and groups repeated facings of the same SKU. The focused center retry is only a fallback after the broad pass is uncertain.
 
-The checkout fixture must be visually unmistakable as a supermarket conveyor, not a generic dark tabletop. It now uses a real project-owner checkout photo. The public copy is cropped, resized and stripped of EXIF/GPS metadata; its deterministic result names only the three package identities Gemini could read and does not add fit markers without verified nutrition.
+The checkout fixture must be visually unmistakable as a supermarket conveyor, not a generic dark tabletop. It uses a real project-owner checkout photo. The public copy is cropped, resized and stripped of EXIF/GPS metadata; its deterministic result names the three package identities Gemini could read and overlays all three because each now has a source-backed two-factor fit. Official manufacturer nutrition supports Sproud and Schnitzer; the chanterelle badge explicitly identifies its generic food-composition reference instead of implying an exact Stockmann record.
 
 When several comparable rated products are present, `Best fit in this scan` is a small eyebrow heading above the leading product name. It is not a separate status pill and stays hidden for a one-product scan.
 

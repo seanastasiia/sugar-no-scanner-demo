@@ -63,8 +63,6 @@ const shelfIds = [
   "proteina-baton-barebells-coco-choco-55-g"
 ];
 
-const checkoutIds = shelfIds;
-
 function makeSessionId() {
   return crypto.randomUUID();
 }
@@ -781,9 +779,8 @@ export function ScannerApp() {
     setResultsExpanded(false);
     setDemoOpen(false);
     track("scan_started", "sample-conveyor");
-    void hydrateProducts(checkoutIds);
     void recognize({ source: "sample-conveyor" });
-  }, [hydrateProducts, recognize, stopActiveCapture, track]);
+  }, [recognize, stopActiveCapture, track]);
 
   async function uploadImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -1255,7 +1252,7 @@ export function ScannerApp() {
                           <h2 id="scan-ranking-title">{ratedCount > 0 ? "Best fit first" : "Scan labels to compare"}</h2>
                           <span>
                             {ratedCount > 0
-                              ? "Based on verified protein and total sugar"
+                              ? "Based on source-backed protein and total sugar"
                               : "Turn a pack around and scan its per-100 nutrition table"}
                           </span>
                         </div>
@@ -1700,7 +1697,11 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
       ? "Exact Barbora nutrition"
       : product.ratingBasis.startsWith("open_food_facts_")
         ? "Open Food Facts nutrition"
-        : "Nutrition label in this scan";
+        : product.ratingBasis.startsWith("manufacturer_")
+          ? "Manufacturer nutrition"
+          : product.ratingBasis.startsWith("food_composition_")
+            ? "Food composition reference"
+            : "Nutrition label in this scan";
   const values = {
     protein: product.nutrientsPer100g.proteinG,
     sugar: product.nutrientsPer100g.totalSugarG

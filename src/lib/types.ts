@@ -10,7 +10,11 @@ export type RatingBasis =
   | "open_food_facts_reference"
   | "open_food_facts_reference_partial"
   | "package_label_reference"
-  | "package_label_reference_partial";
+  | "package_label_reference_partial"
+  | "manufacturer_reference"
+  | "manufacturer_reference_partial"
+  | "food_composition_reference"
+  | "food_composition_reference_partial";
 
 export type RatingSignal = "protein" | "inverseSugar";
 

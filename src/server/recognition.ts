@@ -1,7 +1,9 @@
 import { GoogleGenAI, ThinkingLevel, createPartFromBase64, createPartFromText } from "@google/genai";
 import { z } from "zod";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
+import { scoreReferenceProduct } from "@/lib/scoring";
 import type {
+  ProductRecord,
   ProductDetection,
   RecognitionMode,
   RecognitionResponse,
@@ -141,6 +143,112 @@ const sampleShelf: ProductDetection[] = [
   }
 ];
 
+function checkoutReferenceProduct(
+  product: ProductRecord,
+  basis: "manufacturer_reference" | "food_composition_reference"
+): ScoredProduct {
+  return scoreReferenceProduct(product, basis, `${basis}_partial`);
+}
+
+const checkoutSproud = checkoutReferenceProduct(
+  {
+    id: "visual:sproud-barista-low-sugar-high-in-protein-drink-made-from-peas-1l",
+    retailerProductId: "visual:sproud-barista-low-sugar-high-in-protein-drink-made-from-peas-1l",
+    brand: "SPROUD",
+    name: "Barista pea drink 1L",
+    shortName: "Barista pea drink 1L",
+    aliases: ["Sproud Barista", "Barista Low Sugar High in Protein Drink Made from Peas"],
+    format: "other",
+    category: "Plant-based drinks",
+    packSizeG: 1000,
+    nutritionBasis: "100ml",
+    energyKcalPer100: 40,
+    gtin: null,
+    nutrientsPer100g: { proteinG: 2.1, fiberG: null, totalSugarG: 1.8 },
+    noAddedSugarClaim: false,
+    imageUrl: null,
+    retailerUrl: "https://besproud.com/sv/products/barista/",
+    sources: [
+      {
+        label: "Sproud official product page",
+        url: "https://besproud.com/sv/products/barista/",
+        checkedAt: "2026-08-25",
+        fields: ["identity", "protein", "totalSugar"],
+        status: "verified"
+      }
+    ],
+    isGolden: false,
+    accent: "mint"
+  },
+  "manufacturer_reference"
+);
+
+const checkoutSchnitzer = checkoutReferenceProduct(
+  {
+    id: "visual:schnitzer-bio-burger-buns",
+    retailerProductId: "visual:schnitzer-bio-burger-buns",
+    brand: "SCHNITZER",
+    name: "Bio Burger Buns gluten-free 250g",
+    shortName: "Bio Burger Buns 250g",
+    aliases: ["Schnitzer Bio Burger Buns", "Bio Burger Buns"],
+    format: "other",
+    category: "Gluten-free bakery",
+    packSizeG: 250,
+    nutritionBasis: "100g",
+    energyKcalPer100: 229,
+    gtin: "4022993046076",
+    nutrientsPer100g: { proteinG: 3.4, fiberG: null, totalSugarG: 3.7 },
+    noAddedSugarClaim: false,
+    imageUrl: null,
+    retailerUrl: "https://www.schnitzer.eu/en/products/bio-burger-buns-glutenfrei",
+    sources: [
+      {
+        label: "Schnitzer official product page",
+        url: "https://www.schnitzer.eu/en/products/bio-burger-buns-glutenfrei",
+        checkedAt: "2026-08-25",
+        fields: ["identity", "protein", "totalSugar"],
+        status: "verified"
+      }
+    ],
+    isGolden: false,
+    accent: "sun"
+  },
+  "manufacturer_reference"
+);
+
+const checkoutChanterelles = checkoutReferenceProduct(
+  {
+    id: "visual:stockmann-gailenes-chanterelles",
+    retailerProductId: "visual:stockmann-gailenes-chanterelles",
+    brand: "STOCKMANN",
+    name: "Fresh chanterelles",
+    shortName: "Fresh chanterelles",
+    aliases: ["Gailenes", "Chanterelles"],
+    format: "other",
+    category: "Fresh mushrooms",
+    packSizeG: 100,
+    nutritionBasis: "100g",
+    energyKcalPer100: 17,
+    gtin: null,
+    nutrientsPer100g: { proteinG: 2, fiberG: null, totalSugarG: 0.4 },
+    noAddedSugarClaim: false,
+    imageUrl: null,
+    retailerUrl: "https://www.matvaretabellen.no/en/mushroom-chantherelle-raw/",
+    sources: [
+      {
+        label: "Norwegian Food Composition Table · raw chanterelle reference",
+        url: "https://www.matvaretabellen.no/en/mushroom-chantherelle-raw/",
+        checkedAt: "2026-08-25",
+        fields: ["protein", "totalSugar"],
+        status: "secondary"
+      }
+    ],
+    isGolden: false,
+    accent: "forest"
+  },
+  "food_composition_reference"
+);
+
 const sampleCheckout: ProductDetection[] = [
   {
     productId: "visual:sproud-barista-low-sugar-high-in-protein-drink-made-from-peas-1l",
@@ -158,7 +266,8 @@ const sampleCheckout: ProductDetection[] = [
     },
     shelfPrice: null,
     retailerOffer: null,
-    nutritionLinkConfidence: null
+    nutritionLinkConfidence: 1,
+    inlineProduct: checkoutSproud
   },
   {
     productId: "visual:schnitzer-bio-burger-buns",
@@ -176,7 +285,8 @@ const sampleCheckout: ProductDetection[] = [
     },
     shelfPrice: null,
     retailerOffer: null,
-    nutritionLinkConfidence: null
+    nutritionLinkConfidence: 1,
+    inlineProduct: checkoutSchnitzer
   },
   {
     productId: "visual:stockmann-gailenes-chanterelles",
@@ -194,7 +304,8 @@ const sampleCheckout: ProductDetection[] = [
     },
     shelfPrice: null,
     retailerOffer: null,
-    nutritionLinkConfidence: null
+    nutritionLinkConfidence: 0.86,
+    inlineProduct: checkoutChanterelles
   }
 ];
 

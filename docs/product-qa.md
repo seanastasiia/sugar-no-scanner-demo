@@ -12,7 +12,7 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 6. Tap each marker and each product in the ranked list. Confirm that its fit text appears and the product card changes. The package outline must remain the fit color: no white selected/best ring and no `2/2 signals` pill may appear over the camera.
 7. Swipe the Similar options cards left and right. Confirm that they are comparable formats and remain usable without horizontal page overflow.
 8. Open the Barbora action. Confirm that the exact SKU page opens in a new tab and that Sugar.no never claims affiliate revenue.
-9. Return to live camera, tap `Show demo`, then `Checkout demo`. Confirm it shows the real checkout-belt photo and returns three named packaged products at once: Sproud, Schnitzer and Stockmann. Because the deterministic identity fixture contains no nutrition, the expanded list must say `Scan labels to compare`, show `Needs nutrition label` on each product and show no camera fit markers or invented Sugar.no result.
+9. Return to live camera, tap `Show demo`, then `Checkout demo`. Confirm it shows the real checkout-belt photo and returns three named products at once: Sproud, Schnitzer and Stockmann. Three coloured package outlines must appear on the photo; the compact sheet must say `3 products · 3 with Sugar.no fit`; the expanded page must rank two `Great fit` rows and one `Moderate fit` row. Open Sproud and Schnitzer and confirm the badge says `Manufacturer nutrition`. Open Stockmann chanterelles and confirm it says `Food composition reference`, because that result uses a generic raw-chanterelle reference rather than claiming exact Stockmann nutrition.
 10. Expand Shelf and Checkout results. Confirm there are no `Save`, `Saved`, `Save for next shop` or `Saved options` controls; Similar options and the Barbora link must remain available.
 
 ## Camera and uncertainty
@@ -62,4 +62,4 @@ Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a privat
 
 Record the iPhone model, iOS version, location, lighting, tested SKUs, false positives, misses and time-to-result. Do not call the physical-shelf benchmark passed until those observations exist.
 
-The shelf sample is an AI-generated interaction fixture. The checkout sample is a real project-owner photo with a deterministic three-identity response. Verify layout and comprehension with both, but do not record their deterministic detections as recognition accuracy.
+The shelf sample is an AI-generated interaction fixture. The checkout sample is a real project-owner photo with a deterministic three-identity, three-rating response. Verify layout and comprehension with both, but do not record their deterministic detections as recognition accuracy. Treat the chanterelle result as generic food-composition guidance, not an audited Stockmann label.

@@ -256,12 +256,15 @@ test("sample shelf photo highlights products and shows a two-factor Sugar.no bad
   expect(accessibility.violations).toEqual([]);
 });
 
-test("checkout photo uses one multi-product scan instead of an animated product", async ({ page }) => {
+test("checkout photo recognizes and rates three products on the belt", async ({ page }) => {
   await unlock(page);
   await openDemoScene(page, "Checkout demo");
-  await expect(page.getByRole("status")).toContainText("3 products · 0 with Sugar.no fit");
-  await expect(page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(0);
-  await expect(page.getByText("3 need nutrition labels", { exact: true })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
+  const checkoutMarkers = page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]');
+  await expect(checkoutMarkers).toHaveCount(3);
+  await expect(checkoutMarkers.filter({ hasText: "Great fit" })).toHaveCount(2);
+  await expect(checkoutMarkers.filter({ hasText: "Moderate fit" })).toHaveCount(1);
+  await expect(page.getByText("3 rated · Best fit first", { exact: true })).toBeVisible();
   await expect(page.getByAltText("Groceries on a real supermarket checkout conveyor belt")).toBeVisible();
   await page.waitForFunction(() =>
     [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Real supermarket checkout belt sample with three recognized packaged products"] img')]
@@ -272,14 +275,17 @@ test("checkout photo uses one multi-product scan instead of an animated product"
   const ranking = page.getByLabel("Products ranked by Sugar.no fit");
   await expect(ranking).toBeVisible({ timeout: 8_000 });
   await expect(ranking.getByRole("button")).toHaveCount(3);
-  await expect(ranking.getByText("Sproud", { exact: true })).toBeVisible();
-  await expect(ranking.getByText("Schnitzer", { exact: true })).toBeVisible();
-  await expect(ranking.getByText("Stockmann", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Scan labels to compare" })).toBeVisible();
+  await expect(ranking.getByText("SPROUD", { exact: true })).toBeVisible();
+  await expect(ranking.getByText("SCHNITZER", { exact: true })).toBeVisible();
+  await expect(ranking.getByText("STOCKMANN", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
   await page.waitForTimeout(300);
   await page.screenshot({ path: "docs/screenshots/checkout-results-mobile.png" });
-  await expect(page.getByText("Turn the pack around", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Scan nutrition label" })).toBeVisible();
+  await expect(page.getByText("Manufacturer nutrition", { exact: true })).toBeVisible();
+  await expect(page.getByText("Needs nutrition label", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
+  await ranking.getByRole("button", { name: /STOCKMANN Fresh chanterelles/ }).click();
+  await expect(page.getByText("Food composition reference", { exact: true })).toBeVisible();
   await expect(page.getByText("Compare without starting over")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
 });
@@ -291,9 +297,9 @@ test("demo chooser supports shelf, checkout and a clear return to live camera", 
   await page.getByRole("button", { name: "Back to live camera" }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await openDemoScene(page, "Checkout demo");
-  await expect(page.getByRole("status")).toContainText("3 products · 0 with Sugar.no fit");
+  await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByText("Turn the pack around", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Saved options" })).toHaveCount(0);
   await page.getByRole("button", { name: "Return to camera" }).click();

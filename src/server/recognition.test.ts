@@ -61,6 +61,18 @@ describe("recognizeProducts", () => {
       "visual:stockmann-gailenes-chanterelles"
     ]);
     expect(result.detections.every((detection) => detection.identity?.matchKind === "visual_only")).toBe(true);
+    expect(result.detections.map((detection) => detection.inlineProduct?.matchScore)).toEqual([100, 60, 100]);
+    expect(result.detections.map((detection) => detection.inlineProduct?.ratingBasis)).toEqual([
+      "manufacturer_reference",
+      "manufacturer_reference",
+      "food_composition_reference"
+    ]);
+    expect(result.detections.map((detection) => detection.inlineProduct?.nutrientsPer100g)).toEqual([
+      { proteinG: 2.1, fiberG: null, totalSugarG: 1.8 },
+      { proteinG: 3.4, fiberG: null, totalSugarG: 3.7 },
+      { proteinG: 2, fiberG: null, totalSugarG: 0.4 }
+    ]);
+    expect(result.detections.every((detection) => detection.inlineProduct?.ratingStatus === "complete")).toBe(true);
     expect(result.imageStored).toBe(false);
   });
 

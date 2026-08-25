@@ -34,7 +34,7 @@ For the optional live-camera moment, first show several different products acros
 
 Return to live camera, tap `Show demo`, then `Checkout demo`.
 
-“Checkout uses exactly the same comparison behavior as the shelf: one view of the real conveyor belt beside the cashier, four detected packages and colored overlays on the image. We do not tell someone to undo a purchase, shame the basket or add another action to save a product.”
+“Checkout uses exactly the same comparison behavior as the shelf: one view of the real conveyor belt beside the cashier, three detected products and three colored overlays on the image. The expanded view puts the two Great fits before the Moderate fit and shows the Protein/Sugar evidence. Sproud and Schnitzer use manufacturer nutrition; the chanterelles use a clearly labelled generic food-composition reference. We do not tell someone to undo a purchase, shame the basket or add another action to save a product.”
 
 ## Close
 
