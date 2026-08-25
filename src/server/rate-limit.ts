@@ -13,8 +13,8 @@ export interface RateLimiter {
 // The camera captures roughly 29 frames/minute at its 2.1s cadence. Keep a
 // small bounded retry margin without turning public recognition into an
 // unlimited endpoint.
-export const DEFAULT_RECOGNITION_RATE_LIMIT = 36;
-export const DEFAULT_RECOGNITION_RATE_WINDOW_SECONDS = 60;
+const DEFAULT_RECOGNITION_RATE_LIMIT = 36;
+const DEFAULT_RECOGNITION_RATE_WINDOW_SECONDS = 60;
 
 interface WindowEntry {
   count: number;

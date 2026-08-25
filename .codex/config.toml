@@ -1,0 +1,6 @@
+# Project-local defaults: keep routine scanner iteration proportional to risk.
+# A complex task can still override the model or reasoning effort explicitly.
+model = "gpt-5.6-terra"
+model_reasoning_effort = "medium"
+service_tier = "default"
+project_doc_max_bytes = 8192

@@ -4,7 +4,7 @@ import type { BoundingBox, ProductDetection, RecognitionResponse } from "./types
 
 export type UploadScanCrop = BoundingBox;
 
-export interface UploadScanResult {
+interface UploadScanResult {
   crop: UploadScanCrop;
   response: RecognitionResponse;
 }

@@ -10,14 +10,14 @@ const MATCH_TONE_LABELS: Record<MatchTone, string> = {
   pending: "Data pending"
 };
 
-export interface MatchCriterion {
+interface MatchCriterion {
   key: "protein" | "sugar";
   label: string;
   status: "Higher" | "Middle" | "Lower" | "Pending" | "Not listed";
   tone: MatchTone;
 }
 
-export interface OverlayPresentation {
+interface OverlayPresentation {
   label: string;
   tone: MatchTone;
   completeness: SignalCompleteness;
@@ -89,7 +89,7 @@ export function overallMatchPresentation(score: number | null): { label: string;
   return { label: matchToneLabel(tone), tone };
 }
 
-export function matchToneLabel(tone: MatchTone): string {
+function matchToneLabel(tone: MatchTone): string {
   return MATCH_TONE_LABELS[tone];
 }
 

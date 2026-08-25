@@ -31,7 +31,3 @@ export function investorCategoryForRetailPath(category: string | null | undefine
   }
   return null;
 }
-
-export function investorCategoryLabel(category: InvestorCategory): string {
-  return category === "snacks" ? "Packaged snacks" : "Dairy desserts";
-}

@@ -124,7 +124,7 @@ export function scoreBarboraProduct(product: ProductRecord): ScoredProduct {
   return scoreReferenceProduct(product, "barbora_reference", "barbora_reference_partial");
 }
 
-export interface FairComparisonCohort {
+interface FairComparisonCohort {
   key: string;
   productIds: string[];
   signalMask: RatingSignal[];
@@ -132,7 +132,7 @@ export interface FairComparisonCohort {
   winnerId: string | null;
 }
 
-export interface FairComparisonResult {
+interface FairComparisonResult {
   cohorts: FairComparisonCohort[];
   winnerIds: string[];
 }

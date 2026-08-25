@@ -8,7 +8,7 @@ export function getCatalog(): ScoredProduct[] {
   return catalog;
 }
 
-export function getProductById(id: string): ScoredProduct | null {
+function getProductById(id: string): ScoredProduct | null {
   return catalog.find((product) => product.id === id) ?? null;
 }
 

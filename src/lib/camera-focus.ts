@@ -1,6 +1,6 @@
 import type { BoundingBox, ProductDetection, RecognitionResponse } from "./types";
 
-export type CameraCrop = BoundingBox;
+type CameraCrop = BoundingBox;
 
 export interface MediaDimensions {
   width: number;

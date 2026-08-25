@@ -1,8 +1,3 @@
-export interface SeenDetection {
-  productId: string;
-  seenAt: number;
-}
-
 export function mergeDetectionTray(
   tray: string[],
   seen: Map<string, number>,

@@ -16,7 +16,7 @@ export interface BarboraLookupInput {
   categoryHint?: InvestorCategory | null;
 }
 
-export interface RankedBarboraCandidate {
+interface RankedBarboraCandidate {
   slug: string;
   score: number;
 }

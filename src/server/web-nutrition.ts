@@ -23,12 +23,12 @@ const groundedNutritionSchema = z.object({
   evidence: z.string().max(500)
 });
 
-export interface WebNutritionSource {
+interface WebNutritionSource {
   title: string;
   url: string;
 }
 
-export interface WebNutritionResolution {
+interface WebNutritionResolution {
   product: ScoredProduct;
   confidence: number;
 }

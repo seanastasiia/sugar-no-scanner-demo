@@ -56,4 +56,4 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Railway HTTPS and live health check | Railway deployment `3f5df31f-0ac8-4103-b853-6c359af2df7a` succeeded for commit `dc2fe6ef7918d42685ec08bef504fdf0a9ace9b4`; `/api/health` reported the same commit. The supplied long Rimi screenshot produced four successful recognition responses and one three-product rated list | Pass in production |
 | Physical iPhone Safari shelf test | Requires deployed HTTPS and physical products | Not run |
 
-The deterministic scenes prove the interaction and data contract. They must not be presented as evidence of real-world computer-vision accuracy. The independent QA record and the suitability-only review of temporary Latvian-store images are in [the 2026-08-24 QA run](test-runs/2026-08-24-independent-qa.md).
+The deterministic scenes prove the interaction and data contract. They must not be presented as evidence of real-world computer-vision accuracy. The current release evidence is in [the five-product web-enrichment run](test-runs/2026-08-25-five-product-web-enrichment.md); historical QA logs remain available in Git history.

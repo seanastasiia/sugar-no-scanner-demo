@@ -1,9 +1,9 @@
 import type { RecognitionResponse } from "@/lib/types";
 
 export const MAX_RECOGNITION_DATA_URL_CHARACTERS = 2_800_000;
-export const MAX_RECOGNITION_REQUEST_BYTES = 3_000_000;
+const MAX_RECOGNITION_REQUEST_BYTES = 3_000_000;
 
-export type SupportedBenchmarkImageMime = "image/jpeg" | "image/png" | "image/webp";
+type SupportedBenchmarkImageMime = "image/jpeg" | "image/png" | "image/webp";
 
 export interface BenchmarkProductDetail {
   matchScore: number | null;

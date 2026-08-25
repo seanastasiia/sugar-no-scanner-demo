@@ -67,12 +67,12 @@ const candidateConfirmationResponseSchema = z.object({
   ).max(4)
 });
 
-export interface CandidateConfirmationSet {
+interface CandidateConfirmationSet {
   detectionIndex: number;
   candidates: VisualBarboraCandidate[];
 }
 
-export interface CandidateConfirmationChoice {
+interface CandidateConfirmationChoice {
   detectionIndex: number;
   candidateSlug: string;
   confidence: number;
@@ -473,7 +473,7 @@ export function matchCatalogProduct(
   return matchCatalogProductWithConfidence(observed, catalog)?.product || null;
 }
 
-export function matchCatalogProductWithConfidence(
+function matchCatalogProductWithConfidence(
   observed: { brand: string; name: string; variant: string; packSize: string; observedText: string },
   catalog: ScoredProduct[]
 ): { product: ScoredProduct; confidence: number } | null {
@@ -705,7 +705,7 @@ export interface DetectionResolutionDependencies {
   resolveWebNutrition?: typeof resolveWebNutritionProduct;
 }
 
-export type DetectionResolutionMode = "fast" | "complete";
+type DetectionResolutionMode = "fast" | "complete";
 
 const defaultResolutionDependencies: DetectionResolutionDependencies = {
   getOfferBySlug: getBarboraOfferBySlug,

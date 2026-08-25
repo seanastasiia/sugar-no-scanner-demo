@@ -35,7 +35,7 @@ interface CanonicalQuantity {
   dimension: "solid" | "liquid";
 }
 
-export interface RankedOpenFoodFactsCandidate {
+interface RankedOpenFoodFactsCandidate {
   product: OpenFoodFactsProduct;
   confidence: number;
 }
