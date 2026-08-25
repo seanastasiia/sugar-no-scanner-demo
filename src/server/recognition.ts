@@ -930,7 +930,7 @@ export async function recognizeProducts(input: {
       createPartFromBase64(base64, mimeType)
     ],
     config: {
-      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
       responseMimeType: "application/json",
       responseJsonSchema: {
         type: "object",
