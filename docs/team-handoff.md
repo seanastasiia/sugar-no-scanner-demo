@@ -7,7 +7,7 @@ This document is the engineering and product entry point for continuing the Latv
 1. Open the [live scanner](https://sugar-no-scanner-demo-production.up.railway.app) on an iPhone and allow camera access.
 2. Read the root [README](../README.md), especially `Current state`, `Product rules`, `Catalog`, `Supabase`, `Railway and release`, and `Privacy`.
 3. Run the deterministic Shelf and Checkout scenes before testing arbitrary products.
-4. Read [Product QA](product-qa.md), [Acceptance matrix](acceptance.md), [Latvia coverage plan](latvia-coverage-plan.md), and [Bugs](../Bugs.md).
+4. Read [Week-one lessons and guardrails](week-one-lessons.md), [Product QA](product-qa.md), [Acceptance matrix](acceptance.md), [Latvia coverage plan](latvia-coverage-plan.md), and [Bugs](../Bugs.md).
 5. Treat `GET /api/health` and the newest file in `docs/test-runs/` as the current deployed evidence. Do not rely on screenshots alone.
 
 ## What the prototype currently proves
