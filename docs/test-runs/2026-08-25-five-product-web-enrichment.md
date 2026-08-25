@@ -54,6 +54,15 @@ After the direct Railway deployment:
 
 One later cold-container smoke reached the initial 12-second grounding timeout and correctly returned the identity without a fit. The background-only timeout was increased to 18 seconds and duplicate query terms were removed; the full 126-test verification, production build and 24 Mobile Safari scenarios passed again after that change.
 
+### Cold-lookup follow-up release
+
+- Code commit: `8545035c95d2173015eeab65ec2a7a69774a012d`
+- Direct Railway deployment: `eb6f0dea-6056-45a3-b993-c2e95d3b5262` — `SUCCESS`
+- Production `/api/health`: `200`, `status: ok`, commit `8545035c95d2173015eeab65ec2a7a69774a012d`
+- Production `/`: `200`
+- A cold exact Sproud lookup completed in about 4.2 seconds and returned `web_search`, complete fit, Protein `2`, Sugar `1.9`, two cited sources and `imageStored: false`.
+- A request with six detections returned `400 {"error":"invalid_request"}`.
+
 ## Product checks for the owner
 
 1. Open the production URL on iPhone Safari and scan a shelf with more than five readable products.
