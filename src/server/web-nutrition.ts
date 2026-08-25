@@ -6,6 +6,7 @@ import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
 import { normalizeRetailText, type BarboraLookupInput } from "./barbora-catalog";
 
 const DEFAULT_MODEL = "gemini-3.7-flash";
+const WEB_NUTRITION_TIMEOUT_MS = 18_000;
 const SUCCESS_CACHE_TTL_MS = 24 * 60 * 60_000;
 const MISS_CACHE_TTL_MS = 30 * 60_000;
 const responseCache = new Map<string, { expiresAt: number; result: WebNutritionResolution | null }>();
@@ -160,10 +161,18 @@ export async function resolveWebNutritionProduct(
 
   try {
     const ai = new GoogleGenAI({ apiKey });
+    const normalizedName = normalizeRetailText(input.name);
+    const exactProductQuery = [
+      input.brand,
+      input.name,
+      ...[input.variant, input.packSize].filter(
+        (part): part is string => Boolean(part && !normalizedName.includes(normalizeRetailText(part)))
+      )
+    ].join(" ");
     const response = await ai.models.generateContent({
       model: process.env.GEMINI_WEB_NUTRITION_MODEL || process.env.GEMINI_MODEL || DEFAULT_MODEL,
       contents:
-        `Use Google Search now. Find the exact packaged food "${input.brand} ${input.name} ${input.variant} ${input.packSize}". ` +
+        `Use Google Search now. Find the exact packaged food "${exactProductQuery}". ` +
         `Search manufacturer, retailer or exact product-database pages for its nutrition table. ` +
         `Return exactProductMatch true only when brand, product, flavor/variant and visible pack identity refer to the same SKU. ` +
         `Return energy kcal, protein and total sugars per 100 g or per 100 ml exactly as a source lists them. ` +
@@ -173,7 +182,7 @@ export async function resolveWebNutritionProduct(
         `The object must contain exactProductMatch, matchedBrand, matchedProductName, nutritionBasis as 100g/100ml/unknown, ` +
         `numeric energyKcal, proteinG, totalSugarG and confidence from 0 to 1, plus a short evidence string.`,
       config: {
-        httpOptions: { timeout: 12_000 },
+        httpOptions: { timeout: WEB_NUTRITION_TIMEOUT_MS },
         thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
         temperature: 0,
         tools: [{ googleSearch: {} }]

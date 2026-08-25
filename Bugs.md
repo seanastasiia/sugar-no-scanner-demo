@@ -1,5 +1,7 @@
 # Bugs
 
+- **2026-08-25: a cold grounded nutrition lookup could reach the original 12-second server timeout and leave an otherwise exact product unresolved.** Grounded nutrition remains a background-only step, so the named products still appear immediately. Its bounded timeout is now 18 seconds and duplicate variant/pack text is removed from the exact search query; the camera UI continues to show progress and never blocks the first recognition result.
+
 - **2026-08-25: dense scans could show eight identified packages but only two Sugar.no fits, making successful recognition look mostly broken.** The complete camera/upload result is now capped at the five highest-confidence distinct SKUs. Local and Open Food Facts resolution still run first; unresolved exact identities then receive one bounded, image-free Google Search-grounded check. Only an exact cited per-100 record at confidence 0.90 or higher may produce Protein/Sugar and a fit. The visible nutrition-label scan action is removed, unresolved rows say `Nutrition not verified online`, and multi-section uploads enrich only the final merged five rather than paying and waiting once per crop.
 
 - **2026-08-25: the Figma/Pen styling experiment was visually rejected after it reached production.** The production CSS was restored exactly to the pushed `pre-pen-style-2026-08-25` tag while the editable Pen study stayed isolated as an inactive reference. Future Pen or Figma explorations must be approved as a preview before they change the deployed scanner.
