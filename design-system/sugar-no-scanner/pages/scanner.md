@@ -1,6 +1,6 @@
-# Scanner page override
+# Scanner page experimental reference
 
-This page extends `../MASTER.md` for live camera, saved shelf photos and checkout photos.
+Status: archived and inactive. This page extends the rejected visual study in `../MASTER.md`; it does not define the production scanner.
 
 ## Camera-first hierarchy
 

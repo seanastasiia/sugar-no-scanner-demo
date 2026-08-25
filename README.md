@@ -3,7 +3,7 @@
 Public Latvia proof of concept for camera-based identification and comparison of packaged groceries. It is a wellness discovery tool, not a medical device or an absolute rating of food.
 
 - Live demo: [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
-- Latest Sugar.no Figma/Pen visual-system evidence: [docs/test-runs/2026-08-25-figma-pen-redesign.md](docs/test-runs/2026-08-25-figma-pen-redesign.md)
+- Archived Figma/Pen visual experiment (not active in production): [docs/test-runs/2026-08-25-figma-pen-redesign.md](docs/test-runs/2026-08-25-figma-pen-redesign.md)
 - Latest live-camera latency evidence: [docs/test-runs/2026-08-25-camera-speed.md](docs/test-runs/2026-08-25-camera-speed.md)
 - Latest checkout active-camera race release evidence: [docs/test-runs/2026-08-25-checkout-camera-race.md](docs/test-runs/2026-08-25-checkout-camera-race.md)
 - Latest long-portrait retailer-page release evidence: [docs/test-runs/2026-08-25-long-portrait-store-page.md](docs/test-runs/2026-08-25-long-portrait-store-page.md)
@@ -19,7 +19,7 @@ The app is a working mobile-first web/PWA concept with:
 
 - a public camera-first entry with no password gate or `Private demo` badge;
 - the official white Sugar.no symbol and wordmark sourced from the current `sugar.no` website, stored locally as a first-party SVG so scanner branding does not depend on a third-party runtime request;
-- a source-aligned visual system extracted locally from the supplied Sugar.no Figma file: `#F2F2F7` system background, white surfaces, `#F14E58` brand coral, SF Pro-compatible system typography and 40 px mobile sheet corners;
+- the established pre-Pen investor-demo visual system; the later Figma/Pen styling experiment is preserved only as an inactive design reference and does not affect the production CSS;
 - automatic live-camera frame sampling after the user grants permission;
 - a progressive live-camera path: the first stable frame is attempted about 120 ms after the preview becomes playable, Gemini's package identities are shown immediately, and optional live Barbora/Open Food Facts resolution continues in the background without blocking the held result;
 - full-frame shelf recognition that asks for up to eight distinct readable SKUs in one pass, while repeated facings of one SKU remain grouped;
@@ -53,13 +53,14 @@ A dense landscape shelf photo is analyzed as one complete frame plus three overl
 
 ## Design source and Pen handoff
 
+- Status: archived experiment, not the active production design.
 - Editable Pen file: [`design/sugar-no-scanner.pen`](design/sugar-no-scanner.pen).
-- Source-derived rules: [`design-system/sugar-no-scanner/MASTER.md`](design-system/sugar-no-scanner/MASTER.md) and [`design-system/sugar-no-scanner/pages/scanner.md`](design-system/sugar-no-scanner/pages/scanner.md).
+- Experimental source-derived rules: [`design-system/sugar-no-scanner/MASTER.md`](design-system/sugar-no-scanner/MASTER.md) and [`design-system/sugar-no-scanner/pages/scanner.md`](design-system/sugar-no-scanner/pages/scanner.md).
 - Supporting image files in `design/` exist only so the Pen mockup remains portable and editable.
 - The original `sugar .fig` stays outside the repository and was parsed locally; it was not uploaded to a design service.
 - The Pen file contains foundations, the collapsed camera-first shelf result and the expanded full-comparison state.
-- To inspect the pre-redesign implementation, use the immutable Git tag `pre-pen-style-2026-08-25` at commit `62f62bf8a3b626d2ac65064a7c98b92ee28c1ab6`.
-- Do not export Pen-generated code into the application. The production implementation remains the tested Next.js component and CSS module; Pen is the editable visual reference.
+- The production CSS was restored to the immutable Git tag `pre-pen-style-2026-08-25` at commit `62f62bf8a3b626d2ac65064a7c98b92ee28c1ab6` after the visual experiment was rejected.
+- Do not export Pen-generated code into the application without a new explicit design approval. Pen remains an editable visual reference only.
 
 ## Product rules
 

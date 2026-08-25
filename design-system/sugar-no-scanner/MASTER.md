@@ -1,6 +1,6 @@
-# Sugar.no scanner design system
+# Sugar.no scanner experimental visual study
 
-This is the source of truth for the investor scanner UI. Page-specific rules in `pages/` override this file.
+Status: archived and inactive. This file documents the rejected Figma/Pen experiment; it is not the source of truth for the production scanner. Page-specific notes in `pages/` describe the same inactive study.
 
 ## Provenance
 
