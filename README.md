@@ -17,6 +17,7 @@ The app is a working mobile-first web/PWA concept with:
 - a public camera-first entry with no password gate or `Private demo` badge;
 - the official white Sugar.no symbol and wordmark sourced from the current `sugar.no` website, stored locally as a first-party SVG so scanner branding does not depend on a third-party runtime request;
 - automatic live-camera frame sampling after the user grants permission;
+- a progressive live-camera path: the first stable frame is attempted about 120 ms after the preview becomes playable, Gemini's package identities are shown immediately, and optional live Barbora/Open Food Facts resolution continues in the background without blocking the held result;
 - full-frame shelf recognition that asks for up to eight distinct readable SKUs in one pass, while repeated facings of one SKU remain grouped;
 - one recognition API for camera, saved images, a deterministic four-item shelf photo and a real checkout photo with three recognized, source-rated products;
 - a reproducible active-food index generated from 9,707 non-adult products across Barbora Latvia's main grocery sections;
@@ -39,7 +40,7 @@ The app is a working mobile-first web/PWA concept with:
 - an automatic focused center retry after an uncertain broad camera pass, with remapped overlays and a separate conservative confidence threshold;
 - an in-scanner Shelf/Checkout switch that changes scenes without restarting the scanner;
 - metadata-only analytics with raw-image-like values rejected at the API boundary;
-- 23 authored Mobile Safari scenarios plus deterministic sample scenes, including the complete unknown-package-to-label-to-fit recovery path, landscape and long-portrait saved-image multi-pass recognition, active-camera-to-demo cancellation and a responsive matrix for iPhone 17 Pro portrait/landscape, a large iPhone and a small iPhone.
+- 24 authored Mobile Safari scenarios plus deterministic sample scenes, including progressive camera enrichment, the complete unknown-package-to-label-to-fit recovery path, landscape and long-portrait saved-image multi-pass recognition, active-camera-to-demo cancellation and a responsive matrix for iPhone 17 Pro portrait/landscape, a large iPhone and a small iPhone.
 
 The guaranteed shelf and checkout scenes work without third-party credentials. The checkout fixture carries official manufacturer nutrition for Sproud and Schnitzer plus an explicitly labelled generic raw-chanterelle composition reference for the Stockmann pack, so all three pinned identities produce visible Sugar.no fit markers. Live camera/upload recognition names readable packages, then checks the curated benchmark, the broad exact-Barbora nutrition snapshot and an exact Open Food Facts record. If none supplies both required factors, the result says `Needs nutrition label` and offers one functional camera action instead of ending at `Identified`. The app is deployed from GitHub `main` to Railway with a public HTTPS camera route. Production catalog/analytics storage still requires Supabase.
 
@@ -48,6 +49,8 @@ A dense landscape shelf photo is analyzed as one complete frame plus three overl
 ## Product rules
 
 Recognition and nutrition are separate trust levels. During the main scan Gemini may read a visible package identity, a clearly printed EAN/UPC and a clearly associated physical shelf-price label. Nutrition is then hydrated only from the curated benchmark, an exact product in the broad Barbora nutrition snapshot or an exact Open Food Facts barcode/product record. The local matcher requires compatible brand, rare variant words and pack or multipack size plus a clear runner-up margin. When two or three exact snapshot candidates remain tied, one additional visual pass receives only those candidate IDs, titles and first-party packshots; the server accepts its choice only at confidence 0.92 or higher and rejects any slug outside the constrained set. An exact local snapshot match can produce a fit even if Barbora's live product page is temporarily unavailable; only the current online price and retailer CTA are then omitted. If ambiguity remains, no retailer link or fit is assigned. If all sources fail, the user can deliberately scan the package's nutrition table: the model transcribes only one visible per-100 table, and the server rejects serving-only, low-confidence, implausible or OCR-inconsistent values. AI never fills missing nutrition, calculates a retailer price or invents a Sugar.no fit.
+
+Live camera uses progressive resolution so network lookups do not extend the time to the first useful result. The initial response contains Gemini's identity plus any exact match already available in the checked-in curated or Barbora nutrition indexes. The frame then pauses and the product sheet becomes readable. A separate bounded, image-free request may add a current exact retailer offer or strict Open Food Facts result in the background. If that optional request fails or is superseded by `Scan again`, the initial result remains unchanged. Saved-photo analysis keeps the complete resolution path because it already runs multiple deliberate image passes and does not need live-camera immediacy.
 
 An unknown or data-poor product therefore remains named in the result, but its primary state is `Needs nutrition label`, with a 48 px `Scan nutrition label` action. A successful follow-up replaces only that pending identity with a complete source-labelled result while keeping the other products from the held shelf in the comparison; failure keeps the neutral state and asks for a clearer view rather than guessing. A complete two-factor result uses the `Great fit / Moderate fit / Low fit` presentation. A product with only protein or only total sugar remains neutral and never shows a misleading approval icon or overall fit. Fiber may remain in raw source records, but it is not displayed and never affects the rating. The expanded result summary does not repeat a fit legend or marker explanation; the fit stays attached to each product marker, ranked row and badge. The price appears directly under a recognized product only when Gemini reports a separate physical price label, confidence is at least 0.90 and the exact OCR text includes a matching EUR amount. A package number, deposit or online offer cannot create it. A possible retailer candidate is never linked or displayed as a comparison. The shelf price is crossed out only when the camera price is unambiguous, the Barbora SKU match is exact and the currently fetched online price is lower. The deal card then says `Cheaper at Barbora` and offers `Buy cheaper at Barbora`; because only one retailer is connected, it never claims `best price`.
 
@@ -77,7 +80,7 @@ The deterministic Shelf demo intentionally includes one transparent commercial e
 
 - Next.js 16 App Router, React 19 and TypeScript
 - browser `getUserMedia` plus a stability/motion sampler with one in-flight request
-- Gemini image understanding for package identity and associated shelf-label OCR
+- Gemini image understanding for package identity and associated shelf-label OCR, followed by image-free background retailer enrichment on live camera
 - a compact Barbora sitemap index plus server-only on-demand product/price verification
 - exact-barcode and strict identity fallback through the public Open Food Facts API
 - Supabase Postgres for catalog, sources, retailer offers and anonymous scan metadata
@@ -146,6 +149,7 @@ The Playwright profile blocks service-worker registration so route-level recogni
 ## API
 
 - `POST /api/recognize`: accepts a bounded image data URL or deterministic sample source. `mode: products` returns package identity, optional barcode, normalized boxes, optional camera-read shelf price and exact retailer state. `mode: nutrition-label` requires the selected package identity and may return a source-backed inline fit only from one trusted per-100 table. Both modes return `imageStored: false`.
+- `POST /api/resolve-products`: accepts at most eight already recognized product identities and no image. It completes optional exact Barbora/Open Food Facts resolution after a live-camera result is visible and returns `imageStored: false`.
 - `GET /api/products/:id`: returns curated nutrition, an on-demand exact-Barbora quick view or an exact Open Food Facts barcode record plus independent alternatives when available.
 - `POST /api/events`: stores bounded metadata only and rejects raw-image-like fields.
 - `GET /api/health`: Railway health check with commit metadata and the deployed active-food / automatic-fit catalog counts.
@@ -239,6 +243,7 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 
 - The public scanner requests camera permission on entry; the browser remains the authority and denial exposes `Enable camera` plus `Show demo`.
 - Frames are resized in-browser and at most one recognition request runs at a time.
+- Live retailer enrichment receives only the bounded recognized identity, box and trusted shelf-price metadata; it cannot accept or store another image. Starting another scan aborts stale enrichment.
 - Sugar.no does not persist raw frames; Gemini receives a transient frame when live recognition is enabled.
 - Package text and camera-read prices are returned to the current browser session but are not added to analytics metadata.
 - Supabase receives only a random session ID, coarse device class, source, product ID, confidence/latency and explicit user actions.

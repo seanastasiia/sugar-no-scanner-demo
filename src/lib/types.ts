@@ -98,6 +98,14 @@ export interface RecognizedProductIdentity {
   packSize: string | null;
   category: string | null;
   matchKind: "verified_catalog" | "barbora" | "open_food_facts" | "package_label" | "visual_only";
+  searchQuery?: string;
+  barcode?: string | null;
+}
+
+export interface RecognitionEnrichmentResponse {
+  detections: ProductDetection[];
+  latencyMs: number;
+  imageStored: false;
 }
 
 export interface ShelfPrice {

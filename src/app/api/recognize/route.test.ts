@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { ScanSource } from "@/lib/types";
 import { createRecognizePost } from "./route";
 
 function request(body: unknown, headers: Record<string, string> = {}) {
@@ -51,6 +52,26 @@ describe("public recognition route", () => {
     expect(response.headers.get("retry-after")).toBe("27");
     expect(await response.json()).toEqual({ error: "rate_limited", retryAfterSeconds: 27 });
     expect(recognize).not.toHaveBeenCalled();
+  });
+
+  it("defers retailer resolution for live product frames but not uploads", async () => {
+    const recognize = vi.fn(async (input: { source: ScanSource }) => matchedResponse(input.source));
+    const post = createRecognizePost({
+      listProducts: async () => [],
+      recognize,
+      limiter: { consume: () => ({ allowed: true, remaining: 20, retryAfterSeconds: 0 }) },
+      requestId: () => "request-test"
+    });
+    await post(request({ source: "camera", imageDataUrl: "data:image/jpeg;base64,YWJj" }));
+    await post(request({ source: "upload", imageDataUrl: "data:image/jpeg;base64,YWJj" }));
+    expect(recognize).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ source: "camera", deferExternalResolution: true })
+    );
+    expect(recognize).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ source: "upload", deferExternalResolution: false })
+    );
   });
 
   it("accepts a nutrition-label follow-up only with its recognized target identity", async () => {

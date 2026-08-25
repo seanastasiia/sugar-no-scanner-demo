@@ -40,6 +40,7 @@ import { compareFairCohorts } from "@/lib/scoring";
 import { mergeUploadScanResults, uploadScanCrops, type UploadScanCrop } from "@/lib/upload-scan";
 import type {
   ProductDetection,
+  RecognitionEnrichmentResponse,
   RecognitionMode,
   RecognitionResponse,
   RecognizedProductIdentity,
@@ -180,8 +181,10 @@ export function ScannerApp() {
   const stageRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scanKickoffRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightRef = useRef(false);
   const recognitionAbortRef = useRef<AbortController | null>(null);
+  const enrichmentAbortRef = useRef<AbortController | null>(null);
   const lowResFrameRef = useRef<Uint8ClampedArray | null>(null);
   const focusRetryRef = useRef(false);
   const shelfCompletionRetryRef = useRef(false);
@@ -278,7 +281,50 @@ export function ScannerApp() {
     }
   }, []);
 
+  const enrichRecognizedProducts = useCallback(
+    async (initialDetections: ProductDetection[], requestRevision: number) => {
+      enrichmentAbortRef.current?.abort();
+      const controller = new AbortController();
+      enrichmentAbortRef.current = controller;
+      try {
+        const response = await fetch("/api/resolve-products", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ detections: initialDetections }),
+          signal: controller.signal
+        });
+        if (!response.ok || controller.signal.aborted || requestRevision !== cameraRequestRef.current) return;
+        const result = (await response.json()) as RecognitionEnrichmentResponse;
+        if (controller.signal.aborted || requestRevision !== cameraRequestRef.current || !result.detections.length) return;
+        const enriched = dedupeProductDetections(result.detections);
+        const ids = enriched.map((detection) => detection.productId);
+        setDetections(enriched);
+        setTray(ids);
+        manualSelectionRef.current = false;
+        setSelectedId(ids[0] || null);
+        const catalogIds = enriched
+          .map(
+            (detection) =>
+              detection.catalogProductId ||
+              (["barbora", "open_food_facts"].includes(detection.identity?.matchKind || "")
+                ? detection.productId
+                : null)
+          )
+          .filter((id): id is string => Boolean(id));
+        void hydrateProducts(catalogIds);
+      } catch (error) {
+        if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
+        // The fast recognition result remains useful if optional retailer enrichment fails.
+      } finally {
+        if (enrichmentAbortRef.current === controller) enrichmentAbortRef.current = null;
+      }
+    },
+    [hydrateProducts]
+  );
+
   const pauseRecognitionLoop = useCallback(() => {
+    if (scanKickoffRef.current) clearTimeout(scanKickoffRef.current);
+    scanKickoffRef.current = null;
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
     scanTimerRef.current = null;
     videoRef.current?.pause();
@@ -330,6 +376,7 @@ export function ScannerApp() {
           setStatusMessage("Could not confirm the shelf — scan again");
         } else if (eventSource === "camera" && !focusMode) {
           focusRetryRef.current = true;
+          lastCaptureRef.current = 0;
           setRecognitionState("scanning");
           setStatusMessage("Trying a closer center read…");
         } else {
@@ -401,6 +448,7 @@ export function ScannerApp() {
         setTray(ids);
         manualSelectionRef.current = false;
         setSelectedId(ids[0] || null);
+        lastCaptureRef.current = 0;
         void hydrateProducts(catalogIds);
         return;
       }
@@ -432,8 +480,11 @@ export function ScannerApp() {
           uniqueDetections.reduce((sum, detection) => sum + detection.confidence, 0) /
           uniqueDetections.length
       });
+      if (eventSource === "camera" && !nutritionMode) {
+        void enrichRecognizedProducts(uniqueDetections, cameraRequestRef.current);
+      }
     },
-    [hydrateProducts, pauseRecognitionLoop, track]
+    [enrichRecognizedProducts, hydrateProducts, pauseRecognitionLoop, track]
   );
 
   const recognize = useCallback(
@@ -581,7 +632,11 @@ export function ScannerApp() {
     cameraRequestRef.current += 1;
     recognitionAbortRef.current?.abort();
     recognitionAbortRef.current = null;
+    enrichmentAbortRef.current?.abort();
+    enrichmentAbortRef.current = null;
     inFlightRef.current = false;
+    if (scanKickoffRef.current) clearTimeout(scanKickoffRef.current);
+    scanKickoffRef.current = null;
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
     scanTimerRef.current = null;
     streamRef.current?.getTracks().forEach((trackItem) => trackItem.stop());
@@ -624,7 +679,7 @@ export function ScannerApp() {
     const nutritionTarget = nutritionTargetRef.current;
     const focusMode = !nutritionTarget && focusRetryRef.current;
     const crop = focusMode ? CAMERA_FOCUS_CROP : { x: 0, y: 0, width: 1, height: 1 };
-    const targetWidth = Math.min(sourceWidth, 960);
+    const targetWidth = Math.min(sourceWidth * crop.width, 960);
     canvas.width = targetWidth;
     canvas.height = Math.round(targetWidth * ((sourceHeight * crop.height) / (sourceWidth * crop.width)));
     const context = canvas.getContext("2d");
@@ -700,7 +755,9 @@ export function ScannerApp() {
           : "Point at several products and hold steady"
       );
       track("scan_started", "camera");
-      scanTimerRef.current = setInterval(captureStableFrame, 650);
+      lastCaptureRef.current = 0;
+      scanKickoffRef.current = setTimeout(captureStableFrame, 120);
+      scanTimerRef.current = setInterval(captureStableFrame, 450);
     } catch (error) {
       const denied = error instanceof DOMException && ["NotAllowedError", "SecurityError"].includes(error.name);
       setCameraState(denied ? "denied" : "error");
@@ -731,6 +788,11 @@ export function ScannerApp() {
   const scanAgain = useCallback(() => {
     if (source !== "camera") return;
     sessionIdRef.current = makeSessionId();
+    cameraRequestRef.current += 1;
+    enrichmentAbortRef.current?.abort();
+    enrichmentAbortRef.current = null;
+    if (scanKickoffRef.current) clearTimeout(scanKickoffRef.current);
+    scanKickoffRef.current = null;
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
     scanTimerRef.current = null;
     lowResFrameRef.current = null;
@@ -760,7 +822,8 @@ export function ScannerApp() {
       .play()
       .then(() => {
         track("scan_started", "camera");
-        scanTimerRef.current = setInterval(captureStableFrame, 650);
+        scanKickoffRef.current = setTimeout(captureStableFrame, 120);
+        scanTimerRef.current = setInterval(captureStableFrame, 450);
       })
       .catch(() => void startCamera());
   }, [captureStableFrame, source, startCamera, track]);

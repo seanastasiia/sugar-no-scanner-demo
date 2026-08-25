@@ -33,6 +33,9 @@ interface ProductRow {
   }>;
 }
 
+const CATALOG_CACHE_TTL_MS = 60_000;
+let catalogCache: { expiresAt: number; products: ScoredProduct[] } | null = null;
+
 function rowToProduct(row: ProductRow): ProductRecord {
   return {
     id: row.id,
@@ -67,9 +70,12 @@ function rowToProduct(row: ProductRow): ProductRecord {
 export async function listProducts(): Promise<ScoredProduct[]> {
   const supabase = getSupabaseAdmin();
   if (!supabase) return getCatalog();
+  if (catalogCache && catalogCache.expiresAt > Date.now()) return catalogCache.products;
   const { data, error } = await supabase.from("products").select("*, product_sources(*)").order("name");
   if (error) throw new Error(`Catalog query failed: ${error.message}`);
-  return scoreCatalog((data as ProductRow[]).map(rowToProduct));
+  const products = scoreCatalog((data as ProductRow[]).map(rowToProduct));
+  catalogCache = { products, expiresAt: Date.now() + CATALOG_CACHE_TTL_MS };
+  return products;
 }
 
 export async function productWithAlternatives(id: string) {

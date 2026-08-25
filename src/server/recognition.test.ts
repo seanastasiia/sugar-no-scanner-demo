@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getCatalog } from "@/lib/catalog";
 import {
   DEFAULT_GEMINI_MODEL,
@@ -269,6 +269,34 @@ describe("candidate confirmation", () => {
 });
 
 describe("resolveVisibleDetections", () => {
+  it("returns locally linked camera identities without waiting for retailer or Open Food Facts", async () => {
+    const getOfferBySlug = vi.fn(async () => null);
+    const resolveOffer = vi.fn(async () => null);
+    const resolveOpenFoodFacts = vi.fn(async () => null);
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, { brand: "SPILVA", productName: "Siera majonēze 250 g" })],
+      [],
+      {
+        getOfferBySlug,
+        resolveOffer,
+        resolveOpenFoodFacts,
+        resolveIndexedCandidate: () => ({ slug: "majoneze-siera-spilva-250-g", score: 0.94 })
+      },
+      3,
+      "fast"
+    );
+
+    expect(detections[0]).toMatchObject({
+      productId: "barbora:majoneze-siera-spilva-250-g",
+      nutritionLinkConfidence: 0.94,
+      identity: { matchKind: "barbora" },
+      retailerOffer: null
+    });
+    expect(getOfferBySlug).not.toHaveBeenCalled();
+    expect(resolveOffer).not.toHaveBeenCalled();
+    expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
+  });
+
   it("attempts retailer resolution for the seventh and eighth identities with bounded concurrency", async () => {
     const attempted: string[] = [];
     let active = 0;

@@ -623,7 +623,6 @@ test("a landscape saved shelf is scanned as a full frame plus three row close-up
       })
     });
   });
-
   await unlock(page);
   await chooseLandscapeSavedPhoto(page);
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
@@ -703,7 +702,6 @@ test("a long online-store screenshot is scanned in four passes and opens one mer
       })
     });
   });
-
   await unlock(page);
   await chooseLongPortraitSavedPhoto(page);
   const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
@@ -938,7 +936,6 @@ test("an unrated package can become a Sugar.no fit from its printed nutrition la
 
 test("a broad live shelf scan keeps several different Sugar.no-rated products in one result", async ({ page }) => {
   await mockLiveCamera(page);
-  await unlock(page);
 
   let recognitionAttempts = 0;
   const focusModes: boolean[] = [];
@@ -982,9 +979,15 @@ test("a broad live shelf scan keeps several different Sugar.no-rated products in
     });
   });
 
-  await expect(page.getByRole("status")).toContainText("1 product found. Scanning the rest of the shelf", {
-    timeout: 6_000
+  await page.route("**/api/resolve-products", async (route) => {
+    const { detections } = route.request().postDataJSON() as { detections: unknown[] };
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ detections, latencyMs: 1, imageStored: false })
+    });
   });
+  await unlock(page);
+
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit", { timeout: 10_000 });
   expect(recognitionAttempts).toBe(2);
   expect(focusModes).toEqual([false, false]);
@@ -993,6 +996,83 @@ test("a broad live shelf scan keeps several different Sugar.no-rated products in
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByLabel("Products ranked by Sugar.no fit").getByRole("button")).toHaveCount(3);
+});
+
+test("live camera shows package identities before optional retailer enrichment finishes", async ({ page }) => {
+  await mockLiveCamera(page);
+  const detections = [
+    {
+      productId: "visual:cola",
+      catalogProductId: null,
+      confidence: 0.96,
+      box: { x: 0.08, y: 0.22, width: 0.38, height: 0.55 },
+      observedText: "Coca-Cola Original 330 ml",
+      identity: {
+        brand: "Coca-Cola",
+        name: "Coca-Cola Original 330 ml",
+        variant: null,
+        packSize: "330 ml",
+        category: null,
+        matchKind: "visual_only",
+        searchQuery: "Coca-Cola Original 330 ml"
+      },
+      shelfPrice: null,
+      retailerOffer: null,
+      nutritionLinkConfidence: null
+    },
+    {
+      productId: "visual:sanpellegrino",
+      catalogProductId: null,
+      confidence: 0.93,
+      box: { x: 0.54, y: 0.2, width: 0.36, height: 0.57 },
+      observedText: "Sanpellegrino Zero 330 ml",
+      identity: {
+        brand: "Sanpellegrino",
+        name: "Sanpellegrino Zero 330 ml",
+        variant: null,
+        packSize: "330 ml",
+        category: null,
+        matchKind: "visual_only",
+        searchQuery: "Sanpellegrino Zero 330 ml"
+      },
+      shelfPrice: null,
+      retailerOffer: null,
+      nutritionLinkConfidence: null
+    }
+  ];
+  let releaseEnrichment!: () => void;
+  let enrichmentFinished = false;
+  const enrichmentGate = new Promise<void>((resolve) => {
+    releaseEnrichment = resolve;
+  });
+  await page.route("**/api/recognize", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: "fast-camera-result",
+        status: "matched",
+        latencyMs: 900,
+        model: "qa-mock",
+        imageStored: false,
+        detections
+      })
+    });
+  });
+  await page.route("**/api/resolve-products", async (route) => {
+    await enrichmentGate;
+    enrichmentFinished = true;
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ detections, latencyMs: 3_000, imageStored: false })
+    });
+  });
+
+  await page.goto("/");
+  await expect(page.getByLabel("Live camera scanner")).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("2 products · 0 with Sugar.no fit", { timeout: 5_000 });
+  expect(enrichmentFinished).toBe(false);
+  releaseEnrichment();
+  await expect.poll(() => enrichmentFinished).toBe(true);
 });
 
 test("a not-sure shelf completion retry retains and locks the first valid product", async ({ page }) => {
@@ -1137,7 +1217,6 @@ test("HTTP 429 preserves a provisional product and pauses automatic spending ret
 
 test("live camera groups repeated packs, holds the result and replaces it only after Scan again", async ({ page }) => {
   await mockLiveCamera(page);
-  await unlock(page);
 
   let currentProduct: "coke" | "activia" = "coke";
   let recognitionRequests = 0;
@@ -1178,6 +1257,15 @@ test("live camera groups repeated packs, holds the result and replaces it only a
       })
     });
   });
+
+  await page.route("**/api/resolve-products", async (route) => {
+    const { detections } = route.request().postDataJSON() as { detections: unknown[] };
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ detections, latencyMs: 1, imageStored: false })
+    });
+  });
+  await unlock(page);
 
   await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit", { timeout: 10_000 });
   await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit");

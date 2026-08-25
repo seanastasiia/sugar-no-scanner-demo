@@ -688,6 +688,8 @@ export interface DetectionResolutionDependencies {
   resolveIndexedCandidate?: typeof resolveIndexedBarboraCandidate;
 }
 
+export type DetectionResolutionMode = "fast" | "complete";
+
 const defaultResolutionDependencies: DetectionResolutionDependencies = {
   getOfferBySlug: getBarboraOfferBySlug,
   resolveOffer: resolveBarboraOffer,
@@ -724,7 +726,8 @@ export async function resolveVisibleDetections(
   visible: ConfirmedProviderDetection[],
   catalog: ScoredProduct[],
   dependencies: DetectionResolutionDependencies = defaultResolutionDependencies,
-  concurrency = 3
+  concurrency = 3,
+  mode: DetectionResolutionMode = "complete"
 ): Promise<ProductDetection[]> {
   const resolved = await mapWithConcurrency(visible, concurrency, async (detection): Promise<ProductDetection> => {
     const packSize = extractPackSize(detection.productName);
@@ -742,17 +745,19 @@ export async function resolveVisibleDetections(
       : detection.confirmedBarboraSlug
         ? { slug: detection.confirmedBarboraSlug, score: 1 }
         : (dependencies.resolveIndexedCandidate || resolveIndexedBarboraCandidate)(lookupInput);
-    const retailerOffer = initialCatalogMatch
-      ? await dependencies.getOfferBySlug(initialCatalogMatch.product.id, lookupInput).catch(() => null)
-      : indexedBarboraMatch
-        ? await dependencies.getOfferBySlug(indexedBarboraMatch.slug, lookupInput).catch(() => null)
-        : await dependencies.resolveOffer(lookupInput).catch(() => null);
+    const retailerOffer = mode === "fast"
+      ? null
+      : initialCatalogMatch
+        ? await dependencies.getOfferBySlug(initialCatalogMatch.product.id, lookupInput).catch(() => null)
+        : indexedBarboraMatch
+          ? await dependencies.getOfferBySlug(indexedBarboraMatch.slug, lookupInput).catch(() => null)
+          : await dependencies.resolveOffer(lookupInput).catch(() => null);
     const exactRetailerOffer = retailerOffer?.exactSku ? retailerOffer : null;
     // Barbora is the Latvia-primary source and its broad local index is free to
     // query. Use Open Food Facts only after that exact-SKU path fails so a shelf
     // does not spend the community search API's strict per-IP request budget on
     // products that are already resolved locally.
-    const openFoodFactsCandidate = initialCatalogMatch || indexedBarboraMatch || exactRetailerOffer
+    const openFoodFactsCandidate = mode === "fast" || initialCatalogMatch || indexedBarboraMatch || exactRetailerOffer
       ? null
       : await dependencies.resolveOpenFoodFacts(lookupInput, detection.barcode).catch(() => null);
     const knownProduct =
@@ -783,6 +788,8 @@ export async function resolveVisibleDetections(
         variant: null,
         packSize: packSize || null,
         category: null,
+        searchQuery: detection.searchQuery,
+        barcode: detection.barcode || null,
         matchKind: knownProduct
           ? "verified_catalog"
           : indexedBarboraMatch || exactRetailerOffer
@@ -815,6 +822,7 @@ export async function recognizeProducts(input: {
   sampleFrame?: number;
   catalog: ScoredProduct[];
   requestId: string;
+  deferExternalResolution?: boolean;
 }): Promise<RecognitionResponse> {
   const startedAt = performance.now();
   const sample = sampleResponse(input.source);
@@ -867,6 +875,7 @@ export async function recognizeProducts(input: {
       startedAt
     });
   }
+  const providerStartedAt = performance.now();
   const response = await ai.models.generateContent({
     model,
     contents: [
@@ -930,6 +939,7 @@ export async function recognizeProducts(input: {
     }
   });
   const parsed = providerResponseSchema.parse(JSON.parse(response.text || '{"detections":[]}'));
+  const providerMs = Math.round(performance.now() - providerStartedAt);
   const visible = parsed.detections
     .filter((detection) => detection.confidence >= threshold)
     .map((detection) => ({ ...detection, box: fitBoxToFrame(detection.box) }))
@@ -949,15 +959,34 @@ export async function recognizeProducts(input: {
       })
     );
   }
-  const confirmedVisible = await confirmAmbiguousBarboraCandidates({
-    ai,
-    model,
-    mimeType,
-    base64,
-    detections: visible,
-    allowSingleCandidate: input.source === "upload"
-  });
-  const detections = await resolveVisibleDetections(confirmedVisible, input.catalog);
+  const confirmedVisible = input.deferExternalResolution
+    ? visible
+    : await confirmAmbiguousBarboraCandidates({
+        ai,
+        model,
+        mimeType,
+        base64,
+        detections: visible,
+        allowSingleCandidate: input.source === "upload"
+      });
+  const detections = await resolveVisibleDetections(
+    confirmedVisible,
+    input.catalog,
+    defaultResolutionDependencies,
+    3,
+    input.deferExternalResolution ? "fast" : "complete"
+  );
+  console.info(
+    JSON.stringify({
+      event: "recognition_timing",
+      requestId: input.requestId,
+      source: input.source,
+      deferredExternalResolution: Boolean(input.deferExternalResolution),
+      providerMs,
+      totalMs: Math.round(performance.now() - startedAt),
+      detectionCount: detections.length
+    })
+  );
 
   return {
     requestId: input.requestId,

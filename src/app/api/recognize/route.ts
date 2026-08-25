@@ -84,7 +84,13 @@ export function createRecognizePost(overrides: Partial<RecognizeRouteDependencie
     const requestId = dependencies.requestId();
     try {
       const catalog = await dependencies.listProducts();
-      const result = await dependencies.recognize({ ...parsed.data, catalog, requestId });
+      const result = await dependencies.recognize({
+        ...parsed.data,
+        catalog,
+        requestId,
+        deferExternalResolution:
+          parsed.data.source === "camera" && (parsed.data.mode || "products") === "products"
+      });
       return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
     } catch (error) {
       console.error(
