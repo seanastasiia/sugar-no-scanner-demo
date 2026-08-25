@@ -254,6 +254,7 @@ GitHub `main` is the release source. `COMMIT_SHA` is refreshed before a direct C
 
 ## Evidence and handoff
 
+- [Team handoff](docs/team-handoff.md)
 - [Product QA](docs/product-qa.md)
 - [Acceptance matrix](docs/acceptance.md)
 - [Investor demo script](docs/investor-demo-script.md)
