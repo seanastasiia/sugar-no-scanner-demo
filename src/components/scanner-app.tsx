@@ -36,6 +36,7 @@ import {
 } from "@/lib/match-presentation";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { hasSugarNoRating } from "@/lib/rating-visibility";
+import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { compareFairCohorts } from "@/lib/scoring";
 import { mergeUploadScanResults, uploadScanCrops, type UploadScanCrop } from "@/lib/upload-scan";
 import type {
@@ -176,6 +177,40 @@ function trapFocus(event: KeyboardEvent, container: HTMLElement) {
   }
 }
 
+function detectionResolutionRank(detection: ProductDetection): number {
+  if (detection.inlineProduct || detection.catalogProductId) return 3;
+  if (detection.identity?.matchKind && detection.identity.matchKind !== "visual_only") return 2;
+  return 1;
+}
+
+function mergeEnrichedDetections(
+  initialDetections: ProductDetection[],
+  resolvedDetections: ProductDetection[]
+): ProductDetection[] {
+  return initialDetections.map((initial, index) => {
+    const resolved = resolvedDetections[index];
+    if (!resolved) return initial;
+    const preferred = detectionResolutionRank(resolved) >= detectionResolutionRank(initial) ? resolved : initial;
+    const mergedIdentity = preferred.identity
+      ? {
+          ...initial.identity,
+          ...preferred.identity,
+          variant: preferred.identity.variant || initial.identity?.variant || null,
+          packSize: preferred.identity.packSize || initial.identity?.packSize || null,
+          category: preferred.identity.category || initial.identity?.category || null
+        }
+      : initial.identity;
+    return {
+      ...initial,
+      ...preferred,
+      identity: mergedIdentity,
+      shelfPrice: preferred.shelfPrice || initial.shelfPrice || null,
+      retailerOffer: preferred.retailerOffer || initial.retailerOffer || null,
+      inlineProduct: preferred.inlineProduct || initial.inlineProduct || null
+    };
+  });
+}
+
 export function ScannerApp() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -213,6 +248,7 @@ export function ScannerApp() {
   const [tray, setTray] = useState<string[]>([]);
   const [products, setProducts] = useState<Record<string, ProductPayload>>({});
   const [loadingProductIds, setLoadingProductIds] = useState<string[]>([]);
+  const [enrichingProductIds, setEnrichingProductIds] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState("Ready when you are");
@@ -286,6 +322,7 @@ export function ScannerApp() {
       enrichmentAbortRef.current?.abort();
       const controller = new AbortController();
       enrichmentAbortRef.current = controller;
+      setEnrichingProductIds(initialDetections.map((detection) => detection.productId));
       try {
         const response = await fetch("/api/resolve-products", {
           method: "POST",
@@ -296,19 +333,30 @@ export function ScannerApp() {
         if (!response.ok || controller.signal.aborted || requestRevision !== cameraRequestRef.current) return;
         const result = (await response.json()) as RecognitionEnrichmentResponse;
         if (controller.signal.aborted || requestRevision !== cameraRequestRef.current || !result.detections.length) return;
-        const enriched = dedupeProductDetections(result.detections);
+        const enriched = dedupeProductDetections(
+          mergeEnrichedDetections(initialDetections, result.detections)
+        ).slice(0, MAX_SCAN_PRODUCTS);
         const ids = enriched.map((detection) => detection.productId);
+        const inlineEntries: Array<[string, ProductPayload]> = enriched.flatMap((detection) =>
+          detection.inlineProduct
+            ? [[detection.productId, { product: detection.inlineProduct, alternatives: [] as ScoredProduct[] }]]
+            : []
+        );
+        if (inlineEntries.length) {
+          setProducts((current) => ({ ...current, ...Object.fromEntries(inlineEntries) }));
+        }
         setDetections(enriched);
         setTray(ids);
         manualSelectionRef.current = false;
         setSelectedId(ids[0] || null);
         const catalogIds = enriched
-          .map(
-            (detection) =>
-              detection.catalogProductId ||
-              (["barbora", "open_food_facts"].includes(detection.identity?.matchKind || "")
-                ? detection.productId
-                : null)
+          .map((detection) =>
+            detection.inlineProduct
+              ? null
+              : detection.catalogProductId ||
+                (["barbora", "open_food_facts"].includes(detection.identity?.matchKind || "")
+                  ? detection.productId
+                  : null)
           )
           .filter((id): id is string => Boolean(id));
         void hydrateProducts(catalogIds);
@@ -316,7 +364,10 @@ export function ScannerApp() {
         if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
         // The fast recognition result remains useful if optional retailer enrichment fails.
       } finally {
-        if (enrichmentAbortRef.current === controller) enrichmentAbortRef.current = null;
+        if (enrichmentAbortRef.current === controller) {
+          enrichmentAbortRef.current = null;
+          setEnrichingProductIds([]);
+        }
       }
     },
     [hydrateProducts]
@@ -355,7 +406,7 @@ export function ScannerApp() {
           provisionalResponseRef.current = null;
           pauseRecognitionLoop();
           if (provisional) {
-            const provisionalDetections = dedupeProductDetections(provisional.detections);
+            const provisionalDetections = dedupeProductDetections(provisional.detections).slice(0, MAX_SCAN_PRODUCTS);
             const provisionalIds = provisionalDetections.map((detection) => detection.productId);
             setDetections(provisionalDetections);
             setTray(provisionalIds);
@@ -391,7 +442,7 @@ export function ScannerApp() {
         return;
       }
       focusRetryRef.current = false;
-      const uniqueDetections = dedupeProductDetections(result.detections);
+      const uniqueDetections = dedupeProductDetections(result.detections).slice(0, MAX_SCAN_PRODUCTS);
       const nutritionReturn = nutritionMode ? nutritionReturnRef.current : null;
       const returnedNutritionDetection = nutritionReturn ? uniqueDetections[0] : null;
       const presentedDetections =
@@ -480,7 +531,7 @@ export function ScannerApp() {
           uniqueDetections.reduce((sum, detection) => sum + detection.confidence, 0) /
           uniqueDetections.length
       });
-      if (eventSource === "camera" && !nutritionMode) {
+      if (["camera", "upload"].includes(eventSource) && !nutritionMode) {
         void enrichRecognizedProducts(uniqueDetections, cameraRequestRef.current);
       }
     },
@@ -634,6 +685,7 @@ export function ScannerApp() {
     recognitionAbortRef.current = null;
     enrichmentAbortRef.current?.abort();
     enrichmentAbortRef.current = null;
+    setEnrichingProductIds([]);
     inFlightRef.current = false;
     if (scanKickoffRef.current) clearTimeout(scanKickoffRef.current);
     scanKickoffRef.current = null;
@@ -772,25 +824,13 @@ export function ScannerApp() {
 
   const startCamera = useCallback(() => requestCamera(null), [requestCamera]);
 
-  const startNutritionScan = useCallback(
-    (detection: ProductDetection) => {
-      if (!detection.identity) return;
-      nutritionReturnRef.current = {
-        targetProductId: detection.productId,
-        detections,
-        tray
-      };
-      void requestCamera(detection.identity);
-    },
-    [detections, requestCamera, tray]
-  );
-
   const scanAgain = useCallback(() => {
     if (source !== "camera") return;
     sessionIdRef.current = makeSessionId();
     cameraRequestRef.current += 1;
     enrichmentAbortRef.current?.abort();
     enrichmentAbortRef.current = null;
+    setEnrichingProductIds([]);
     if (scanKickoffRef.current) clearTimeout(scanKickoffRef.current);
     scanKickoffRef.current = null;
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
@@ -961,7 +1001,6 @@ export function ScannerApp() {
   const fairComparison = useMemo(() => compareFairCohorts(loadedTray), [loadedTray]);
   const bestId = globalBestProductId(fairComparison);
   const ratedCount = ratedDetections.length;
-  const sheetTitle = `${tray.length} ${tray.length === 1 ? "product" : "products"} · ${ratedCount} with Sugar.no fit`;
   const compactSheetTitle = `${tray.length} ${tray.length === 1 ? "product" : "products"}`;
   const rankedTrayIds = useMemo(
     () => rankScanProductIds(tray, productById),
@@ -971,12 +1010,19 @@ export function ScannerApp() {
     () => rankedTrayIds.filter((id) => hasSugarNoRating(productById[id])),
     [productById, rankedTrayIds]
   );
+  const pendingProductIds = useMemo(
+    () => new Set([...loadingProductIds, ...enrichingProductIds]),
+    [enrichingProductIds, loadingProductIds]
+  );
+  const sheetTitle = pendingProductIds.size
+    ? `${tray.length} ${tray.length === 1 ? "product" : "products"} · checking nutrition`
+    : `${tray.length} ${tray.length === 1 ? "product" : "products"} · ${ratedCount} with Sugar.no fit`;
   const firstRankedId = rankedRatedIds[0] || rankedTrayIds[0];
   const sheetPreviewIds = rankedTrayIds.slice(0, 4);
   const displayedStatusMessage =
     recognitionState === "matched" && scanMode === "nutrition-label" && ratedCount > 0
       ? "Sugar.no fit ready from the nutrition label"
-      : recognitionState === "matched" && tray.length > 0 && loadingProductIds.length === 0
+      : recognitionState === "matched" && tray.length > 0 && pendingProductIds.size === 0
       ? `${tray.length} ${tray.length === 1 ? "product" : "products"} · ${ratedCount} with Sugar.no fit`
       : statusMessage;
 
@@ -1229,8 +1275,12 @@ export function ScannerApp() {
                       <strong>{compactSheetTitle}</strong>
                       <span>
                         {ratedCount > 0
-                          ? `${ratedCount} rated · Best fit first`
-                          : `${tray.length} need ${tray.length === 1 ? "a nutrition label" : "nutrition labels"}`}
+                          ? pendingProductIds.size
+                            ? `${ratedCount} rated · Checking the rest…`
+                            : `${ratedCount} rated · Best fit first`
+                          : pendingProductIds.size
+                            ? "Checking exact nutrition online…"
+                            : "Products identified · Nutrition checked online"}
                       </span>
                     </div>
                     <div className={styles.sheetActions}>
@@ -1287,7 +1337,7 @@ export function ScannerApp() {
                             {item && hasSugarNoRating(item) ? (
                               <MatchPill product={item} />
                             ) : (
-                              <small>{loadingProductIds.includes(id) ? "Checking nutrition…" : "Needs nutrition label"}</small>
+                              <small>{pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}</small>
                             )}
                             <CompactProductPrice detection={detection} />
                           </div>
@@ -1319,7 +1369,9 @@ export function ScannerApp() {
                       <strong>
                         {ratedCount > 0
                           ? `${ratedCount} of ${tray.length} ready to compare`
-                          : `${tray.length} ${tray.length === 1 ? "product needs" : "products need"} nutrition labels`}
+                          : pendingProductIds.size
+                            ? `Checking ${tray.length} ${tray.length === 1 ? "product" : "products"} online…`
+                            : `${tray.length} ${tray.length === 1 ? "product identified" : "products identified"}`}
                       </strong>
                       <span>{resultLocked ? "Result held while you read" : "Tap a product to compare"}</span>
                     </div>
@@ -1337,11 +1389,15 @@ export function ScannerApp() {
                       <div className={styles.rankingHeading}>
                         <div>
                           <p>Sugar.no ranking</p>
-                          <h2 id="scan-ranking-title">{ratedCount > 0 ? "Best fit first" : "Scan labels to compare"}</h2>
+                          <h2 id="scan-ranking-title">
+                            {ratedCount > 0 ? "Best fit first" : pendingProductIds.size ? "Checking nutrition online" : "Products identified"}
+                          </h2>
                           <span>
                             {ratedCount > 0
                               ? "Based on source-backed protein and total sugar"
-                              : "Turn a pack around and scan its per-100 nutrition table"}
+                              : pendingProductIds.size
+                                ? "Looking only for exact, cited per-100 product data"
+                                : "No exact source-backed nutrition was found online for this scan"}
                           </span>
                         </div>
                         <strong>{ratedCount}/{tray.length} rated</strong>
@@ -1364,7 +1420,7 @@ export function ScannerApp() {
                                 aria-label={
                                   isRated && presentation
                                     ? `Rank ${rank}, ${itemBrand} ${itemName}, ${presentation.label}`
-                                    : `${itemBrand} ${itemName}, nutrition label needed`
+                                    : `${itemBrand} ${itemName}, nutrition not verified online`
                                 }
                                 className={`${styles.rankedProduct} ${selectedId === id ? styles.activeRankedProduct : ""}`}
                                 onClick={() => {
@@ -1389,7 +1445,7 @@ export function ScannerApp() {
                                         <small>Protein {protein}g · Sugar {sugar}g</small>
                                       </>
                                     ) : (
-                                      <small>{loadingProductIds.includes(id) ? "Checking nutrition…" : "Needs nutrition label"}</small>
+                                      <small>{pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}</small>
                                     )}
                                   </div>
                                   <CompactProductPrice detection={detection} />
@@ -1414,15 +1470,13 @@ export function ScannerApp() {
                         track("alternative_viewed", source, id);
                       }}
                       onRetailer={(id) => track("retailer_link_clicked", source, id)}
-                      onScanNutrition={selectedDetection ? () => startNutritionScan(selectedDetection) : undefined}
                     />
-                  ) : selectedDetection?.identity && selectedId && loadingProductIds.includes(selectedId) ? (
+                  ) : selectedDetection?.identity && selectedId && pendingProductIds.has(selectedId) ? (
                     <LoadingProductResult detection={selectedDetection} />
                   ) : selectedDetection?.identity ? (
                     <RecognizedProductResult
                       detection={selectedDetection}
                       onRetailer={() => track("retailer_link_clicked", source, selectedDetection.productId, { placement: "recognized_product" })}
-                      onScanNutrition={() => startNutritionScan(selectedDetection)}
                     />
                   ) : null}
                 </div>
@@ -1524,15 +1578,13 @@ function ProductResult({
   detection,
   bestInScan,
   onAlternative,
-  onRetailer,
-  onScanNutrition
+  onRetailer
 }: {
   payload: ProductPayload;
   detection?: ProductDetection;
   bestInScan: boolean;
   onAlternative: (id: string) => void;
   onRetailer: (id: string) => void;
-  onScanNutrition?: () => void;
 }) {
   const { product, alternatives } = payload;
   return (
@@ -1559,14 +1611,9 @@ function ProductResult({
         <div className={styles.pendingDataAction}>
           <Info aria-hidden="true" size={18} />
           <span>
-            <strong>One more view gives you the Sugar.no fit</strong>
-            Turn the pack around. Sugar.no needs the per-100 kcal, protein and total sugars from the printed table.
+            <strong>Nutrition not verified online</strong>
+            Sugar.no checked its catalog, Barbora, Open Food Facts and cited web results, but will not invent a fit without an exact per-100 source.
           </span>
-          {onScanNutrition ? (
-            <button type="button" onClick={onScanNutrition}>
-              <ScanLine aria-hidden="true" size={18} /> Scan nutrition label
-            </button>
-          ) : null}
         </div>
       ) : null}
 
@@ -1631,12 +1678,10 @@ function ProductResult({
 
 function RecognizedProductResult({
   detection,
-  onRetailer,
-  onScanNutrition
+  onRetailer
 }: {
   detection: ProductDetection;
   onRetailer: () => void;
-  onScanNutrition: () => void;
 }) {
   const identity = detection.identity!;
   const visiblePackSize =
@@ -1651,7 +1696,7 @@ function RecognizedProductResult({
           <h2>{[identity.name, identity.variant, visiblePackSize].filter(Boolean).join(" · ")}</h2>
         </div>
         <span className={styles.recognizedBadge}>
-          <ScanLine aria-hidden="true" size={15} /> Needs label
+          <ScanLine aria-hidden="true" size={15} /> Identified
         </span>
       </div>
 
@@ -1660,12 +1705,9 @@ function RecognizedProductResult({
       <div className={styles.pendingDataAction}>
         <Info aria-hidden="true" size={18} />
         <span>
-          <strong>Turn the pack around</strong>
-          Scan the nutrition table once. Sugar.no will read per-100 kcal, protein and total sugars and show the fit.
+          <strong>Nutrition not verified online</strong>
+          Sugar.no will not invent protein or sugar values when an exact source cannot be confirmed.
         </span>
-        <button type="button" onClick={onScanNutrition}>
-          <ScanLine aria-hidden="true" size={18} /> Scan nutrition label
-        </button>
       </div>
     </article>
   );
@@ -1684,8 +1726,8 @@ function LoadingProductResult({ detection }: { detection: ProductDetection }) {
       <div className={styles.pendingData}>
         <LoaderCircle className={styles.spin} aria-hidden="true" size={18} />
         <span>
-          <strong>Checking nutrition…</strong>
-          Checking exact Barbora and Open Food Facts records. If neither has the values, Sugar.no will ask for the printed label.
+          <strong>Checking nutrition online…</strong>
+          Checking the Sugar.no catalog, Barbora, Open Food Facts and cited web results.
         </span>
       </div>
     </article>
@@ -1789,6 +1831,8 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
       ? "Exact Barbora nutrition"
       : product.ratingBasis.startsWith("open_food_facts_")
         ? "Open Food Facts nutrition"
+        : product.ratingBasis.startsWith("web_search_")
+          ? "Verified web nutrition"
         : product.ratingBasis.startsWith("manufacturer_")
           ? "Manufacturer nutrition"
           : product.ratingBasis.startsWith("food_composition_")

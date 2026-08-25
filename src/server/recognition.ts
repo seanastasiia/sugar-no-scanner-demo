@@ -1,6 +1,7 @@
 import { GoogleGenAI, ThinkingLevel, createPartFromBase64, createPartFromText } from "@google/genai";
 import { z } from "zod";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
+import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { scoreReferenceProduct } from "@/lib/scoring";
 import type { InvestorCategory } from "@/lib/supported-categories";
 import type {
@@ -22,7 +23,9 @@ import {
   type VisualBarboraCandidate
 } from "./barbora-catalog";
 import { nutritionLabelToScoredProduct, type NutritionLabelRead } from "./nutrition-label";
+import { getIndexedBarboraProductWithAlternatives } from "./barbora-nutrition-index";
 import { resolveOpenFoodFactsProduct } from "./open-food-facts";
+import { resolveWebNutritionProduct } from "./web-nutrition";
 
 export const DEFAULT_GEMINI_MODEL = "gemini-3.7-flash";
 const DEFAULT_RECOGNITION_THRESHOLD = 0.72;
@@ -56,7 +59,7 @@ export type ProviderDetection = z.infer<typeof providerResponseSchema>["detectio
 const candidateConfirmationResponseSchema = z.object({
   choices: z.array(
     z.object({
-      detectionIndex: z.number().int().min(0).max(7),
+      detectionIndex: z.number().int().min(0).max(MAX_SCAN_PRODUCTS - 1),
       candidateSlug: z.string().max(220),
       confidence: z.number().min(0).max(1),
       evidence: z.string().max(220)
@@ -515,8 +518,8 @@ export function recognitionInstruction(
   const scope = focusMode
     ? `This is a center crop after a broad scan was uncertain. Identify the most prominent readable package in the crop. ` +
       `Repeated copies of the same package are one SKU; return it once rather than returning an empty result. `
-    : `Scan the complete frame from left to right and top to bottom. Identify every distinct clearly readable front-facing ` +
-      `packaged retail SKU, including several different products on the same shelf, up to the response limit. ` +
+    : `Scan the complete frame from left to right and top to bottom. Identify the five most confidently readable distinct front-facing ` +
+      `packaged retail SKUs, including several different products on the same shelf. ` +
       `Do not stop after the central or most prominent package. Include that package as a fallback, but also return readable ` +
       `products elsewhere in the frame. Repeated facings of the same SKU are one product type and must be returned once. `;
   const savedImageContext =
@@ -542,7 +545,7 @@ export function recognitionInstruction(
     `Otherwise set shelfPriceLabelVisible false, price cents and confidence to zero, and price text to an empty string. ` +
     `Never treat nutrition claims, pack size, deposit text or any number printed on the package as a shelf price. ` +
     `Return an empty detections array rather than guessing when no product identity is readable. ` +
-    `Return at most one box per distinct front-facing SKU and do not enumerate repeated or blurry background packages. ` +
+    `Return no more than ${MAX_SCAN_PRODUCTS} boxes, at most one per distinct front-facing SKU, and do not enumerate repeated or blurry background packages. ` +
     `Boxes use x, y, width and height normalized from 0 to 1.`
   );
 }
@@ -698,6 +701,8 @@ export interface DetectionResolutionDependencies {
   resolveOffer: typeof resolveBarboraOffer;
   resolveOpenFoodFacts: typeof resolveOpenFoodFactsProduct;
   resolveIndexedCandidate?: typeof resolveIndexedBarboraCandidate;
+  getIndexedProduct?: typeof getIndexedBarboraProductWithAlternatives;
+  resolveWebNutrition?: typeof resolveWebNutritionProduct;
 }
 
 export type DetectionResolutionMode = "fast" | "complete";
@@ -706,7 +711,9 @@ const defaultResolutionDependencies: DetectionResolutionDependencies = {
   getOfferBySlug: getBarboraOfferBySlug,
   resolveOffer: resolveBarboraOffer,
   resolveOpenFoodFacts: resolveOpenFoodFactsProduct,
-  resolveIndexedCandidate: resolveIndexedBarboraCandidate
+  resolveIndexedCandidate: resolveIndexedBarboraCandidate,
+  getIndexedProduct: getIndexedBarboraProductWithAlternatives,
+  resolveWebNutrition: resolveWebNutritionProduct
 };
 
 async function mapWithConcurrency<T, R>(
@@ -729,10 +736,9 @@ async function mapWithConcurrency<T, R>(
 }
 
 /**
- * Resolves all visible identities, including the seventh and eighth detections,
- * while bounding outbound Barbora lookups. The vision model supplies identity
- * only; nutrition is linked exclusively through a sufficiently confident
- * catalog or exact retailer match.
+ * Resolves at most five visible identities while bounding outbound lookups.
+ * The vision model supplies identity only; nutrition is linked through an exact
+ * catalog/database result or a cited, high-confidence grounded web result.
  */
 export async function resolveVisibleDetections(
   visible: ConfirmedProviderDetection[],
@@ -741,7 +747,7 @@ export async function resolveVisibleDetections(
   concurrency = 3,
   mode: DetectionResolutionMode = "complete"
 ): Promise<ProductDetection[]> {
-  const resolved = await mapWithConcurrency(visible, concurrency, async (detection): Promise<ProductDetection> => {
+  const resolved = await mapWithConcurrency(visible.slice(0, MAX_SCAN_PRODUCTS), concurrency, async (detection): Promise<ProductDetection> => {
     const packSize = extractPackSize(detection.productName);
     const observedIdentity = {
       brand: detection.brand,
@@ -757,6 +763,9 @@ export async function resolveVisibleDetections(
       : detection.confirmedBarboraSlug
         ? { slug: detection.confirmedBarboraSlug, score: 1 }
         : (dependencies.resolveIndexedCandidate || resolveIndexedBarboraCandidate)(lookupInput);
+    const indexedProduct = indexedBarboraMatch
+      ? dependencies.getIndexedProduct?.(indexedBarboraMatch.slug)?.product || null
+      : null;
     const retailerOffer = mode === "fast"
       ? null
       : initialCatalogMatch
@@ -765,29 +774,31 @@ export async function resolveVisibleDetections(
           ? await dependencies.getOfferBySlug(indexedBarboraMatch.slug, lookupInput).catch(() => null)
           : await dependencies.resolveOffer(lookupInput).catch(() => null);
     const exactRetailerOffer = retailerOffer?.exactSku ? retailerOffer : null;
-    // Barbora is the Latvia-primary source and its broad local index is free to
-    // query. Use Open Food Facts only after that exact-SKU path fails so a shelf
-    // does not spend the community search API's strict per-IP request budget on
-    // products that are already resolved locally.
-    const openFoodFactsCandidate = mode === "fast" || initialCatalogMatch || indexedBarboraMatch || exactRetailerOffer
+    const exactOfferProduct = exactRetailerOffer
+      ? dependencies.getIndexedProduct?.(exactRetailerOffer.slug)?.product || null
+      : null;
+    const knownProduct = initialCatalogMatch?.product || indexedProduct || exactOfferProduct || null;
+    // Open Food Facts is the first internet fallback. A visual Barbora slug is
+    // not enough to skip it when that exact SKU has no local nutrition record.
+    const openFoodFactsCandidate = mode === "fast" || knownProduct
       ? null
       : await dependencies.resolveOpenFoodFacts(lookupInput, detection.barcode).catch(() => null);
-    const knownProduct =
-      initialCatalogMatch?.product ||
-      (exactRetailerOffer ? catalog.find((product) => product.id === exactRetailerOffer.slug) || null : null);
-    const openFoodFacts = knownProduct || indexedBarboraMatch || exactRetailerOffer ? null : openFoodFactsCandidate;
-    const resolvedProduct = knownProduct || openFoodFacts?.product || null;
+    const webNutrition = mode === "fast" || knownProduct || openFoodFactsCandidate
+      ? null
+      : await dependencies.resolveWebNutrition?.(lookupInput, detection.confidence).catch(() => null) || null;
+    const resolvedProduct = knownProduct || openFoodFactsCandidate?.product || webNutrition?.product || null;
     const nutritionLinkConfidence =
       initialCatalogMatch?.confidence ??
+      openFoodFactsCandidate?.confidence ??
+      webNutrition?.confidence ??
       indexedBarboraMatch?.score ??
       exactRetailerOffer?.matchConfidence ??
-      openFoodFacts?.confidence ??
       null;
     const productId =
       resolvedProduct?.id ||
       (indexedBarboraMatch || exactRetailerOffer
         ? `barbora:${indexedBarboraMatch?.slug || exactRetailerOffer!.slug}`
-        : genericProductId(detection.brand, detection.productName, ""));
+          : genericProductId(detection.brand, detection.productName, ""));
     return {
       productId,
       catalogProductId: knownProduct?.id || null,
@@ -807,13 +818,17 @@ export async function resolveVisibleDetections(
               : null,
         searchQuery: detection.searchQuery,
         barcode: detection.barcode || null,
-        matchKind: knownProduct
+        matchKind: initialCatalogMatch
           ? "verified_catalog"
-          : indexedBarboraMatch || exactRetailerOffer
+          : indexedProduct || exactOfferProduct
             ? "barbora"
-            : openFoodFacts
+            : openFoodFactsCandidate
               ? "open_food_facts"
-              : "visual_only"
+              : webNutrition
+                ? "web_search"
+                : indexedBarboraMatch || exactRetailerOffer
+                  ? "barbora"
+                  : "visual_only"
       },
       shelfPrice: isTrustedShelfPriceDetection(detection)
         ? {
@@ -824,7 +839,8 @@ export async function resolveVisibleDetections(
           }
         : null,
       retailerOffer,
-      nutritionLinkConfidence
+      nutritionLinkConfidence,
+      inlineProduct: webNutrition?.product || null
     };
   });
   return dedupeProductDetections(resolved);
@@ -911,7 +927,7 @@ export async function recognizeProducts(input: {
         properties: {
           detections: {
             type: "array",
-            maxItems: 8,
+            maxItems: MAX_SCAN_PRODUCTS,
             items: {
               type: "object",
               additionalProperties: false,
@@ -963,7 +979,8 @@ export async function recognizeProducts(input: {
     .filter((detection) => detection.confidence >= threshold)
     .map((detection) => ({ ...detection, box: fitBoxToFrame(detection.box) }))
     .filter((detection) => detection.box.width >= 0.02 && detection.box.height >= 0.02)
-    .slice(0, 8);
+    .sort((left, right) => right.confidence - left.confidence)
+    .slice(0, MAX_SCAN_PRODUCTS);
   if (!visible.length) {
     console.info(
       JSON.stringify({

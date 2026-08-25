@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import type { ScoredProduct } from "@/lib/types";
+import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { listProducts } from "@/server/catalog-repository";
 import {
   resolveVisibleDetections,
@@ -18,7 +19,7 @@ const identitySchema = z.object({
   variant: z.string().max(120).nullable(),
   packSize: z.string().max(60).nullable(),
   category: z.string().max(120).nullable(),
-  matchKind: z.enum(["verified_catalog", "barbora", "open_food_facts", "package_label", "visual_only"]),
+  matchKind: z.enum(["verified_catalog", "barbora", "open_food_facts", "web_search", "package_label", "visual_only"]),
   searchQuery: z.string().max(240).optional(),
   barcode: z.string().max(14).nullable().optional()
 });
@@ -46,7 +47,7 @@ const detectionSchema = z.object({
     .optional()
 });
 
-const requestSchema = z.object({ detections: z.array(detectionSchema).min(1).max(8) }).strict();
+const requestSchema = z.object({ detections: z.array(detectionSchema).min(1).max(MAX_SCAN_PRODUCTS) }).strict();
 const MAX_REQUEST_BYTES = 64_000;
 const liveResolutionRateLimiter = createRecognitionRateLimiter();
 
@@ -64,6 +65,12 @@ interface ResolveRouteDependencies {
 
 function toProviderDetection(detection: z.infer<typeof detectionSchema>): ConfirmedProviderDetection {
   const identity = detection.identity;
+  const productName = [
+    identity.name,
+    ...[identity.variant, identity.packSize].filter(
+      (part): part is string => Boolean(part && !identity.name.toLowerCase().includes(part.toLowerCase()))
+    )
+  ].join(" ");
   const retailCategory =
     identity.category === "Packaged snacks"
       ? "snack"
@@ -72,7 +79,7 @@ function toProviderDetection(detection: z.infer<typeof detectionSchema>): Confir
         : "other";
   return {
     brand: identity.brand,
-    productName: identity.name,
+    productName,
     searchQuery:
       identity.searchQuery || [identity.brand, identity.name, identity.variant, identity.packSize].filter(Boolean).join(" "),
     barcode: identity.barcode || "",

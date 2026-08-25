@@ -793,95 +793,22 @@ test("one-signal and identity-only products remain neutral without an overall fi
   await chooseSavedPhoto(page, "limited-and-identity.png");
   const savedResults = page.getByRole("dialog", { name: "Products from this scan" });
   await expect(savedResults).toBeVisible({ timeout: 10_000 });
-  await expect(savedResults.getByText("2 products need nutrition labels", { exact: true })).toBeVisible();
+  await expect(savedResults.getByText("2 products identified", { exact: true })).toBeVisible();
   await expect(page.getByTestId("rated-detection-marker")).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Scan labels to compare" })).toBeVisible();
-  await expect(page.getByText("Turn a pack around and scan its per-100 nutrition table", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Products identified" })).toBeVisible();
+  await expect(page.getByText("No exact source-backed nutrition was found online for this scan", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Sugar.no limited view · 1/2", { exact: true })).toBeVisible();
   await expect(page.getByText("Limited view · 1 of 2 signals", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await page.getByLabel("Products ranked by Sugar.no fit").getByRole("button", { name: /QA identity only/ }).click();
-  await expect(page.getByText("One more view gives you the Sugar.no fit", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Scan nutrition label" })).toBeVisible();
+  await expect(page.getByText("Nutrition not verified online", { exact: true }).last()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
 });
 
-test("an unrated package can become a Sugar.no fit from its printed nutrition label", async ({ page }) => {
+test("an unrated package can receive a Sugar.no fit from automatic online enrichment", async ({ page }) => {
   await mockLiveCamera(page);
-  const requestModes: string[] = [];
   await page.route("**/api/recognize", async (route) => {
-    const body = route.request().postDataJSON() as { mode?: string; targetIdentity?: { name?: string } };
-    requestModes.push(body.mode || "products");
-    if (body.mode === "nutrition-label") {
-      expect(body.targetIdentity?.name).toBe("Sproud Barista 1L");
-      await route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify({
-          requestId: "nutrition-label-read",
-          status: "matched",
-          latencyMs: 900,
-          model: "qa-mock",
-          imageStored: false,
-          detections: [
-            {
-              productId: "label:sproud-barista-1l",
-              catalogProductId: null,
-              confidence: 0.96,
-              box: { x: 0.08, y: 0.08, width: 0.84, height: 0.84 },
-              observedText: "Per 100 ml: 40 kcal, protein 2.1 g, sugars 1.8 g",
-              identity: {
-                brand: "Sproud",
-                name: "Sproud Barista 1L",
-                variant: null,
-                packSize: "1 L",
-                category: "plant drink",
-                matchKind: "package_label"
-              },
-              shelfPrice: null,
-              retailerOffer: null,
-              nutritionLinkConfidence: 0.96,
-              inlineProduct: {
-                id: "label:sproud-barista-1l",
-                retailerProductId: "",
-                brand: "Sproud",
-                name: "Sproud Barista 1L",
-                shortName: "Sproud Barista 1L",
-                aliases: [],
-                format: "other",
-                category: "plant drink",
-                packSizeG: 1000,
-                nutritionBasis: "100ml",
-                energyKcalPer100: 40,
-                gtin: null,
-                nutrientsPer100g: { proteinG: 2.1, fiberG: null, totalSugarG: 1.8 },
-                noAddedSugarClaim: false,
-                imageUrl: null,
-                retailerUrl: "",
-                sources: [
-                  {
-                    label: "Nutrition label in this scan",
-                    url: "",
-                    checkedAt: "2026-08-25T00:00:00.000Z",
-                    fields: ["identity", "protein", "totalSugar"],
-                    status: "verified"
-                  }
-                ],
-                isGolden: false,
-                accent: "coral",
-                matchScore: 100,
-                matchReason: "complete",
-                ratingBasis: "package_label_reference",
-                ratingStatus: "complete",
-                ratingSignalCount: 2,
-                ratingSignalMask: ["protein", "inverseSugar"],
-                criterionScores: { protein: 100, inverseSugar: 100 }
-              }
-            }
-          ]
-        })
-      });
-      return;
-    }
     const visual = (id: string, name: string, x: number) => ({
       productId: id,
       catalogProductId: null,
@@ -915,26 +842,72 @@ test("an unrated package can become a Sugar.no fit from its printed nutrition la
     });
   });
 
-  await unlock(page);
-  await expect(page.getByRole("status")).toContainText("2 products · 0 with Sugar.no fit", { timeout: 8_000 });
-  await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Scan nutrition label" })).toBeVisible();
-  await page.getByRole("button", { name: "Scan nutrition label" }).click();
-  await expect.poll(() => requestModes.includes("nutrition-label"), { timeout: 8_000 }).toBe(true);
-  await expect(page.getByRole("status")).toContainText("Sugar.no fit ready from the nutrition label", {
-    timeout: 8_000
+  await page.route("**/api/resolve-products", async (route) => {
+    const { detections } = route.request().postDataJSON() as { detections: Array<Record<string, unknown>> };
+    const sproud = detections[0];
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        latencyMs: 700,
+        imageStored: false,
+        detections: [
+          {
+            ...sproud,
+            productId: "web:sproud-barista-1l",
+            identity: { ...(sproud.identity as object), matchKind: "web_search" },
+            nutritionLinkConfidence: 0.96,
+            inlineProduct: {
+              id: "web:sproud-barista-1l",
+              retailerProductId: "web:sproud-barista-1l",
+              brand: "Sproud",
+              name: "Sproud Barista 1L",
+              shortName: "Sproud Barista 1L",
+              aliases: [],
+              format: "other",
+              category: "plant drink",
+              packSizeG: 1000,
+              nutritionBasis: "100ml",
+              energyKcalPer100: 40,
+              gtin: null,
+              nutrientsPer100g: { proteinG: 2.1, fiberG: null, totalSugarG: 1.8 },
+              noAddedSugarClaim: false,
+              imageUrl: null,
+              retailerUrl: "https://example.com/sproud",
+              sources: [{
+                label: "Web nutrition source · Manufacturer",
+                url: "https://example.com/sproud",
+                checkedAt: "2026-08-25T00:00:00.000Z",
+                fields: ["identity", "protein", "totalSugar"],
+                status: "secondary"
+              }],
+              isGolden: false,
+              accent: "coral",
+              matchScore: 100,
+              matchReason: "complete",
+              ratingBasis: "web_search_reference",
+              ratingStatus: "complete",
+              ratingSignalCount: 2,
+              ratingSignalMask: ["protein", "inverseSugar"],
+              criterionScores: { protein: 100, inverseSugar: 100 }
+            }
+          },
+          detections[1]
+        ]
+      })
+    });
   });
+
+  await unlock(page);
+  await expect(page.getByRole("status")).toContainText("2 products · 1 with Sugar.no fit", { timeout: 8_000 });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByText("1 of 2 ready to compare", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Other Other Snack, nutrition label needed/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Other Other Snack, nutrition not verified online/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   const badge = page.getByLabel("Sugar.no badge");
-  await expect(badge.getByText("Nutrition label in this scan", { exact: true })).toBeVisible();
+  await expect(badge.getByText("Verified web nutrition", { exact: true })).toBeVisible();
   await expect(badge.getByText("2.1g", { exact: true })).toBeVisible();
   await expect(badge.getByText("1.8g", { exact: true })).toBeVisible();
-  await badge.scrollIntoViewIfNeeded();
-  await page.screenshot({ path: "docs/screenshots/nutrition-label-fit-mobile.png" });
-  expect(requestModes).toContain("nutrition-label");
 });
 
 test("a broad live shelf scan keeps several different Sugar.no-rated products in one result", async ({ page }) => {
@@ -1072,10 +1045,12 @@ test("live camera shows package identities before optional retailer enrichment f
 
   await page.goto("/");
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("2 products · 0 with Sugar.no fit", { timeout: 5_000 });
+  await expect(page.getByRole("status")).toContainText("Products found. Checking Sugar.no signals", { timeout: 5_000 });
+  await expect(page.getByLabel("Product result preview").getByText("Checking online…", { exact: true })).toHaveCount(2);
   expect(enrichmentFinished).toBe(false);
   releaseEnrichment();
   await expect.poll(() => enrichmentFinished).toBe(true);
+  await expect(page.getByRole("status")).toContainText("2 products · 0 with Sugar.no fit");
 });
 
 test("a not-sure shelf completion retry retains and locks the first valid product", async ({ page }) => {
@@ -1299,6 +1274,13 @@ test("a product outside the scored catalog is named and receives an honest price
   await page.route("**/api/products/**", async (route) => {
     await route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: "not_found" }) });
   });
+  await page.route("**/api/resolve-products", async (route) => {
+    const { detections } = route.request().postDataJSON() as { detections: unknown[] };
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ detections, latencyMs: 1, imageStored: false })
+    });
+  });
   let exactSku = true;
   let includeShelfPrice = true;
   await page.route("**/api/recognize", async (route) => {
@@ -1356,7 +1338,7 @@ test("a product outside the scored catalog is named and receives an honest price
     page.getByLabel("Product result preview").getByLabel("Shelf price €1.69, Barbora €0.99, cheaper at Barbora")
   ).toBeVisible();
   const compactBuy = page.getByLabel("Product result preview").getByRole("link", {
-    name: "Buy Zero Peach cheaper at Barbora for €0.99"
+    name: /Buy Zero Peach.*cheaper at Barbora for €0.99/
   });
   await expect(compactBuy).toBeVisible();
   await expect(compactBuy).toHaveAttribute(
@@ -1377,8 +1359,8 @@ test("a product outside the scored catalog is named and receives an honest price
     "href",
     "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
   );
-  await expect(page.getByText("Turn the pack around", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Scan nutrition label" })).toBeVisible();
+  await expect(page.getByText("Nutrition not verified online", { exact: true }).last()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await expect(page.getByText("How this result was made", { exact: true })).toHaveCount(0);
   await comparison.scrollIntoViewIfNeeded();
   await comparison.screenshot({ path: "docs/screenshots/price-comparison-mobile.png" });
@@ -1490,7 +1472,7 @@ test("an exact Barbora food gets an on-demand two-factor Sugar.no fit", async ({
   await chooseSavedPhoto(page, "exact-barbora-food.png");
 
   await expect(page.getByRole("status")).toContainText("Products found. Checking Sugar.no signals");
-  await expect(page.getByText("Checking nutrition…", { exact: true })).toBeVisible();
+  await expect(page.getByText("Checking online…", { exact: true })).toBeVisible();
   const cameraOverlay = page.getByLabel("Saved shelf or checkout photo scanner");
   const ratedMarker = cameraOverlay.locator('button[aria-label^="Open "]').first();
   await expect(ratedMarker).toBeVisible();

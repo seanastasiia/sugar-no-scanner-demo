@@ -124,6 +124,7 @@ describe("recognitionInstruction", () => {
     expect(instruction).toContain("several different products on the same shelf");
     expect(instruction).toContain("Do not stop after the central or most prominent package");
     expect(instruction).toContain("Repeated facings of the same SKU are one product type");
+    expect(instruction).toContain("no more than 5 boxes");
     expect(instruction).toContain("retailCategory as snack");
     expect(instruction).toContain("EAN-8, EAN-13 or UPC barcode");
   });
@@ -299,7 +300,7 @@ describe("resolveVisibleDetections", () => {
     expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
   });
 
-  it("attempts retailer resolution for the seventh and eighth identities with bounded concurrency", async () => {
+  it("resolves no more than five identities with bounded concurrency", async () => {
     const attempted: string[] = [];
     let active = 0;
     let peak = 0;
@@ -321,11 +322,11 @@ describe("resolveVisibleDetections", () => {
       3
     );
 
-    expect(attempted).toHaveLength(8);
-    expect(attempted).toContain("Snack Seven 50 g");
-    expect(attempted).toContain("Snack Eight 50 g");
+    expect(attempted).toHaveLength(5);
+    expect(attempted).toContain("Snack Five 50 g");
+    expect(attempted).not.toContain("Snack Six 50 g");
     expect(peak).toBeLessThanOrEqual(3);
-    expect(detections).toHaveLength(8);
+    expect(detections).toHaveLength(5);
   });
 
   it("deduplicates repeated facings after every facing receives the same resolution path", async () => {
@@ -375,8 +376,33 @@ describe("resolveVisibleDetections", () => {
     });
   });
 
+  it("uses a cited grounded web result only after catalog, Barbora and Open Food Facts miss", async () => {
+    const fallback = { ...getCatalog()[0], id: "web:selga-classic", ratingBasis: "web_search_reference" as const };
+    const resolveWebNutrition = vi.fn(async () => ({ product: fallback, confidence: 0.96 }));
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, { brand: "SELGA", productName: "Classic biscuits 180 g" })],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveOpenFoodFacts: async () => null,
+        resolveIndexedCandidate: () => null,
+        resolveWebNutrition
+      }
+    );
+
+    expect(resolveWebNutrition).toHaveBeenCalledOnce();
+    expect(detections[0]).toMatchObject({
+      productId: "web:selga-classic",
+      nutritionLinkConfidence: 0.96,
+      inlineProduct: { ratingBasis: "web_search_reference" },
+      identity: { matchKind: "web_search" }
+    });
+  });
+
   it("promotes an exact broad Barbora nutrition match outside the 40-product catalog", async () => {
     let openFoodFactsAttempts = 0;
+    const indexedProduct = { ...getCatalog()[0], id: "barbora:majoneze-siera-spilva-250-g" };
     const detections = await resolveVisibleDetections(
       [providerDetection(1, { brand: "SPILVA", productName: "Siera majonēze 250 g" })],
       [],
@@ -398,6 +424,7 @@ describe("resolveVisibleDetections", () => {
           exactSku: true
         }),
         resolveIndexedCandidate: () => ({ slug: "majoneze-siera-spilva-250-g", score: 0.94 }),
+        getIndexedProduct: () => ({ product: indexedProduct, alternatives: [] }),
         resolveOpenFoodFacts: async () => {
           openFoodFactsAttempts += 1;
           return null;
@@ -407,7 +434,7 @@ describe("resolveVisibleDetections", () => {
 
     expect(detections[0]).toMatchObject({
       productId: "barbora:majoneze-siera-spilva-250-g",
-      catalogProductId: null,
+      catalogProductId: "barbora:majoneze-siera-spilva-250-g",
       nutritionLinkConfidence: 0.94,
       identity: { matchKind: "barbora" },
       retailerOffer: null
@@ -417,6 +444,7 @@ describe("resolveVisibleDetections", () => {
 
   it("keeps an exact broad nutrition match when the live retailer price page is unavailable", async () => {
     let openFoodFactsAttempts = 0;
+    const indexedProduct = { ...getCatalog()[0], id: "barbora:kosl-gum-refresh-spearmint-orbit-15-6-g" };
     const detections = await resolveVisibleDetections(
       [providerDetection(1, { brand: "ORBIT", productName: "Refreshers Spearmint gum" })],
       [],
@@ -424,6 +452,7 @@ describe("resolveVisibleDetections", () => {
         getOfferBySlug: async () => null,
         resolveOffer: async () => null,
         resolveIndexedCandidate: () => ({ slug: "kosl-gum-refresh-spearmint-orbit-15-6-g", score: 0.85 }),
+        getIndexedProduct: () => ({ product: indexedProduct, alternatives: [] }),
         resolveOpenFoodFacts: async () => {
           openFoodFactsAttempts += 1;
           return null;

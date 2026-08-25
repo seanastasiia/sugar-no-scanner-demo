@@ -1,4 +1,5 @@
 import { dedupeProductDetections } from "./product-detection-dedupe";
+import { MAX_SCAN_PRODUCTS } from "./scan-limits";
 import type { BoundingBox, ProductDetection, RecognitionResponse } from "./types";
 
 export type UploadScanCrop = BoundingBox;
@@ -72,7 +73,7 @@ function relatedIdentity(left: ProductDetection, right: ProductDetection): boole
   return [...leftTokens].some((token) => rightTokens.has(token));
 }
 
-export function mergeUploadScanResults(results: UploadScanResult[], limit = 16): RecognitionResponse {
+export function mergeUploadScanResults(results: UploadScanResult[], limit = MAX_SCAN_PRODUCTS): RecognitionResponse {
   const remapped = dedupeProductDetections(
     results.flatMap(({ crop, response }) => response.detections.map((detection) => remapUploadDetection(detection, crop)))
   );

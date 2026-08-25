@@ -131,4 +131,33 @@ describe("multi-pass uploaded shelf recognition", () => {
       junglePop.productId
     ]);
   });
+
+  it("keeps only the five highest-confidence distinct products from a dense photo", () => {
+    const names = ["Almond", "Berry", "Coconut", "Date", "Espresso", "Fig", "Ginger", "Hazelnut"];
+    const detections = Array.from({ length: 8 }, (_, index) =>
+      detection({
+        productId: `visual:product-${index + 1}`,
+        confidence: 0.99 - index * 0.02,
+        observedText: `${names[index]} snack`,
+        box: { x: index * 0.1, y: 0.2, width: 0.08, height: 0.4 },
+        identity: {
+          brand: names[index],
+          name: `${names[index]} snack`,
+          variant: null,
+          packSize: null,
+          category: null,
+          matchKind: "visual_only"
+        }
+      })
+    );
+
+    const merged = mergeUploadScanResults([
+      { crop: { x: 0, y: 0, width: 1, height: 1 }, response: response(detections) }
+    ]);
+
+    expect(merged.detections).toHaveLength(5);
+    expect(merged.detections.map((item) => item.productId)).toEqual(
+      detections.slice(0, 5).map((item) => item.productId)
+    );
+  });
 });

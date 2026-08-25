@@ -51,6 +51,6 @@ describe("product enrichment route", () => {
       limiter: { consume: () => ({ allowed: true, remaining: 20, retryAfterSeconds: 0 }) }
     });
     expect((await post(request({ detections: [detection], imageDataUrl: "data:image/jpeg;base64,YWJj" }))).status).toBe(400);
-    expect((await post(request({ detections: Array.from({ length: 9 }, () => detection) }))).status).toBe(400);
+    expect((await post(request({ detections: Array.from({ length: 6 }, () => detection) }))).status).toBe(400);
   });
 });

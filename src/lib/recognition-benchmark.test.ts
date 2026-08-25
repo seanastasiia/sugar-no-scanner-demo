@@ -67,6 +67,7 @@ describe("recognition benchmark privacy harness", () => {
       verified_catalog: 1,
       barbora: 0,
       open_food_facts: 0,
+      web_search: 0,
       package_label: 0,
       visual_only: 1,
       unknown: 0

@@ -21,7 +21,7 @@ Never collapse these states. A confident visual identity may still have no exact
 - Gemini may read packaging, boxes, barcodes and tightly gated shelf-label text. It may not invent nutrition, an exact retailer SKU, a price or a fit.
 - A product without both verified protein and total sugar remains neutral and receives no overall fit marker.
 - `Great fit`, `Moderate fit` and `Low fit` are the only user-facing fit states. The internal numeric score is for deterministic ordering, not display.
-- Camera overlays appear only on products with a complete fit. Identity-only products remain in the result list as `Needs nutrition label`.
+- Camera overlays appear only on products with a complete fit. Identity-only products remain in the result list as `Nutrition not verified online`.
 - Repeated facings of one SKU count as one product, not several recognition successes.
 - A retailer link or crossed price requires an exact SKU. A possible candidate never reaches the UI.
 - `Cheaper at Barbora` requires a trusted physical shelf price and a lower current exact Barbora offer.
@@ -35,7 +35,7 @@ Never collapse these states. A confident visual identity may still have no exact
 
 **What failed:** Packages were called `Identified`, but most had no useful Sugar.no result.
 
-**Guardrail:** Hydrate nutrition only from the curated benchmark, an exact checked-in Barbora record, an exact/strict Open Food Facts record, or the explicit nutrition-label recovery flow. If all fail, say `Needs nutrition label` and provide the recovery action.
+**Guardrail:** Hydrate nutrition only from the curated benchmark, an exact checked-in Barbora record, an exact/strict Open Food Facts record or a cited exact per-100 web record. If all fail, say `Nutrition not verified online`; do not expose a label-scan action or invent a fit.
 
 **Regression:** Identity-only, one-signal and complete-fit results must all render different states without crashes or approval markers.
 
@@ -93,7 +93,7 @@ Never collapse these states. A confident visual identity may still have no exact
 
 **What failed:** A center-biased prompt returned one package from a shelf that contained several useful choices.
 
-**Guardrail:** The first pass scans the complete frame left-to-right and top-to-bottom and returns up to eight distinct readable front-facing SKUs. The focused center crop is a fallback only after an uncertain broad pass.
+**Guardrail:** The first pass scans the complete frame left-to-right and top-to-bottom and keeps at most five high-confidence distinct readable front-facing SKUs. The focused center crop is a fallback only after an uncertain broad pass.
 
 **Regression:** A live-camera browser scenario must retain several distinct products from one frame; the focused retry has a separate threshold and box-remapping test.
 

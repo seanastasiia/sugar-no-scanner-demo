@@ -1,5 +1,7 @@
 # Bugs
 
+- **2026-08-25: dense scans could show eight identified packages but only two Sugar.no fits, making successful recognition look mostly broken.** The complete camera/upload result is now capped at the five highest-confidence distinct SKUs. Local and Open Food Facts resolution still run first; unresolved exact identities then receive one bounded, image-free Google Search-grounded check. Only an exact cited per-100 record at confidence 0.90 or higher may produce Protein/Sugar and a fit. The visible nutrition-label scan action is removed, unresolved rows say `Nutrition not verified online`, and multi-section uploads enrich only the final merged five rather than paying and waiting once per crop.
+
 - **2026-08-25: the Figma/Pen styling experiment was visually rejected after it reached production.** The production CSS was restored exactly to the pushed `pre-pen-style-2026-08-25` tag while the editable Pen study stayed isolated as an inactive reference. Future Pen or Figma explorations must be approved as a preview before they change the deployed scanner.
 
 - **2026-08-25: the investor scanner had drifted from the supplied Sugar.no product design into a cream/brown editorial theme with serif headings and white selected-marker rings.** A source-derived alternative was documented in a separate editable Pen file and briefly tested in production, but its implementation was visually rejected and rolled back. The Pen artifact remains an inactive study rather than the live scanner design.
@@ -28,7 +30,7 @@ This file is the running record of scanner defects found and resolved.
 
 ## Open
 
-- Broad Barbora nutrition coverage is not universal Latvia-store coverage. Rimi/Lidl/Stockmann private labels, products absent from Barbora, unreadable variants and pages without energy/protein/total-sugar data still require an exact barcode or the package-label recovery step; they must not receive a guessed fit.
+- Broad Barbora nutrition coverage plus grounded web search is not universal Latvia-store coverage. Rimi/Lidl/Stockmann private labels, unreadable variants and products without an exact cited per-100 table can remain `Nutrition not verified online`; they must not receive a guessed fit.
 - Real packaging, glare, low-light and physical checkout-belt accuracy are not validated. The first proof of concept uses curated sample scenes only.
 - Shelf-price OCR and spatial association with the correct product label need a physical Latvian store benchmark; ambiguous labels must remain hidden.
 - Barbora is the only live retailer source. The prototype can say `Barbora online`, but cannot claim `best price` until multiple comparable retailers, exact pack-size matching and freshness rules are connected.

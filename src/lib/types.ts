@@ -9,6 +9,8 @@ export type RatingBasis =
   | "barbora_reference_partial"
   | "open_food_facts_reference"
   | "open_food_facts_reference_partial"
+  | "web_search_reference"
+  | "web_search_reference_partial"
   | "package_label_reference"
   | "package_label_reference_partial"
   | "manufacturer_reference"
@@ -97,7 +99,7 @@ export interface RecognizedProductIdentity {
   variant: string | null;
   packSize: string | null;
   category: string | null;
-  matchKind: "verified_catalog" | "barbora" | "open_food_facts" | "package_label" | "visual_only";
+  matchKind: "verified_catalog" | "barbora" | "open_food_facts" | "web_search" | "package_label" | "visual_only";
   searchQuery?: string;
   barcode?: string | null;
 }

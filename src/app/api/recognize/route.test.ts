@@ -54,7 +54,7 @@ describe("public recognition route", () => {
     expect(recognize).not.toHaveBeenCalled();
   });
 
-  it("defers retailer resolution for live product frames but not uploads", async () => {
+  it("defers external resolution until the final camera or upload result", async () => {
     const recognize = vi.fn(async (input: { source: ScanSource }) => matchedResponse(input.source));
     const post = createRecognizePost({
       listProducts: async () => [],
@@ -70,7 +70,7 @@ describe("public recognition route", () => {
     );
     expect(recognize).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ source: "upload", deferExternalResolution: false })
+      expect.objectContaining({ source: "upload", deferExternalResolution: true })
     );
   });
 
