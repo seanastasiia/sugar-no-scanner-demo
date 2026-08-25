@@ -1,7 +1,7 @@
 # Investor snack and dairy category pack
 
 - Date: 2026-08-25
-- Code commit tested: `582edbb`
+- Code commit tested and deployed: `fb2cf43`
 - Scope: packaged snacks plus dairy desserts for the Latvia investor store test
 
 ## Verified data state
@@ -30,11 +30,18 @@ Matcher fixtures verify an exact Kārums vanilla curd snack, a `ProteinFit` fron
 
 A four-pass production replay of the existing dense SELGA shelf returned 23 row-level identities and 9 exact rated results before the browser's cross-crop merge. It also exposed `Classic` being read as a product line alongside a specific flavor. The matcher now ignores that line only when a concrete flavor is present, penalizes conflicting `Mini`, `Treat` or `Nature` lines and keeps its exact-match margin fail-closed. Products visibly present on the shelf but absent from the current Barbora snapshot remain unrated.
 
+## Production evidence
+
+- Railway direct deployment: `ed50d4ff-83a3-4c92-81ca-dd7599348d0f`, status `SUCCESS`.
+- `/api/health`: status `ok`, commit `fb2cf43`, 9,707 active food SKUs, 7,433 automatic fits and the 1,818 + 255 investor-pack split.
+- Final single-frame replay of the existing wide SELGA shelf: 8 unique identities, 3 exact rated Barbora matches, 0 duplicates, `imageStored: false`, 9,480 ms round trip.
+- Exact rated results included SELGA banana, SELGA chocolate and SELGA Nature. Five visible identities on that shelf remained visual-only because their exact products were not in the current Barbora snapshot.
+
 ## Product acceptance check
 
 1. Open the live scanner and tap `Show demo`.
 2. Confirm the chooser says `Investor test aisles` and names 2,073 rated snacks and dairy desserts.
-3. In a Latvian store, first test close, front-facing packs from the snack aisle: SELGA biscuits, ĀDAŽU/ESTRELLA chips, LAIMA/KINDER sweets or protein bars.
+3. In a Latvian store, first test close, front-facing packs from the snack aisle: SELGA biscuits, ĀDAŽU/ESTRELLA chips, LAIMA/KINDER sweets or protein bars. These brands have multiple exact records in the current pack.
 4. Then test dairy desserts: KĀRUMS glazed curd snacks, BALTAIS ProteinFit/Skyr/yogurt or pudding/desert cups.
 5. Hold the phone steady until the result is held. Confirm an exact variant shows `Great fit`, `Moderate fit` or `Low fit` plus Protein and Sugar.
 6. Test two flavors from one brand and confirm the app does not borrow the first flavor's nutrition for the second.
@@ -42,4 +49,4 @@ A four-pass production replay of the existing dense SELGA shelf returned 23 row-
 
 ## Remaining limitation
 
-The supplied `IMG_3089.PNG` path was no longer present on disk, so that exact failed frame could not be replayed. A reliable store-readiness claim still requires a labelled set of real shelf photos for these two aisles. The current change materially narrows the promise and improves local exact matching, but it does not claim 100% computer-vision recall.
+The supplied `IMG_3089.PNG` path was no longer present on disk, so that exact failed frame could not be replayed. A reliable store-readiness claim still requires a labelled set of real shelf photos for these two aisles. The current change materially narrows the promise and improves local exact matching, but it does not claim 100% computer-vision recall or nutrition coverage for products that are not sold by Barbora.
