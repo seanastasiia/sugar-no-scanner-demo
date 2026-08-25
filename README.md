@@ -3,6 +3,7 @@
 Public Latvia proof of concept for camera-based identification and comparison of packaged groceries. It is a wellness discovery tool, not a medical device or an absolute rating of food.
 
 - Live demo: [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
+- Latest long-portrait retailer-page release evidence: [docs/test-runs/2026-08-25-long-portrait-store-page.md](docs/test-runs/2026-08-25-long-portrait-store-page.md)
 - Latest checkout-demo release evidence: [docs/test-runs/2026-08-25-checkout-demo-rated-products.md](docs/test-runs/2026-08-25-checkout-demo-rated-products.md)
 - Latest broad Latvia coverage evidence: [docs/test-runs/2026-08-25-broad-latvia-coverage.md](docs/test-runs/2026-08-25-broad-latvia-coverage.md)
 - Public source: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
