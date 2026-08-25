@@ -731,7 +731,7 @@ export function ScannerApp() {
     const nutritionTarget = nutritionTargetRef.current;
     const focusMode = !nutritionTarget && focusRetryRef.current;
     const crop = focusMode ? CAMERA_FOCUS_CROP : { x: 0, y: 0, width: 1, height: 1 };
-    const targetWidth = Math.min(sourceWidth * crop.width, 960);
+    const targetWidth = Math.min(sourceWidth * crop.width, 1280);
     canvas.width = targetWidth;
     canvas.height = Math.round(targetWidth * ((sourceHeight * crop.height) / (sourceWidth * crop.width)));
     const context = canvas.getContext("2d");

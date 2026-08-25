@@ -5,6 +5,7 @@ import {
   applyBarboraCandidateConfirmations,
   needsVisualCandidateConfirmation,
   fitBoxToFrame,
+  geminiBox2dToFrame,
   isTrustedShelfPriceDetection,
   matchCatalogProduct,
   nutritionLabelInstruction,
@@ -127,6 +128,9 @@ describe("recognitionInstruction", () => {
     expect(instruction).toContain("no more than 5 boxes");
     expect(instruction).toContain("retailCategory as snack");
     expect(instruction).toContain("EAN-8, EAN-13 or UPC barcode");
+    expect(instruction).toContain("box2d [ymin, xmin, ymax, xmax]");
+    expect(instruction).toContain("excluding shelf labels, display trays, neighboring facings and empty space");
+    expect(instruction).toContain("may omit the € symbol");
   });
 
   it("requires one printed per-100 column for the nutrition fallback", () => {
@@ -168,12 +172,33 @@ describe("isTrustedShelfPriceDetection", () => {
     shelfPriceLabelVisible: true
   };
 
-  it("requires a separate visible label, high confidence and matching currency text", () => {
+  it("requires a separate visible label, high confidence and matching price text", () => {
     expect(isTrustedShelfPriceDetection(trusted)).toBe(true);
     expect(isTrustedShelfPriceDetection({ ...trusted, shelfPriceLabelVisible: false })).toBe(false);
     expect(isTrustedShelfPriceDetection({ ...trusted, shelfPriceConfidence: 0.89 })).toBe(false);
-    expect(isTrustedShelfPriceDetection({ ...trusted, shelfPriceText: "1,69" })).toBe(false);
+    expect(isTrustedShelfPriceDetection({ ...trusted, shelfPriceText: "1,69" })).toBe(true);
+    expect(isTrustedShelfPriceDetection({ ...trusted, shelfPriceText: "169" })).toBe(false);
     expect(isTrustedShelfPriceDetection({ ...trusted, shelfPriceCents: 59 })).toBe(false);
+  });
+});
+
+describe("geminiBox2dToFrame", () => {
+  it("converts Gemini ymin/xmin/ymax/xmax coordinates into normalized CSS boxes", () => {
+    expect(geminiBox2dToFrame([125, 250, 625, 750])).toEqual({
+      x: 0.25,
+      y: 0.125,
+      width: 0.5,
+      height: 0.5
+    });
+  });
+
+  it("clamps inverted or out-of-order edges without creating negative boxes", () => {
+    expect(geminiBox2dToFrame([800, 900, 200, 100])).toEqual({
+      x: 0.9,
+      y: 0.8,
+      width: 0,
+      height: 0
+    });
   });
 });
 

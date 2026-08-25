@@ -20,6 +20,8 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Internet enrichment runs after the first identity result. It is bounded to 18 seconds and never receives or stores the camera image.
 - A fit is shown only for an exact source-backed product. Otherwise the row says `Nutrition not verified online`.
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
+- Product overlays use Gemini's native `box2d [ymin, xmin, ymax, xmax]` coordinates and exclude shelf labels and neighboring packages from the product box.
+- A high-confidence Latvian comma-decimal shelf label can be accepted even when the printed `€` symbol is not readable; numbers printed on a package remain excluded.
 - A crossed-out shelf price and `Buy cheaper at Barbora` appear only when the exact Barbora SKU is currently cheaper.
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
 - The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
@@ -136,7 +138,8 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 4. Open Shelf and Checkout demos and expand `View all`.
 5. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
 6. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
-7. Move the camera after a result and confirm it remains held until `Scan again`.
+7. Confirm each overlay tightly follows its package rather than a nearby shelf label.
+8. Move the camera after a result and confirm it remains held until `Scan again`.
 
 ## Known limits
 

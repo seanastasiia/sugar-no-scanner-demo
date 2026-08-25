@@ -31,7 +31,7 @@ export const DEFAULT_GEMINI_MODEL = "gemini-3.7-flash";
 const DEFAULT_RECOGNITION_THRESHOLD = 0.72;
 const DEFAULT_FOCUSED_RECOGNITION_THRESHOLD = 0.58;
 
-const providerResponseSchema = z.object({
+const rawProviderResponseSchema = z.object({
   detections: z.array(
     z.object({
       brand: z.string().max(80),
@@ -40,12 +40,12 @@ const providerResponseSchema = z.object({
       retailCategory: z.enum(["snack", "dairy_dessert", "other"]),
       barcode: z.string().max(14),
       confidence: z.number().min(0).max(1),
-      box: z.object({
-        x: z.number().min(0).max(1),
-        y: z.number().min(0).max(1),
-        width: z.number().min(0).max(1),
-        height: z.number().min(0).max(1)
-      }),
+      box2d: z.tuple([
+        z.number().int().min(0).max(1000),
+        z.number().int().min(0).max(1000),
+        z.number().int().min(0).max(1000),
+        z.number().int().min(0).max(1000)
+      ]),
       shelfPriceCents: z.number().int().min(0).max(1_000_000),
       shelfPriceText: z.string().max(60),
       shelfPriceConfidence: z.number().min(0).max(1),
@@ -54,7 +54,18 @@ const providerResponseSchema = z.object({
   )
 });
 
-export type ProviderDetection = z.infer<typeof providerResponseSchema>["detections"][number];
+type RawProviderDetection = z.infer<typeof rawProviderResponseSchema>["detections"][number];
+
+export type ProviderDetection = Omit<RawProviderDetection, "box2d"> & { box: ProductDetection["box"] };
+
+export function geminiBox2dToFrame([yMin, xMin, yMax, xMax]: RawProviderDetection["box2d"]): ProductDetection["box"] {
+  return fitBoxToFrame({
+    x: xMin / 1000,
+    y: yMin / 1000,
+    width: Math.max(0, xMax - xMin) / 1000,
+    height: Math.max(0, yMax - yMin) / 1000
+  });
+}
 
 const candidateConfirmationResponseSchema = z.object({
   choices: z.array(
@@ -437,8 +448,7 @@ export function isTrustedShelfPriceDetection(detection: {
     return false;
   }
   const observedAmount = detection.shelfPriceText.match(/\d{1,4}[.,]\d{2}/)?.[0];
-  const hasExplicitCurrency = /€|\beur\b/i.test(detection.shelfPriceText);
-  if (!observedAmount || !hasExplicitCurrency) return false;
+  if (!observedAmount) return false;
   return Math.round(Number.parseFloat(observedAmount.replace(",", ".")) * 100) === detection.shelfPriceCents;
 }
 
@@ -541,12 +551,14 @@ export function recognitionInstruction(
     `searchQuery should repeat the identity using useful English or Latvian equivalents of foreign flavor words for retailer matching. ` +
     `If a complete EAN-8, EAN-13 or UPC barcode number is clearly readable, return only its digits in barcode; otherwise return an empty string. ` +
     `Only when a separate physical shelf price label outside the package is clearly visible and associated with that exact package, ` +
-    `set shelfPriceLabelVisible true and return its EUR price in cents, the exact observed price text including € or EUR, and a separate confidence. ` +
+    `set shelfPriceLabelVisible true and return its EUR price in cents, the exact observed price digits plus any visible currency, and a separate confidence. ` +
+    `A Latvian shelf label may omit the € symbol; a clear comma-decimal amount such as 0,99 is still valid when it is visibly printed on a separate shelf label. ` +
     `Otherwise set shelfPriceLabelVisible false, price cents and confidence to zero, and price text to an empty string. ` +
     `Never treat nutrition claims, pack size, deposit text or any number printed on the package as a shelf price. ` +
     `Return an empty detections array rather than guessing when no product identity is readable. ` +
     `Return no more than ${MAX_SCAN_PRODUCTS} boxes, at most one per distinct front-facing SKU, and do not enumerate repeated or blurry background packages. ` +
-    `Boxes use x, y, width and height normalized from 0 to 1.`
+    `For every product, box2d must tightly enclose only that product package, excluding shelf labels, display trays, neighboring facings and empty space. ` +
+    `Use the Gemini object-detection convention box2d [ymin, xmin, ymax, xmax] as integers normalized from 0 to 1000.`
   );
 }
 
@@ -918,7 +930,7 @@ export async function recognizeProducts(input: {
       createPartFromBase64(base64, mimeType)
     ],
     config: {
-      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
       responseMimeType: "application/json",
       responseJsonSchema: {
         type: "object",
@@ -938,7 +950,7 @@ export async function recognizeProducts(input: {
                 "retailCategory",
                 "barcode",
                 "confidence",
-                "box",
+                "box2d",
                 "shelfPriceCents",
                 "shelfPriceText",
                 "shelfPriceConfidence",
@@ -955,16 +967,11 @@ export async function recognizeProducts(input: {
                 shelfPriceText: { type: "string", maxLength: 60 },
                 shelfPriceConfidence: { type: "number", minimum: 0, maximum: 1 },
                 shelfPriceLabelVisible: { type: "boolean" },
-                box: {
-                  type: "object",
-                  additionalProperties: false,
-                  required: ["x", "y", "width", "height"],
-                  properties: {
-                    x: { type: "number", minimum: 0, maximum: 1 },
-                    y: { type: "number", minimum: 0, maximum: 1 },
-                    width: { type: "number", minimum: 0, maximum: 1 },
-                    height: { type: "number", minimum: 0, maximum: 1 }
-                  }
+                box2d: {
+                  type: "array",
+                  minItems: 4,
+                  maxItems: 4,
+                  items: { type: "integer", minimum: 0, maximum: 1000 }
                 }
               }
             }
@@ -973,7 +980,13 @@ export async function recognizeProducts(input: {
       }
     }
   });
-  const parsed = providerResponseSchema.parse(JSON.parse(response.text || '{"detections":[]}'));
+  const rawParsed = rawProviderResponseSchema.parse(JSON.parse(response.text || '{"detections":[]}'));
+  const parsed: { detections: ProviderDetection[] } = {
+    detections: rawParsed.detections.map(({ box2d, ...detection }) => ({
+      ...detection,
+      box: geminiBox2dToFrame(box2d)
+    }))
+  };
   const providerMs = Math.round(performance.now() - providerStartedAt);
   const visible = parsed.detections
     .filter((detection) => detection.confidence >= threshold)

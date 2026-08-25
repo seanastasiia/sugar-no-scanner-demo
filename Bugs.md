@@ -13,6 +13,7 @@ This file tracks open limitations and only the most recent resolved regressions.
 
 ## Recently resolved
 
+- **2026-08-25: live Gemini boxes could drift onto shelf labels and Latvian prices without a readable `€` were always discarded.** Recognition now uses Gemini's native 0-1000 `box2d` convention with tight-package instructions, higher live-frame resolution and guarded comma-decimal shelf prices.
 - **2026-08-25: expanded multi-product results repeated scan counts, instructions and a second scan-again action above the ranking.** The expanded view now keeps only the collapse control, `Best fit first` and the ranked product cards before contextual price or alternative actions.
 - **2026-08-25: the demo chooser included a redundant investor-coverage card above its actions.** The card is removed so the three demo actions begin directly under the heading.
 - **2026-08-25: the expanded comparison control used an upward chevron that conflicted with the intended navigation cue.** The control now shows a downward chevron while keeping the same collapse action and accessible label.
