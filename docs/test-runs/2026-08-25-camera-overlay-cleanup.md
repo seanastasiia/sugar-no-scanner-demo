@@ -23,6 +23,14 @@
 
 Visual evidence was regenerated in `docs/screenshots/shelf-mobile.png`, `docs/screenshots/iphone-17-pro-camera.png` and `docs/screenshots/iphone-17-pro-landscape.png`.
 
+## Production evidence
+
+- Behavior commit: `6be31ce4c0fa4d1feb28483a55347ed8e294e454` on GitHub `main`.
+- Railway deployment: `1a8d3a1e-dc7b-43cd-b9ee-425c532fbebe`, status `SUCCESS`.
+- Production `/api/health` returned `status=ok` and the same behavior commit.
+- Production Shelf demo rendered four rated markers with zero visible `2/2 signals` pills and no `signals` text in marker accessibility names.
+- The best marker computed to the green fit border `rgb(23, 116, 71)` and a black translucent shadow with no white ring. After selecting a Moderate fit product, the marker retained the yellow fit outline and the selected marker class without a white frame.
+
 ## Product check after deployment
 
 1. Open the Shelf demo and tap several markers.
