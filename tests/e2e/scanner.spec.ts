@@ -290,6 +290,12 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(ranking.getByRole("button")).toHaveCount(4);
   await expect(ranking.getByRole("button").first()).toHaveAccessibleName(/^Rank 1,/);
   await expect(resultsDialog.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+  await expect(resultsDialog.getByText("Full comparison", { exact: true })).toHaveCount(0);
+  await expect(resultsDialog.getByText("Sugar.no ranking", { exact: true })).toHaveCount(0);
+  await expect(resultsDialog.getByText("Based on source-backed protein and total sugar", { exact: true })).toHaveCount(0);
+  await expect(resultsDialog.getByText("4 of 4 ready to compare", { exact: true })).toHaveCount(0);
+  await expect(resultsDialog.getByText("4/4 rated", { exact: true })).toHaveCount(0);
+  await expect(resultsDialog.getByRole("button", { name: "Scan again" })).toHaveCount(0);
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   await expect.poll(async () => (await resultsDialog.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(viewportHeight * 0.95);
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
@@ -411,7 +417,7 @@ test("demo chooser supports shelf, checkout and a clear return to live camera", 
   await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Saved options" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Return to camera" }).click();
+  await page.getByRole("button", { name: "Collapse product results" }).click();
   await expect(page.getByRole("button", { name: "Back to live camera" })).toBeVisible();
 });
 
@@ -481,7 +487,7 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
   await viewAll.click();
   const dialog = page.getByRole("dialog", { name: "Products from this scan" });
   await expectInsideViewport(page, dialog);
-  await expectInsideViewport(page, page.getByRole("button", { name: "Return to camera" }));
+  await expect(page.getByRole("button", { name: "Return to camera" })).toHaveCount(0);
   await expectInsideViewport(page, page.getByRole("button", { name: "Collapse product results" }));
   await expectNoDocumentOverflow(page);
   await page.screenshot({ path: "docs/screenshots/iphone-17-pro-results.png" });
@@ -894,7 +900,7 @@ test("an unrated package can receive a Sugar.no fit from automatic online enrich
   await unlock(page);
   await expect(page.getByRole("status")).toContainText("2 products · 1 with Sugar.no fit", { timeout: 8_000 });
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByText("1 of 2 ready to compare", { exact: true })).toBeVisible();
+  await expect(page.getByText("1 of 2 ready to compare", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Other Other Snack, nutrition not verified online/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
@@ -1360,7 +1366,7 @@ test("a product outside the scored catalog is named and receives an honest price
   await comparison.screenshot({ path: "docs/screenshots/price-comparison-mobile.png" });
 
   exactSku = false;
-  await page.getByRole("button", { name: "Return to camera" }).click();
+  await page.getByRole("button", { name: "Collapse product results" }).click();
   await page.getByRole("button", { name: "Back to live camera" }).click();
   await chooseSavedPhoto(page, "possible-price-check.png");
   await page.getByRole("button", { name: "View all", exact: true }).click();
@@ -1373,7 +1379,7 @@ test("a product outside the scored catalog is named and receives an honest price
 
   exactSku = true;
   includeShelfPrice = false;
-  await page.getByRole("button", { name: "Return to camera" }).click();
+  await page.getByRole("button", { name: "Collapse product results" }).click();
   await page.getByRole("button", { name: "Back to live camera" }).click();
   await chooseSavedPhoto(page, "package-without-shelf-label.png");
   await page.getByRole("button", { name: "View all", exact: true }).click();

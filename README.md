@@ -13,6 +13,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - A scan keeps at most five distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
 - Rated products are ordered best fit first and use `Great fit`, `Moderate fit`, or `Low fit`.
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.
+- Expanded multi-product results show only the collapse control, `Best fit first` and the ranked product cards; duplicate summaries, counters and scan-again controls are omitted.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Open Food Facts match, then exact Google Search-grounded web nutrition.
@@ -133,7 +134,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 2. Scan a shelf with more than five visible products and confirm no more than five distinct results appear.
 3. Confirm verified results gain fit labels and unresolved products remain neutral.
 4. Open Shelf and Checkout demos and expand `View all`.
-5. Confirm the ranked list is followed directly by relevant price actions or similar options, without a repeated best-fit detail card.
+5. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
 6. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
 7. Move the camera after a result and confirm it remains held until `Scan again`.
 

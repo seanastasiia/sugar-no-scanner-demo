@@ -1014,9 +1014,6 @@ export function ScannerApp() {
     () => new Set([...loadingProductIds, ...enrichingProductIds]),
     [enrichingProductIds, loadingProductIds]
   );
-  const sheetTitle = pendingProductIds.size
-    ? `${tray.length} ${tray.length === 1 ? "product" : "products"} · checking nutrition`
-    : `${tray.length} ${tray.length === 1 ? "product" : "products"} · ${ratedCount} with Sugar.no fit`;
   const firstRankedId = rankedRatedIds[0] || rankedTrayIds[0];
   const sheetPreviewIds = rankedTrayIds.slice(0, 4);
   const displayedStatusMessage =
@@ -1241,25 +1238,14 @@ export function ScannerApp() {
             >
               <div className={styles.sheetChrome}>
                 {resultsExpanded ? (
-                  <>
-                    <button
-                      className={styles.sheetTitleButton}
-                      type="button"
-                      onClick={closeResults}
-                      aria-label="Return to camera"
-                    >
-                      <strong>{sheetTitle}</strong>
-                      <span>Full comparison</span>
-                    </button>
-                    <button
-                      className={styles.sheetIconButton}
-                      type="button"
-                      onClick={closeResults}
-                      aria-label="Collapse product results"
-                    >
-                      <ChevronDown aria-hidden="true" size={20} />
-                    </button>
-                  </>
+                  <button
+                    className={styles.sheetIconButton}
+                    type="button"
+                    onClick={closeResults}
+                    aria-label="Collapse product results"
+                  >
+                    <ChevronDown aria-hidden="true" size={20} />
+                  </button>
                 ) : (
                   <>
                     <div className={styles.sheetTitleStatic}>
@@ -1355,43 +1341,34 @@ export function ScannerApp() {
                 </div>
               ) : (
                 <div className={styles.sheetContent} id="scan-results-content">
-                  <div className={styles.scanSummary}>
-                    <div>
-                      <strong>
-                        {ratedCount > 0
-                          ? `${ratedCount} of ${tray.length} ready to compare`
-                          : pendingProductIds.size
-                            ? `Checking ${tray.length} ${tray.length === 1 ? "product" : "products"} online…`
-                            : `${tray.length} ${tray.length === 1 ? "product identified" : "products identified"}`}
-                      </strong>
-                      <span>{resultLocked ? "Result held while you read" : "Tap a product to compare"}</span>
+                  {tray.length === 1 ? (
+                    <div className={styles.scanSummary}>
+                      <div>
+                        <strong>
+                          {ratedCount > 0
+                            ? "Ready to compare"
+                            : pendingProductIds.size
+                              ? "Checking product online…"
+                              : "Product identified"}
+                        </strong>
+                        <span>{resultLocked ? "Result held while you read" : "Product result"}</span>
+                      </div>
+                      <button
+                        className={styles.scanAgainButton}
+                        type="button"
+                        onClick={source === "camera" ? scanAgain : startCamera}
+                      >
+                          <RefreshCw aria-hidden="true" size={16} /> Scan again
+                      </button>
                     </div>
-                    <button
-                      className={styles.scanAgainButton}
-                      type="button"
-                      onClick={source === "camera" ? scanAgain : startCamera}
-                    >
-                        <RefreshCw aria-hidden="true" size={16} /> Scan again
-                    </button>
-                  </div>
+                  ) : null}
 
                   {tray.length > 1 ? (
                     <section className={styles.rankingSection} aria-labelledby="scan-ranking-title">
                       <div className={styles.rankingHeading}>
-                        <div>
-                          <p>Sugar.no ranking</p>
-                          <h2 id="scan-ranking-title">
-                            {ratedCount > 0 ? "Best fit first" : pendingProductIds.size ? "Checking nutrition online" : "Products identified"}
-                          </h2>
-                          <span>
-                            {ratedCount > 0
-                              ? "Based on source-backed protein and total sugar"
-                              : pendingProductIds.size
-                                ? "Looking only for exact, cited per-100 product data"
-                                : "No exact source-backed nutrition was found online for this scan"}
-                          </span>
-                        </div>
-                        <strong>{ratedCount}/{tray.length} rated</strong>
+                        <h2 id="scan-ranking-title">
+                          {ratedCount > 0 ? "Best fit first" : pendingProductIds.size ? "Checking nutrition online" : "Products identified"}
+                        </h2>
                       </div>
                       <ol className={styles.rankedList} aria-label="Products ranked by Sugar.no fit">
                         {rankedTrayIds.map((id) => {

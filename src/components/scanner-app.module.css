@@ -586,13 +586,13 @@
 
 .resultsExpanded .sheetChrome {
   min-height: calc(66px + env(safe-area-inset-top));
-  grid-template-columns: minmax(0, 1fr) 44px;
+  grid-template-columns: 44px;
+  justify-content: end;
   padding: calc(8px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left));
   border-bottom: 1px solid var(--border);
 }
 
 .sheetIconButton,
-.sheetTitleButton,
 .sheetPreviewOpen,
 .sheetPreviewBuy {
   cursor: pointer;
@@ -611,21 +611,9 @@
 }
 
 .sheetIconButton:active,
-.sheetTitleButton:active,
 .sheetPreviewOpen:active,
 .sheetPreviewBuy:active {
   opacity: 0.65;
-}
-
-.sheetTitleButton {
-  display: grid;
-  min-height: 44px;
-  align-content: center;
-  gap: 2px;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
-  text-align: left;
 }
 
 .sheetTitleStatic {
@@ -677,21 +665,6 @@
 
 .resultsCollapsed .sheetChrome {
   grid-template-columns: minmax(0, 1fr) auto;
-}
-
-.sheetTitleButton strong {
-  overflow: hidden;
-  font-size: 16px;
-  font-weight: 820;
-  letter-spacing: -0.025em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sheetTitleButton span {
-  color: #716860;
-  font-size: 10px;
-  font-weight: 680;
 }
 
 .sheetPreview {
@@ -860,24 +833,7 @@
 }
 
 .rankingHeading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
   padding: 2px;
-}
-
-.rankingHeading > div {
-  min-width: 0;
-}
-
-.rankingHeading p {
-  margin: 0 0 2px;
-  color: #8a3a2c;
-  font-size: 9px;
-  font-weight: 820;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .rankingHeading h2 {
@@ -885,26 +841,6 @@
   font-size: 18px;
   letter-spacing: -0.035em;
   line-height: 1.1;
-}
-
-.rankingHeading span {
-  display: block;
-  margin-top: 4px;
-  color: #665e57;
-  font-size: 10px;
-  line-height: 1.35;
-}
-
-.rankingHeading > strong {
-  flex: 0 0 auto;
-  padding: 5px 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: #fffdf8;
-  color: #625950;
-  font-size: 9px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
 }
 
 .rankedList {
@@ -1806,7 +1742,6 @@
   .pendingDataAction,
   .priceComparison,
   .priceValues > div,
-  .rankingHeading > strong,
   .rankedProduct,
   .rankedProductThumb {
     background: #24211e;
@@ -1845,7 +1780,6 @@
   .pendingData,
   .pendingDataAction,
   .priceComparison > p,
-  .rankingHeading span,
   .rankedProductMeta > small,
   .demoGrid button span {
     color: #beb5ab;
@@ -1863,9 +1797,6 @@
     background: rgb(23 21 19 / 94%);
   }
 
-  .sheetTitleButton span {
-    color: #beb5ab;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -13,6 +13,7 @@ This file tracks open limitations and only the most recent resolved regressions.
 
 ## Recently resolved
 
+- **2026-08-25: expanded multi-product results repeated scan counts, instructions and a second scan-again action above the ranking.** The expanded view now keeps only the collapse control, `Best fit first` and the ranked product cards before contextual price or alternative actions.
 - **2026-08-25: the demo chooser included a redundant investor-coverage card above its actions.** The card is removed so the three demo actions begin directly under the heading.
 - **2026-08-25: the expanded comparison control used an upward chevron that conflicted with the intended navigation cue.** The control now shows a downward chevron while keeping the same collapse action and accessible label.
 - **2026-08-25: expanded multi-product results repeated the leading rating in a large `Best fit in this scan` block.** The ranked list is now the single comparison source; similar options and price actions remain directly below it.
