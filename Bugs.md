@@ -1,5 +1,7 @@
 # Bugs
 
+- **2026-08-25: the guaranteed Shelf demo described online savings but never supplied a price comparison, so the investor path could not demonstrate the requested crossed-price purchase action.** The leading Barebells fixture now carries an explicitly labelled €3.49 demo shelf value and the exact Barbora SKU offer verified at €2.79 on 25 August 2026. The compact result crosses out only the demo shelf value and exposes one 44 px `Buy cheaper` action; the expanded result preserves the same two prices, €0.70 difference and exact retailer link.
+
 - **2026-08-25: the scanner header approximated the Sugar.no name with styled text instead of using the official brand mark.** The header now renders the exact white symbol-and-wordmark SVG currently published on `sugar.no`, with its original `137 × 26.07` viewBox and aspect ratio preserved as a local first-party asset.
 
 - **2026-08-25: camera markers repeated `2/2 signals` and selected/best products gained a heavy white frame.** The redundant signal pill was removed from the camera overlay and its accessibility label. Selected and best markers now keep only the semantic fit-colored package outline plus stable shadow, while detailed Protein/Sugar evidence remains in the comparison sheet.

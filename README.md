@@ -30,6 +30,7 @@ The app is a working mobile-first web/PWA concept with:
 - a vertical expanded ranking that puts the highest verified Sugar.no fit first, keeps `Great / Moderate / Low fit` attached to every rated row and places unrated identities last as `Needs nutrition label`;
 - ranked product rows name the exact recognized SKU or variant, so several products from one brand remain distinguishable;
 - camera-read shelf prices shown directly under recognized products, plus a live Barbora offer lookup with source time and fail-closed exact-SKU state;
+- a deterministic Shelf demo price comparison on the leading Barebells result: an explicitly labelled €3.49 demo shelf value is crossed out beside the exact Barbora offer verified at €2.79 on 25 August 2026, with the existing one-tap retailer action;
 - same-SKU grouping so repeated facings such as four Coca-Cola cans count as one unique product;
 - a held live-camera result with an explicit `Scan again` action, so moving the phone cannot replace the result while it is being read;
 - an automatic focused center retry after an uncertain broad camera pass, with remapped overlays and a separate conservative confidence threshold;
@@ -64,6 +65,8 @@ Each percentile uses all available verified values in the 40-product protein-sna
 For exact external food records and a trusted package-label read outside the curated snack category, the server calculates a separate reference-based fit. Protein uses the EU `source of protein` / `high protein` energy-share thresholds; total sugar uses the EU low-sugar threshold of 5 g/100 g for solids or 2.5 g/100 ml for liquids. Sugar.no's yellow middle sugar band is explicitly defined as up to twice the official low-sugar threshold. The two bands are weighted equally for the shelf summary. `Best fit in this scan` appears only inside a fair cohort that shares category, per-100 basis, scoring method and both factors; near ties have no winner. These nutrition-claim references are not a medical or absolute health score. Pages without enough nutrition remain unrated. See [Regulation (EC) No 1924/2006](https://eur-lex.europa.eu/legal-content/en/TXT/?uri=CELEX%3A32006R1924).
 
 The scanner deliberately has no save action. When a trusted shelf label and an exact Barbora SKU prove that the current online price is lower, the compact result replaces that secondary behavior with a one-tap `Buy cheaper` action to the exact Barbora page. Similar options remain immediately comparable, but commercial availability never changes the independent Sugar.no rating or ranking.
+
+The deterministic Shelf demo intentionally includes one transparent commercial example. Its €3.49 shelf value is marked as a demo fixture, while the attached €2.79 Barbora value, exact SKU URL and unit price were read from the public product page on 25 August 2026. This demonstrates the crossed-price and one-tap purchase flow without claiming that the generated shelf photo is a live store-price observation. Live camera results keep the stricter physical-label and freshness gates above.
 
 ## Stack
 

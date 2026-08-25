@@ -1606,6 +1606,7 @@ function LoadingProductResult({ detection }: { detection: ProductDetection }) {
 function PriceComparison({ detection, onRetailer }: { detection: ProductDetection; onRetailer: () => void }) {
   const shelfPrice = detection.shelfPrice;
   if (!shelfPrice) return null;
+  const isDemoShelfPrice = shelfPrice.observedText.startsWith("Demo shelf price");
   const offer = detection.retailerOffer?.exactSku ? detection.retailerOffer : null;
   const cheaperOnline = Boolean(offer && offer.price < shelfPrice.amount);
   const savings = cheaperOnline && offer ? shelfPrice.amount - offer.price : 0;
@@ -1624,7 +1625,7 @@ function PriceComparison({ detection, onRetailer }: { detection: ProductDetectio
       </div>
       <div className={styles.priceValues}>
         <div>
-          <small>Scanned shelf label</small>
+          <small>{isDemoShelfPrice ? "Demo shelf price" : "Scanned shelf label"}</small>
           <strong className={cheaperOnline ? styles.crossedPrice : ""}>€{shelfPrice.amount.toFixed(2)}</strong>
         </div>
         {offer ? (
@@ -1637,7 +1638,7 @@ function PriceComparison({ detection, onRetailer }: { detection: ProductDetectio
       {offer ? (
         <>
           <p>
-            Matched by package identity
+            {isDemoShelfPrice ? "Demo shelf value · exact product match" : "Matched by package identity"}
             {checkedTime ? ` · checked ${checkedTime}` : ""}
           </p>
           <a
@@ -1666,9 +1667,10 @@ function CompactProductPrice({ detection }: { detection?: ProductDetection }) {
   if (!shelfPrice) return null;
   const offer = detection.retailerOffer?.exactSku ? detection.retailerOffer : null;
   const cheaperAtBarbora = Boolean(offer && offer.price < shelfPrice.amount);
+  const shelfPriceLabel = shelfPrice.observedText.startsWith("Demo shelf price") ? "Demo shelf price" : "Shelf price";
   const accessibleLabel = cheaperAtBarbora && offer
-    ? `Shelf price €${shelfPrice.amount.toFixed(2)}, Barbora €${offer.price.toFixed(2)}, cheaper at Barbora`
-    : `Shelf price €${shelfPrice.amount.toFixed(2)}`;
+    ? `${shelfPriceLabel} €${shelfPrice.amount.toFixed(2)}, Barbora €${offer.price.toFixed(2)}, cheaper at Barbora`
+    : `${shelfPriceLabel} €${shelfPrice.amount.toFixed(2)}`;
 
   return (
     <div className={styles.compactProductPrice} role="group" aria-label={accessibleLabel}>

@@ -36,6 +36,14 @@ describe("recognizeProducts", () => {
     );
     expect(result.imageStored).toBe(false);
     expect(result.model).toBe("deterministic-sample-v1");
+    expect(result.detections[0]).toMatchObject({
+      shelfPrice: { amount: 3.49, observedText: "Demo shelf price €3.49" },
+      retailerOffer: {
+        price: 2.79,
+        exactSku: true,
+        slug: "prot-bat-sal-riekst-saldin-barebells-55-g"
+      }
+    });
   });
 
   it("treats checkout as one multi-product frame through the same response shape", async () => {

@@ -1354,7 +1354,7 @@
 }
 
 .compactProductPrice > .compactCrossedPrice {
-  color: #817970;
+  color: #6d665e;
   text-decoration: line-through 1.5px #c84f43;
   text-decoration-skip-ink: none;
 }

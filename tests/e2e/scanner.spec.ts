@@ -168,6 +168,17 @@ test("sample shelf photo highlights products and shows a two-factor Sugar.no bad
   await unlock(page);
   await openDemoScene(page, "Shelf demo");
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
+  const shelfPreview = page.getByLabel("Product result preview");
+  const shelfDeal = shelfPreview.getByLabel("Demo shelf price €3.49, Barbora €2.79, cheaper at Barbora");
+  await expect(shelfDeal).toBeVisible();
+  await expect(shelfDeal.getByText("€3.49", { exact: true })).toHaveCSS("text-decoration-line", "line-through");
+  const shelfBuy = shelfPreview.getByRole("link", { name: /Buy .* cheaper at Barbora for €2\.79/ });
+  await expect(shelfBuy).toBeVisible();
+  await expect(shelfBuy).toHaveAttribute(
+    "href",
+    "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g"
+  );
+  expect((await shelfBuy.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   await expect(page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
   await expect(page.getByLabel("Sample shelf photo with four supported protein snacks").locator("img")).toHaveCount(1);
@@ -220,13 +231,23 @@ test("sample shelf photo highlights products and shows a two-factor Sugar.no bad
   await expect(page.getByLabel("Sugar.no badge").getByText("Protein", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Sugar.no badge").getByText("Fiber", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Sugar.no badge").getByText("Sugar", { exact: true })).toBeVisible();
+  const shelfPriceComparison = page.getByLabel("Price comparison");
+  await expect(shelfPriceComparison.getByText("Cheaper at Barbora", { exact: true })).toBeVisible();
+  await expect(shelfPriceComparison.getByText("Demo shelf price", { exact: true })).toBeVisible();
+  await expect(shelfPriceComparison.getByText("€3.49", { exact: true })).toHaveCSS(
+    "text-decoration-line",
+    "line-through"
+  );
+  await expect(shelfPriceComparison.getByText("€2.79", { exact: true })).toBeVisible();
+  await expect(shelfPriceComparison.getByRole("link", { name: /Buy cheaper at Barbora · €2\.79/ })).toHaveAttribute(
+    "href",
+    "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g"
+  );
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await expect(page.getByText("Outlines show products with both protein and total sugar available.", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Values per 100 g · Compared with protein snacks in this demo")).toBeVisible();
   await expect(page.getByText(/Sugar\.no Match \d+/)).toHaveCount(0);
   await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
-  const retailer = page.getByRole("link", { name: /View at Barbora/ });
-  await expect(retailer).toHaveAttribute("href", /^https:\/\/barbora\.lv\/produkti\//);
   await expect(page.getByText(/\b(good|bad|unhealthy)\b/i)).toHaveCount(0);
   await waitForAlternativeImages(page);
   const accessibility = await new AxeBuilder({ page })

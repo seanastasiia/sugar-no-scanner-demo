@@ -98,7 +98,28 @@ const sampleShelf: ProductDetection[] = [
     productId: "prot-bat-sal-riekst-saldin-barebells-55-g",
     confidence: 0.98,
     box: { x: 0.01, y: 0.27, width: 0.24, height: 0.28 },
-    observedText: "Barebells Salty Peanut"
+    observedText: "Barebells Salty Peanut",
+    shelfPrice: {
+      amount: 3.49,
+      currency: "EUR",
+      observedText: "Demo shelf price €3.49",
+      confidence: 1
+    },
+    retailerOffer: {
+      retailer: "Barbora",
+      slug: "prot-bat-sal-riekst-saldin-barebells-55-g",
+      title: "Proteīna batoniņš ar sāļiem riekstiem BAREBELLS 55g",
+      brand: "BAREBELLS",
+      url: "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g",
+      price: 2.79,
+      currency: "EUR",
+      unitPrice: 50.73,
+      unit: "kg",
+      imageUrl: "https://cdn.barbora.lv/products/25f716c3-1604-41de-8679-7f4231725f41_s.png",
+      checkedAt: "2026-08-25T06:37:00.000Z",
+      matchConfidence: 1,
+      exactSku: true
+    }
   },
   {
     productId: "prot-bat-barebells-lemon-cheesecake-55-g",
