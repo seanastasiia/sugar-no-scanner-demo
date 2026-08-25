@@ -31,6 +31,13 @@ The expanded fixed sheet used `height: 100dvh`. In WebKit, changing from a 440×
 | Touch targets | Pass: compact actions and collapse control are at least 44 px |
 | `git diff --check` | Pass |
 
+## Production release
+
+- Application commit: `48b633b11b92a60bb07e88176fa2df75e557cc42`
+- Direct Railway deployment: `ed79da46-6758-43cb-98fd-fbb7d8408012` — `SUCCESS`
+- Production health: `GET /api/health` returned `status: ok` and commit `48b633b11b92a60bb07e88176fa2df75e557cc42`.
+- Production WebKit smoke: pass. The compact result sheet, status, `View all` and `Scan again` fit 402×874 with no document overflow. The expanded dialog ended exactly at 874 px, then recalculated to 402 px after landscape rotation and to 667 px after the following narrow-portrait resize.
+
 ## Visual evidence
 
 - `docs/screenshots/iphone-17-pro-camera.png`
