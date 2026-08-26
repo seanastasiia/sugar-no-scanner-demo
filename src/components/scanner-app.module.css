@@ -3,7 +3,8 @@
   min-height: 100dvh;
   overflow-x: clip;
   background:
-    radial-gradient(circle at 90% 2%, rgb(232 97 74 / 18%), transparent 25rem),
+    radial-gradient(circle at 92% 2%, rgb(10 132 255 / 18%), transparent 27rem),
+    radial-gradient(circle at 6% 88%, rgb(255 180 150 / 14%), transparent 24rem),
     var(--cream);
   color: var(--ink);
 }
@@ -19,7 +20,7 @@
   align-items: flex-end;
   justify-content: flex-start;
   padding: 0 max(20px, env(safe-area-inset-right)) 14px max(20px, env(safe-area-inset-left));
-  background: linear-gradient(to bottom, rgb(242 237 228 / 96%), rgb(242 237 228 / 82%));
+  background: linear-gradient(to bottom, rgb(240 247 255 / 96%), rgb(240 247 255 / 82%));
   backdrop-filter: blur(16px);
   transition: background-color 180ms ease, color 180ms ease;
 }
@@ -53,12 +54,12 @@
   border-radius: 18px;
   background: var(--ink);
   color: var(--cream);
-  box-shadow: 0 14px 34px rgb(17 17 17 / 16%);
+  box-shadow: 0 14px 34px rgb(17 19 31 / 16%);
 }
 
 .eyebrow {
   margin: 28px 0 12px;
-  color: #a62f1e;
+  color: var(--accent-deep);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.09em;
@@ -69,20 +70,21 @@
   margin: 0;
   font-size: clamp(44px, 13vw, 72px);
   font-weight: 800;
+  font-family: var(--font-display);
   letter-spacing: -0.062em;
   line-height: 0.94;
 }
 
 .intro h1 em {
-  color: var(--coral);
-  font-family: var(--font-serif), Georgia, serif;
+  color: var(--accent);
+  font-family: var(--font-display);
   font-weight: 700;
 }
 
 .introCopy {
   max-width: 460px;
   margin: 22px 0 26px;
-  color: #514942;
+  color: var(--muted);
   font-size: 17px;
   line-height: 1.6;
 }
@@ -108,9 +110,9 @@
   border: 0;
   border-radius: 16px;
   background: var(--ink);
-  color: #ffffff;
+  color: var(--surface);
   font-weight: 750;
-  box-shadow: 0 14px 32px rgb(17 17 17 / 18%);
+  box-shadow: 0 14px 32px rgb(17 19 31 / 18%);
 }
 
 .primaryButton:active,
@@ -126,7 +128,7 @@
   align-items: center;
   gap: 12px;
   margin: 24px 0 14px;
-  color: #766d65;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 650;
 }
@@ -153,19 +155,19 @@
   padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 17px;
-  background: rgb(255 253 248 / 76%);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
   color: var(--ink);
   text-align: left;
 }
 
 .demoGrid button > svg:first-child {
-  color: var(--coral);
+  color: var(--accent);
 }
 
 .demoGrid button span {
   display: grid;
   gap: 2px;
-  color: #6d645c;
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -182,7 +184,7 @@
   gap: 9px;
   margin-top: 10px;
   border-radius: 14px;
-  color: #4d453e;
+  color: var(--muted);
   font-size: 14px;
   font-weight: 700;
 }
@@ -203,7 +205,7 @@
   justify-content: center;
   gap: 7px;
   margin: 18px 0 0;
-  color: #756c64;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -227,7 +229,7 @@
   height: 100%;
   isolation: isolate;
   overflow: hidden;
-  background: #171513;
+  background: var(--ink-strong);
   color: #ffffff;
 }
 
@@ -268,7 +270,7 @@
   padding: 7px 10px;
   border: 1px solid rgb(255 255 255 / 24%);
   border-radius: 999px;
-  background: rgb(0 0 0 / 38%);
+  background: rgb(20 21 30 / 82%);
   backdrop-filter: blur(10px);
   font-size: 12px;
   font-weight: 750;
@@ -282,7 +284,7 @@
   place-items: center;
   border: 1px solid rgb(255 255 255 / 24%);
   border-radius: 50%;
-  background: rgb(0 0 0 / 40%);
+  background: rgb(20 21 30 / 82%);
   color: #ffffff;
   backdrop-filter: blur(10px);
 }
@@ -305,7 +307,7 @@
   padding: 3px;
   border: 1px solid rgb(255 255 255 / 24%);
   border-radius: 999px;
-  background: rgb(0 0 0 / 40%);
+  background: rgb(20 21 30 / 82%);
   backdrop-filter: blur(10px);
 }
 
@@ -324,7 +326,7 @@
 
 .sampleSwitch .activeSample {
   background: #ffffff;
-  color: #171513;
+  color: var(--ink-strong);
 }
 
 .stageStatus {
@@ -341,7 +343,7 @@
   padding: 8px 13px;
   border: 1px solid rgb(255 255 255 / 22%);
   border-radius: 999px;
-  background: rgb(18 17 15 / 72%);
+  background: rgb(20 21 30 / 86%);
   font-size: 13px;
   font-weight: 680;
   text-align: center;
@@ -472,7 +474,7 @@
   padding: 3px 7px;
   border: 1px solid rgb(255 255 255 / 30%);
   border-radius: 999px;
-  background: rgb(17 17 17 / 82%);
+  background: rgb(20 21 30 / 86%);
   color: #ffffff;
   font-size: 11px;
   font-weight: 820;
@@ -510,10 +512,10 @@
 }
 
 .tonePending {
-  --tone: #746d66;
-  --tone-soft: #ece7df;
-  --tone-overlay: rgb(116 109 102 / 12%);
-  --tone-text: #514b45;
+  --tone: #8f8fa1;
+  --tone-soft: #f6f5f8;
+  --tone-overlay: rgb(143 143 161 / 12%);
+  --tone-text: #525252;
   --tone-on: #ffffff;
 }
 
@@ -527,7 +529,7 @@
   justify-content: center;
   gap: 10px;
   padding: 70px 30px;
-  background: #211f1c;
+  background: var(--ink-strong);
   text-align: center;
 }
 
@@ -629,7 +631,7 @@
   place-items: center;
   border: 1px solid var(--border);
   border-radius: 50%;
-  background: #fffdf8;
+  background: var(--surface);
   color: var(--ink);
 }
 
@@ -657,7 +659,7 @@
 }
 
 .sheetTitleStatic span {
-  color: #716860;
+  color: var(--muted);
   font-size: 10px;
   font-weight: 680;
 }
@@ -676,7 +678,7 @@
   cursor: pointer;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: #fffdf8;
+  background: var(--surface);
   color: var(--ink);
   font-size: 11px;
   font-weight: 800;
@@ -707,8 +709,8 @@
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 15px;
-  background: #fffdf8;
-  color: #625950;
+  background: var(--surface);
+  color: var(--muted);
 }
 
 .sheetPreviewCardDeal {
@@ -737,7 +739,7 @@
   place-items: center;
   border-radius: 50%;
   background: var(--ink);
-  color: var(--cream);
+  color: var(--surface);
   font-size: 9px;
   font-variant-numeric: tabular-nums;
   font-weight: 850;
@@ -755,7 +757,7 @@
   border: 0;
   border-left: 1px solid rgb(255 255 255 / 18%);
   background: var(--ink);
-  color: var(--cream);
+  color: var(--surface);
   text-decoration: none;
 }
 
@@ -782,7 +784,7 @@
   height: 54px;
   overflow: hidden;
   border-radius: 10px;
-  background: #f0e9df;
+  background: var(--surface-tinted);
 }
 
 .sheetPreviewThumb img {
@@ -846,7 +848,7 @@
 }
 
 .scanSummary > div:first-child span {
-  color: #665e57;
+  color: var(--muted);
   font-size: 10px;
   text-align: right;
 }
@@ -862,7 +864,7 @@
   border: 1px solid var(--ink);
   border-radius: 14px;
   background: var(--ink);
-  color: var(--cream);
+  color: var(--surface);
   font-size: 12px;
   font-weight: 800;
   transition: opacity 180ms ease;
@@ -908,7 +910,7 @@
   cursor: pointer;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: #fffdf8;
+  background: var(--surface);
   color: var(--ink);
   text-align: left;
   transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
@@ -919,9 +921,9 @@
 }
 
 .activeRankedProduct {
-  border-color: var(--ink);
-  background: #f8f3eb;
-  box-shadow: inset 0 0 0 1px var(--ink);
+  border-color: var(--accent);
+  background: var(--surface-accent);
+  box-shadow: 0 10px 28px rgb(10 132 255 / 10%);
 }
 
 .rankPosition {
@@ -931,15 +933,15 @@
   place-items: center;
   border-radius: 50%;
   background: var(--ink);
-  color: var(--cream);
+  color: var(--surface);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   font-weight: 850;
 }
 
 .rankPending {
-  background: #ece7df;
-  color: #514b45;
+  background: var(--surface-tinted);
+  color: var(--muted);
 }
 
 .rankedProductThumb {
@@ -948,7 +950,7 @@
   height: 60px;
   overflow: hidden;
   border-radius: 11px;
-  background: #f0e9df;
+  background: var(--surface-tinted);
 }
 
 .rankedProductThumb img {
@@ -962,7 +964,7 @@
 }
 
 .rankedProductCopy > small {
-  color: #8a3a2c;
+  color: var(--accent-deep);
   font-size: 9px;
   font-weight: 820;
   letter-spacing: 0.06em;
@@ -985,7 +987,7 @@
 }
 
 .rankedProductMeta > small {
-  color: #665e57;
+  color: var(--muted);
   font-size: 9px;
   font-variant-numeric: tabular-nums;
   font-weight: 680;
@@ -1010,7 +1012,7 @@
 .productBrand,
 .sectionHeading p {
   margin: 0 0 3px;
-  color: #8a3a2c;
+  color: var(--accent-deep);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -1048,7 +1050,7 @@
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 17px;
-  background: #fffdf8;
+  background: var(--surface);
 }
 
 .sugarBadgeHeading {
@@ -1065,7 +1067,7 @@
 }
 
 .sugarBadgeHeading > div small {
-  color: #8a3a2c;
+  color: var(--accent-deep);
   font-size: 8px;
   font-weight: 820;
   letter-spacing: 0.07em;
@@ -1160,7 +1162,7 @@
   padding: 13px;
   border: 1px solid var(--border);
   border-radius: 17px;
-  background: #fffdf8;
+  background: var(--surface);
 }
 
 .priceComparisonDeal {
@@ -1176,7 +1178,7 @@
 }
 
 .priceHeading span {
-  color: #8a3a2c;
+  color: var(--accent-deep);
   font-size: 10px;
   font-weight: 840;
   letter-spacing: 0.08em;
@@ -1201,7 +1203,7 @@
   gap: 3px;
   padding: 10px;
   border-radius: 13px;
-  background: #f1ebe2;
+  background: var(--surface-tinted);
 }
 
 .priceValues > div:only-child {
@@ -1209,7 +1211,7 @@
 }
 
 .priceValues small {
-  color: #6f665e;
+  color: var(--muted);
   font-size: 9px;
   font-weight: 750;
 }
@@ -1221,14 +1223,14 @@
 }
 
 .priceValues .crossedPrice {
-  color: #746d66;
+  color: var(--muted);
   text-decoration: line-through 2px #c84f43;
   text-decoration-skip-ink: none;
 }
 
 .priceComparison > p {
   margin: 9px 1px 0;
-  color: #71675f;
+  color: var(--muted);
   font-size: 10px;
   line-height: 1.4;
 }
@@ -1242,7 +1244,7 @@
   min-width: 0;
   align-items: baseline;
   gap: 4px;
-  color: #625950;
+  color: var(--muted);
   font-size: 9px;
   font-variant-numeric: tabular-nums;
   font-weight: 780;
@@ -1275,7 +1277,7 @@
 }
 
 .compactProductPrice > .compactCrossedPrice {
-  color: #6d665e;
+  color: var(--muted);
   text-decoration: line-through 1.5px #c84f43;
   text-decoration-skip-ink: none;
 }
@@ -1289,8 +1291,8 @@
   padding: 11px 12px;
   border: 1px solid var(--border);
   border-radius: 13px;
-  background: #fffdf8;
-  color: #5c544d;
+  background: var(--surface);
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -1317,7 +1319,7 @@
   border: 1px solid var(--ink);
   border-radius: 13px;
   background: var(--ink);
-  color: var(--cream);
+  color: var(--surface);
   font: inherit;
   font-weight: 820;
   transition: opacity 180ms ease;
@@ -1341,11 +1343,11 @@
   padding: 11px 10px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: #fffdf8;
+  background: var(--surface);
 }
 
 .nutrient span {
-  color: #6f665e;
+  color: var(--muted);
   font-size: 10px;
   font-weight: 750;
 }
@@ -1359,14 +1361,14 @@
 }
 
 .nutrient small {
-  color: #8b8178;
+  color: var(--muted);
   font-size: 8px;
   line-height: 1.2;
 }
 
 .perHundred {
   margin: 8px 1px 0;
-  color: #6d645c;
+  color: var(--muted);
   font-size: 10px;
 }
 
@@ -1406,7 +1408,7 @@
   flex: 0 0 min(62vw, 218px);
   border: 1px solid var(--border);
   border-radius: 15px;
-  background: #fffdf8;
+  background: var(--surface);
   color: var(--ink);
   scroll-snap-align: start;
 }
@@ -1471,7 +1473,7 @@
   height: 90px;
   overflow: hidden;
   border-radius: 11px;
-  background: #f0e9df;
+  background: var(--surface-tinted);
 }
 
 .alternativeThumb img {
@@ -1487,7 +1489,7 @@
 }
 
 .alternativeList small {
-  color: #8a3a2c;
+  color: var(--accent-deep);
   font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
@@ -1536,13 +1538,13 @@
   place-items: center;
   align-content: center;
   gap: 8px;
-  color: #615850;
+  color: var(--muted);
   text-align: center;
 }
 
 .emptyResult span {
   max-width: 340px;
-  color: #837970;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -1551,7 +1553,7 @@
   width: 100%;
   height: 64px;
   border-radius: 15px;
-  background: linear-gradient(90deg, #e7dfd4, #f6f1e9, #e7dfd4);
+  background: linear-gradient(90deg, var(--surface-accent), var(--surface), var(--surface-accent));
   background-size: 220% 100%;
   animation: shimmer 1.2s ease infinite;
 }
@@ -1567,7 +1569,7 @@
   z-index: -3;
   inset: 0;
   overflow: hidden;
-  background: #171513;
+  background: var(--ink-strong);
 }
 
 .samplePhoto {
@@ -1604,7 +1606,7 @@
 
 .demoHeading p {
   margin: 0 0 3px;
-  color: #8a3a2c;
+  color: var(--accent-deep);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -1627,7 +1629,7 @@
   place-items: center;
   border: 1px solid var(--border);
   border-radius: 50%;
-  background: #fffdf8;
+  background: var(--surface);
   color: var(--ink);
 }
 
@@ -1648,7 +1650,7 @@
   cursor: pointer;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: #fffdf8;
+  background: var(--surface);
   color: var(--ink);
   text-align: left;
 }
@@ -1659,7 +1661,7 @@
 }
 
 .demoChoices small {
-  color: #716860;
+  color: var(--muted);
   font-size: 11px;
 }
 
@@ -1683,7 +1685,7 @@
   border: 0;
   border-radius: 14px;
   background: var(--ink);
-  color: var(--cream);
+  color: var(--surface);
   font-weight: 800;
 }
 
@@ -1787,19 +1789,16 @@
 
 @media (prefers-color-scheme: dark) {
   .app {
-    --cream: #171513;
-    --ink: #f8f3eb;
-    --border: #3b3732;
-    background: #171513;
+    background: var(--canvas);
   }
 
   .header,
   .resultsSheet {
-    background: #171513;
+    background: var(--canvas);
   }
 
   .header {
-    background: rgb(23 21 19 / 88%);
+    background: rgb(20 21 30 / 88%);
   }
 
   .sheetIconButton,
@@ -1815,19 +1814,19 @@
   .priceValues > div,
   .rankedProduct,
   .rankedProductThumb {
-    background: #24211e;
-    color: #f8f3eb;
+    background: var(--surface);
+    color: var(--ink);
   }
 
   .activeRankedProduct {
-    border-color: #f8f3eb;
-    background: #2d2925;
-    box-shadow: inset 0 0 0 1px #f8f3eb;
+    border-color: var(--accent);
+    background: var(--surface-accent);
+    box-shadow: 0 10px 28px rgb(96 182 226 / 12%);
   }
 
   .rankPending {
-    background: #3a3530;
-    color: #f8f3eb;
+    background: var(--surface-tinted);
+    color: var(--ink);
   }
 
   .priceComparisonDeal {
@@ -1836,7 +1835,7 @@
   }
 
   .compactProductPrice {
-    color: #d4cbc2;
+    color: var(--muted);
   }
 
   .compactProductPrice > strong,
@@ -1853,19 +1852,19 @@
   .priceComparison > p,
   .rankedProductMeta > small,
   .demoGrid button span {
-    color: #beb5ab;
+    color: var(--muted);
   }
 
   .demoGrid button strong {
-    color: #f8f3eb;
+    color: var(--ink);
   }
 
   .scanSummary > div:first-child span {
-    color: #beb5ab;
+    color: var(--muted);
   }
 
   .sheetChrome {
-    background: rgb(23 21 19 / 94%);
+    background: rgb(20 21 30 / 94%);
   }
 
 }

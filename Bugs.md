@@ -13,6 +13,7 @@ This file tracks open limitations and only the most recent resolved regressions.
 
 ## Recently resolved
 
+- **2026-08-26: the scanner still used an obsolete beige/coral proof-of-concept palette.** Surfaces, ink, focus, selection and camera chrome now use semantic tokens sourced from the current Sugar.no website; fit colors remain independent and the active ranked card has one blue emphasis layer.
 - **2026-08-26: the compact sheet repeated scanning controls and yellow markers obscured too much packaging.** The redundant compact refresh action is removed, leaving `View all`; `Moderate fit` discs are smaller while the full product box remains tappable.
 - **2026-08-26: saved-photo views repeated their source in a large overlay badge.** The redundant `Saved shelf or checkout photo` badge is removed while `Back to live` stays aligned to the right.
 - **2026-08-26: compact product previews hid their ranking and nutrition context.** Rated preview cards now show the same `#1`, `#2`, `#3…` order as the expanded comparison plus a small total-sugar value per 100 g or 100 ml.

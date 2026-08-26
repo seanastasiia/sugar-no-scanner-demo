@@ -265,6 +265,35 @@ test("public root opens directly into the camera-first experience", async ({ pag
   await expect(page.getByText("Private demo", { exact: true })).toHaveCount(0);
 });
 
+test("scanner uses the current Sugar.no website palette without changing fit semantics", async ({ page }) => {
+  await unlock(page);
+  const palette = await page.evaluate(() => {
+    const style = getComputedStyle(document.documentElement);
+    return Object.fromEntries(
+      ["--canvas", "--surface", "--ink", "--accent", "--accent-deep", "--peach", "--coral", "--focus"]
+        .map((token) => [token, style.getPropertyValue(token).trim()])
+    );
+  });
+  expect(palette).toEqual({
+    "--canvas": "#f0f7ff",
+    "--surface": "#fff",
+    "--ink": "#11131f",
+    "--accent": "#0a84ff",
+    "--accent-deep": "#044884",
+    "--peach": "#ffb496",
+    "--coral": "#f14e58",
+    "--focus": "#0a84ff"
+  });
+
+  await openDemoScene(page, "Shelf demo");
+  await expect(page.locator("aside")).toHaveCSS("background-color", "rgb(240, 247, 255)");
+  await expect(page.getByRole("status")).toHaveCSS("background-color", "rgba(20, 21, 30, 0.86)");
+  const markers = page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]');
+  await expect(markers).toHaveCount(4);
+  await expect(markers.filter({ hasText: "Great fit" })).toHaveCount(2);
+  await expect(markers.filter({ hasText: "Moderate fit" })).toHaveCount(2);
+});
+
 test("sample shelf photo highlights products and ranks two-factor Sugar.no fits", async ({ page }) => {
   await mockAlternativeOffers(page);
   await unlock(page);
@@ -1101,7 +1130,7 @@ test("live camera shows package identities before optional retailer enrichment f
   await expect(page.getByLabel("Product result preview")).toHaveCount(0);
 });
 
-test("a not-sure shelf completion retry retains and locks the first valid product", async ({ page }) => {
+test("a not-sure completion retry stops without exposing an unrated provisional product", async ({ page }) => {
   await mockLiveCamera(page);
   let recognitionRequests = 0;
   const focusModes: boolean[] = [];
@@ -1154,8 +1183,8 @@ test("a not-sure shelf completion retry retains and locks the first valid produc
   await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open First Product"]')).toHaveCount(0);
   await expect.poll(() => recognitionRequests, { timeout: 5_000 }).toBe(2);
   expect(focusModes).toEqual([false, false]);
-  await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "First Product" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "View all", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "First Product" })).toHaveCount(0);
 });
 
 test("provider unavailability pauses live recognition and offers manual recovery", async ({ page }) => {
@@ -1304,7 +1333,7 @@ test("live camera groups repeated packs, holds the result and replaces it only a
   });
   await unlock(page);
 
-  await expect(page.getByRole("status")).toContainText("1 product with Sugar.no fit", { timeout: 10_000 });
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
   await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toBeVisible();
@@ -1319,7 +1348,7 @@ test("live camera groups repeated packs, holds the result and replaces it only a
 
   currentProduct = "activia";
   await page.getByRole("button", { name: "Scan again" }).click();
-  await expect(page.getByRole("status")).toContainText("1 product with Sugar.no fit", { timeout: 10_000 });
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Activia Forest Berries Yogurt/ })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toHaveCount(0);
