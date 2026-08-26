@@ -10,6 +10,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 - The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
 - Camera starts after permission without requiring a shutter action.
+- The live iPhone preview preserves the complete camera field with no CSS crop or simulated zoom. Product overlays are mapped into the visible uncropped frame; saved/demo scenes keep their intentional edge-to-edge crop.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
 - Saved-photo views omit the redundant source badge and keep only the `Back to live` action in the top overlay.
 - A scan keeps at most ten distinct, highest-confidence readable products. Repeated facings of one SKU are grouped. The camera sheet previews the leading products and `View all` opens the complete ranked result.

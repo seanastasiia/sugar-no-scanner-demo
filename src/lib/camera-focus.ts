@@ -45,9 +45,32 @@ export function mapBoxToObjectCover(
   media: MediaDimensions,
   stage: MediaDimensions
 ): BoundingBox {
+  return mapBoxToObjectFit(box, media, stage, "cover");
+}
+
+/**
+ * Maps model coordinates into a complete, uncropped camera preview rendered
+ * with CSS `object-fit: contain`. Letterbox space remains outside every box.
+ */
+export function mapBoxToObjectContain(
+  box: BoundingBox,
+  media: MediaDimensions,
+  stage: MediaDimensions
+): BoundingBox {
+  return mapBoxToObjectFit(box, media, stage, "contain");
+}
+
+function mapBoxToObjectFit(
+  box: BoundingBox,
+  media: MediaDimensions,
+  stage: MediaDimensions,
+  fit: "cover" | "contain"
+): BoundingBox {
   if (media.width <= 0 || media.height <= 0 || stage.width <= 0 || stage.height <= 0) return box;
 
-  const scale = Math.max(stage.width / media.width, stage.height / media.height);
+  const scale = fit === "cover"
+    ? Math.max(stage.width / media.width, stage.height / media.height)
+    : Math.min(stage.width / media.width, stage.height / media.height);
   const renderedWidth = media.width * scale;
   const renderedHeight = media.height * scale;
   const offsetX = (stage.width - renderedWidth) / 2;

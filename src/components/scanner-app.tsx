@@ -22,6 +22,7 @@ import {
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CAMERA_FOCUS_CROP,
+  mapBoxToObjectContain,
   mapBoxToObjectCover,
   remapRecognitionFromCrop,
   type MediaDimensions
@@ -1308,7 +1309,9 @@ export function ScannerApp() {
               const presentation = overlayMatchPresentation(product);
               const displayName = product?.name || detection.identity?.name || detection.observedText || "product";
               const mappedBox = mediaDimensions && stageDimensions
-                ? mapBoxToObjectCover(detection.box, mediaDimensions, stageDimensions)
+                ? source === "camera"
+                  ? mapBoxToObjectContain(detection.box, mediaDimensions, stageDimensions)
+                  : mapBoxToObjectCover(detection.box, mediaDimensions, stageDimensions)
                 : detection.box;
               const isBest = bestId === detection.productId;
               return (

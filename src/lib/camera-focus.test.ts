@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   CAMERA_FOCUS_CROP,
+  mapBoxToObjectContain,
   mapBoxToObjectCover,
   remapBoxFromCrop,
   remapRecognitionFromCrop
@@ -61,6 +62,19 @@ describe("camera focus crop", () => {
     expect(mapped.x).toBe(0);
     expect(mapped.width).toBeGreaterThan(0);
     expect(mapped.width).toBeLessThan(0.4);
+  });
+
+  it("keeps the complete landscape camera field inside a portrait stage without zooming", () => {
+    const mapped = mapBoxToObjectContain(
+      { x: 0.4, y: 0.25, width: 0.2, height: 0.5 },
+      { width: 1920, height: 1080 },
+      { width: 375, height: 812 }
+    );
+
+    expect(mapped.x).toBeCloseTo(0.4, 2);
+    expect(mapped.y).toBeCloseTo(0.435, 2);
+    expect(mapped.width).toBeCloseTo(0.2, 2);
+    expect(mapped.height).toBeCloseTo(0.13, 2);
   });
 
   it("leaves coordinates unchanged when media and stage share an aspect ratio", () => {

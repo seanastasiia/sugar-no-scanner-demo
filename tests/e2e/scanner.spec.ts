@@ -1146,6 +1146,7 @@ test("a broad live shelf scan keeps up to ten different Sugar.no-rated products 
   });
   await unlock(page);
 
+  await expect(page.getByLabel("Live camera preview")).toHaveCSS("object-fit", "contain");
   await expect(page.getByRole("status")).toContainText("10 products · 10 with Sugar.no fit", { timeout: 10_000 });
   expect(recognitionAttempts).toBe(2);
   expect(focusModes).toEqual([false, false]);
