@@ -1,6 +1,6 @@
 # Saved-photo source badge removal
 
-Date: 2026-08-26  
+Date: 2026-08-26
 Feature commit: `7b2daccfe1e960c10873241cb7492401c34f9d23`
 
 ## Change under test
