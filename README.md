@@ -19,6 +19,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - The compact camera preview mirrors that ranking with `#1`, `#2`, `#3…` badges and shows total sugar per 100 g or 100 ml beneath each rated fit.
 - Compact and expanded product cards show the exact catalog/Barbora image when available; otherwise the browser creates an in-memory crop of that package from the scanned scene instead of leaving an empty gray thumbnail.
 - The compact sheet keeps `View all` as its only action; returning to live camera starts a new scan.
+- Once resolved products are visible, their count and fit coverage live only in the compact sheet; the redundant dark success banner over the camera is removed. Scanning, offline and recoverable error messages still appear on the camera.
 - `Great fit`, `Moderate fit` and `Low fit` camera markers use the same 46 px visual disc; the full detected-product outline remains the larger touch target.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
@@ -148,6 +149,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 7. Confirm each overlay tightly follows its package rather than a nearby shelf label.
 8. Move the camera after a result and confirm it remains held until `Scan again`.
 9. Confirm every compact and expanded result card has a recognizable product image; products without a catalog image should use a crop from the current scan.
+10. Confirm a completed Shelf or Checkout demo has no duplicate dark result-count banner above the compact sheet; scanning and error feedback should still appear when relevant.
 
 ## Known limits
 

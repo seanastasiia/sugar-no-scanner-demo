@@ -287,7 +287,7 @@ test("scanner follows the current Sugar.no app surface language without changing
 
   await openDemoScene(page, "Shelf demo");
   await expect(page.locator("aside")).toHaveCSS("background-color", "rgb(243, 244, 248)");
-  await expect(page.getByRole("status")).toHaveCSS("background-color", "rgba(20, 21, 30, 0.86)");
+  await expect(page.getByTestId("stage-status-pill")).toHaveCount(0);
   const markers = page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]');
   await expect(markers).toHaveCount(4);
   await expect(markers.filter({ hasText: "Great fit" })).toHaveCount(2);
@@ -299,6 +299,7 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await unlock(page);
   await openDemoScene(page, "Shelf demo");
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
+  await expect(page.getByTestId("stage-status-pill")).toHaveCount(0);
   const shelfPreview = page.getByLabel("Product result preview");
   await expect(shelfPreview.getByText(/^#[1-4]$/)).toHaveCount(4);
   await expect(shelfPreview.getByText(/^Sugar \d+(?:\.\d+)?g$/)).toHaveCount(4);
@@ -411,6 +412,7 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await unlock(page);
   await openDemoScene(page, "Checkout demo");
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
+  await expect(page.getByTestId("stage-status-pill")).toHaveCount(0);
   const checkoutPreview = page.getByLabel("Product result preview");
   await expect(checkoutPreview.locator("img")).toHaveCount(3);
   await expect.poll(async () =>
@@ -600,11 +602,10 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
 
   const sheet = page.locator("aside");
-  const status = page.getByRole("status");
   const viewAll = page.getByRole("button", { name: "View all", exact: true });
 
   await expectInsideViewport(page, sheet);
-  await expectInsideViewport(page, status);
+  await expect(page.getByTestId("stage-status-pill")).toHaveCount(0);
   await expectInsideViewport(page, viewAll);
   expect((await viewAll.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   await expect(page.getByRole("button", { name: "Scan again" })).toHaveCount(0);
@@ -632,7 +633,7 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
     await expectNoDocumentOverflow(page);
     await page.getByRole("button", { name: "Collapse product results" }).click();
     await expectInsideViewport(page, sheet);
-    await expectInsideViewport(page, status);
+    await expect(page.getByTestId("stage-status-pill")).toHaveCount(0);
     await expectInsideViewport(page, page.getByRole("button", { name: "View all", exact: true }));
     await expect(page.getByRole("button", { name: "Scan again" })).toHaveCount(0);
     await expectNoDocumentOverflow(page);

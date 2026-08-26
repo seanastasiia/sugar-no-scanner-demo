@@ -1172,6 +1172,11 @@ export function ScannerApp() {
         : scanHasNoRatedResults
           ? "No products with verified Sugar.no fit found"
           : statusMessage;
+  const resolvedResultStatusIsRedundant =
+    networkOnline &&
+    visibleTrayIds.length > 0 &&
+    pendingProductIds.size === 0 &&
+    (recognitionState === "matched" || recognitionState === "retained");
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -1361,23 +1366,29 @@ export function ScannerApp() {
               </button>
             </div>
 
-            <div className={styles.stageStatus} role="status" aria-live="polite">
-              {recognitionState === "scanning" ? (
-                <LoaderCircle className={styles.spin} aria-hidden="true" size={17} />
-              ) : recognitionState === "matched" || recognitionState === "retained" ? (
-                <Check aria-hidden="true" size={17} />
-              ) : recognitionState === "not_sure" || recognitionState === "error" || recognitionState === "unavailable" || recognitionState === "rate_limited" ? (
-                <Info aria-hidden="true" size={17} />
-              ) : (
-                <ScanLine aria-hidden="true" size={17} />
-              )}
-              <span>{networkOnline ? displayedStatusMessage : "Offline — recognition paused"}</span>
-              {source === "camera" && (recognitionState === "unavailable" || recognitionState === "rate_limited" || scanHasNoRatedResults) ? (
-                <button className={styles.recognitionRetry} type="button" onClick={scanAgain}>
-                  <RefreshCw aria-hidden="true" size={15} /> Try again
-                </button>
-              ) : null}
-            </div>
+            {resolvedResultStatusIsRedundant ? (
+              <span className={styles.screenReaderStatus} role="status" aria-live="polite">
+                {displayedStatusMessage}
+              </span>
+            ) : (
+              <div className={styles.stageStatus} data-testid="stage-status-pill" role="status" aria-live="polite">
+                {recognitionState === "scanning" ? (
+                  <LoaderCircle className={styles.spin} aria-hidden="true" size={17} />
+                ) : recognitionState === "matched" || recognitionState === "retained" ? (
+                  <Check aria-hidden="true" size={17} />
+                ) : recognitionState === "not_sure" || recognitionState === "error" || recognitionState === "unavailable" || recognitionState === "rate_limited" ? (
+                  <Info aria-hidden="true" size={17} />
+                ) : (
+                  <ScanLine aria-hidden="true" size={17} />
+                )}
+                <span>{networkOnline ? displayedStatusMessage : "Offline — recognition paused"}</span>
+                {source === "camera" && (recognitionState === "unavailable" || recognitionState === "rate_limited" || scanHasNoRatedResults) ? (
+                  <button className={styles.recognitionRetry} type="button" onClick={scanAgain}>
+                    <RefreshCw aria-hidden="true" size={15} /> Try again
+                  </button>
+                ) : null}
+              </div>
+            )}
             <p className={styles.privacyNoteStage}>Frames are analyzed, never stored.</p>
           </div>
 

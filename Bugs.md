@@ -13,6 +13,7 @@ This file tracks open limitations and only the most recent resolved regressions.
 
 ## Recently resolved
 
+- **2026-08-26: completed scans repeated the same product count in a dark camera banner and the compact results sheet.** The resolved-success banner is now visually removed; its screen-reader announcement remains, while loading and error feedback stay visible.
 - **2026-08-26: products without catalog images appeared as empty gray squares.** Result cards now prefer the exact catalog/Barbora image and fall back to a device-only crop of the recognized package from the current scene.
 - **2026-08-26: green, yellow and red camera markers had inconsistent visual sizes.** All rated fit discs, including the leading result, now render at the same 46 px diameter while the full product outline remains the larger touch target.
 - **2026-08-26: the first filled amber fit pill used white text with insufficient contrast.** The label now uses dark `#2D2106` text, reaching 6.97:1 contrast; the full Mobile Safari accessibility suite passes.
