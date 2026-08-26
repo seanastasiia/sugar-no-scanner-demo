@@ -21,7 +21,7 @@ Never collapse these states. A confident visual identity may still have no exact
 - Gemini may read packaging, boxes, barcodes and tightly gated shelf-label text. It may not invent nutrition, an exact retailer SKU, a price or a fit.
 - A product without both verified protein and total sugar remains neutral and receives no overall fit marker.
 - `Great fit`, `Moderate fit` and `Low fit` are the only user-facing fit states. The internal numeric score is for deterministic ordering, not display.
-- Camera overlays appear only on products with a complete fit. Identity-only products remain in the result list as `Nutrition not verified online`.
+- Camera overlays and final comparison cards appear only on products with a complete fit. Identity-only products are visible only while exact nutrition lookup is pending, then disappear after a miss.
 - Repeated facings of one SKU count as one product, not several recognition successes.
 - A retailer link or crossed price requires an exact SKU. A possible candidate never reaches the UI.
 - `Cheaper at Barbora` requires a trusted physical shelf price and a lower current exact Barbora offer.
@@ -255,7 +255,7 @@ Never collapse these states. A confident visual identity may still have no exact
 
 **Guardrail:** Use one best-fit-first vertical list for full comparison. Keep the fit attached to each product. Remove repeated legends, generic source accordions and explanations that do not change the next action.
 
-**Regression:** Confirm the first rated row is the highest fit and unresolved products follow without rank.
+**Regression:** Confirm the first rated row is the highest fit and unresolved products disappear after lookup without a rank or price-only card.
 
 ### 28. Camera markers must be compact and semantic
 

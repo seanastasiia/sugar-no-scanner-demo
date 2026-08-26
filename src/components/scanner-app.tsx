@@ -35,7 +35,7 @@ import {
   type SignalCompleteness
 } from "@/lib/match-presentation";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
-import { hasSugarNoRating } from "@/lib/rating-visibility";
+import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
 import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { compareFairCohorts } from "@/lib/scoring";
 import { mergeUploadScanResults, uploadScanCrops, type UploadScanCrop } from "@/lib/upload-scan";
@@ -980,48 +980,63 @@ export function ScannerApp() {
     return () => observer.disconnect();
   }, []);
 
-  const selectedPayload = selectedId ? products[selectedId] : undefined;
   const detectionById = useMemo(
     () => Object.fromEntries(detections.map((detection) => [detection.productId, detection])),
     [detections]
   );
-  const selectedDetection = selectedId ? detectionById[selectedId] : undefined;
-  const loadedTray = tray.map((id) => products[id]?.product).filter(Boolean) as ScoredProduct[];
   const productById = useMemo(
     () => Object.fromEntries(Object.entries(products).map(([id, payload]) => [id, payload.product])),
     [products]
-  );
-  const ratedDetections = useMemo(
-    () =>
-      detections.filter(
-        (detection) => hasSugarNoRating(products[detection.productId]?.product)
-      ),
-    [detections, products]
-  );
-  const fairComparison = useMemo(() => compareFairCohorts(loadedTray), [loadedTray]);
-  const bestId = globalBestProductId(fairComparison);
-  const ratedCount = ratedDetections.length;
-  const compactSheetTitle = `${tray.length} ${tray.length === 1 ? "product" : "products"}`;
-  const rankedTrayIds = useMemo(
-    () => rankScanProductIds(tray, productById),
-    [productById, tray]
-  );
-  const rankedRatedIds = useMemo(
-    () => rankedTrayIds.filter((id) => hasSugarNoRating(productById[id])),
-    [productById, rankedTrayIds]
   );
   const pendingProductIds = useMemo(
     () => new Set([...loadingProductIds, ...enrichingProductIds]),
     [enrichingProductIds, loadingProductIds]
   );
+  const ratedTrayIds = useMemo(
+    () => ratedScanProductIds(tray, productById),
+    [productById, tray]
+  );
+  const visibleTrayIds = useMemo(
+    () => displayableScanProductIds(tray, productById, pendingProductIds),
+    [pendingProductIds, productById, tray]
+  );
+  const visibleTrayIdSet = useMemo(() => new Set(visibleTrayIds), [visibleTrayIds]);
+  const ratedTrayIdSet = useMemo(() => new Set(ratedTrayIds), [ratedTrayIds]);
+  const loadedTray = ratedTrayIds.map((id) => products[id]?.product).filter(Boolean) as ScoredProduct[];
+  const ratedDetections = useMemo(
+    () => detections.filter((detection) => ratedTrayIdSet.has(detection.productId)),
+    [detections, ratedTrayIdSet]
+  );
+  const fairComparison = useMemo(() => compareFairCohorts(loadedTray), [loadedTray]);
+  const bestId = globalBestProductId(fairComparison);
+  const ratedCount = ratedDetections.length;
+  const compactSheetTitle = `${visibleTrayIds.length} ${visibleTrayIds.length === 1 ? "product" : "products"}`;
+  const rankedTrayIds = useMemo(
+    () => rankScanProductIds(visibleTrayIds, productById),
+    [productById, visibleTrayIds]
+  );
+  const rankedRatedIds = useMemo(
+    () => rankedTrayIds.filter((id) => hasSugarNoRating(productById[id])),
+    [productById, rankedTrayIds]
+  );
   const firstRankedId = rankedRatedIds[0] || rankedTrayIds[0];
+  const effectiveSelectedId = selectedId && visibleTrayIdSet.has(selectedId)
+    ? selectedId
+    : bestId || firstRankedId || null;
+  const selectedPayload = effectiveSelectedId ? products[effectiveSelectedId] : undefined;
+  const selectedDetection = effectiveSelectedId ? detectionById[effectiveSelectedId] : undefined;
+  const resultsAreExpanded = resultsExpanded && visibleTrayIds.length > 0;
   const sheetPreviewIds = rankedTrayIds.slice(0, 4);
+  const scanHasNoRatedResults =
+    recognitionState === "matched" && tray.length > 0 && visibleTrayIds.length === 0 && pendingProductIds.size === 0;
   const displayedStatusMessage =
     recognitionState === "matched" && scanMode === "nutrition-label" && ratedCount > 0
       ? "Sugar.no fit ready from the nutrition label"
-      : recognitionState === "matched" && tray.length > 0 && pendingProductIds.size === 0
-      ? `${tray.length} ${tray.length === 1 ? "product" : "products"} · ${ratedCount} with Sugar.no fit`
-      : statusMessage;
+      : recognitionState === "matched" && visibleTrayIds.length > 0 && pendingProductIds.size === 0
+        ? `${visibleTrayIds.length} ${visibleTrayIds.length === 1 ? "product" : "products"} · ${ratedCount} with Sugar.no fit`
+        : scanHasNoRatedResults
+          ? "No products with verified Sugar.no fit found"
+          : statusMessage;
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -1056,7 +1071,7 @@ export function ScannerApp() {
   }, []);
 
   useEffect(() => {
-    if (!resultsExpanded) return;
+    if (!resultsAreExpanded) return;
     const focusFrame = window.requestAnimationFrame(() => resultsSheetRef.current?.focus());
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") closeResults();
@@ -1067,7 +1082,7 @@ export function ScannerApp() {
       window.cancelAnimationFrame(focusFrame);
       window.removeEventListener("keydown", handleKey);
     };
-  }, [closeResults, resultsExpanded]);
+  }, [closeResults, resultsAreExpanded]);
 
   useEffect(() => {
     if (!demoOpen) return;
@@ -1100,9 +1115,9 @@ export function ScannerApp() {
       <section className={styles.experience} aria-label={`${sourceLabel(source)} scanner`}>
           <div
             ref={stageRef}
-            className={`${styles.stage} ${tray.length ? styles.stageWithResults : ""}`}
-            inert={resultsExpanded || demoOpen}
-            aria-hidden={resultsExpanded || demoOpen || undefined}
+            className={`${styles.stage} ${visibleTrayIds.length ? styles.stageWithResults : ""}`}
+            inert={resultsAreExpanded || demoOpen}
+            aria-hidden={resultsAreExpanded || demoOpen || undefined}
           >
             {cameraState === "live" || cameraState === "requesting" ? (
               <video
@@ -1158,7 +1173,7 @@ export function ScannerApp() {
               const isBest = bestId === detection.productId;
               return (
                 <button
-                  className={`${styles.detectionBox} ${toneClass(presentation.tone)} ${completenessClass(presentation.completeness)} ${selectedId === detection.productId ? styles.selectedBox : ""} ${isBest ? styles.bestBox : ""}`}
+                  className={`${styles.detectionBox} ${toneClass(presentation.tone)} ${completenessClass(presentation.completeness)} ${effectiveSelectedId === detection.productId ? styles.selectedBox : ""} ${isBest ? styles.bestBox : ""}`}
                   data-testid="rated-detection-marker"
                   style={{
                     left: `${mappedBox.x * 100}%`,
@@ -1218,7 +1233,7 @@ export function ScannerApp() {
                 <ScanLine aria-hidden="true" size={17} />
               )}
               <span>{networkOnline ? displayedStatusMessage : "Offline — recognition paused"}</span>
-              {source === "camera" && (recognitionState === "unavailable" || recognitionState === "rate_limited") ? (
+              {source === "camera" && (recognitionState === "unavailable" || recognitionState === "rate_limited" || scanHasNoRatedResults) ? (
                 <button className={styles.recognitionRetry} type="button" onClick={scanAgain}>
                   <RefreshCw aria-hidden="true" size={15} /> Try again
                 </button>
@@ -1227,17 +1242,17 @@ export function ScannerApp() {
             <p className={styles.privacyNoteStage}>Frames are analyzed, never stored.</p>
           </div>
 
-          {tray.length ? (
+          {visibleTrayIds.length ? (
             <aside
               ref={resultsSheetRef}
-              className={`${styles.resultsSheet} ${resultsExpanded ? styles.resultsExpanded : styles.resultsCollapsed}`}
-              role={resultsExpanded ? "dialog" : undefined}
-              aria-modal={resultsExpanded ? "true" : undefined}
+              className={`${styles.resultsSheet} ${resultsAreExpanded ? styles.resultsExpanded : styles.resultsCollapsed}`}
+              role={resultsAreExpanded ? "dialog" : undefined}
+              aria-modal={resultsAreExpanded ? "true" : undefined}
               aria-label="Products from this scan"
-              tabIndex={resultsExpanded ? -1 : undefined}
+              tabIndex={resultsAreExpanded ? -1 : undefined}
             >
               <div className={styles.sheetChrome}>
-                {resultsExpanded ? (
+                {resultsAreExpanded ? (
                   <button
                     className={styles.sheetIconButton}
                     type="button"
@@ -1277,7 +1292,7 @@ export function ScannerApp() {
                 )}
               </div>
 
-              {!resultsExpanded ? (
+              {!resultsAreExpanded ? (
                 <div className={styles.sheetPreview} aria-label="Product result preview">
                   {sheetPreviewIds.map((id) => {
                     const item = products[id]?.product;
@@ -1341,7 +1356,7 @@ export function ScannerApp() {
                 </div>
               ) : (
                 <div className={styles.sheetContent} id="scan-results-content">
-                  {tray.length === 1 ? (
+                  {visibleTrayIds.length === 1 ? (
                     <div className={styles.scanSummary}>
                       <div>
                         <strong>
@@ -1363,7 +1378,7 @@ export function ScannerApp() {
                     </div>
                   ) : null}
 
-                  {tray.length > 1 ? (
+                  {visibleTrayIds.length > 1 ? (
                     <section className={styles.rankingSection} aria-labelledby="scan-ranking-title">
                       <div className={styles.rankingHeading}>
                         <h2 id="scan-ranking-title">
@@ -1390,7 +1405,7 @@ export function ScannerApp() {
                                     ? `Rank ${rank}, ${itemBrand} ${itemName}, ${presentation.label}`
                                     : `${itemBrand} ${itemName}, nutrition not verified online`
                                 }
-                                className={`${styles.rankedProduct} ${selectedId === id ? styles.activeRankedProduct : ""}`}
+                                className={`${styles.rankedProduct} ${effectiveSelectedId === id ? styles.activeRankedProduct : ""}`}
                                 onClick={() => {
                                   manualSelectionRef.current = true;
                                   setSelectedId(id);
@@ -1430,7 +1445,7 @@ export function ScannerApp() {
                     <ProductResult
                       payload={selectedPayload}
                       detection={selectedDetection}
-                      showSummary={tray.length === 1}
+                      showSummary={visibleTrayIds.length === 1}
                       onAlternative={(id) => {
                         manualSelectionRef.current = true;
                         setSelectedId(id);
@@ -1439,7 +1454,7 @@ export function ScannerApp() {
                       }}
                       onRetailer={(id) => track("retailer_link_clicked", source, id)}
                     />
-                  ) : selectedDetection?.identity && selectedId && pendingProductIds.has(selectedId) ? (
+                  ) : selectedDetection?.identity && effectiveSelectedId && pendingProductIds.has(effectiveSelectedId) ? (
                     <LoadingProductResult detection={selectedDetection} />
                   ) : selectedDetection?.identity ? (
                     <RecognizedProductResult

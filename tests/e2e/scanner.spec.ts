@@ -719,7 +719,7 @@ test("a long online-store screenshot is scanned in four passes and opens one mer
   await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
 });
 
-test("one-signal and identity-only products remain neutral without an overall fit", async ({ page }) => {
+test("one-signal, identity-only and price-only products disappear after lookup", async ({ page }) => {
   const limitedId = "barbora:qa-protein-only";
   const identityId = "barbora:qa-identity-only";
   await page.route("**/api/recognize", async (route) => {
@@ -745,10 +745,19 @@ test("one-signal and identity-only products remain neutral without an overall fi
             category: "Snack",
             matchKind: "barbora"
           },
-          shelfPrice: null,
+          shelfPrice: index === 1
+            ? { amount: 0.69, currency: "EUR", observedText: "0 69", confidence: 0.96 }
+            : null,
           retailerOffer: null
         }))
       })
+    });
+  });
+  await page.route("**/api/resolve-products", async (route) => {
+    const { detections } = route.request().postDataJSON() as { detections: unknown[] };
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ detections, latencyMs: 1, imageStored: false })
     });
   });
   await page.route("**/api/products/**", async (route) => {
@@ -791,18 +800,13 @@ test("one-signal and identity-only products remain neutral without an overall fi
 
   await unlock(page);
   await chooseSavedPhoto(page, "limited-and-identity.png");
-  const savedResults = page.getByRole("dialog", { name: "Products from this scan" });
-  await expect(savedResults).toBeVisible({ timeout: 10_000 });
-  await expect(savedResults.getByText("2 products identified", { exact: true })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("No products with verified Sugar.no fit found", { timeout: 10_000 });
+  await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
   await expect(page.getByTestId("rated-detection-marker")).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Products identified" })).toBeVisible();
-  await expect(page.getByText("No exact source-backed nutrition was found online for this scan", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Sugar.no badge").getByText("Sugar.no limited view · 1/2", { exact: true })).toBeVisible();
-  await expect(page.getByText("Limited view · 1 of 2 signals", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("€0.69", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Nutrition not verified online", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
-  await page.getByLabel("Products ranked by Sugar.no fit").getByRole("button", { name: /QA identity only/ }).click();
-  await expect(page.getByText("Nutrition not verified online", { exact: true }).last()).toBeVisible();
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
 });
 
@@ -898,16 +902,14 @@ test("an unrated package can receive a Sugar.no fit from automatic online enrich
   });
 
   await unlock(page);
-  await expect(page.getByRole("status")).toContainText("2 products · 1 with Sugar.no fit", { timeout: 8_000 });
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 8_000 });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByText("1 of 2 ready to compare", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Other Other Snack, nutrition not verified online/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
+  await expect(page.getByText("Other Snack", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: /Sproud Barista 1L/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
-  const ranking = page.getByLabel("Products ranked by Sugar.no fit");
-  await expect(ranking.getByRole("button", { name: /Rank 1, Sproud Sproud Barista 1L, Great fit/ })).toBeVisible();
-  await expect(ranking.getByText("Protein 2.1g · Sugar 1.8g", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Sugar.no badge")).toHaveCount(0);
+  await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
 });
 
 test("a broad live shelf scan keeps several different Sugar.no-rated products in one result", async ({ page }) => {
@@ -1050,7 +1052,8 @@ test("live camera shows package identities before optional retailer enrichment f
   expect(enrichmentFinished).toBe(false);
   releaseEnrichment();
   await expect.poll(() => enrichmentFinished).toBe(true);
-  await expect(page.getByRole("status")).toContainText("2 products · 0 with Sugar.no fit");
+  await expect(page.getByRole("status")).toContainText("No products with verified Sugar.no fit found");
+  await expect(page.getByLabel("Product result preview")).toHaveCount(0);
 });
 
 test("a not-sure shelf completion retry retains and locks the first valid product", async ({ page }) => {
@@ -1215,23 +1218,34 @@ test("live camera groups repeated packs, holds the result and replaces it only a
         latencyMs: 800,
         model: "gemini-3.7-flash",
         imageStored: false,
-        detections: identities.map((name, index) => ({
-          productId: `visual:${name.toLowerCase().replaceAll(" ", "-")}`,
-          catalogProductId: null,
-          confidence: 0.96 - index * 0.01,
-          box: { x: 0.08 + index * 0.2, y: 0.2, width: 0.16, height: 0.5 },
-          observedText: name,
-          identity: {
-            brand: currentProduct === "coke" ? "Coca-Cola" : "Activia",
-            name,
-            variant: null,
-            packSize: currentProduct === "coke" ? "330 ml" : "4 x 120 g",
-            category: null,
-            matchKind: "visual_only"
-          },
-          shelfPrice: null,
-          retailerOffer: null
-        }))
+        detections: identities.map((name, index) => {
+          const productId = `visual:${name.toLowerCase().replaceAll(" ", "-")}`;
+          return {
+            productId,
+            catalogProductId: null,
+            confidence: 0.96 - index * 0.01,
+            box: { x: 0.08 + index * 0.2, y: 0.2, width: 0.16, height: 0.5 },
+            observedText: name,
+            identity: {
+              brand: currentProduct === "coke" ? "Coca-Cola" : "Activia",
+              name,
+              variant: null,
+              packSize: currentProduct === "coke" ? "330 ml" : "4 x 120 g",
+              category: null,
+              matchKind: "web_search"
+            },
+            shelfPrice: null,
+            retailerOffer: null,
+            inlineProduct: ratedInlineProduct({
+              id: productId,
+              brand: currentProduct === "coke" ? "Coca-Cola" : "Activia",
+              name,
+              score: currentProduct === "coke" ? 28 : 62,
+              protein: currentProduct === "coke" ? 0 : 4.1,
+              sugar: currentProduct === "coke" ? 10.6 : 8.4
+            })
+          };
+        })
       })
     });
   });
@@ -1245,9 +1259,8 @@ test("live camera groups repeated packs, holds the result and replaces it only a
   });
   await unlock(page);
 
-  await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit", { timeout: 10_000 });
-  await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit");
-  await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open "]')).toHaveCount(0);
+  await expect(page.getByRole("status")).toContainText("1 product with Sugar.no fit", { timeout: 10_000 });
+  await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toBeVisible();
   const scanAgainButton = page.getByRole("button", { name: "Scan again" });
@@ -1261,7 +1274,7 @@ test("live camera groups repeated packs, holds the result and replaces it only a
 
   currentProduct = "activia";
   await page.getByRole("button", { name: "Scan again" }).click();
-  await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit", { timeout: 10_000 });
+  await expect(page.getByRole("status")).toContainText("1 product with Sugar.no fit", { timeout: 10_000 });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Activia Forest Berries Yogurt/ })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toHaveCount(0);
@@ -1269,10 +1282,23 @@ test("live camera groups repeated packs, holds the result and replaces it only a
   expect(focusModes).toEqual([false, false, false, false]);
 });
 
-test("a product outside the scored catalog is named and receives an honest price comparison", async ({ page }) => {
+test("a rated product receives an honest price comparison", async ({ page }) => {
   await unlock(page);
   await page.route("**/api/products/**", async (route) => {
-    await route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: "not_found" }) });
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        product: ratedInlineProduct({
+          id: "barbora:gaz-dz-sanpellegrino-zero-peach-0-33-l-d",
+          brand: "SAN PELLEGRINO",
+          name: "Zero Peach · Pesca & Clementina · 330 ml",
+          score: 72,
+          protein: 0,
+          sugar: 0
+        }),
+        alternatives: []
+      })
+    });
   });
   await page.route("**/api/resolve-products", async (route) => {
     const { detections } = route.request().postDataJSON() as { detections: unknown[] };
@@ -1333,7 +1359,7 @@ test("a product outside the scored catalog is named and receives an honest price
 
   await page.waitForLoadState("networkidle");
   await chooseSavedPhoto(page, "price-check.png");
-  await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit");
+  await expect(page.getByRole("status")).toContainText("1 product with Sugar.no fit");
   await expect(
     page.getByLabel("Product result preview").getByLabel("Shelf price €1.69, Barbora €0.99, cheaper at Barbora")
   ).toBeVisible();
@@ -1349,7 +1375,7 @@ test("a product outside the scored catalog is named and receives an honest price
   await page.screenshot({ path: "docs/screenshots/price-cta-compact-mobile.png" });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Zero Peach.*Pesca & Clementina.*330 ml/ })).toBeVisible();
-  await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(0);
+  await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   const comparison = page.getByLabel("Price comparison");
   await expect(comparison.getByText("Cheaper at Barbora", { exact: true })).toBeVisible();
@@ -1359,7 +1385,7 @@ test("a product outside the scored catalog is named and receives an honest price
     "href",
     "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
   );
-  await expect(page.getByText("Nutrition not verified online", { exact: true }).last()).toBeVisible();
+  await expect(page.getByText("Nutrition not verified online", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await expect(page.getByText("How this result was made", { exact: true })).toHaveCount(0);
   await comparison.scrollIntoViewIfNeeded();

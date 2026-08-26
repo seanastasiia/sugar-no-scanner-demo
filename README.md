@@ -18,7 +18,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Open Food Facts match, then exact Google Search-grounded web nutrition.
 - Internet enrichment runs after the first identity result. It is bounded to 18 seconds and never receives or stores the camera image.
-- A fit is shown only for an exact source-backed product. Otherwise the row says `Nutrition not verified online`.
+- A product remains visible while exact nutrition is being checked, then stays in the result only when source-backed protein and total sugar produce a Sugar.no fit. A shelf price by itself never creates a result card.
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
 - Product overlays use Gemini's native `box2d [ymin, xmin, ymax, xmax]` coordinates and exclude shelf labels and neighboring packages from the product box.
 - A high-confidence Latvian comma-decimal shelf label can be accepted even when the printed `€` symbol is not readable; numbers printed on a package remain excluded.
@@ -134,7 +134,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 
 1. Open production in iPhone Safari and allow camera access.
 2. Scan a shelf with more than five visible products and confirm no more than five distinct results appear.
-3. Confirm verified results gain fit labels and unresolved products remain neutral.
+3. Confirm verified results gain fit labels and unresolved products disappear after the exact lookup finishes.
 4. Open Shelf and Checkout demos and expand `View all`.
 5. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
 6. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
@@ -143,7 +143,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 
 ## Known limits
 
-- Latvia-wide coverage is not guaranteed. Private labels, unreadable variants and products without an exact public per-100 table can remain unresolved.
+- Latvia-wide coverage is not guaranteed. Private labels, unreadable variants and products without an exact public per-100 table can remain unresolved in recognition; they are hidden from the final comparison rather than shown as price-only or identity-only cards.
 - Real shelf, glare, low-light, moving-belt and price-label accuracy still require a physical store benchmark.
 - Barbora is the only connected retailer, so the demo cannot claim a market-wide best price.
 - Grounded web nutrition has variable latency and cost. Production should persist human-reviewed successful results in Supabase.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ScoredProduct } from "./types";
-import { hasSugarNoRating } from "./rating-visibility";
+import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "./rating-visibility";
 
 function product(matchScore: number | null, signalCount = matchScore === null ? 1 : 2): ScoredProduct {
   return { matchScore, ratingSignalCount: signalCount } as ScoredProduct;
@@ -16,5 +16,20 @@ describe("Sugar.no rating visibility", () => {
     expect(hasSugarNoRating(product(null))).toBe(false);
     expect(hasSugarNoRating(product(null, 1))).toBe(false);
     expect(hasSugarNoRating(undefined)).toBe(false);
+  });
+
+  it("omits a price-only identity from visible scan results", () => {
+    const products = {
+      rated: product(61),
+      "price-only": product(null, 0)
+    };
+
+    expect(ratedScanProductIds(["rated", "price-only", "missing"], products)).toEqual(["rated"]);
+    expect(displayableScanProductIds(["rated", "price-only", "missing"], products, new Set())).toEqual(["rated"]);
+  });
+
+  it("keeps an identity visible only while its nutrition lookup is pending", () => {
+    expect(displayableScanProductIds(["pending"], {}, new Set(["pending"]))).toEqual(["pending"]);
+    expect(displayableScanProductIds(["pending"], {}, new Set())).toEqual([]);
   });
 });
