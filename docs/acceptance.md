@@ -54,7 +54,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Cached result < 1 s | Deterministic/API flow observed in WebKit | Pass locally |
 | New AI p95 < 4 s | Live camera no longer waits for packshot confirmation, live retailer pages or Open Food Facts before showing the first result; server timing logs split Gemini provider time from total time. One browser regression exposes two identities while enrichment remains pending, but a physical-device production p95 sample has not been collected | Not measured |
 | Supabase migration, seed and writes | Migration and seed are reproducible | Prepared, not applied |
-| Railway HTTPS and live health check | Railway deployment `3f5df31f-0ac8-4103-b853-6c359af2df7a` succeeded for commit `dc2fe6ef7918d42685ec08bef504fdf0a9ace9b4`; `/api/health` reported the same commit. The supplied long Rimi screenshot produced four successful recognition responses and one three-product rated list | Pass in production |
+| Railway HTTPS and live health check | Railway deployment `3290d309-d48e-496f-a62e-92c4287a5590` succeeded for commit `4d9a0ef79df7542ce1bc93c56d7bb4395d8eb1a1`; `/api/health` reported the same commit, `/` returned HTTP 200, Shelf returned four products and Checkout returned three products | Pass in production |
 | Physical iPhone Safari shelf test | Requires deployed HTTPS and physical products | Not run |
 
 The deterministic scenes prove the interaction and data contract. They must not be presented as evidence of real-world computer-vision accuracy. Current release evidence is in [the project cleanup run](test-runs/2026-08-26-project-cleanup.md); historical QA logs remain available in Git history.

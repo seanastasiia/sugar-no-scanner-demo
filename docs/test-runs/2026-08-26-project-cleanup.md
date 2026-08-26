@@ -37,4 +37,12 @@ Baseline: `origin/main` at `97f97b9`.
 4. Upload a saved shelf photo; confirm the merged result contains at most five distinct rated products.
 5. Scan an unresolved product; confirm no nutrition-label action or invented rating appears.
 
-Production deployment evidence is added after the pushed commit is live and `/api/health` reports the same SHA.
+## Production evidence
+
+- GitHub `main`: `4d9a0ef79df7542ce1bc93c56d7bb4395d8eb1a1`.
+- Railway deployment: `3290d309-d48e-496f-a62e-92c4287a5590` — success.
+- `/api/health`: `status=ok` and the same commit SHA.
+- `/`: HTTP 200.
+- `sample-shelf`: `matched`, four distinct products.
+- `sample-conveyor`: `matched`, three distinct products.
+- Railway emitted a config-as-code deprecation warning; migration before 1 December 2026 is tracked in `Bugs.md`.

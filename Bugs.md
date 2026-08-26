@@ -11,6 +11,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **Open Food Facts bulk coverage is only a bootstrap.** The isolated importer is production-shaped; the checked-in layer contains five verified Latvia proof rows.
 - **Retailer snapshots age.** Checked-in product and nutrition indexes are reproducible discovery snapshots, not real-time stock or price guarantees.
 - **Grounded nutrition can be slow or unavailable.** Identity appears first; exact internet enrichment is background-only and bounded to 18 seconds.
+- **Railway config-as-code needs migration before 1 December 2026.** The current `railway.json`/`railway.toml` deployment still works, but Railway now recommends `.railway/railway.ts` and prints a deprecation warning during deploys.
 
 ## Recently resolved
 
