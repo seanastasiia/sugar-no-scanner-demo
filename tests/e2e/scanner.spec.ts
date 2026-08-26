@@ -611,6 +611,8 @@ test("saved images are resized client-side and fail closed without a provider ke
   await expect(page.getByRole("status")).toContainText("Recognition is unavailable");
   await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
   await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
+  await expect(page.getByText("Saved shelf or checkout photo", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Back to live camera" })).toBeVisible();
 });
 
 test("a landscape saved shelf is scanned as a full frame plus three row close-ups", async ({ page }) => {
@@ -1400,7 +1402,8 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
 
   await page.waitForLoadState("networkidle");
   await chooseSavedPhoto(page, "price-check.png");
-  await expect(page.getByRole("status")).toContainText("1 product with Sugar.no fit");
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
+  await expect(page.getByText("Saved shelf or checkout photo", { exact: true })).toHaveCount(0);
   await expect(
     page.getByLabel("Product result preview").getByLabel("Shelf price €1.69, Barbora €0.99, cheaper at Barbora")
   ).toBeVisible();

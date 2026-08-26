@@ -10,6 +10,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 - Camera starts after permission without requiring a shutter action.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
+- Saved-photo views omit the redundant source badge and keep only the `Back to live` action in the top overlay.
 - A scan keeps at most five distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
 - Rated products are ordered best fit first and use `Great fit`, `Moderate fit`, or `Low fit`.
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.

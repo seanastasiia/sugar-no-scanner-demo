@@ -260,6 +260,10 @@
   justify-content: space-between;
 }
 
+.stageTopbarEnd {
+  justify-content: flex-end;
+}
+
 .stageTopbar > span {
   padding: 7px 10px;
   border: 1px solid rgb(255 255 255 / 24%);

@@ -1204,8 +1204,12 @@ export function ScannerApp() {
               );
             })}
 
-            <div className={styles.stageTopbar}>
-              <span>{scanMode === "nutrition-label" ? "Nutrition label" : sourceLabel(source)}</span>
+            <div
+              className={`${styles.stageTopbar} ${source === "upload" && scanMode === "products" ? styles.stageTopbarEnd : ""}`}
+            >
+              {source === "upload" && scanMode === "products" ? null : (
+                <span>{scanMode === "nutrition-label" ? "Nutrition label" : sourceLabel(source)}</span>
+              )}
               <button
                 ref={source === "camera" && scanMode === "products" ? demoTriggerRef : undefined}
                 className={styles.demoTrigger}
