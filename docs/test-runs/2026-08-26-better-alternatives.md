@@ -14,7 +14,8 @@ Code commit: `5d8877d01d507b254ab6ba9c7c99de5e8ea0895a`.
 - Related Vitest files: **33/33 passed**.
 - `npm run verify`: **passed** — lint, typecheck, **141/141 unit/integration tests**, production build and standalone asset preparation.
 - `CI=1 npm run test:e2e`: **25/25 Mobile Safari scenarios passed**.
-- Railway build and `/api/health`: recorded after the production deployment below.
+- Railway production on `c9e9042a`: **passed** — `/api/health` returned `status: ok` with 9,707 active food products and 7,433 products with automatic fit.
+- Production smoke: **passed** — root returned HTTP 200; the salty-peanut Barebells protein bar returned only two interchangeable 55 g protein bars with equal-or-better scores (94 and 91), and both exact Barbora offers resolved at €2.79.
 
 ## Owner product check
 
