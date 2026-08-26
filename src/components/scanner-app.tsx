@@ -1303,6 +1303,11 @@ export function ScannerApp() {
                   {sheetPreviewIds.map((id) => {
                     const item = products[id]?.product;
                     const detection = detectionById[id];
+                    const isRated = hasSugarNoRating(item);
+                    const rank = isRated ? rankedRatedIds.indexOf(id) + 1 : null;
+                    const previewPresentation = isRated ? overlayMatchPresentation(item) : null;
+                    const sugar = item?.nutrientsPer100g.totalSugarG;
+                    const previewBasisLabel = item?.nutritionBasis === "100ml" ? "100 milliliters" : "100 grams";
                     const retailerOffer = detection?.retailerOffer?.exactSku
                       ? detection.retailerOffer
                       : null;
@@ -1320,6 +1325,11 @@ export function ScannerApp() {
                         <button
                           className={styles.sheetPreviewOpen}
                           type="button"
+                          aria-label={
+                            isRated && previewPresentation
+                              ? `Rank ${rank}, ${item.brand} ${item.shortName}, ${previewPresentation.label}, Sugar ${sugar} grams per ${previewBasisLabel}`
+                              : `${item?.brand || detection?.identity?.brand || "Product"} ${item?.shortName || detection?.identity?.name || "identified product"}, nutrition not verified online`
+                          }
                           onClick={() => {
                             manualSelectionRef.current = true;
                             setSelectedId(id);
@@ -1327,13 +1337,22 @@ export function ScannerApp() {
                             track("result_opened", source, id);
                           }}
                         >
+                          <span
+                            className={`${styles.sheetPreviewRank} ${isRated ? "" : styles.rankPending}`}
+                            aria-hidden="true"
+                          >
+                            {rank ? `#${rank}` : "—"}
+                          </span>
                           <div className={styles.sheetPreviewThumb} aria-hidden="true">
                             {item?.imageUrl ? <Image src={item.imageUrl} alt="" fill sizes="42px" /> : null}
                           </div>
                           <div className={styles.sheetPreviewCopy}>
                             <span>{item?.brand || detection?.identity?.brand || "Product"}</span>
                             {item && hasSugarNoRating(item) ? (
-                              <MatchPill product={item} />
+                              <>
+                                <MatchPill product={item} />
+                                <small className={styles.sheetPreviewSugar}>Sugar {sugar}g</small>
+                              </>
                             ) : (
                               <small>{pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}</small>
                             )}

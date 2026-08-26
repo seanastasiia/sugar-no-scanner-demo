@@ -679,7 +679,7 @@
 
 .sheetPreviewCard {
   display: grid;
-  min-width: 158px;
+  min-width: 184px;
   min-height: 68px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -689,7 +689,7 @@
 }
 
 .sheetPreviewCardDeal {
-  min-width: 258px;
+  min-width: 284px;
   grid-template-columns: minmax(0, 1fr) 94px;
 }
 
@@ -697,14 +697,27 @@
   display: grid;
   min-width: 0;
   min-height: 66px;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 28px 42px minmax(0, 1fr);
   align-items: center;
-  gap: 9px;
-  padding: 8px 10px 8px 8px;
+  gap: 7px;
+  padding: 8px;
   border: 0;
   background: transparent;
   color: inherit;
   text-align: left;
+}
+
+.sheetPreviewRank {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--cream);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
 }
 
 .sheetPreviewBuy {
@@ -756,7 +769,7 @@
 .sheetPreviewCopy {
   display: grid;
   min-width: 0;
-  gap: 6px;
+  gap: 3px;
 }
 
 .sheetPreviewCopy > span {
@@ -771,6 +784,16 @@
 .sheetPreviewOpen small {
   font-size: 10px;
   font-weight: 750;
+}
+
+.sheetPreviewOpen .sheetPreviewSugar {
+  overflow: hidden;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  opacity: 0.72;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sheetContent {

@@ -271,6 +271,9 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await openDemoScene(page, "Shelf demo");
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
   const shelfPreview = page.getByLabel("Product result preview");
+  await expect(shelfPreview.getByText(/^#[1-4]$/)).toHaveCount(4);
+  await expect(shelfPreview.getByText(/^Sugar \d+(?:\.\d+)?g$/)).toHaveCount(4);
+  await expect(shelfPreview.getByRole("button").first()).toHaveAccessibleName(/^Rank 1,.*Sugar .* grams per 100 grams$/);
   const shelfDeal = shelfPreview.getByLabel("Demo shelf price €3.49, Barbora €2.79, cheaper at Barbora");
   await expect(shelfDeal).toBeVisible();
   await expect(shelfDeal.getByText("€3.49", { exact: true })).toHaveCSS("text-decoration-line", "line-through");

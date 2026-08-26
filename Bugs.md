@@ -13,6 +13,7 @@ This file tracks open limitations and only the most recent resolved regressions.
 
 ## Recently resolved
 
+- **2026-08-26: compact product previews hid their ranking and nutrition context.** Rated preview cards now show the same `#1`, `#2`, `#3…` order as the expanded comparison plus a small total-sugar value per 100 g or 100 ml.
 - **2026-08-26: Similar options shared one ambiguous Barbora CTA and showed no per-card price.** Every exact Barbora alternative now has its own non-blocking `Buy online` action and current price; `Cheaper online` is reserved for the same SKU with a higher scanned shelf price.
 - **2026-08-26: price-only and identity-only products remained in the final list as incomplete results.** Unresolved identities now disappear when the exact nutrition lookup finishes; a shelf price or retailer offer is shown only alongside a source-backed Sugar.no fit.
 - **2026-08-25: live Gemini boxes could drift onto shelf labels and Latvian prices without a readable `€` were always discarded.** Recognition now uses Gemini's native 0-1000 `box2d` convention with tight-package instructions, higher live-frame resolution and guarded comma-decimal shelf prices.
