@@ -38,6 +38,11 @@ import {
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
 import { barboraProductSlug, isExactOnlineSaving } from "@/lib/online-offer";
+import {
+  mapWithConcurrency,
+  mergeEnrichedDetections,
+  mergeProgressiveEnrichment
+} from "@/lib/product-enrichment";
 import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { compareFairCohorts } from "@/lib/scoring";
 import { mergeUploadScanResults, uploadScanCrops, type UploadScanCrop } from "@/lib/upload-scan";
@@ -271,40 +276,6 @@ function trapFocus(event: KeyboardEvent, container: HTMLElement) {
   }
 }
 
-function detectionResolutionRank(detection: ProductDetection): number {
-  if (detection.inlineProduct || detection.catalogProductId) return 3;
-  if (detection.identity?.matchKind && detection.identity.matchKind !== "visual_only") return 2;
-  return 1;
-}
-
-function mergeEnrichedDetections(
-  initialDetections: ProductDetection[],
-  resolvedDetections: ProductDetection[]
-): ProductDetection[] {
-  return initialDetections.map((initial, index) => {
-    const resolved = resolvedDetections[index];
-    if (!resolved) return initial;
-    const preferred = detectionResolutionRank(resolved) >= detectionResolutionRank(initial) ? resolved : initial;
-    const mergedIdentity = preferred.identity
-      ? {
-          ...initial.identity,
-          ...preferred.identity,
-          variant: preferred.identity.variant || initial.identity?.variant || null,
-          packSize: preferred.identity.packSize || initial.identity?.packSize || null,
-          category: preferred.identity.category || initial.identity?.category || null
-        }
-      : initial.identity;
-    return {
-      ...initial,
-      ...preferred,
-      identity: mergedIdentity,
-      shelfPrice: preferred.shelfPrice || initial.shelfPrice || null,
-      retailerOffer: preferred.retailerOffer || initial.retailerOffer || null,
-      inlineProduct: preferred.inlineProduct || initial.inlineProduct || null
-    };
-  });
-}
-
 export function ScannerApp() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -424,42 +395,56 @@ export function ScannerApp() {
       enrichmentAbortRef.current = controller;
       setEnrichingProductIds(initialDetections.map((detection) => detection.productId));
       try {
-        const response = await fetch("/api/resolve-products", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ detections: initialDetections }),
-          signal: controller.signal
-        });
-        if (!response.ok || controller.signal.aborted || requestRevision !== cameraRequestRef.current) return;
-        const result = (await response.json()) as RecognitionEnrichmentResponse;
-        if (controller.signal.aborted || requestRevision !== cameraRequestRef.current || !result.detections.length) return;
-        const enriched = dedupeProductDetections(
-          mergeEnrichedDetections(initialDetections, result.detections)
-        ).slice(0, MAX_SCAN_PRODUCTS);
-        const ids = enriched.map((detection) => detection.productId);
-        const inlineEntries: Array<[string, ProductPayload]> = enriched.flatMap((detection) =>
-          detection.inlineProduct
-            ? [[detection.productId, { product: detection.inlineProduct, alternatives: [] as ScoredProduct[] }]]
-            : []
-        );
-        if (inlineEntries.length) {
-          setProducts((current) => ({ ...current, ...Object.fromEntries(inlineEntries) }));
-        }
-        setDetections(enriched);
-        setTray(ids);
-        manualSelectionRef.current = false;
-        setSelectedId(ids[0] || null);
-        const catalogIds = enriched
-          .map((detection) =>
-            detection.inlineProduct
+        await mapWithConcurrency(initialDetections, 5, async (initialDetection) => {
+          try {
+            const response = await fetch("/api/resolve-products", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ detections: [initialDetection] }),
+              signal: controller.signal
+            });
+            if (!response.ok || controller.signal.aborted || requestRevision !== cameraRequestRef.current) return;
+            const result = (await response.json()) as RecognitionEnrichmentResponse;
+            if (controller.signal.aborted || requestRevision !== cameraRequestRef.current || !result.detections.length) return;
+            const enrichedDetection = mergeEnrichedDetections([initialDetection], result.detections)[0];
+            if (!enrichedDetection) return;
+            if (enrichedDetection.inlineProduct) {
+              setProducts((current) => ({
+                ...current,
+                [enrichedDetection.productId]: {
+                  product: enrichedDetection.inlineProduct!,
+                  alternatives: [] as ScoredProduct[]
+                }
+              }));
+            }
+            setDetections((current) =>
+              dedupeProductDetections(
+                mergeProgressiveEnrichment(current, initialDetection, result.detections[0])
+              ).slice(0, MAX_SCAN_PRODUCTS)
+            );
+            setTray((current) => [
+              ...new Set(
+                current.map((id) =>
+                  id === initialDetection.productId ? enrichedDetection.productId : id
+                )
+              )
+            ]);
+            setSelectedId((current) =>
+              current === initialDetection.productId ? enrichedDetection.productId : current
+            );
+            const catalogId = enrichedDetection.inlineProduct
               ? null
-              : detection.catalogProductId ||
-                (["barbora", "open_food_facts"].includes(detection.identity?.matchKind || "")
-                  ? detection.productId
-                  : null)
-          )
-          .filter((id): id is string => Boolean(id));
-        void hydrateProducts(catalogIds);
+              : enrichedDetection.catalogProductId ||
+                (["barbora", "open_food_facts"].includes(enrichedDetection.identity?.matchKind || "")
+                  ? enrichedDetection.productId
+                  : null);
+            if (catalogId) void hydrateProducts([catalogId]);
+          } finally {
+            setEnrichingProductIds((current) =>
+              current.filter((id) => id !== initialDetection.productId)
+            );
+          }
+        });
       } catch (error) {
         if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
         // The fast recognition result remains useful if optional retailer enrichment fails.

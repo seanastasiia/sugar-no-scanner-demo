@@ -107,7 +107,7 @@ Use the project change lanes in `AGENTS.md`:
 ## API
 
 - `POST /api/recognize`: image data URL plus source type, returns bounded detections.
-- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. Five products resolve in one bounded outbound wave, so a typical shelf does not wait for a second queue; successful exact web lookups remain cached for 24 hours in the running service.
+- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products; successful exact web lookups remain cached for 24 hours in the running service.
 - `POST /api/offers`: up to four known exact Barbora slugs, returns current per-card offers without blocking recognition.
 - `POST /api/events`: metadata-only product events with image-like values rejected.
 - `GET /api/health`: service, catalog and deployed commit status.
