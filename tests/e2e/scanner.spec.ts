@@ -958,17 +958,19 @@ test("an unrated package can receive a Sugar.no fit from automatic online enrich
 
   await page.route("**/api/resolve-products", async (route) => {
     const { detections } = route.request().postDataJSON() as { detections: Array<Record<string, unknown>> };
-    const sproud = detections[0];
+    const detection = detections[0];
+    const identity = detection.identity as { name?: string };
+    const isSproud = identity.name?.includes("Sproud");
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
         latencyMs: 700,
         imageStored: false,
-        detections: [
+        detections: isSproud ? [
           {
-            ...sproud,
+            ...detection,
             productId: "web:sproud-barista-1l",
-            identity: { ...(sproud.identity as object), matchKind: "web_search" },
+            identity: { ...(detection.identity as object), matchKind: "web_search" },
             nutritionLinkConfidence: 0.96,
             inlineProduct: {
               id: "web:sproud-barista-1l",
@@ -1004,9 +1006,8 @@ test("an unrated package can receive a Sugar.no fit from automatic online enrich
               ratingSignalMask: ["protein", "inverseSugar"],
               criterionScores: { protein: 100, inverseSugar: 100 }
             }
-          },
-          detections[1]
-        ]
+          }
+        ] : detections
       })
     });
   });
@@ -1086,7 +1087,7 @@ test("a broad live shelf scan keeps several different Sugar.no-rated products in
   await expect(page.getByLabel("Products ranked by Sugar.no fit").getByRole("button")).toHaveCount(3);
 });
 
-test("live camera shows package identities before optional retailer enrichment finishes", async ({ page }) => {
+test("live camera applies each online result without waiting for the slowest product", async ({ page }) => {
   await mockLiveCamera(page);
   const detections = [
     {
@@ -1128,10 +1129,10 @@ test("live camera shows package identities before optional retailer enrichment f
       nutritionLinkConfidence: null
     }
   ];
-  let releaseEnrichment!: () => void;
-  let enrichmentFinished = false;
-  const enrichmentGate = new Promise<void>((resolve) => {
-    releaseEnrichment = resolve;
+  let releaseSlowEnrichment!: () => void;
+  let slowEnrichmentFinished = false;
+  const slowEnrichmentGate = new Promise<void>((resolve) => {
+    releaseSlowEnrichment = resolve;
   });
   await page.route("**/api/recognize", async (route) => {
     await route.fulfill({
@@ -1147,11 +1148,35 @@ test("live camera shows package identities before optional retailer enrichment f
     });
   });
   await page.route("**/api/resolve-products", async (route) => {
-    await enrichmentGate;
-    enrichmentFinished = true;
+    const { detections: requested } = route.request().postDataJSON() as { detections: typeof detections };
+    expect(requested).toHaveLength(1);
+    const requestedDetection = requested[0];
+    const isFastProduct = requestedDetection.productId === "visual:cola";
+    if (!isFastProduct) {
+      await slowEnrichmentGate;
+      slowEnrichmentFinished = true;
+    }
     await route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({ detections, latencyMs: 3_000, imageStored: false })
+      body: JSON.stringify({
+        detections: isFastProduct
+          ? [{
+              ...requestedDetection,
+              productId: "web:cola",
+              identity: { ...requestedDetection.identity, matchKind: "web_search" },
+              inlineProduct: ratedInlineProduct({
+                id: "web:cola",
+                brand: "Coca-Cola",
+                name: "Coca-Cola Original 330 ml",
+                score: 20,
+                protein: 0,
+                sugar: 10.6
+              })
+            }]
+          : requested,
+        latencyMs: isFastProduct ? 800 : 3_000,
+        imageStored: false
+      })
     });
   });
 
@@ -1174,13 +1199,14 @@ test("live camera shows package identities before optional retailer enrichment f
   expect(previewGeometry.viewportRatio).toBeCloseTo(previewGeometry.mediaRatio, 2);
   expect(previewGeometry.objectFit).toBe("contain");
   expect(previewGeometry.borderRadius).toBeGreaterThanOrEqual(26);
-  await expect(page.getByRole("status")).toContainText("Products found. Checking Sugar.no signals", { timeout: 5_000 });
-  await expect(page.getByLabel("Product result preview").getByText("Checking online…", { exact: true })).toHaveCount(2);
-  expect(enrichmentFinished).toBe(false);
-  releaseEnrichment();
-  await expect.poll(() => enrichmentFinished).toBe(true);
-  await expect(page.getByRole("status")).toContainText("No products with verified Sugar.no fit found");
-  await expect(page.getByLabel("Product result preview")).toHaveCount(0);
+  const preview = page.getByLabel("Product result preview");
+  await expect(preview.getByText("Checking online…", { exact: true })).toHaveCount(1, { timeout: 5_000 });
+  await expect(preview.getByText("Low fit", { exact: true })).toBeVisible();
+  expect(slowEnrichmentFinished).toBe(false);
+  releaseSlowEnrichment();
+  await expect.poll(() => slowEnrichmentFinished).toBe(true);
+  await expect(preview.getByText("Checking online…", { exact: true })).toHaveCount(0);
+  await expect(preview.locator("article")).toHaveCount(1);
 });
 
 test("a not-sure completion retry stops without exposing an unrated provisional product", async ({ page }) => {
