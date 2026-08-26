@@ -23,6 +23,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Rimi/Livin snapshot, isolated Open Food Facts bulk/API match, then exact Google Search-grounded web nutrition.
 - Internet enrichment runs after the first identity result. It is bounded to 18 seconds and never receives or stores the camera image.
+- The retired nutrition-label follow-up is removed from the UI and API; automatic exact-source enrichment is the only nutrition path.
 - A product remains visible while exact nutrition is being checked, then stays in the result only when source-backed protein and total sugar produce a Sugar.no fit. A shelf price by itself never creates a result card.
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
 - Product overlays use Gemini's native `box2d [ymin, xmin, ymax, xmax]` coordinates and exclude shelf labels and neighboring packages from the product box.
@@ -170,11 +171,12 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 ## Supporting docs
 
 - [Acceptance criteria](docs/acceptance.md)
+- [Architecture and file map](docs/architecture.md)
 - [Product QA](docs/product-qa.md)
 - [Team handoff](docs/team-handoff.md)
 - [Latvia coverage plan](docs/latvia-coverage-plan.md)
 - [Catalog sources, licensing and refresh](docs/catalog-sources.md)
 - [Partner data request drafts](docs/partner-data-requests.md)
 - [Week-one lessons](docs/week-one-lessons.md)
-- [Latest feature evidence](docs/test-runs/2026-08-25-five-product-web-enrichment.md)
+- [Latest release evidence](docs/test-runs/2026-08-26-project-cleanup.md)
 - [Open and recent bugs](Bugs.md)

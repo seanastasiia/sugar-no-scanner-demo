@@ -22,7 +22,7 @@ Tap two product boxes and show the Sugar.no badge.
 
 Open a similar option.
 
-“Similar options scroll horizontally. They are ranked by category similarity and the internal comparison, while commercial availability never changes the recommendation.”
+“Better alternatives appear only when Sugar.no finds the same exact product type with an equal or better fit and a current exact online offer. If there is no true substitute, we show nothing.”
 
 Open the Barbora CTA, then return.
 

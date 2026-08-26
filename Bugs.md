@@ -1,41 +1,26 @@
 # Bugs
 
-This file tracks open limitations and only the most recent resolved regressions. Older resolved history remains recoverable in Git and in the dated test evidence.
+This file tracks open limitations and only recent resolved regressions. Older history remains recoverable in Git.
 
 ## Open
 
-- **Latvia coverage is not universal.** Rimi, Lidl and Stockmann private labels, unreadable variants and products without an exact cited per-100 table can remain `Nutrition not verified online`. They must not receive a guessed fit.
+- **Latvia coverage is not universal.** Private labels, unreadable variants and products without an exact cited per-100 table can remain unresolved. They must not receive a guessed fit.
 - **Physical-store accuracy is not validated.** Packaging glare, low light, distance and a moving checkout belt need a real-store benchmark.
 - **Shelf-price association needs a benchmark.** Ambiguous labels stay hidden; a package number, deposit or unrelated nearby tag must not become the product price.
-- **Rimi/Livin coverage is only a bootstrap.** Their exact page adapters work, but the checked-in release has only a few proof rows. Production-scale refresh and reuse require retailer permission.
-- **Open Food Facts bulk coverage is only a bootstrap.** The isolated importer is production-shaped, but the checked-in layer has five verified Latvia rows rather than the full multi-gigabyte daily export.
-- **Retailer snapshots age.** The checked-in product and nutrition indexes are reproducible discovery snapshots, not real-time stock or price guarantees.
-- **Grounded nutrition can be slow or unavailable.** Identity appears first; the exact internet check is background-only and bounded to 18 seconds.
+- **Rimi/Livin coverage is only a bootstrap.** Their exact page adapters work, but production-scale refresh and reuse require retailer permission.
+- **Open Food Facts bulk coverage is only a bootstrap.** The isolated importer is production-shaped; the checked-in layer contains five verified Latvia proof rows.
+- **Retailer snapshots age.** Checked-in product and nutrition indexes are reproducible discovery snapshots, not real-time stock or price guarantees.
+- **Grounded nutrition can be slow or unavailable.** Identity appears first; exact internet enrichment is background-only and bounded to 18 seconds.
 
 ## Recently resolved
 
-- **2026-08-26: nutrition resolution depended on Barbora plus runtime web search.** Strict Rimi and Livin catalog adapters now resolve exact identity, per-100 protein/sugar, current page price and provenance; Open Food Facts has a separate ODbL bulk-import and Supabase layer.
-- **2026-08-26: Livin's all-zero GTIN placeholder could masquerade as a real barcode.** Retailer parsing now converts invalid all-zero values to `null`, keeping barcode resolution fail-closed.
-- **2026-08-26: Similar options treated a broad retailer category as product interchangeability.** The block is now `Better alternatives` and requires an exact type/subcategory/form, an equal or better fit, an active catalog entry and a live exact Barbora offer; otherwise it stays hidden.
-- **2026-08-26: green, yellow and red camera markers had inconsistent visual sizes.** All rated fit discs, including the leading result, now render at the same 46 px diameter while the full product outline remains the larger touch target.
-- **2026-08-26: the first filled amber fit pill used white text with insufficient contrast.** The label now uses dark `#2D2106` text, reaching 6.97:1 contrast; the full Mobile Safari accessibility suite passes.
-- **2026-08-26: the website-derived blue treatment did not resemble the shipped Sugar.no app UI closely enough.** The scanner now follows the supplied iOS screens with a cool gray canvas, white cards/sheets, neutral separators, black hierarchy and filled semantic fit pills; blue is limited to actions and focus.
-- **2026-08-26: the compact sheet repeated scanning controls.** The redundant compact refresh action is removed, leaving `View all` as the single compact-sheet action.
-- **2026-08-26: saved-photo views repeated their source in a large overlay badge.** The redundant `Saved shelf or checkout photo` badge is removed while `Back to live` stays aligned to the right.
-- **2026-08-26: compact product previews hid their ranking and nutrition context.** Rated preview cards now show the same `#1`, `#2`, `#3…` order as the expanded comparison plus a small total-sugar value per 100 g or 100 ml.
-- **2026-08-26: Similar options shared one ambiguous Barbora CTA and showed no per-card price.** Every exact Barbora alternative now has its own non-blocking `Buy online` action and current price; `Cheaper online` is reserved for the same SKU with a higher scanned shelf price.
-- **2026-08-26: price-only and identity-only products remained in the final list as incomplete results.** Unresolved identities now disappear when the exact nutrition lookup finishes; a shelf price or retailer offer is shown only alongside a source-backed Sugar.no fit.
-- **2026-08-25: live Gemini boxes could drift onto shelf labels and Latvian prices without a readable `€` were always discarded.** Recognition now uses Gemini's native 0-1000 `box2d` convention with tight-package instructions, higher live-frame resolution and guarded comma-decimal shelf prices.
-- **2026-08-25: expanded multi-product results repeated scan counts, instructions and a second scan-again action above the ranking.** The expanded view now keeps only the collapse control, `Best fit first` and the ranked product cards before contextual price or alternative actions.
-- **2026-08-25: the demo chooser included a redundant investor-coverage card above its actions.** The card is removed so the three demo actions begin directly under the heading.
-- **2026-08-25: the expanded comparison control used an upward chevron that conflicted with the intended navigation cue.** The control now shows a downward chevron while keeping the same collapse action and accessible label.
-- **2026-08-25: expanded multi-product results repeated the leading rating in a large `Best fit in this scan` block.** The ranked list is now the single comparison source; similar options and price actions remain directly below it.
-- **2026-08-25: four decorative camera corners implied that only the center rectangle was analyzed.** The guide is removed from live camera and saved-photo views; recognition still reads the full scene and keeps real product boxes after detection.
-- **2026-08-25: dense scans looked mostly broken when eight identities produced only two fits.** Results are now capped at five distinct high-confidence SKUs. Missing nutrition is checked through exact local, retailer, Open Food Facts and cited web sources; the nutrition-label scan action was removed.
-- **2026-08-25: a cold grounded lookup could hit the original 12-second timeout.** The background bound is now 18 seconds, duplicate query terms are removed and the first identity result remains non-blocking.
-- **2026-08-25: the rejected Pen/Figma theme reached production.** Production was restored to the accepted pre-Pen visual system. The obsolete experiment is removed from the active tree and remains recoverable in Git.
-- **2026-08-25: active live-camera requests could leave Checkout demo on a preloader.** Source changes now abort and ignore stale camera work before a deterministic demo starts.
-- **2026-08-25: long retailer screenshots lost readable products.** Saved portrait images run one full read plus three overlapping sections, remap boxes and merge exact products.
-- **2026-08-25: iPhone viewport changes clipped the camera or result sheet.** The scanner uses live viewport edges and safe-area insets, with acceptance coverage for iPhone 17 Pro portrait and landscape.
+- **2026-08-26: removed features and QA artifacts still inflated the active codebase.** The unreachable nutrition-label follow-up was deleted from client, API and server code; camera results and demo fixtures were split into focused modules; Playwright screenshots now stay in ignored test artifacts instead of Git.
+- **2026-08-26: nutrition resolution depended on Barbora plus runtime web search.** Strict Rimi and Livin adapters now resolve exact identity, per-100 protein/sugar, page price and provenance; Open Food Facts has a separate ODbL import and Supabase layer.
+- **2026-08-26: broad Similar options were not guaranteed substitutes.** The block is now fail-closed Better alternatives: same exact type/subcategory/form, equal or better fit, active exact offer, then price and pack-size tie-breaks.
+- **2026-08-26: camera marker colors rendered at inconsistent sizes.** Great, Moderate and Low fit discs share one visual diameter while the package outline remains the touch target.
+- **2026-08-26: scanner surfaces had drifted from the shipped Sugar.no app.** The current UI uses the cool gray canvas, white cards, neutral separators, black hierarchy and semantic fit pills from the supplied iOS screens.
+- **2026-08-26: price-only and identity-only products remained in final comparison.** A source miss now removes the incomplete row and its price/retailer action rather than inventing a fit.
+- **2026-08-25: live Gemini boxes drifted onto shelf labels.** Recognition now uses native normalized box coordinates, tighter package instructions and guarded shelf-label association.
+- **2026-08-25: active live-camera work could overwrite Checkout demo.** Source changes abort and ignore stale camera requests before deterministic scenes start.
 
-When a new regression is fixed, add one concise entry here and put detailed evidence in a test log only if the change is release-critical.
+When a new regression is fixed, add one concise entry here. Put detailed evidence in a test log only for release-critical work.

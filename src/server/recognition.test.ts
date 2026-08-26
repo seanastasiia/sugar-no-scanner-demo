@@ -8,7 +8,6 @@ import {
   geminiBox2dToFrame,
   isTrustedShelfPriceDetection,
   matchCatalogProduct,
-  nutritionLabelInstruction,
   recognitionInstruction,
   recognitionConfidenceThreshold,
   recognizeProducts,
@@ -133,20 +132,6 @@ describe("recognitionInstruction", () => {
     expect(instruction).toContain("may omit the € symbol");
     expect(instruction).toContain("immediate shelf edge");
     expect(instruction).toContain("distant header or promotion labels");
-  });
-
-  it("requires one printed per-100 column for the nutrition fallback", () => {
-    const instruction = nutritionLabelInstruction({
-      brand: "Sproud",
-      name: "Barista 1L",
-      variant: null,
-      packSize: "1 L",
-      category: null,
-      matchKind: "visual_only"
-    });
-    expect(instruction).toContain("per 100 g or per 100 ml");
-    expect(instruction).toContain("energy in kcal, protein in grams and total sugars");
-    expect(instruction).toContain("Do not use front-of-pack claims, serving values");
   });
 
   it("keeps the uncertain retry focused on one centered package", () => {

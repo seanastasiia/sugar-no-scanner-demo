@@ -5,7 +5,7 @@ This document is the engineering and product entry point for continuing the Latv
 ## Start here
 
 1. Open the [live scanner](https://sugar-no-scanner-demo-production.up.railway.app) on an iPhone and allow camera access.
-2. Read the root [README](../README.md), especially `Current state`, `Product rules`, `Catalog`, `Supabase`, `Railway and release`, and `Privacy`.
+2. Read the root [README](../README.md), then use the concise [Architecture and file map](architecture.md) to locate code without scanning the repository.
 3. Run the deterministic Shelf and Checkout scenes before testing arbitrary products.
 4. Read [Week-one lessons and guardrails](week-one-lessons.md), [Product QA](product-qa.md), [Acceptance matrix](acceptance.md), [Latvia coverage plan](latvia-coverage-plan.md), and [Bugs](../Bugs.md).
 5. Treat `GET /api/health` and the newest file in `docs/test-runs/` as the current deployed evidence. Do not rely on screenshots alone.
@@ -62,7 +62,7 @@ Requirements: Node.js 22 or newer.
 git clone https://github.com/seanastasiia/sugar-no-scanner-demo.git
 cd sugar-no-scanner-demo
 cp .env.example .env.local
-npm install
+npm ci
 npx playwright install webkit
 npm run dev
 ```
@@ -78,9 +78,12 @@ The deterministic Shelf and Checkout scenes work without external credentials. L
 5. The UI groups repeated facings, keeps at most five high-confidence SKUs, holds the result and ranks rated products. Unresolved products may show `Checking online…` while lookup is active, then disappear instead of leaving price-only or identity-only cards.
 6. `POST /api/events` accepts metadata only. Image-like fields and data URLs are rejected.
 
-Key implementation locations:
+Key implementation locations (the complete map is in [Architecture and file map](architecture.md)):
 
 - Scanner UI and camera lifecycle: `src/components/scanner-app.tsx`
+- Product/result presentation: `src/components/scanner-results.tsx`
+- Saved-image preparation: `src/lib/client-image.ts`
+- Deterministic demo fixtures: `src/server/demo-scenes.ts`
 - Recognition provider and prompts: `src/server/recognition.ts`
 - Exact Barbora matching and nutrition: `src/server/barbora-*.ts`
 - Rimi/Livin snapshots and strict matching: `src/server/retailer-page-parser.ts`, `src/server/external-catalog.ts`

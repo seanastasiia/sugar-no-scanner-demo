@@ -8,6 +8,32 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+# Sugar.no scanner working rules
+
+## Read first, and only what the task needs
+
+- `README.md` is the current product and operations source of truth.
+- `docs/architecture.md` is the code map. Start there before opening large source files.
+- `Bugs.md` contains active limitations and only recent regressions.
+- Do not load `data/*.generated.json`, screenshots, or `docs/test-runs/` into context by default. Query generated data with a narrow `jq`, `rg`, or purpose-built script.
+- Git history is the archive. Do not restore superseded release logs or generated QA screenshots to the active tree.
+
+## Change boundaries
+
+- Preserve the trust rules: no invented nutrition, no non-exact retailer CTA, no image persistence, and price never affects Sugar.no fit.
+- Keep deterministic Shelf and Checkout scenes in `src/server/demo-scenes.ts`; production recognition stays in `src/server/recognition.ts`.
+- Keep client image preparation in `src/lib/client-image.ts`, result cards in `src/components/scanner-results.tsx`, and camera orchestration in `src/components/scanner-app.tsx`.
+- Generated catalog files are changed only through scripts in `scripts/`.
+- Browser screenshots belong in ignored `test-results/`, never in tracked documentation.
+
+## Proportional checks
+
+- Docs or copy only: `git diff --check` plus link/path checks.
+- Local pure logic: related Vitest files, then `npm run check:fast`.
+- UI: related Vitest files, `npm run check:fast`, and `npm run test:e2e:smoke`.
+- Recognition, scoring, privacy, auth, schema, dependencies, or release: `npm run verify` and `CI=1 npm run test:e2e`.
+- Before declaring code ready: update `README.md` and `Bugs.md`, push to GitHub `main`, deploy through Railway, and verify `/api/health` reports the pushed SHA.
+
 # Sugar.no scanner workflow
 
 Keep routine work small. Read only the files and sections needed for the requested change; use `rg` before opening large files. Do not reread the full README, Bugs history, test logs, or generated catalog unless the task directly needs them.

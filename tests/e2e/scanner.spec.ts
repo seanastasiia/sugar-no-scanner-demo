@@ -350,7 +350,7 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await bestMarker.click();
   await waitForAlternativeImages(page);
   await expect(page.getByRole("button", { name: "Scan again" })).toHaveCount(0);
-  await page.screenshot({ path: "docs/screenshots/shelf-mobile.png", fullPage: true });
+  await page.screenshot({ path: "test-results/shelf-mobile.png", fullPage: true });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
   await expect(resultsDialog).toBeVisible();
@@ -368,7 +368,7 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   await expect.poll(async () => (await resultsDialog.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(viewportHeight * 0.95);
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
-  await page.screenshot({ path: "docs/screenshots/shelf-results-mobile.png" });
+  await page.screenshot({ path: "test-results/shelf-results-mobile.png" });
   await expect(resultsDialog.getByLabel("Sugar.no badge")).toHaveCount(0);
   await expect(resultsDialog.getByText("Better alternatives", { exact: true })).toBeVisible();
   const betterAlternatives = resultsDialog.getByRole("region", { name: "Same product type · equal or better fit" });
@@ -421,7 +421,7 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
     [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Real supermarket checkout belt sample with three recognized packaged products"] img')]
       .every((image) => image.complete && image.naturalWidth > 0)
   );
-  await page.screenshot({ path: "docs/screenshots/checkout-mobile.png", fullPage: true });
+  await page.screenshot({ path: "test-results/checkout-mobile.png", fullPage: true });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   const ranking = page.getByLabel("Products ranked by Sugar.no fit");
   await expect(ranking).toBeVisible({ timeout: 8_000 });
@@ -431,7 +431,7 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await expect(ranking.getByText("STOCKMANN", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
   await page.waitForTimeout(300);
-  await page.screenshot({ path: "docs/screenshots/checkout-results-mobile.png" });
+  await page.screenshot({ path: "test-results/checkout-results-mobile.png" });
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Sugar.no badge")).toHaveCount(0);
   await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g/)).toHaveCount(3);
@@ -560,7 +560,7 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
   expect((await viewAll.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   await expect(page.getByRole("button", { name: "Scan again" })).toHaveCount(0);
   await expectNoDocumentOverflow(page);
-  await page.screenshot({ path: "docs/screenshots/iphone-17-pro-camera.png" });
+  await page.screenshot({ path: "test-results/iphone-17-pro-camera.png" });
 
   await viewAll.click();
   const dialog = page.getByRole("dialog", { name: "Products from this scan" });
@@ -568,7 +568,7 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
   await expect(page.getByRole("button", { name: "Return to camera" })).toHaveCount(0);
   await expectInsideViewport(page, page.getByRole("button", { name: "Collapse product results" }));
   await expectNoDocumentOverflow(page);
-  await page.screenshot({ path: "docs/screenshots/iphone-17-pro-results.png" });
+  await page.screenshot({ path: "test-results/iphone-17-pro-results.png" });
 
   const viewports = [
     { width: 440, height: 956, label: "large portrait" },
@@ -588,7 +588,7 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
     await expect(page.getByRole("button", { name: "Scan again" })).toHaveCount(0);
     await expectNoDocumentOverflow(page);
     if (viewport.label === "iPhone 17 Pro landscape") {
-      await page.screenshot({ path: "docs/screenshots/iphone-17-pro-landscape.png" });
+      await page.screenshot({ path: "test-results/iphone-17-pro-landscape.png" });
     }
     await page.getByRole("button", { name: "View all", exact: true }).click();
   }
@@ -1453,7 +1453,7 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
     "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
   );
   expect((await compactBuy.boundingBox())?.height).toBeGreaterThanOrEqual(44);
-  await page.screenshot({ path: "docs/screenshots/price-cta-compact-mobile.png" });
+  await page.screenshot({ path: "test-results/price-cta-compact-mobile.png" });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Zero Peach.*Pesca & Clementina.*330 ml/ })).toBeVisible();
   await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
@@ -1470,7 +1470,7 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await expect(page.getByText("How this result was made", { exact: true })).toHaveCount(0);
   await comparison.scrollIntoViewIfNeeded();
-  await comparison.screenshot({ path: "docs/screenshots/price-comparison-mobile.png" });
+  await comparison.screenshot({ path: "test-results/price-comparison-mobile.png" });
 
   exactSku = false;
   await page.getByRole("button", { name: "Collapse product results" }).click();
@@ -1604,7 +1604,7 @@ test("an exact Barbora food gets an on-demand two-factor Sugar.no fit", async ({
   await expect(page.getByText("Values per 100 g · 2 of 2 source-backed signals", { exact: true })).toBeVisible();
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
-  await page.screenshot({ path: "docs/screenshots/barbora-quick-view-mobile.png" });
+  await page.screenshot({ path: "test-results/barbora-quick-view-mobile.png" });
   const accessibility = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();

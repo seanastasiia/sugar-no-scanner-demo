@@ -14,24 +14,10 @@ const requestSchema = z
     imageDataUrl: z.string().max(2_800_000).optional(),
     source: z.enum(["camera", "upload", "sample-shelf", "sample-conveyor"]),
     focusMode: z.boolean().optional(),
-    mode: z.enum(["products", "nutrition-label"]).optional(),
-    targetIdentity: z
-      .object({
-        brand: z.string().max(80),
-        name: z.string().max(180),
-        variant: z.string().max(120).nullable(),
-        packSize: z.string().max(60).nullable(),
-        category: z.string().max(120).nullable(),
-        matchKind: z.enum(["verified_catalog", "barbora", "retailer_catalog", "open_food_facts", "web_search", "package_label", "visual_only"])
-      })
-      .optional(),
     sampleFrame: z.number().int().nonnegative().max(10_000).optional()
   })
   .refine((value) => value.source.startsWith("sample-") || Boolean(value.imageDataUrl), {
     message: "An image is required for camera or upload recognition."
-  })
-  .refine((value) => value.mode !== "nutrition-label" || Boolean(value.targetIdentity), {
-    message: "A target identity is required for nutrition-label recognition."
   });
 
 const MAX_REQUEST_BYTES = 3_000_000;
@@ -88,9 +74,7 @@ export function createRecognizePost(overrides: Partial<RecognizeRouteDependencie
         ...parsed.data,
         catalog,
         requestId,
-        deferExternalResolution:
-          ["camera", "upload"].includes(parsed.data.source) &&
-          (parsed.data.mode || "products") === "products"
+        deferExternalResolution: ["camera", "upload"].includes(parsed.data.source)
       });
       return NextResponse.json(result, { headers: { "cache-control": "no-store" } });
     } catch (error) {

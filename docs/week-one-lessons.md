@@ -83,7 +83,7 @@ Never collapse these states. A confident visual identity may still have no exact
 
 **What failed:** Incomplete or differently based results entered fair-comparison logic; one null rating basis could crash rendering.
 
-**Guardrail:** `Best fit in this scan` requires at least two products with the same category/reference basis, per-100 basis, scoring method and both signals. Near ties have no winner. Unrated products are listed after rated products without a rank.
+**Guardrail:** Use the best-first ranked list as the single comparison surface. Do not repeat a separate `Best fit in this scan` block. Unrated products may appear only while exact enrichment is pending and disappear after a miss.
 
 **Regression:** Cover one-product, mixed-basis, incomplete, near-tie and null-rating-basis cases.
 
@@ -279,7 +279,7 @@ Never collapse these states. A confident visual identity may still have no exact
 
 **Guardrail:** The primary journey is scan, compare, understand and optionally buy a proven-cheaper exact item. Remove actions without an immediate supported outcome. Keep one collapse arrow and one clear `Scan again` action.
 
-**Regression:** Browser copy checks must prove removed controls do not reappear in compact, expanded, checkout or Similar options surfaces.
+**Regression:** Browser copy checks must prove removed controls do not reappear in compact, expanded, checkout or Better alternatives surfaces.
 
 ### 31. Use first-party brand assets
 

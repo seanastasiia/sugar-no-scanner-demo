@@ -74,38 +74,6 @@ describe("public recognition route", () => {
     );
   });
 
-  it("accepts a nutrition-label follow-up only with its recognized target identity", async () => {
-    const recognize = vi.fn(async () => matchedResponse("camera"));
-    const post = createRecognizePost({
-      listProducts: async () => [],
-      recognize,
-      limiter: { consume: () => ({ allowed: true, remaining: 20, retryAfterSeconds: 0 }) },
-      requestId: () => "request-test"
-    });
-    const missingTarget = await post(
-      request({ source: "camera", mode: "nutrition-label", imageDataUrl: "data:image/jpeg;base64,YWJj" })
-    );
-    expect(missingTarget.status).toBe(400);
-
-    const response = await post(
-      request({
-        source: "camera",
-        mode: "nutrition-label",
-        imageDataUrl: "data:image/jpeg;base64,YWJj",
-        targetIdentity: {
-          brand: "Sproud",
-          name: "Barista 1L",
-          variant: null,
-          packSize: "1 L",
-          category: "plant drink",
-          matchKind: "visual_only"
-        }
-      })
-    );
-    expect(response.status).toBe(200);
-    expect(recognize).toHaveBeenCalledWith(expect.objectContaining({ mode: "nutrition-label" }));
-  });
-
   it("rejects declared oversized bodies before parsing", async () => {
     const post = createRecognizePost();
     const response = await post(request({}, { "content-length": "3000001" }));

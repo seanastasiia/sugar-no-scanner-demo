@@ -13,8 +13,6 @@ export type RatingBasis =
   | "open_food_facts_reference_partial"
   | "web_search_reference"
   | "web_search_reference_partial"
-  | "package_label_reference"
-  | "package_label_reference_partial"
   | "manufacturer_reference"
   | "manufacturer_reference_partial"
   | "food_composition_reference"
@@ -107,7 +105,6 @@ export interface RecognizedProductIdentity {
     | "retailer_catalog"
     | "open_food_facts"
     | "web_search"
-    | "package_label"
     | "visual_only";
   searchQuery?: string;
   barcode?: string | null;
@@ -143,8 +140,6 @@ export interface RetailerOffer {
 }
 
 export type ScanSource = "camera" | "upload" | "sample-shelf" | "sample-conveyor";
-
-export type RecognitionMode = "products" | "nutrition-label";
 
 export interface RecognitionResponse {
   requestId: string;
