@@ -37,6 +37,7 @@ import {
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
 import { barboraProductSlug, isExactOnlineSaving } from "@/lib/online-offer";
+import { rankAvailableBetterAlternatives } from "@/lib/better-alternatives";
 import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { compareFairCohorts } from "@/lib/scoring";
 import { mergeUploadScanResults, uploadScanCrops, type UploadScanCrop } from "@/lib/upload-scan";
@@ -1622,8 +1623,19 @@ function ProductResult({
     return () => controller.abort();
   }, [alternativeSlugs, offerRequestKey]);
 
-  const alternativeOffers = offerResult.key === offerRequestKey ? offerResult.offers : {};
-  const pricesLoading = Boolean(offerRequestKey && offerResult.key !== offerRequestKey);
+  const alternativeOffers = useMemo(
+    () => (offerResult.key === offerRequestKey ? offerResult.offers : {}),
+    [offerRequestKey, offerResult]
+  );
+  const availableAlternatives = useMemo(
+    () =>
+      offerResult.key === offerRequestKey
+        ? rankAvailableBetterAlternatives(product, alternatives, alternativeOffers, (candidate) =>
+            barboraProductSlug(candidate.retailerUrl)
+          )
+        : [],
+    [alternativeOffers, alternatives, offerRequestKey, offerResult.key, product]
+  );
   return (
     <article className={styles.productResult}>
       {showSummary ? (
@@ -1657,18 +1669,19 @@ function ProductResult({
         </div>
       ) : null}
 
-      {alternatives.length ? (
+      {availableAlternatives.length ? (
         <section className={styles.alternatives} aria-labelledby={`alternatives-${product.id}`}>
           <div className={styles.sectionHeading}>
             <div>
-              <p>Similar options</p>
-              <h3 id={`alternatives-${product.id}`}>Compare without starting over</h3>
+              <p>Better alternatives</p>
+              <h3 id={`alternatives-${product.id}`}>Same product type · equal or better fit</h3>
             </div>
           </div>
           <div className={styles.alternativeList}>
-            {alternatives.map((alternative) => {
+            {availableAlternatives.map((alternative) => {
               const slug = barboraProductSlug(alternative.retailerUrl);
               const offer = slug ? alternativeOffers[slug] : null;
+              if (!slug || !offer) return null;
               const shelfPrice = scanDetections[alternative.id]?.shelfPrice;
               const cheaperOnline = isExactOnlineSaving(offer, shelfPrice);
               return (
@@ -1690,25 +1703,23 @@ function ProductResult({
                       <MatchPill product={alternative} />
                     </span>
                   </button>
-                  {slug ? (
-                    <a
-                      className={styles.alternativeBuy}
-                      href={offer?.url || alternative.retailerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => onRetailer(alternative.id)}
-                      aria-label={`${cheaperOnline ? "Buy cheaper online" : "Buy online"} ${alternative.name}${offer ? ` for €${offer.price.toFixed(2)}` : ""}`}
-                    >
-                      <span>
-                        <strong>{cheaperOnline ? "Cheaper online" : "Buy online"}</strong>
-                        {cheaperOnline && shelfPrice ? <s>€{shelfPrice.amount.toFixed(2)} shelf</s> : null}
-                      </span>
-                      <span className={styles.alternativeBuyPrice}>
-                        {offer ? `€${offer.price.toFixed(2)}` : pricesLoading ? "Checking…" : ""}
-                        <ArrowUpRight aria-hidden="true" size={16} />
-                      </span>
-                    </a>
-                  ) : null}
+                  <a
+                    className={styles.alternativeBuy}
+                    href={offer.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => onRetailer(alternative.id)}
+                    aria-label={`${cheaperOnline ? "Buy cheaper online" : "Buy online"} ${alternative.name} for €${offer.price.toFixed(2)}`}
+                  >
+                    <span>
+                      <strong>{cheaperOnline ? "Cheaper online" : "Buy online"}</strong>
+                      {cheaperOnline && shelfPrice ? <s>€{shelfPrice.amount.toFixed(2)} shelf</s> : null}
+                    </span>
+                    <span className={styles.alternativeBuyPrice}>
+                      €{offer.price.toFixed(2)}
+                      <ArrowUpRight aria-hidden="true" size={16} />
+                    </span>
+                  </a>
                 </article>
               );
             })}

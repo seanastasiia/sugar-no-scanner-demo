@@ -221,12 +221,13 @@ describe("compareFairCohorts", () => {
 });
 
 describe("rankSimilarProducts", () => {
-  it("ranks same-format products before higher-scoring different formats", () => {
+  it("keeps only interchangeable Barbora products with an equal or better fit", () => {
     const scored = scoreCatalog([
       product("current", 20, null, 8, "bar"),
-      product("same-format", 21, null, 7, "bar"),
+      product("better", 30, null, 2, "bar"),
+      product("worse", 10, null, 30, "bar"),
       product("different", 40, null, 0, "cookie")
-    ]);
-    expect(rankSimilarProducts(scored[0], scored).map((item) => item.id)).toEqual(["same-format", "different"]);
+    ]).map((item) => ({ ...item, retailerUrl: `https://barbora.lv/produkti/${item.id}` }));
+    expect(rankSimilarProducts(scored[0], scored).map((item) => item.id)).toEqual(["better"]);
   });
 });

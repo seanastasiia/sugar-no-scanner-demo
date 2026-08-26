@@ -47,4 +47,17 @@ describe("POST /api/offers", () => {
     await expect(response.json()).resolves.toEqual({ offers: { "example-200-g": offer } });
     expect(getKnownOffer).toHaveBeenCalledTimes(1);
   });
+
+  it("accepts enough candidates to verify availability before showing four alternatives", async () => {
+    getKnownOffer.mockImplementation(async (slug: string) => ({ ...offer, slug }));
+    const slugs = Array.from({ length: 8 }, (_, index) => `example-${index + 1}`);
+    const response = await POST(new Request("http://localhost/api/offers", {
+      method: "POST",
+      body: JSON.stringify({ slugs })
+    }));
+
+    expect(response.status).toBe(200);
+    expect(Object.keys((await response.json()).offers)).toEqual(slugs);
+    expect(getKnownOffer).toHaveBeenCalledTimes(8);
+  });
 });

@@ -27,7 +27,8 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
 - Product overlays use Gemini's native `box2d [ymin, xmin, ymax, xmax]` coordinates and exclude shelf labels and neighboring packages from the product box.
 - A high-confidence Latvian comma-decimal shelf label can be accepted even when the printed `€` symbol is not readable; numbers printed on a package remain excluded.
-- A crossed-out shelf price and `Buy cheaper at Barbora` appear only when the exact Barbora SKU is currently cheaper. Similar options load their exact current Barbora prices after the scan result and expose their own `Buy online` actions; there is no shared retailer button.
+- A crossed-out shelf price and `Buy cheaper at Barbora` appear only when the exact Barbora SKU is currently cheaper.
+- `Better alternatives` are fail-closed: they must share the same exact product type, full retailer subcategory/form and nutrition basis, have an equal or better Sugar.no fit, and resolve to a current exact Barbora offer. Equal-fit candidates are ordered by lower live price and then the closest pack size. If no true substitute is available, the section is hidden.
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
 - The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
 
@@ -105,7 +106,7 @@ Use the project change lanes in `AGENTS.md`:
 
 - `POST /api/recognize`: image data URL plus source type, returns bounded detections.
 - `POST /api/resolve-products`: up to five image-free identities, returns optional exact retailer/nutrition enrichment.
-- `POST /api/offers`: up to four known exact Barbora slugs, returns current per-card offers without blocking recognition.
+- `POST /api/offers`: up to eight known exact Barbora slugs, returns current per-card offers without blocking recognition.
 - `POST /api/events`: metadata-only product events with image-like values rejected.
 - `GET /api/health`: service, catalog and deployed commit status.
 
@@ -146,6 +147,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 6. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
 7. Confirm each overlay tightly follows its package rather than a nearby shelf label.
 8. Move the camera after a result and confirm it remains held until `Scan again`.
+9. Open a rated product and confirm `Better alternatives` contains only the same product type with an equal or better fit and a live price; products without a valid substitute should show no alternatives block.
 
 ## Known limits
 

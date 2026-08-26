@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   getIndexedBarboraProductWithAlternatives,
   indexedBarboraProductToScoredProduct,
-  listIndexedBarboraNutrition
+  listIndexedBarboraNutrition,
+  rankIndexedBetterAlternatives,
+  type BarboraNutritionIndexProduct
 } from "./barbora-nutrition-index";
 import { isExactBarboraMatch, rankIndexedBarboraCandidates } from "./barbora-catalog";
 
@@ -66,7 +68,7 @@ describe("broad Barbora nutrition snapshot", () => {
     });
   });
 
-  it("keeps broad alternatives inside the same source category and basis", () => {
+  it("keeps alternatives inside the same exact type with a fit no worse than the source product", () => {
     const result = getIndexedBarboraProductWithAlternatives("3-graudu-parslas-extra-line-400-g", 4);
     expect(result?.product.id).toBe("barbora:3-graudu-parslas-extra-line-400-g");
     expect(result?.alternatives.length).toBeGreaterThan(0);
@@ -75,9 +77,36 @@ describe("broad Barbora nutrition snapshot", () => {
         (candidate) =>
           candidate.category === result.product.category &&
           candidate.nutritionBasis === result.product.nutritionBasis &&
+          candidate.matchScore! >= result.product.matchScore! &&
           candidate.id !== result.product.id
       )
     ).toBe(true);
+  });
+
+  it("excludes inactive, worse-fit and different-type products", () => {
+    const indexed = (overrides: Partial<BarboraNutritionIndexProduct> & Pick<BarboraNutritionIndexProduct, "slug" | "title">): BarboraNutritionIndexProduct => ({
+      brand: "TEST",
+      category: "Bakaleja/Saldumi/Šokolādes batoniņi",
+      packSize: "50g",
+      nutritionBasis: "100g",
+      energyKcal: 200,
+      proteinG: 20,
+      totalSugarG: 4,
+      imageUrl: null,
+      isAdult: false,
+      checkedAt: "2026-08-26T00:00:00.000Z",
+      ...overrides
+    });
+    const current = indexed({ slug: "current", title: "Proteīna batoniņš TEST 50g" });
+    const better = indexed({ slug: "better", title: "Proteīna batoniņš BETTER 55g", proteinG: 30, totalSugarG: 2 });
+    const inactive = indexed({ slug: "inactive", title: "Proteīna batoniņš INACTIVE 50g", proteinG: 30, totalSugarG: 2 });
+    const worse = indexed({ slug: "worse", title: "Proteīna batoniņš WORSE 50g", proteinG: 2, totalSugarG: 30 });
+    const snackBar = indexed({ slug: "snack", title: "Ābolu batoniņš 50g", proteinG: 30, totalSugarG: 2 });
+
+    expect(
+      rankIndexedBetterAlternatives(current, [current, better, inactive, worse, snackBar], new Set(["current", "better", "worse", "snack"]), 8)
+        .map((candidate) => candidate.id)
+    ).toEqual(["barbora:better"]);
   });
 
   it.each([

@@ -370,12 +370,12 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await page.screenshot({ path: "docs/screenshots/shelf-results-mobile.png" });
   await expect(resultsDialog.getByLabel("Sugar.no badge")).toHaveCount(0);
-  await expect(resultsDialog.getByText("Similar options", { exact: true })).toBeVisible();
-  const similarOptions = resultsDialog.getByRole("region", { name: "Compare without starting over" });
-  await expect(similarOptions.getByRole("link", { name: /Buy online .* for €1\.49/ })).toHaveCount(2);
+  await expect(resultsDialog.getByText("Better alternatives", { exact: true })).toBeVisible();
+  const betterAlternatives = resultsDialog.getByRole("region", { name: "Same product type · equal or better fit" });
+  await expect(betterAlternatives.getByRole("link", { name: /Buy online .* for €1\.49/ })).toHaveCount(2);
   await expect(page.getByText("View at Barbora · check current price", { exact: true })).toHaveCount(0);
   await ranking.getByRole("button", { name: /BAREBELLS.*Lemon Cheesecake/i }).click();
-  const cheaperAlternative = similarOptions.getByRole("link", { name: /Buy cheaper online .* for €1\.49/ });
+  const cheaperAlternative = betterAlternatives.getByRole("link", { name: /Buy cheaper online .* for €1\.49/ });
   await expect(cheaperAlternative).toBeVisible();
   await expect(cheaperAlternative.getByText("€3.49 shelf", { exact: true })).toHaveCSS(
     "text-decoration-line",

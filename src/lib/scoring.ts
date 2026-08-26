@@ -1,4 +1,5 @@
 import type { ProductRecord, RatingSignal, ScoredProduct } from "./types";
+import { areInterchangeable } from "./better-alternatives";
 
 type CriterionScores = NonNullable<ScoredProduct["criterionScores"]>;
 
@@ -196,15 +197,25 @@ export function compareFairCohorts(products: ScoredProduct[], tieThreshold = 5):
 export function rankSimilarProducts(
   current: ScoredProduct,
   products: ScoredProduct[],
-  limit = 2
+  limit = 8
 ): ScoredProduct[] {
+  if (current.matchScore === null) return [];
+  const currentMatchScore = current.matchScore;
   return products
-    .filter((candidate) => candidate.id !== current.id && candidate.matchScore !== null)
+    .filter(
+      (candidate) =>
+        candidate.id !== current.id &&
+        candidate.matchScore !== null &&
+        candidate.matchScore >= currentMatchScore &&
+        areInterchangeable(current, candidate) &&
+        candidate.retailerUrl.startsWith("https://barbora.lv/produkti/")
+    )
     .sort((left, right) => {
-      const leftFormat = left.format === current.format ? 1 : 0;
-      const rightFormat = right.format === current.format ? 1 : 0;
-      if (leftFormat !== rightFormat) return rightFormat - leftFormat;
-      return (right.matchScore ?? -1) - (left.matchScore ?? -1);
+      const scoreDifference = (right.matchScore ?? -1) - (left.matchScore ?? -1);
+      if (scoreDifference) return scoreDifference;
+      const leftPackDistance = Math.abs(left.packSizeG - current.packSizeG);
+      const rightPackDistance = Math.abs(right.packSizeG - current.packSizeG);
+      return leftPackDistance - rightPackDistance || left.name.localeCompare(right.name);
     })
     .slice(0, limit);
 }

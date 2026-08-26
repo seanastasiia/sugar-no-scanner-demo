@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getKnownBarboraOfferBySlug } from "@/server/barbora-catalog";
 
 const requestSchema = z.object({
-  slugs: z.array(z.string().min(1).max(180).regex(/^[a-z0-9-]+$/)).min(1).max(4)
+  slugs: z.array(z.string().min(1).max(180).regex(/^[a-z0-9-]+$/)).min(1).max(8)
 });
 
 export async function POST(request: Request) {

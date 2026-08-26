@@ -1,4 +1,6 @@
 import snapshot from "../../data/barbora-nutrition-index.generated.json";
+import activeFoodSnapshot from "../../data/barbora-food-product-index.generated.json";
+import { areInterchangeable } from "@/lib/better-alternatives";
 import { scoreBarboraProduct } from "@/lib/scoring";
 import type { ScoredProduct } from "@/lib/types";
 
@@ -19,6 +21,7 @@ export interface BarboraNutritionIndexProduct {
 
 const products = snapshot as BarboraNutritionIndexProduct[];
 const productsBySlug = new Map(products.map((product) => [product.slug, product]));
+const activeFoodSlugs = new Set(activeFoodSnapshot as string[]);
 let scoredProducts: ScoredProduct[] | null = null;
 
 function packSizeInBaseUnits(value: string): number {
@@ -95,22 +98,45 @@ function listScoredProducts(): ScoredProduct[] {
   return scoredProducts;
 }
 
-export function getIndexedBarboraProductWithAlternatives(slug: string, limit = 4) {
+export function rankIndexedBetterAlternatives(
+  indexed: BarboraNutritionIndexProduct,
+  candidates: BarboraNutritionIndexProduct[] = products,
+  activeSlugs: ReadonlySet<string> = activeFoodSlugs,
+  limit = 8
+): ScoredProduct[] {
+  const product = indexedBarboraProductToScoredProduct(indexed);
+  if (product.matchScore === null) return [];
+  const currentMatchScore = product.matchScore;
+
+  const scoredCandidates = candidates === products
+    ? listScoredProducts()
+    : candidates.map(indexedBarboraProductToScoredProduct);
+  return scoredCandidates
+    .filter((candidate) => {
+      const slug = candidate.id.slice("barbora:".length);
+      return candidate.id !== product.id && activeSlugs.has(slug);
+    })
+    .filter(
+      (candidate) =>
+        candidate.ratingStatus === "complete" &&
+        candidate.matchScore !== null &&
+        candidate.matchScore >= currentMatchScore &&
+        areInterchangeable(product, candidate)
+    )
+    .sort((left, right) => {
+      const scoreDifference = (right.matchScore ?? -1) - (left.matchScore ?? -1);
+      if (scoreDifference) return scoreDifference;
+      const leftPackDistance = Math.abs(left.packSizeG - product.packSizeG);
+      const rightPackDistance = Math.abs(right.packSizeG - product.packSizeG);
+      return leftPackDistance - rightPackDistance || left.name.localeCompare(right.name);
+    })
+    .slice(0, limit);
+}
+
+export function getIndexedBarboraProductWithAlternatives(slug: string, limit = 8) {
   const indexed = getIndexedBarboraNutrition(slug);
   if (!indexed) return null;
   const product = indexedBarboraProductToScoredProduct(indexed);
-  const alternatives = listScoredProducts()
-    .filter(
-      (candidate) =>
-        candidate.id !== product.id &&
-        candidate.category === product.category &&
-        candidate.nutritionBasis === product.nutritionBasis &&
-        candidate.ratingStatus === "complete" &&
-        candidate.matchScore !== null
-    )
-    .sort((left, right) =>
-      (right.matchScore ?? -1) - (left.matchScore ?? -1) || left.name.localeCompare(right.name)
-    )
-    .slice(0, limit);
+  const alternatives = rankIndexedBetterAlternatives(indexed, products, activeFoodSlugs, limit);
   return { product, alternatives };
 }
