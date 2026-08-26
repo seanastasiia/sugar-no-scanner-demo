@@ -49,6 +49,9 @@ const detectionSchema = z.object({
 
 const requestSchema = z.object({ detections: z.array(detectionSchema).min(1).max(MAX_SCAN_PRODUCTS) }).strict();
 const MAX_REQUEST_BYTES = 64_000;
+// Five visible products are the common investor-demo case. Resolve that set in
+// one bounded wave instead of making the UI wait for a second 3 + 2 wave.
+const PRODUCT_RESOLUTION_CONCURRENCY = 5;
 const liveResolutionRateLimiter = createRecognitionRateLimiter();
 
 interface ResolveRouteDependencies {
@@ -130,7 +133,7 @@ export function createResolveProductsPost(overrides: Partial<ResolveRouteDepende
         parsed.data.detections.map(toProviderDetection),
         catalog,
         undefined,
-        3,
+        PRODUCT_RESOLUTION_CONCURRENCY,
         "complete"
       );
       return NextResponse.json(

@@ -15,6 +15,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-28: five uncatalogued products waited for sequential enrichment and the slowest lookup blocked every card.** The client now resolves up to five identities independently and applies each exact result as soon as it returns; the server also supports five concurrent identities in one request.
 - **2026-08-28: online purchase actions appeared without a demonstrated saving.** Product and alternative cards now render the retailer action only when an exact current online offer is strictly cheaper than the camera-read shelf price; the qualifying action is full-width, green and labelled `Buy cheaper online`.
 - **2026-08-28: the rounded live-camera card retained black bands inside the media frame.** The live viewport now follows the actual camera stream aspect ratio and updates when Safari reports a dimension change, so media reaches the rounded top and bottom edges without distorting the feed.
 - **2026-08-28: exact Rimi/Livin product images could render as broken thumbnails.** The Next.js image allowlist now includes the versioned retailer snapshot hosts and is covered by a catalog-host regression test.
