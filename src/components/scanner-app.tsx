@@ -1562,8 +1562,20 @@ export function ScannerApp() {
                           const presentation = isRated ? overlayMatchPresentation(item) : null;
                           const protein = item?.nutrientsPer100g.proteinG;
                           const sugar = item?.nutrientsPer100g.totalSugarG;
+                          const retailerOffer = detection?.retailerOffer?.exactSku
+                            ? detection.retailerOffer
+                            : null;
+                          const cheaperOffer =
+                            detection?.shelfPrice &&
+                            retailerOffer &&
+                            retailerOffer.price < detection.shelfPrice.amount
+                              ? retailerOffer
+                              : null;
                           return (
-                            <li key={id}>
+                            <li
+                              className={`${styles.rankedProduct} ${effectiveSelectedId === id ? styles.activeRankedProduct : ""}`}
+                              key={id}
+                            >
                               <button
                                 type="button"
                                 aria-label={
@@ -1571,7 +1583,7 @@ export function ScannerApp() {
                                     ? `Rank ${rank}, ${itemBrand} ${itemName}, ${presentation.label}`
                                     : `${itemBrand} ${itemName}, nutrition not verified online`
                                 }
-                                className={`${styles.rankedProduct} ${effectiveSelectedId === id ? styles.activeRankedProduct : ""}`}
+                                className={styles.rankedProductOpen}
                                 onClick={() => {
                                   manualSelectionRef.current = true;
                                   setSelectedId(id);
@@ -1602,9 +1614,26 @@ export function ScannerApp() {
                                       <small>{pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}</small>
                                     )}
                                   </div>
-                                  <CompactProductPrice detection={detection} />
+                                  {!cheaperOffer ? <CompactProductPrice detection={detection} /> : null}
                                 </div>
                               </button>
+                              {cheaperOffer && detection?.shelfPrice ? (
+                                <a
+                                  className={styles.rankedProductDeal}
+                                  href={cheaperOffer.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label={`Buy ${itemName} cheaper at Barbora for €${cheaperOffer.price.toFixed(2)} instead of shelf price €${detection.shelfPrice.amount.toFixed(2)}`}
+                                  onClick={() =>
+                                    track("retailer_link_clicked", source, id, { placement: "ranked_price_cta" })
+                                  }
+                                >
+                                  <s>€{detection.shelfPrice.amount.toFixed(2)}</s>
+                                  <strong>€{cheaperOffer.price.toFixed(2)}</strong>
+                                  <span>Buy cheaper at Barbora</span>
+                                  <ArrowUpRight aria-hidden="true" size={15} />
+                                </a>
+                              ) : null}
                             </li>
                           );
                         })}
@@ -1615,7 +1644,6 @@ export function ScannerApp() {
                   {selectedPayload ? (
                     <ProductResult
                       payload={selectedPayload}
-                      detection={selectedDetection}
                       scanDetections={detectionById}
                       showSummary={visibleTrayIds.length === 1}
                       onAlternative={(id) => {
@@ -1629,10 +1657,7 @@ export function ScannerApp() {
                   ) : selectedDetection?.identity && effectiveSelectedId && pendingProductIds.has(effectiveSelectedId) ? (
                     <LoadingProductResult detection={selectedDetection} />
                   ) : selectedDetection?.identity ? (
-                    <RecognizedProductResult
-                      detection={selectedDetection}
-                      onRetailer={() => track("retailer_link_clicked", source, selectedDetection.productId, { placement: "recognized_product" })}
-                    />
+                    <RecognizedProductResult detection={selectedDetection} />
                   ) : null}
                 </div>
               )}
@@ -1726,14 +1751,12 @@ function CheckoutScene({ onLoad }: { onLoad: (dimensions: MediaDimensions) => vo
 
 function ProductResult({
   payload,
-  detection,
   scanDetections,
   showSummary,
   onAlternative,
   onRetailer
 }: {
   payload: ProductPayload;
-  detection?: ProductDetection;
   scanDetections: Record<string, ProductDetection>;
   showSummary: boolean;
   onAlternative: (id: string) => void;
@@ -1783,10 +1806,6 @@ function ProductResult({
             <h2>{product.shortName}</h2>
           </div>
         </div>
-      ) : null}
-
-      {detection?.shelfPrice ? (
-        <PriceComparison detection={detection} onRetailer={() => onRetailer(product.id)} />
       ) : null}
 
       {showSummary && product.ratingSignalCount > 0 ? <SugarNoBadge product={product} /> : null}
@@ -1869,13 +1888,7 @@ function ProductResult({
   );
 }
 
-function RecognizedProductResult({
-  detection,
-  onRetailer
-}: {
-  detection: ProductDetection;
-  onRetailer: () => void;
-}) {
+function RecognizedProductResult({ detection }: { detection: ProductDetection }) {
   const identity = detection.identity!;
   const visiblePackSize =
     identity.packSize && !identity.name.toLowerCase().includes(identity.packSize.toLowerCase())
@@ -1892,8 +1905,6 @@ function RecognizedProductResult({
           <ScanLine aria-hidden="true" size={15} /> Identified
         </span>
       </div>
-
-      {detection.shelfPrice ? <PriceComparison detection={detection} onRetailer={onRetailer} /> : null}
 
       <div className={styles.pendingDataAction}>
         <Info aria-hidden="true" size={18} />
@@ -1924,65 +1935,6 @@ function LoadingProductResult({ detection }: { detection: ProductDetection }) {
         </span>
       </div>
     </article>
-  );
-}
-
-function PriceComparison({ detection, onRetailer }: { detection: ProductDetection; onRetailer: () => void }) {
-  const shelfPrice = detection.shelfPrice;
-  if (!shelfPrice) return null;
-  const isDemoShelfPrice = shelfPrice.observedText.startsWith("Demo shelf price");
-  const offer = detection.retailerOffer?.exactSku ? detection.retailerOffer : null;
-  const cheaperOnline = Boolean(offer && offer.price < shelfPrice.amount);
-  const savings = cheaperOnline && offer ? shelfPrice.amount - offer.price : 0;
-  const checkedTime = offer
-    ? new Date(offer.checkedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
-    : null;
-
-  return (
-    <section
-      className={`${styles.priceComparison} ${cheaperOnline ? styles.priceComparisonDeal : ""}`}
-      aria-label="Price comparison"
-    >
-      <div className={styles.priceHeading}>
-        <span>{cheaperOnline ? "Cheaper at Barbora" : offer ? "Barbora price check" : "Shelf price"}</span>
-        {savings > 0 ? <strong>€{savings.toFixed(2)} less</strong> : null}
-      </div>
-      <div className={styles.priceValues}>
-        <div>
-          <small>{isDemoShelfPrice ? "Demo shelf price" : "Scanned shelf label"}</small>
-          <strong className={cheaperOnline ? styles.crossedPrice : ""}>€{shelfPrice.amount.toFixed(2)}</strong>
-        </div>
-        {offer ? (
-          <div>
-            <small>Barbora online</small>
-            <strong>€{offer.price.toFixed(2)}</strong>
-          </div>
-        ) : null}
-      </div>
-      {offer ? (
-        <>
-          <p>
-            {isDemoShelfPrice ? "Demo shelf value · exact product match" : "Matched by package identity"}
-            {checkedTime ? ` · checked ${checkedTime}` : ""}
-          </p>
-          <a
-            className={styles.retailerButton}
-            href={offer.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={onRetailer}
-          >
-            <span>
-              <small>Current online offer</small>
-              {cheaperOnline ? "Buy cheaper at Barbora" : "View at Barbora"} · €{offer.price.toFixed(2)}
-            </span>
-            <ArrowUpRight aria-hidden="true" size={19} />
-          </a>
-        </>
-      ) : (
-        <p>No exact online match. The camera-read shelf price is shown without a retailer link.</p>
-      )}
-    </section>
   );
 }
 

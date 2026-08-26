@@ -91,7 +91,8 @@
 .demoGrid button,
 .retailerButton,
 .alternativeOpen,
-.rankedProduct,
+.rankedProductOpen,
+.rankedProductDeal,
 .cameraError button {
   cursor: pointer;
   transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, opacity 180ms ease;
@@ -891,23 +892,34 @@
 }
 
 .rankedProduct {
-  display: grid;
   width: 100%;
   min-height: 82px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.rankedProductOpen {
+  display: grid;
+  width: 100%;
+  min-height: 80px;
   grid-template-columns: 36px 48px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   padding: 10px;
   cursor: pointer;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  background: var(--surface);
+  border: 0;
+  background: transparent;
   color: var(--ink);
   text-align: left;
-  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+  transition: opacity 180ms ease;
 }
 
-.rankedProduct:active {
+.rankedProductOpen:active,
+.rankedProductDeal:active {
   opacity: 0.7;
 }
 
@@ -982,6 +994,48 @@
   font-size: 9px;
   font-variant-numeric: tabular-nums;
   font-weight: 680;
+}
+
+.rankedProductDeal {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 6px;
+  margin: -4px 10px 10px 104px;
+  padding: 7px 9px;
+  border: 1px solid color-mix(in srgb, var(--fit-great) 28%, var(--border));
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--fit-great) 8%, var(--surface));
+  color: var(--ink);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 780;
+  line-height: 1.15;
+  text-decoration: none;
+  transition: opacity 180ms ease;
+}
+
+.rankedProductDeal s {
+  color: var(--muted);
+  text-decoration: line-through 1.5px #c84f43;
+  text-decoration-skip-ink: none;
+}
+
+.rankedProductDeal strong {
+  color: #0e5734;
+}
+
+.rankedProductDeal span {
+  min-width: 0;
+  margin-left: auto;
+  color: #0e5734;
+  font-weight: 850;
+  text-align: right;
+}
+
+.rankedProductDeal svg {
+  flex: 0 0 auto;
+  color: #0e5734;
 }
 
 .productResult {
@@ -1147,89 +1201,6 @@
   color: #6b4311;
   font-size: 11px;
   font-weight: 800;
-}
-
-.priceComparison {
-  margin-top: 14px;
-  padding: 13px;
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  background: var(--surface);
-  box-shadow: 0 10px 28px rgb(17 19 31 / 4%);
-}
-
-.priceComparisonDeal {
-  border-color: #9cc8ae;
-  background: #f2faf5;
-}
-
-.priceHeading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.priceHeading span {
-  color: var(--accent-deep);
-  font-size: 10px;
-  font-weight: 840;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.priceHeading strong {
-  color: #0e5734;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.priceValues {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.priceValues > div {
-  display: grid;
-  gap: 3px;
-  padding: 10px;
-  border-radius: 13px;
-  background: var(--surface-tinted);
-}
-
-.priceValues > div:only-child {
-  grid-column: 1 / -1;
-}
-
-.priceValues small {
-  color: var(--muted);
-  font-size: 9px;
-  font-weight: 750;
-}
-
-.priceValues strong {
-  font-size: 24px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.05em;
-}
-
-.priceValues .crossedPrice {
-  color: var(--muted);
-  text-decoration: line-through 2px #c84f43;
-  text-decoration-skip-ink: none;
-}
-
-.priceComparison > p {
-  margin: 9px 1px 0;
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 1.4;
-}
-
-.priceComparison .retailerButton {
-  margin-top: 11px;
 }
 
 .compactProductPrice {
@@ -1804,8 +1775,6 @@
   .alternativeCard,
   .pendingData,
   .pendingDataAction,
-  .priceComparison,
-  .priceValues > div,
   .rankedProduct,
   .rankedProductThumb {
     background: var(--surface);
@@ -1823,18 +1792,21 @@
     color: var(--ink);
   }
 
-  .priceComparisonDeal {
-    border-color: #315e45;
-    background: #1c3024;
-  }
-
   .compactProductPrice {
     color: var(--muted);
   }
 
   .compactProductPrice > strong,
-  .compactProductPrice > small {
+  .compactProductPrice > small,
+  .rankedProductDeal strong,
+  .rankedProductDeal span,
+  .rankedProductDeal svg {
     color: #9dd7b6;
+  }
+
+  .rankedProductDeal {
+    border-color: #315e45;
+    background: #1c3024;
   }
 
   .introCopy,
@@ -1843,7 +1815,6 @@
   .emptyResult,
   .pendingData,
   .pendingDataAction,
-  .priceComparison > p,
   .rankedProductMeta > small,
   .demoGrid button span {
     color: var(--muted);

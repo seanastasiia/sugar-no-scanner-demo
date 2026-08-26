@@ -13,6 +13,7 @@ This file tracks open limitations and only the most recent resolved regressions.
 
 ## Recently resolved
 
+- **2026-08-26: the expanded result repeated a selected product's price in a large standalone `Cheaper at Barbora` panel.** The panel is removed; an exact lower Barbora price and its one-tap action now live inside the matching horizontal ranked-product card.
 - **2026-08-26: completed scans repeated the same product count in a dark camera banner and the compact results sheet.** The resolved-success banner is now visually removed; its screen-reader announcement remains, while loading and error feedback stay visible.
 - **2026-08-26: products without catalog images appeared as empty gray squares.** Result cards now prefer the exact catalog/Barbora image and fall back to a device-only crop of the recognized package from the current scene.
 - **2026-08-26: green, yellow and red camera markers had inconsistent visual sizes.** All rated fit discs, including the leading result, now render at the same 46 px diameter while the full product outline remains the larger touch target.

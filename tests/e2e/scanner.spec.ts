@@ -383,18 +383,19 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
     "line-through"
   );
   await ranking.getByRole("button").first().click();
-  const shelfPriceComparison = page.getByLabel("Price comparison");
-  await expect(shelfPriceComparison.getByText("Cheaper at Barbora", { exact: true })).toBeVisible();
-  await expect(shelfPriceComparison.getByText("Demo shelf price", { exact: true })).toBeVisible();
-  await expect(shelfPriceComparison.getByText("€3.49", { exact: true })).toHaveCSS(
+  await expect(page.getByLabel("Price comparison")).toHaveCount(0);
+  const rankedShelfDeal = ranking.getByRole("link", { name: /cheaper at Barbora for €2\.79/i });
+  await expect(rankedShelfDeal).toBeVisible();
+  await expect(rankedShelfDeal.getByText("€3.49", { exact: true })).toHaveCSS(
     "text-decoration-line",
     "line-through"
   );
-  await expect(shelfPriceComparison.getByText("€2.79", { exact: true })).toBeVisible();
-  await expect(shelfPriceComparison.getByRole("link", { name: /Buy cheaper at Barbora · €2\.79/ })).toHaveAttribute(
+  await expect(rankedShelfDeal.getByText("€2.79", { exact: true })).toBeVisible();
+  await expect(rankedShelfDeal).toHaveAttribute(
     "href",
     "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g"
   );
+  expect((await rankedShelfDeal.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await expect(page.getByText("Outlines show products with both protein and total sugar available.", { exact: true })).toHaveCount(0);
   await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g/).first()).toBeVisible();
@@ -1412,7 +1413,7 @@ test("live camera groups repeated packs, holds the result and replaces it only a
   expect(focusModes).toEqual([false, false, false, false]);
 });
 
-test("a rated product receives an honest price comparison", async ({ page }) => {
+test("a rated product keeps an honest inline retailer action without a duplicate price block", async ({ page }) => {
   await unlock(page);
   await page.route("**/api/products/**", async (route) => {
     await route.fulfill({
@@ -1508,30 +1509,17 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await expect(page.getByRole("heading", { name: /Zero Peach.*Pesca & Clementina.*330 ml/ })).toBeVisible();
   await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
-  const comparison = page.getByLabel("Price comparison");
-  await expect(comparison.getByText("Cheaper at Barbora", { exact: true })).toBeVisible();
-  await expect(comparison.getByText("€0.70 less")).toBeVisible();
-  await expect(comparison.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "line-through");
-  await expect(comparison.getByRole("link", { name: /Buy cheaper at Barbora · €0.99/ })).toHaveAttribute(
-    "href",
-    "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
-  );
+  await expect(page.getByLabel("Price comparison")).toHaveCount(0);
   await expect(page.getByText("Nutrition not verified online", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await expect(page.getByText("How this result was made", { exact: true })).toHaveCount(0);
-  await comparison.scrollIntoViewIfNeeded();
-  await comparison.screenshot({ path: "docs/screenshots/price-comparison-mobile.png" });
 
   exactSku = false;
   await page.getByRole("button", { name: "Collapse product results" }).click();
   await page.getByRole("button", { name: "Back to live camera" }).click();
   await chooseSavedPhoto(page, "possible-price-check.png");
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(comparison.getByText("Shelf price", { exact: true })).toBeVisible();
-  await expect(comparison.getByText("Possible Barbora match")).toHaveCount(0);
-  await expect(comparison.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "none");
-  await expect(comparison.getByText("Cheaper at Barbora", { exact: true })).toHaveCount(0);
-  await expect(comparison.getByRole("link")).toHaveCount(0);
+  await expect(page.getByLabel("Price comparison")).toHaveCount(0);
   await expect(page.getByLabel("Product result preview").getByRole("link", { name: /Buy .* cheaper at Barbora/ })).toHaveCount(0);
 
   exactSku = true;

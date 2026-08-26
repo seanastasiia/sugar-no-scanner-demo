@@ -42,7 +42,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Raw images not stored in analytics | `imageStored: false`, metadata guard and API end-to-end rejection test | Pass at app boundary |
 | Permission denied | Mocked WebKit browser scenario verifies explanation, retry and continued access to `Show demo` | Pass locally |
 | Saved-image fallback | Client resize and provider-unavailable state tested | Pass locally |
-| Shelf-price comparison | UI regression proves a trusted €1.69 shelf price appears beneath the recognized product and is crossed out only for an exact €0.99 Barbora match | Pass as logic |
+| Shelf-price comparison | UI regression proves a trusted €1.69 shelf price is crossed out only for an exact €0.99 Barbora match, with the purchase action inside the matching product card and no duplicate standalone price panel | Pass as logic |
 | One-tap cheaper purchase | A trusted cheaper exact SKU exposes a 44 px or larger `Buy cheaper` link in the compact camera sheet; possible matches and frames without a shelf label expose no purchase action | Pass locally |
 | Live shelf-label OCR | Real Gemini call on the concept shelf identified six distinct front-facing products and associated €1.79/€2.29 labels in 7,159 ms; physical Latvia benchmark is absent | Partially measured |
 | Live recognition rate limit | Default 36/60 allowance covers the roughly 29/min camera cadence; samples are exempt and API `429` includes `Retry-After`. Client code pauses capture, preserves a provisional product and exposes retry/demo actions; unit and browser regressions encode the contract | Pass locally |
