@@ -13,6 +13,7 @@ This file tracks open limitations and only the most recent resolved regressions.
 
 ## Recently resolved
 
+- **2026-08-26: Similar options shared one ambiguous Barbora CTA and showed no per-card price.** Every exact Barbora alternative now has its own non-blocking `Buy online` action and current price; `Cheaper online` is reserved for the same SKU with a higher scanned shelf price.
 - **2026-08-26: price-only and identity-only products remained in the final list as incomplete results.** Unresolved identities now disappear when the exact nutrition lookup finishes; a shelf price or retailer offer is shown only alongside a source-backed Sugar.no fit.
 - **2026-08-25: live Gemini boxes could drift onto shelf labels and Latvian prices without a readable `€` were always discarded.** Recognition now uses Gemini's native 0-1000 `box2d` convention with tight-package instructions, higher live-frame resolution and guarded comma-decimal shelf prices.
 - **2026-08-25: expanded multi-product results repeated scan counts, instructions and a second scan-again action above the ranking.** The expanded view now keeps only the collapse control, `Best fit first` and the ranked product cards before contextual price or alternative actions.

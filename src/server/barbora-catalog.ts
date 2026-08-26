@@ -466,6 +466,26 @@ export async function getBarboraProductBySlug(slug: string): Promise<BarboraPage
   return product;
 }
 
+export async function getKnownBarboraOfferBySlug(slug: string): Promise<RetailerOffer | null> {
+  const product = await getBarboraProductBySlug(slug);
+  if (!product || product.Url !== slug) return null;
+  return {
+    retailer: "Barbora",
+    slug: product.Url,
+    title: product.title,
+    brand: product.brand_name,
+    url: `https://barbora.lv/produkti/${product.Url}`,
+    price: product.price,
+    currency: "EUR",
+    unitPrice: Number.isFinite(product.comparative_unit_price) ? product.comparative_unit_price! : null,
+    unit: product.comparative_unit || null,
+    imageUrl: product.image || null,
+    checkedAt: new Date().toISOString(),
+    matchConfidence: 1,
+    exactSku: true
+  };
+}
+
 async function fetchOffer(slug: string, input: BarboraLookupInput, indexScore: number): Promise<RetailerOffer | null> {
   const url = `https://barbora.lv/produkti/${slug}`;
   const product = await getBarboraProductBySlug(slug);

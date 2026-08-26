@@ -1356,13 +1356,54 @@
   position: relative;
   display: grid;
   min-width: min(62vw, 218px);
-  min-height: 170px;
+  min-height: 224px;
   flex: 0 0 min(62vw, 218px);
   border: 1px solid var(--border);
   border-radius: 15px;
   background: #fffdf8;
   color: var(--ink);
   scroll-snap-align: start;
+}
+
+.alternativeBuy {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 8px 8px;
+  padding: 7px 10px;
+  border-radius: 11px;
+  background: var(--ink);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.alternativeBuy > span:first-child {
+  display: grid;
+  gap: 1px;
+}
+
+.alternativeBuy strong,
+.alternativeBuy s,
+.alternativeBuyPrice {
+  color: inherit;
+  font-size: 10px;
+  line-height: 1.15;
+  text-transform: none;
+}
+
+.alternativeBuy s {
+  color: rgb(255 255 255 / 66%);
+  font-size: 8px;
+}
+
+.alternativeBuyPrice {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .alternativeOpen {

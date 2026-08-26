@@ -36,11 +36,13 @@ import {
 } from "@/lib/match-presentation";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
+import { barboraProductSlug, isExactOnlineSaving } from "@/lib/online-offer";
 import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { compareFairCohorts } from "@/lib/scoring";
 import { mergeUploadScanResults, uploadScanCrops, type UploadScanCrop } from "@/lib/upload-scan";
 import type {
   ProductDetection,
+  RetailerOffer,
   RecognitionEnrichmentResponse,
   RecognitionMode,
   RecognitionResponse,
@@ -53,6 +55,10 @@ import styles from "./scanner-app.module.css";
 interface ProductPayload {
   product: ScoredProduct;
   alternatives: ScoredProduct[];
+}
+
+interface AlternativeOfferResponse {
+  offers: Record<string, RetailerOffer | null>;
 }
 
 type CameraState = "idle" | "requesting" | "live" | "denied" | "error";
@@ -1445,6 +1451,7 @@ export function ScannerApp() {
                     <ProductResult
                       payload={selectedPayload}
                       detection={selectedDetection}
+                      scanDetections={detectionById}
                       showSummary={visibleTrayIds.length === 1}
                       onAlternative={(id) => {
                         manualSelectionRef.current = true;
@@ -1555,17 +1562,53 @@ function CheckoutScene({ onLoad }: { onLoad: (dimensions: MediaDimensions) => vo
 function ProductResult({
   payload,
   detection,
+  scanDetections,
   showSummary,
   onAlternative,
   onRetailer
 }: {
   payload: ProductPayload;
   detection?: ProductDetection;
+  scanDetections: Record<string, ProductDetection>;
   showSummary: boolean;
   onAlternative: (id: string) => void;
   onRetailer: (id: string) => void;
 }) {
   const { product, alternatives } = payload;
+  const alternativeSlugs = useMemo(
+    () => alternatives.map((alternative) => barboraProductSlug(alternative.retailerUrl)).filter(Boolean) as string[],
+    [alternatives]
+  );
+  const offerRequestKey = alternativeSlugs.join("|");
+  const [offerResult, setOfferResult] = useState<{
+    key: string;
+    offers: Record<string, RetailerOffer | null>;
+  }>({ key: "", offers: {} });
+
+  useEffect(() => {
+    if (!offerRequestKey) return;
+    const controller = new AbortController();
+    void fetch("/api/offers", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slugs: alternativeSlugs }),
+      signal: controller.signal
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Alternative prices unavailable");
+        return response.json() as Promise<AlternativeOfferResponse>;
+      })
+      .then((response) => setOfferResult({ key: offerRequestKey, offers: response.offers }))
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setOfferResult({ key: offerRequestKey, offers: {} });
+        }
+      });
+    return () => controller.abort();
+  }, [alternativeSlugs, offerRequestKey]);
+
+  const alternativeOffers = offerResult.key === offerRequestKey ? offerResult.offers : {};
+  const pricesLoading = Boolean(offerRequestKey && offerResult.key !== offerRequestKey);
   return (
     <article className={styles.productResult}>
       {showSummary ? (
@@ -1608,45 +1651,54 @@ function ProductResult({
             </div>
           </div>
           <div className={styles.alternativeList}>
-            {alternatives.map((alternative) => (
-              <article className={styles.alternativeCard} key={alternative.id}>
-                <button
-                  className={styles.alternativeOpen}
-                  type="button"
-                  onClick={() => onAlternative(alternative.id)}
-                  aria-label={`Compare ${alternative.name}`}
-                >
-                  <div className={styles.alternativeThumb}>
-                    {alternative.imageUrl ? (
-                      <Image src={alternative.imageUrl} alt="" fill sizes="58px" />
-                    ) : null}
-                  </div>
-                  <span>
-                    <small>{alternative.brand}</small>
-                    <strong>{alternative.shortName}</strong>
-                    <MatchPill product={alternative} />
-                  </span>
-                </button>
-              </article>
-            ))}
+            {alternatives.map((alternative) => {
+              const slug = barboraProductSlug(alternative.retailerUrl);
+              const offer = slug ? alternativeOffers[slug] : null;
+              const shelfPrice = scanDetections[alternative.id]?.shelfPrice;
+              const cheaperOnline = isExactOnlineSaving(offer, shelfPrice);
+              return (
+                <article className={styles.alternativeCard} key={alternative.id}>
+                  <button
+                    className={styles.alternativeOpen}
+                    type="button"
+                    onClick={() => onAlternative(alternative.id)}
+                    aria-label={`Compare ${alternative.name}`}
+                  >
+                    <div className={styles.alternativeThumb}>
+                      {alternative.imageUrl ? (
+                        <Image src={alternative.imageUrl} alt="" fill sizes="58px" />
+                      ) : null}
+                    </div>
+                    <span>
+                      <small>{alternative.brand}</small>
+                      <strong>{alternative.shortName}</strong>
+                      <MatchPill product={alternative} />
+                    </span>
+                  </button>
+                  {slug ? (
+                    <a
+                      className={styles.alternativeBuy}
+                      href={offer?.url || alternative.retailerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => onRetailer(alternative.id)}
+                      aria-label={`${cheaperOnline ? "Buy cheaper online" : "Buy online"} ${alternative.name}${offer ? ` for €${offer.price.toFixed(2)}` : ""}`}
+                    >
+                      <span>
+                        <strong>{cheaperOnline ? "Cheaper online" : "Buy online"}</strong>
+                        {cheaperOnline && shelfPrice ? <s>€{shelfPrice.amount.toFixed(2)} shelf</s> : null}
+                      </span>
+                      <span className={styles.alternativeBuyPrice}>
+                        {offer ? `€${offer.price.toFixed(2)}` : pricesLoading ? "Checking…" : ""}
+                        <ArrowUpRight aria-hidden="true" size={16} />
+                      </span>
+                    </a>
+                  ) : null}
+                </article>
+              );
+            })}
           </div>
         </section>
-      ) : null}
-
-      {product.retailerUrl.startsWith("https://barbora.lv/") && !(detection?.shelfPrice && detection.retailerOffer?.exactSku) ? (
-        <a
-          className={styles.retailerButton}
-          href={product.retailerUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => onRetailer(product.id)}
-        >
-          <span>
-            <small>Available online</small>
-            View at Barbora · check current price
-          </span>
-          <ArrowUpRight aria-hidden="true" size={19} />
-        </a>
       ) : null}
     </article>
   );

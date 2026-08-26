@@ -73,6 +73,32 @@ async function waitForAlternativeImages(page: Page) {
   });
 }
 
+async function mockAlternativeOffers(page: Page, price = 1.49) {
+  await page.route("**/api/offers", async (route) => {
+    const { slugs } = route.request().postDataJSON() as { slugs: string[] };
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        offers: Object.fromEntries(slugs.map((slug) => [slug, {
+          retailer: "Barbora",
+          slug,
+          title: slug,
+          brand: "Test brand",
+          url: `https://barbora.lv/produkti/${slug}`,
+          price,
+          currency: "EUR",
+          unitPrice: null,
+          unit: null,
+          imageUrl: null,
+          checkedAt: "2026-08-26T10:00:00.000Z",
+          matchConfidence: 1,
+          exactSku: true
+        }]))
+      })
+    });
+  });
+}
+
 const onePixelPng = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
   "base64"
@@ -240,6 +266,7 @@ test("public root opens directly into the camera-first experience", async ({ pag
 });
 
 test("sample shelf photo highlights products and ranks two-factor Sugar.no fits", async ({ page }) => {
+  await mockAlternativeOffers(page);
   await unlock(page);
   await openDemoScene(page, "Shelf demo");
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
@@ -302,6 +329,17 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await page.screenshot({ path: "docs/screenshots/shelf-results-mobile.png" });
   await expect(resultsDialog.getByLabel("Sugar.no badge")).toHaveCount(0);
   await expect(resultsDialog.getByText("Similar options", { exact: true })).toBeVisible();
+  const similarOptions = resultsDialog.getByRole("region", { name: "Compare without starting over" });
+  await expect(similarOptions.getByRole("link", { name: /Buy online .* for €1\.49/ })).toHaveCount(2);
+  await expect(page.getByText("View at Barbora · check current price", { exact: true })).toHaveCount(0);
+  await ranking.getByRole("button", { name: /BAREBELLS.*Lemon Cheesecake/i }).click();
+  const cheaperAlternative = similarOptions.getByRole("link", { name: /Buy cheaper online .* for €1\.49/ });
+  await expect(cheaperAlternative).toBeVisible();
+  await expect(cheaperAlternative.getByText("€3.49 shelf", { exact: true })).toHaveCSS(
+    "text-decoration-line",
+    "line-through"
+  );
+  await ranking.getByRole("button").first().click();
   const shelfPriceComparison = page.getByLabel("Price comparison");
   await expect(shelfPriceComparison.getByText("Cheaper at Barbora", { exact: true })).toBeVisible();
   await expect(shelfPriceComparison.getByText("Demo shelf price", { exact: true })).toBeVisible();

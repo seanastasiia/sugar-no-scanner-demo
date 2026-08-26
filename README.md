@@ -22,7 +22,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
 - Product overlays use Gemini's native `box2d [ymin, xmin, ymax, xmax]` coordinates and exclude shelf labels and neighboring packages from the product box.
 - A high-confidence Latvian comma-decimal shelf label can be accepted even when the printed `€` symbol is not readable; numbers printed on a package remain excluded.
-- A crossed-out shelf price and `Buy cheaper at Barbora` appear only when the exact Barbora SKU is currently cheaper.
+- A crossed-out shelf price and `Buy cheaper at Barbora` appear only when the exact Barbora SKU is currently cheaper. Similar options load their exact current Barbora prices after the scan result and expose their own `Buy online` actions; there is no shared retailer button.
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
 - The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
 
@@ -100,6 +100,7 @@ Use the project change lanes in `AGENTS.md`:
 
 - `POST /api/recognize`: image data URL plus source type, returns bounded detections.
 - `POST /api/resolve-products`: up to five image-free identities, returns optional exact retailer/nutrition enrichment.
+- `POST /api/offers`: up to four known exact Barbora slugs, returns current per-card offers without blocking recognition.
 - `POST /api/events`: metadata-only product events with image-like values rejected.
 - `GET /api/health`: service, catalog and deployed commit status.
 

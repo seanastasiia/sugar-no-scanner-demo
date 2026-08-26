@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  getKnownBarboraOfferBySlug,
   isExactBarboraMatch,
   parseBarboraProductPage,
   rankBarboraCandidates,
@@ -7,7 +8,22 @@ import {
   retailerBrandMatches
 } from "./barbora-catalog";
 
+afterEach(() => vi.unstubAllGlobals());
+
 describe("Barbora product lookup", () => {
+  it("returns a current exact-SKU offer for a known Barbora slug", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(`
+      <script>window.product = {"title":"SANPELLEGRINO Zero peach 330ml","brand_name":"SANPELLEGRINO","price":1.49,"comparative_unit":"l","comparative_unit_price":4.52,"image":"https://cdn.example/peach.png","Url":"gaz-dz-sanpellegrino-zero-peach-0-33-l-d","status":"active"};</script>
+    `)));
+
+    await expect(getKnownBarboraOfferBySlug("gaz-dz-sanpellegrino-zero-peach-0-33-l-d")).resolves.toMatchObject({
+      exactSku: true,
+      price: 1.49,
+      unitPrice: 4.52,
+      url: "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
+    });
+  });
+
   it("ranks the photographed Sanpellegrino flavor ahead of other variants", () => {
     const candidates = rankBarboraCandidates(
       {
