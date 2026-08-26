@@ -23,3 +23,8 @@ Feature commit: `213143ca9c54a6c3358d24c11ddbbfc78932d665`
 1. Open `Show demo` and choose `Shelf demo`.
 2. Confirm the compact sheet contains `View all` but no circular refresh button.
 3. Confirm yellow minus markers cover less of their packages and tapping anywhere in the outlined package still opens that product.
+
+## Production verification
+
+- Railway health returned HTTP 200 and `status: ok` for release commit `0b176a1a4a70cb886b8895ad4ed333d6183282d6`.
+- Production WebKit Shelf demo at 393×852 found zero compact `Scan again` buttons, one visible `View all` action, 38 px yellow camera discs and no page-level horizontal overflow.
