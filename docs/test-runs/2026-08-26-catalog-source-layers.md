@@ -40,3 +40,10 @@ The first `npm run verify` exposed two test expectation gaps for the new `retail
 3. Scan a neighboring flavor or different pack size and confirm it does not borrow the bootstrap SKU's nutrition or offer.
 4. Open `/api/health` and confirm `connectedRetailerProducts` and `openFoodFactsBulkProducts` are present.
 5. Confirm the investor demo still completes Shelf and Checkout scenes without external credentials.
+
+## Production evidence
+
+- GitHub `main`: `90d6f9d4315f194bf7309aac22b7c364dceac208` verified through the connected GitHub account.
+- Railway deployment: `75d6636a-6e54-48f0-b616-857694dce5e3` — **SUCCESS**.
+- Public root: HTTP 200.
+- Public `/api/health`: `status: ok`, deployed commit `90d6f9d4315f194bf7309aac22b7c364dceac208`, Rimi 3, Livin 2, OFF bulk 5.
