@@ -445,6 +445,25 @@
   transform: translate(-50%, -50%);
 }
 
+.detectionBox.toneMiddle span {
+  width: 38px;
+  height: 38px;
+}
+
+.detectionBox.bestBox.toneMiddle span {
+  width: 42px;
+  height: 42px;
+  border-width: 3px;
+}
+
+.detectionBox.toneMiddle span strong {
+  top: 41px;
+}
+
+.detectionBox.bestBox.toneMiddle span strong {
+  top: 45px;
+}
+
 .detectionBox span strong {
   position: absolute;
   top: 49px;
@@ -1714,22 +1733,6 @@
 
   .sheetActions button {
     padding: 0 10px;
-  }
-
-  .sheetActions .compactScanAgain {
-    width: 44px;
-    padding: 0;
-    justify-content: center;
-  }
-
-  .compactScanAgain span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 
   .scanSummary > div:first-child {

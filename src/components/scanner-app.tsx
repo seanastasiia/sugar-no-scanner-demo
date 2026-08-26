@@ -1289,14 +1289,6 @@ export function ScannerApp() {
                       <button type="button" onClick={openResults} aria-controls="scan-results-content">
                         <List aria-hidden="true" size={17} /> <span>View all</span>
                       </button>
-                      <button
-                        className={styles.compactScanAgain}
-                        type="button"
-                        onClick={source === "camera" ? scanAgain : startCamera}
-                        aria-label="Scan again"
-                      >
-                        <RefreshCw aria-hidden="true" size={17} /> <span>Scan again</span>
-                      </button>
                     </div>
                   </>
                 )}
