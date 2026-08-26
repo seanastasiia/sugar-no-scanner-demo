@@ -265,28 +265,28 @@ test("public root opens directly into the camera-first experience", async ({ pag
   await expect(page.getByText("Private demo", { exact: true })).toHaveCount(0);
 });
 
-test("scanner uses the current Sugar.no website palette without changing fit semantics", async ({ page }) => {
+test("scanner follows the current Sugar.no app surface language without changing fit semantics", async ({ page }) => {
   await unlock(page);
   const palette = await page.evaluate(() => {
     const style = getComputedStyle(document.documentElement);
     return Object.fromEntries(
-      ["--canvas", "--surface", "--ink", "--accent", "--accent-deep", "--peach", "--coral", "--focus"]
+      ["--canvas", "--surface", "--surface-tinted", "--ink", "--muted", "--accent", "--border", "--focus"]
         .map((token) => [token, style.getPropertyValue(token).trim()])
     );
   });
   expect(palette).toEqual({
-    "--canvas": "#f0f7ff",
+    "--canvas": "#f3f4f8",
     "--surface": "#fff",
+    "--surface-tinted": "#f5f5f7",
     "--ink": "#11131f",
+    "--muted": "#69696f",
     "--accent": "#0a84ff",
-    "--accent-deep": "#044884",
-    "--peach": "#ffb496",
-    "--coral": "#f14e58",
+    "--border": "#e8e9ef",
     "--focus": "#0a84ff"
   });
 
   await openDemoScene(page, "Shelf demo");
-  await expect(page.locator("aside")).toHaveCSS("background-color", "rgb(240, 247, 255)");
+  await expect(page.locator("aside")).toHaveCSS("background-color", "rgb(243, 244, 248)");
   await expect(page.getByRole("status")).toHaveCSS("background-color", "rgba(20, 21, 30, 0.86)");
   const markers = page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]');
   await expect(markers).toHaveCount(4);

@@ -7,16 +7,16 @@ The redesign uses two public interaction references without copying their brandi
 
 Sugar.no applies those patterns to relative protein and total-sugar comparison. It uses the same product language as the main app: `Great fit`, `Moderate fit` and `Low fit` describe the two-factor comparison and never label food as good, bad, healthy or unhealthy.
 
-## Sugar.no brand palette
+## Sugar.no app surface language
 
-The scanner theme is sourced from the live [Sugar.no website](https://sugar.no/) tokens captured on 26 August 2026, rather than from the older beige/coral proof-of-concept palette:
+The scanner uses the four supplied Sugar.no iOS screenshots as its closest visual reference. Website colors remain useful brand context, but the product UI establishes the surface hierarchy:
 
-- canvas `#F0F7FF`, surface `#FFFFFF`, tinted surface `#F6F5F8`, blue surface `#E5F3FF`;
-- primary ink `#11131F`, dark camera chrome `#14151E`, muted copy `#525252`;
-- focus/selection `#0A84FF`, deep-blue labels `#044884`, light blue `#A5D0FF`;
-- warm accents `#FFB496` and `#F14E58`.
+- cool light-gray canvas `#F3F4F8`, white surface `#FFFFFF` and tinted media wells `#F5F5F7`;
+- primary ink `#11131F`, dark camera chrome `#14151E`, muted copy `#69696F`;
+- neutral card border `#E8E9EF` and system-blue action/focus `#0A84FF`;
+- soft shadows, large rounded white cards and no decorative blue card fills.
 
-Blue is reserved for brand focus and active selection. It does not replace the scanner's evidence-backed fit semantics: Great stays green, Moderate amber and Low red. Camera controls use an 82–86% `#14151E` scrim so white labels remain readable over bright packages and price tags. Results use one pale-blue canvas, white cards and a single blue active-card outline; the hierarchy is not carried by color alone.
+Blue is reserved for interaction and keyboard focus rather than general decoration. The active ranked card stays white and uses one near-black outline. Evidence-backed fit semantics remain independent: Great stays green, Moderate amber and Low red, with explicit labels inside filled pills. Camera controls still use an 82–86% `#14151E` scrim so white labels remain readable over bright packages and price tags.
 
 The broad camera pass follows the multi-product shelf pattern: it scans the complete frame, keeps at most five high-confidence distinct readable front-facing SKUs and groups repeated facings of the same SKU. The focused center retry is only a fallback after the broad pass is uncertain.
 

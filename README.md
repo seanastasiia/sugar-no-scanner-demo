@@ -8,7 +8,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 ## Current product behavior
 
-- The scanner uses the current `sugar.no` website palette: blue-white canvas and surfaces, near-black ink and controls, blue focus/selection, and restrained peach/coral accents. `Great fit`, `Moderate fit` and `Low fit` keep independent semantic colors.
+- The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
 - Camera starts after permission without requiring a shutter action.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
 - Saved-photo views omit the redundant source badge and keep only the `Back to live` action in the top overlay.
