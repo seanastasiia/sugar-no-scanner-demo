@@ -1,7 +1,7 @@
 # Sugar.no brand palette pass
 
 Date: 2026-08-26
-Feature commit: recorded after production deployment
+Feature commit: `f64516078af4b3430a048201202dcc8ee84fd39c`
 
 ## Change under test
 
@@ -33,4 +33,7 @@ Feature commit: recorded after production deployment
 
 ## Production verification
 
-- Pending GitHub `main` push and Railway health/smoke verification.
+- GitHub `main` contains feature commit `f64516078af4b3430a048201202dcc8ee84fd39c`.
+- Railway deployment `31356dfa-94b1-4e85-b4a5-b5c265d52670` completed with `SUCCESS`; its running instance and `/api/health` reported the exact feature commit.
+- Production Mobile Safari smoke confirmed the seven live-site palette tokens, four shelf markers/results, three checkout markers/results, the expected camera chrome and zero page-level horizontal overflow in compact and expanded states.
+- Production screenshots were visually inspected after image decode; Shelf ranking and Checkout camera/result hierarchy both render with the new palette and unchanged fit colors.
