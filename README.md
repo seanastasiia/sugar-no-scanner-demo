@@ -17,6 +17,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.
 - Expanded multi-product results show only the collapse control, `Best fit first` and the ranked product cards; duplicate summaries, counters and scan-again controls are omitted.
 - The compact camera preview mirrors that ranking with `#1`, `#2`, `#3…` badges and shows total sugar per 100 g or 100 ml beneath each rated fit.
+- Compact and expanded product cards show the exact catalog/Barbora image when available; otherwise the browser creates an in-memory crop of that package from the scanned scene instead of leaving an empty gray thumbnail.
 - The compact sheet keeps `View all` as its only action; returning to live camera starts a new scan.
 - `Great fit`, `Moderate fit` and `Low fit` camera markers use the same 46 px visual disc; the full detected-product outline remains the larger touch target.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
@@ -146,6 +147,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 6. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
 7. Confirm each overlay tightly follows its package rather than a nearby shelf label.
 8. Move the camera after a result and confirm it remains held until `Scan again`.
+9. Confirm every compact and expanded result card has a recognizable product image; products without a catalog image should use a crop from the current scan.
 
 ## Known limits
 

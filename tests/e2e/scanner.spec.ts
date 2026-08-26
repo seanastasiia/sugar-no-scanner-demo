@@ -411,6 +411,31 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await unlock(page);
   await openDemoScene(page, "Checkout demo");
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
+  const checkoutPreview = page.getByLabel("Product result preview");
+  await expect(checkoutPreview.locator("img")).toHaveCount(3);
+  await expect.poll(async () =>
+    checkoutPreview.locator("img").evaluateAll((images) =>
+      images.every((image) => {
+        const productImage = image as HTMLImageElement;
+        if (!productImage.complete || productImage.naturalWidth === 0) return false;
+        const canvas = document.createElement("canvas");
+        canvas.width = productImage.naturalWidth;
+        canvas.height = productImage.naturalHeight;
+        const context = canvas.getContext("2d");
+        if (!context) return false;
+        context.drawImage(productImage, 0, 0);
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        let min = 255;
+        let max = 0;
+        for (let index = 0; index < pixels.length; index += 4) {
+          const brightness = (pixels[index] + pixels[index + 1] + pixels[index + 2]) / 3;
+          min = Math.min(min, brightness);
+          max = Math.max(max, brightness);
+        }
+        return max - min > 20;
+      })
+    )
+  ).toBe(true);
   const checkoutMarkers = page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]');
   await expect(checkoutMarkers).toHaveCount(3);
   await expect(checkoutMarkers.filter({ hasText: "Great fit" })).toHaveCount(2);
@@ -426,6 +451,30 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   const ranking = page.getByLabel("Products ranked by Sugar.no fit");
   await expect(ranking).toBeVisible({ timeout: 8_000 });
   await expect(ranking.getByRole("button")).toHaveCount(3);
+  await expect(ranking.locator("img")).toHaveCount(3);
+  await expect.poll(async () =>
+    ranking.locator("img").evaluateAll((images) =>
+      images.every((image) => {
+        const productImage = image as HTMLImageElement;
+        if (!productImage.complete || productImage.naturalWidth === 0) return false;
+        const canvas = document.createElement("canvas");
+        canvas.width = productImage.naturalWidth;
+        canvas.height = productImage.naturalHeight;
+        const context = canvas.getContext("2d");
+        if (!context) return false;
+        context.drawImage(productImage, 0, 0);
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        let min = 255;
+        let max = 0;
+        for (let index = 0; index < pixels.length; index += 4) {
+          const brightness = (pixels[index] + pixels[index + 1] + pixels[index + 2]) / 3;
+          min = Math.min(min, brightness);
+          max = Math.max(max, brightness);
+        }
+        return max - min > 20;
+      })
+    )
+  ).toBe(true);
   await expect(ranking.getByText("SPROUD", { exact: true })).toBeVisible();
   await expect(ranking.getByText("SCHNITZER", { exact: true })).toBeVisible();
   await expect(ranking.getByText("STOCKMANN", { exact: true })).toBeVisible();

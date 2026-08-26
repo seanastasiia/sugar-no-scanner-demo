@@ -134,6 +134,93 @@ async function imageFileToScanFrames(file: File): Promise<PreparedUploadFrame[]>
   }
 }
 
+async function loadScanImage(sourceUrl: string): Promise<HTMLImageElement> {
+  const image = document.createElement("img");
+  image.decoding = "async";
+  await new Promise<void>((resolve, reject) => {
+    image.onload = () => resolve();
+    image.onerror = () => reject(new Error("Scan image could not be decoded"));
+    image.src = sourceUrl;
+  });
+  await image.decode();
+  return image;
+}
+
+function detectionCropToDataUrl(image: HTMLImageElement, detection: ProductDetection): string | null {
+  const paddingX = Math.max(0.018, detection.box.width * 0.08);
+  const paddingY = Math.max(0.018, detection.box.height * 0.06);
+  const x = Math.max(0, detection.box.x - paddingX);
+  const y = Math.max(0, detection.box.y - paddingY);
+  const right = Math.min(1, detection.box.x + detection.box.width + paddingX);
+  const bottom = Math.min(1, detection.box.y + detection.box.height + paddingY);
+  const sourceWidth = (right - x) * image.naturalWidth;
+  const sourceHeight = (bottom - y) * image.naturalHeight;
+  if (sourceWidth < 2 || sourceHeight < 2) return null;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 192;
+  canvas.height = 240;
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+  context.fillStyle = "#f5f5f7";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+
+  const scale = Math.min(canvas.width / sourceWidth, canvas.height / sourceHeight);
+  const targetWidth = sourceWidth * scale;
+  const targetHeight = sourceHeight * scale;
+  context.drawImage(
+    image,
+    x * image.naturalWidth,
+    y * image.naturalHeight,
+    sourceWidth,
+    sourceHeight,
+    (canvas.width - targetWidth) / 2,
+    (canvas.height - targetHeight) / 2,
+    targetWidth,
+    targetHeight
+  );
+  return canvas.toDataURL("image/jpeg", 0.82);
+}
+
+async function cropDetectionThumbnails(
+  sourceUrl: string,
+  detections: ProductDetection[]
+): Promise<Record<string, string>> {
+  const image = await loadScanImage(sourceUrl);
+  return Object.fromEntries(
+    detections.flatMap((detection) => {
+      const cropUrl = detectionCropToDataUrl(image, detection);
+      return cropUrl ? [[detection.productId, cropUrl]] : [];
+    })
+  );
+}
+
+function ProductThumbnail({
+  primaryUrl,
+  fallbackUrl,
+  sizes
+}: {
+  primaryUrl: string | null | undefined;
+  fallbackUrl: string | null | undefined;
+  sizes: string;
+}) {
+  const [activeUrl, setActiveUrl] = useState(primaryUrl || fallbackUrl || null);
+
+  if (!activeUrl) return null;
+  return (
+    <Image
+      src={activeUrl}
+      alt=""
+      fill
+      sizes={sizes}
+      unoptimized={activeUrl.startsWith("data:")}
+      onError={() => setActiveUrl(activeUrl === primaryUrl ? fallbackUrl || null : null)}
+    />
+  );
+}
+
 function sourceLabel(source: ScanSource) {
   if (source === "sample-conveyor") return "Checkout photo";
   if (source === "sample-shelf") return "Shelf photo";
@@ -257,6 +344,12 @@ export function ScannerApp() {
   const [enrichingProductIds, setEnrichingProductIds] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [scanImageUrl, setScanImageUrl] = useState<string | null>(null);
+  const [thumbnailResult, setThumbnailResult] = useState<{
+    sourceUrl: string;
+    thumbnails: Record<string, string>;
+    revision: number;
+  }>({ sourceUrl: "", thumbnails: {}, revision: 0 });
   const [statusMessage, setStatusMessage] = useState("Ready when you are");
   const [resultLocked, setResultLocked] = useState(false);
   const [resultsExpanded, setResultsExpanded] = useState(false);
@@ -753,9 +846,11 @@ export function ScannerApp() {
       canvas.width,
       canvas.height
     );
+    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.76);
+    if (!focusMode && !nutritionTarget) setScanImageUrl(imageDataUrl);
     void recognize({
       source: "camera",
-      imageDataUrl: canvas.toDataURL("image/jpeg", 0.76),
+      imageDataUrl,
       focusMode,
       mode: nutritionTarget ? "nutrition-label" : "products",
       targetIdentity: nutritionTarget || undefined
@@ -771,6 +866,7 @@ export function ScannerApp() {
     setSource("camera");
     setScanMode(nutritionTarget ? "nutrition-label" : "products");
     setPreviewUrl(null);
+    if (!nutritionTarget) setScanImageUrl(null);
     setCameraState("requesting");
     setDetections([]);
     setTray([]);
@@ -848,6 +944,7 @@ export function ScannerApp() {
     provisionalResponseRef.current = null;
     lastCaptureRef.current = 0;
     setDetections([]);
+    if (!nutritionTarget) setScanImageUrl(null);
     setTray([]);
     setSelectedId(null);
     manualSelectionRef.current = false;
@@ -881,6 +978,7 @@ export function ScannerApp() {
     nutritionReturnRef.current = null;
     setScanMode("products");
     setPreviewUrl(null);
+    setScanImageUrl("/samples/latvia-shelf.jpg");
     setMediaDimensions(null);
     setCameraState("idle");
     setDetections([]);
@@ -902,6 +1000,7 @@ export function ScannerApp() {
     nutritionReturnRef.current = null;
     setScanMode("products");
     setPreviewUrl(null);
+    setScanImageUrl("/samples/latvia-checkout.jpg");
     setMediaDimensions(null);
     setCameraState("idle");
     setDetections([]);
@@ -943,6 +1042,7 @@ export function ScannerApp() {
     try {
       const frames = await imageFileToScanFrames(file);
       setPreviewUrl(frames[0]?.imageDataUrl || null);
+      setScanImageUrl(frames[0]?.imageDataUrl || null);
       track("scan_started", "upload");
       void recognizeUploadFrames(frames);
     } catch {
@@ -950,6 +1050,34 @@ export function ScannerApp() {
       setStatusMessage("This image could not be prepared. Try a JPEG or PNG.");
     }
   }
+
+  const thumbnailSourceUrl =
+    source === "sample-shelf"
+      ? "/samples/latvia-shelf.jpg"
+      : source === "sample-conveyor"
+        ? "/samples/latvia-checkout.jpg"
+        : source === "upload"
+          ? previewUrl
+          : scanImageUrl;
+
+  useEffect(() => {
+    if (!thumbnailSourceUrl || !detections.length) return;
+    let cancelled = false;
+    void cropDetectionThumbnails(thumbnailSourceUrl, detections)
+      .then((thumbnails) => {
+        if (!cancelled) {
+          setThumbnailResult((current) => ({
+            sourceUrl: thumbnailSourceUrl,
+            thumbnails,
+            revision: current.revision + 1
+          }));
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [detections, thumbnailSourceUrl]);
 
   useEffect(() => {
     const online = () => {
@@ -990,6 +1118,7 @@ export function ScannerApp() {
     () => Object.fromEntries(detections.map((detection) => [detection.productId, detection])),
     [detections]
   );
+  const detectionThumbnails = thumbnailResult.sourceUrl === thumbnailSourceUrl ? thumbnailResult.thumbnails : {};
   const productById = useMemo(
     () => Object.fromEntries(Object.entries(products).map(([id, payload]) => [id, payload.product])),
     [products]
@@ -1340,7 +1469,12 @@ export function ScannerApp() {
                             {rank ? `#${rank}` : "—"}
                           </span>
                           <div className={styles.sheetPreviewThumb} aria-hidden="true">
-                            {item?.imageUrl ? <Image src={item.imageUrl} alt="" fill sizes="42px" /> : null}
+                            <ProductThumbnail
+                              key={`${id}:${item?.imageUrl || detection?.retailerOffer?.imageUrl || "crop"}:${thumbnailResult.revision}`}
+                              primaryUrl={item?.imageUrl || detection?.retailerOffer?.imageUrl}
+                              fallbackUrl={detectionThumbnails[id]}
+                              sizes="42px"
+                            />
                           </div>
                           <div className={styles.sheetPreviewCopy}>
                             <span>{item?.brand || detection?.identity?.brand || "Product"}</span>
@@ -1437,7 +1571,12 @@ export function ScannerApp() {
                                   {rank ? `#${rank}` : "—"}
                                 </span>
                                 <span className={styles.rankedProductThumb} aria-hidden="true">
-                                  {item?.imageUrl ? <Image src={item.imageUrl} alt="" fill sizes="48px" /> : null}
+                                  <ProductThumbnail
+                                    key={`${id}:${item?.imageUrl || detection?.retailerOffer?.imageUrl || "crop"}:${thumbnailResult.revision}`}
+                                    primaryUrl={item?.imageUrl || detection?.retailerOffer?.imageUrl}
+                                    fallbackUrl={detectionThumbnails[id]}
+                                    sizes="48px"
+                                  />
                                 </span>
                                 <div className={styles.rankedProductCopy}>
                                   <small>{itemBrand}</small>
