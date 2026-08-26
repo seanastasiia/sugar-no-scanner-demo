@@ -403,6 +403,54 @@ describe("resolveVisibleDetections", () => {
     });
   });
 
+  it("uses an exact connected-retailer snapshot before Open Food Facts or web search", async () => {
+    const product = {
+      ...getCatalog()[0],
+      id: "rimi_lv:100006",
+      retailerProductId: "100006",
+      ratingBasis: "retailer_catalog_reference" as const
+    };
+    const offer = {
+      retailer: "Rimi" as const,
+      slug: "rimi_lv:100006",
+      title: "Mērce Santa Maria tako maigā 230g",
+      brand: "Santa Maria",
+      url: "https://www.rimi.lv/e-veikals/lv/produkti/example/p/100006",
+      price: 2.27,
+      currency: "EUR" as const,
+      unitPrice: null,
+      unit: null,
+      imageUrl: null,
+      checkedAt: "2026-08-26T00:00:00.000Z",
+      matchConfidence: 0.96,
+      exactSku: true
+    };
+    const resolveOpenFoodFacts = vi.fn(async () => null);
+    const resolveWebNutrition = vi.fn(async () => null);
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, { brand: "Santa Maria", productName: "Tako mērce maigā 230g" })],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveExternalCatalog: () => ({ product, offer, confidence: 0.96 }),
+        resolveOpenFoodFacts,
+        resolveWebNutrition
+      }
+    );
+
+    expect(detections[0]).toMatchObject({
+      productId: "rimi_lv:100006",
+      catalogProductId: null,
+      nutritionLinkConfidence: 0.96,
+      inlineProduct: { id: "rimi_lv:100006", ratingBasis: "retailer_catalog_reference" },
+      identity: { matchKind: "retailer_catalog" },
+      retailerOffer: { retailer: "Rimi", price: 2.27, exactSku: true }
+    });
+    expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
+    expect(resolveWebNutrition).not.toHaveBeenCalled();
+  });
+
   it("uses a cited grounded web result only after catalog, Barbora and Open Food Facts miss", async () => {
     const fallback = { ...getCatalog()[0], id: "web:selga-classic", ratingBasis: "web_search_reference" as const };
     const resolveWebNutrition = vi.fn(async () => ({ product: fallback, confidence: 0.96 }));

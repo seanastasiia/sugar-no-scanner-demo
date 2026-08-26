@@ -7,12 +7,15 @@ This file tracks open limitations and only the most recent resolved regressions.
 - **Latvia coverage is not universal.** Rimi, Lidl and Stockmann private labels, unreadable variants and products without an exact cited per-100 table can remain `Nutrition not verified online`. They must not receive a guessed fit.
 - **Physical-store accuracy is not validated.** Packaging glare, low light, distance and a moving checkout belt need a real-store benchmark.
 - **Shelf-price association needs a benchmark.** Ambiguous labels stay hidden; a package number, deposit or unrelated nearby tag must not become the product price.
-- **Only Barbora is connected.** The demo may say `Barbora online`, but cannot claim `best price` without comparable exact-SKU data from multiple retailers.
+- **Rimi/Livin coverage is only a bootstrap.** Their exact page adapters work, but the checked-in release has only a few proof rows. Production-scale refresh and reuse require retailer permission.
+- **Open Food Facts bulk coverage is only a bootstrap.** The isolated importer is production-shaped, but the checked-in layer has five verified Latvia rows rather than the full multi-gigabyte daily export.
 - **Retailer snapshots age.** The checked-in product and nutrition indexes are reproducible discovery snapshots, not real-time stock or price guarantees.
 - **Grounded nutrition can be slow or unavailable.** Identity appears first; the exact internet check is background-only and bounded to 18 seconds.
 
 ## Recently resolved
 
+- **2026-08-26: nutrition resolution depended on Barbora plus runtime web search.** Strict Rimi and Livin catalog adapters now resolve exact identity, per-100 protein/sugar, current page price and provenance; Open Food Facts has a separate ODbL bulk-import and Supabase layer.
+- **2026-08-26: Livin's all-zero GTIN placeholder could masquerade as a real barcode.** Retailer parsing now converts invalid all-zero values to `null`, keeping barcode resolution fail-closed.
 - **2026-08-26: Similar options treated a broad retailer category as product interchangeability.** The block is now `Better alternatives` and requires an exact type/subcategory/form, an equal or better fit, an active catalog entry and a live exact Barbora offer; otherwise it stays hidden.
 - **2026-08-26: green, yellow and red camera markers had inconsistent visual sizes.** All rated fit discs, including the leading result, now render at the same 46 px diameter while the full product outline remains the larger touch target.
 - **2026-08-26: the first filled amber fit pill used white text with insufficient contrast.** The label now uses dark `#2D2106` text, reaching 6.97:1 contrast; the full Mobile Safari accessibility suite passes.

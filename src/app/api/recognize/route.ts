@@ -22,7 +22,7 @@ const requestSchema = z
         variant: z.string().max(120).nullable(),
         packSize: z.string().max(60).nullable(),
         category: z.string().max(120).nullable(),
-        matchKind: z.enum(["verified_catalog", "barbora", "open_food_facts", "web_search", "package_label", "visual_only"])
+        matchKind: z.enum(["verified_catalog", "barbora", "retailer_catalog", "open_food_facts", "web_search", "package_label", "visual_only"])
       })
       .optional(),
     sampleFrame: z.number().int().nonnegative().max(10_000).optional()

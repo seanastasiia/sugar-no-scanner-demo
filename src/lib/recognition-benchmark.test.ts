@@ -66,6 +66,7 @@ describe("recognition benchmark privacy harness", () => {
     expect(result.identityKinds).toEqual({
       verified_catalog: 1,
       barbora: 0,
+      retailer_catalog: 0,
       open_food_facts: 0,
       web_search: 0,
       package_label: 0,

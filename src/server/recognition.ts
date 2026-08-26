@@ -25,6 +25,7 @@ import {
 import { nutritionLabelToScoredProduct, type NutritionLabelRead } from "./nutrition-label";
 import { getIndexedBarboraProductWithAlternatives } from "./barbora-nutrition-index";
 import { resolveOpenFoodFactsProduct } from "./open-food-facts";
+import { resolveExternalCatalogProduct } from "./external-catalog";
 import { resolveWebNutritionProduct } from "./web-nutrition";
 
 export const DEFAULT_GEMINI_MODEL = "gemini-3.7-flash";
@@ -714,6 +715,7 @@ export interface DetectionResolutionDependencies {
   getOfferBySlug: typeof getBarboraOfferBySlug;
   resolveOffer: typeof resolveBarboraOffer;
   resolveOpenFoodFacts: typeof resolveOpenFoodFactsProduct;
+  resolveExternalCatalog?: typeof resolveExternalCatalogProduct;
   resolveIndexedCandidate?: typeof resolveIndexedBarboraCandidate;
   getIndexedProduct?: typeof getIndexedBarboraProductWithAlternatives;
   resolveWebNutrition?: typeof resolveWebNutritionProduct;
@@ -725,6 +727,7 @@ const defaultResolutionDependencies: DetectionResolutionDependencies = {
   getOfferBySlug: getBarboraOfferBySlug,
   resolveOffer: resolveBarboraOffer,
   resolveOpenFoodFacts: resolveOpenFoodFactsProduct,
+  resolveExternalCatalog: resolveExternalCatalogProduct,
   resolveIndexedCandidate: resolveIndexedBarboraCandidate,
   getIndexedProduct: getIndexedBarboraProductWithAlternatives,
   resolveWebNutrition: resolveWebNutritionProduct
@@ -794,15 +797,20 @@ export async function resolveVisibleDetections(
     const knownProduct = initialCatalogMatch?.product || indexedProduct || exactOfferProduct || null;
     // Open Food Facts is the first internet fallback. A visual Barbora slug is
     // not enough to skip it when that exact SKU has no local nutrition record.
-    const openFoodFactsCandidate = mode === "fast" || knownProduct
+    const externalCatalogCandidate = mode === "fast" || knownProduct
+      ? null
+      : dependencies.resolveExternalCatalog?.(lookupInput, detection.barcode) || null;
+    const openFoodFactsCandidate = mode === "fast" || knownProduct || externalCatalogCandidate
       ? null
       : await dependencies.resolveOpenFoodFacts(lookupInput, detection.barcode).catch(() => null);
-    const webNutrition = mode === "fast" || knownProduct || openFoodFactsCandidate
+    const webNutrition = mode === "fast" || knownProduct || externalCatalogCandidate || openFoodFactsCandidate
       ? null
       : await dependencies.resolveWebNutrition?.(lookupInput, detection.confidence).catch(() => null) || null;
-    const resolvedProduct = knownProduct || openFoodFactsCandidate?.product || webNutrition?.product || null;
+    const resolvedProduct = knownProduct || externalCatalogCandidate?.product || openFoodFactsCandidate?.product || webNutrition?.product || null;
+    const resolvedRetailerOffer = exactRetailerOffer || externalCatalogCandidate?.offer || retailerOffer;
     const nutritionLinkConfidence =
       initialCatalogMatch?.confidence ??
+      externalCatalogCandidate?.confidence ??
       openFoodFactsCandidate?.confidence ??
       webNutrition?.confidence ??
       indexedBarboraMatch?.score ??
@@ -836,6 +844,8 @@ export async function resolveVisibleDetections(
           ? "verified_catalog"
           : indexedProduct || exactOfferProduct
             ? "barbora"
+            : externalCatalogCandidate
+              ? "retailer_catalog"
             : openFoodFactsCandidate
               ? "open_food_facts"
               : webNutrition
@@ -852,9 +862,9 @@ export async function resolveVisibleDetections(
             confidence: detection.shelfPriceConfidence
           }
         : null,
-      retailerOffer,
+      retailerOffer: resolvedRetailerOffer,
       nutritionLinkConfidence,
-      inlineProduct: webNutrition?.product || null
+      inlineProduct: externalCatalogCandidate?.product || webNutrition?.product || null
     };
   });
   return dedupeProductDetections(resolved);

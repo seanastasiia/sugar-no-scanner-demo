@@ -1,5 +1,7 @@
 import { scoreReferenceProduct } from "@/lib/scoring";
 import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
+import bulkSnapshot from "../../data/open-food-facts-lv.generated.json";
+import type { ExternalCatalogProduct } from "./external-catalog-types";
 import { normalizeRetailText, retailerBrandMatches, type BarboraLookupInput } from "./barbora-catalog";
 
 interface OpenFoodFactsNutriments {
@@ -45,6 +47,7 @@ const PRODUCT_URL = "https://world.openfoodfacts.org/api/v3/product";
 const USER_AGENT = "Sugar.no scanner demo/0.1 (https://sugar.no)";
 const CACHE_TTL_MS = 30 * 60_000;
 const responseCache = new Map<string, { expiresAt: number; product: ScoredProduct | null; confidence: number }>();
+const bulkProducts = bulkSnapshot as ExternalCatalogProduct[];
 
 const stopWords = new Set([
   "and",
@@ -260,6 +263,37 @@ export async function resolveOpenFoodFactsProduct(
   input: BarboraLookupInput,
   barcode = ""
 ): Promise<{ product: ScoredProduct; confidence: number } | null> {
+  const bulkCandidates = /^\d{8,14}$/.test(barcode)
+    ? bulkProducts.filter((product) => product.gtin === barcode)
+    : bulkProducts;
+  const rankedBulk = rankOpenFoodFactsCandidates(
+    input,
+    bulkCandidates.map((product) => ({
+      code: product.gtin || product.sourceProductId,
+      product_name: product.title,
+      brands: product.brand,
+      quantity: product.packSize,
+      nutrition_data_per: product.nutritionBasis,
+      nutriments: {
+        "energy-kcal_100g": product.energyKcal,
+        proteins_100g: product.proteinG,
+        sugars_100g: product.totalSugarG
+      },
+      image_front_url: product.imageUrl,
+      categories: product.category
+    }))
+  );
+  const bestBulk = rankedBulk[0];
+  const exactBulk = Boolean(
+    bestBulk &&
+      (bestBulk.product.code === barcode ||
+        (bestBulk.confidence >= 0.84 && bestBulk.confidence - (rankedBulk[1]?.confidence || 0) >= 0.08))
+  );
+  if (exactBulk) {
+    const source = bulkCandidates.find((candidate) => (candidate.gtin || candidate.sourceProductId) === bestBulk.product.code);
+    const product = openFoodFactsToScoredProduct(bestBulk.product, source?.checkedAt);
+    if (product) return { product, confidence: bestBulk.product.code === barcode ? 1 : bestBulk.confidence };
+  }
   if (/^\d{8,14}$/.test(barcode)) {
     const product = await getOpenFoodFactsProductByBarcode(barcode);
     if (product && retailerBrandMatches(input.brand, product.brand)) return { product, confidence: 1 };
@@ -279,4 +313,8 @@ export async function resolveOpenFoodFactsProduct(
     expiresAt: Date.now() + CACHE_TTL_MS
   });
   return product ? { product, confidence: best.confidence } : null;
+}
+
+export function openFoodFactsBulkCount(): number {
+  return bulkProducts.length;
 }

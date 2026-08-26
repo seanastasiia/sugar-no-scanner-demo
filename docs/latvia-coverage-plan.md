@@ -1,6 +1,6 @@
 # Latvia product coverage plan
 
-Checked: 2026-08-25
+Checked: 2026-08-26
 
 ## Two different coverage metrics
 
@@ -14,6 +14,8 @@ Current proof-of-concept state:
 - the checked-in 2026-08-25 snapshot contains 9,707 active non-adult food SKUs and 7,433 complete automatic-fit records: 76.57% source-data coverage across 817 brands and 276 retailer categories.
 - 40 protein-snack records remain as the deterministic category-percentile benchmark, not the Latvia coverage ceiling.
 - exact products in the broad snapshot receive a runtime two-factor reference fit; fiber is not a rating input.
+- strict Rimi and Livin adapters now prove exact page parsing and matching, but their checked-in snapshots contain only 3 and 2 complete rows respectively; this is connection evidence, not retailer coverage.
+- Open Food Facts now has a streaming daily-JSONL importer and separate ODbL storage. The checked-in five-row Latvia bootstrap validates the path; a scheduled full import is still required.
 - records without enough nutrition and non-food pages remain unrated; a food package can recover through one explicit scan of its printed per-100 nutrition table.
 
 The pre-expansion public smoke found 20 distinct package identities across five Latvia scenes but only 5 automatic ratings. On the two close mayonnaise shelves, 4 of 12 identities were rated. The other three scenes include alcohol, cleaning products and distant checkout views, so the 25% aggregate is a release smoke baseline rather than a grocery accuracy estimate.
@@ -40,7 +42,7 @@ Official references:
 ## Recommended coverage pipeline
 
 1. **Run barcode and visual recognition together.** EAN-13/EAN-8 gives the strongest exact-SKU key when a barcode is visible. Native `BarcodeDetector` cannot be the only web implementation because browser support is limited; use a tested EAN-capable WebAssembly/JavaScript fallback on iPhone Safari.
-2. **Resolve the SKU through a source ladder.** Query a reviewed Sugar.no/Supabase record first, then the local broad Barbora nutrition snapshot, then an exact or strict separately attributed Open Food Facts record and finally a Google Search-grounded exact product page. The Barbora matcher uses brand, rare variant tokens, multilingual equivalents and exact pack or multipack size; a clear winner earns one live page read for current price. If two or three candidates remain tied, a second image pass receives only their IDs, titles and packshots and must clear 0.92 confidence; a slug outside that set is rejected server-side. The grounded fallback requires the same exact variant, an HTTPS citation, per-100 protein and total sugars and confidence at least 0.90. If no source resolves, keep the visual identity only as internal scan evidence and hide it from the final comparison. Never let Gemini estimate missing nutrition.
+2. **Resolve the SKU through a source ladder.** Query a reviewed Sugar.no/Supabase record first, then the local broad Barbora nutrition snapshot, strict Rimi/Livin snapshots, the isolated Open Food Facts layer and finally a Google Search-grounded exact product page. Matchers require brand, variant tokens and exact pack size where available. The grounded fallback requires the same exact variant, an HTTPS citation, per-100 protein and total sugars and confidence at least 0.90. If no source resolves, keep the visual identity only as internal scan evidence and hide it from the final comparison. Never let Gemini estimate missing nutrition.
 3. **Read sourced nutrition automatically.** Exact Barbora, Open Food Facts and cited exact web records can produce the two-factor reference view from energy, protein and total sugars. The user-facing nutrition-label scan is disabled. Fiber may remain in a raw record when a source supplies it, but it does not affect the fit.
 4. **Add a label fallback.** If the SKU is known but a required nutrient is missing, ask the user to show the nutrition table. AI may transcribe the label into a review screen, but the rating becomes verified only after source validation. Raw images remain unsaved.
 5. **Compare inside a category.** A yogurt, cola and protein bar must not share one percentile population. Store a reviewed category and calculate protein and inverse total sugar against that category's current sourced distribution.

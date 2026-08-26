@@ -361,7 +361,7 @@ export function ScannerApp() {
             detection.inlineProduct
               ? null
               : detection.catalogProductId ||
-                (["barbora", "open_food_facts"].includes(detection.identity?.matchKind || "")
+                (["barbora", "retailer_catalog", "open_food_facts"].includes(detection.identity?.matchKind || "")
                   ? detection.productId
                   : null)
           )
@@ -490,7 +490,7 @@ export function ScannerApp() {
         .map(
           (detection) =>
             detection.catalogProductId ||
-            (["barbora", "open_food_facts"].includes(detection.identity?.matchKind || "")
+            (["barbora", "retailer_catalog", "open_food_facts"].includes(detection.identity?.matchKind || "")
               ? detection.productId
               : null) ||
             (detection.identity ? null : detection.productId)
@@ -1362,7 +1362,7 @@ export function ScannerApp() {
                             href={cheaperOffer.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            aria-label={`Buy ${item?.shortName || detection?.identity?.name || "product"} cheaper at Barbora for €${cheaperOffer.price.toFixed(2)}`}
+                            aria-label={`Buy ${item?.shortName || detection?.identity?.name || "product"} cheaper at ${cheaperOffer.retailer} for €${cheaperOffer.price.toFixed(2)}`}
                             onClick={() =>
                               track("retailer_link_clicked", source, id, { placement: "compact_price_cta" })
                             }
@@ -1658,7 +1658,7 @@ function ProductResult({
           <Info aria-hidden="true" size={18} />
           <span>
             <strong>Nutrition not verified online</strong>
-            Sugar.no checked its catalog, Barbora, Open Food Facts and cited web results, but will not invent a fit without an exact per-100 source.
+            Sugar.no checked its catalog, connected Latvia retailers, Open Food Facts and cited web results, but will not invent a fit without an exact per-100 source.
           </span>
         </div>
       ) : null}
@@ -1781,7 +1781,7 @@ function LoadingProductResult({ detection }: { detection: ProductDetection }) {
         <LoaderCircle className={styles.spin} aria-hidden="true" size={18} />
         <span>
           <strong>Checking nutrition online…</strong>
-          Checking the Sugar.no catalog, Barbora, Open Food Facts and cited web results.
+          Checking the Sugar.no catalog, connected Latvia retailers, Open Food Facts and cited web results.
         </span>
       </div>
     </article>
@@ -1805,7 +1805,7 @@ function PriceComparison({ detection, onRetailer }: { detection: ProductDetectio
       aria-label="Price comparison"
     >
       <div className={styles.priceHeading}>
-        <span>{cheaperOnline ? "Cheaper at Barbora" : offer ? "Barbora price check" : "Shelf price"}</span>
+        <span>{cheaperOnline && offer ? `Cheaper at ${offer.retailer}` : offer ? `${offer.retailer} price check` : "Shelf price"}</span>
         {savings > 0 ? <strong>€{savings.toFixed(2)} less</strong> : null}
       </div>
       <div className={styles.priceValues}>
@@ -1815,7 +1815,7 @@ function PriceComparison({ detection, onRetailer }: { detection: ProductDetectio
         </div>
         {offer ? (
           <div>
-            <small>Barbora online</small>
+            <small>{offer.retailer} online</small>
             <strong>€{offer.price.toFixed(2)}</strong>
           </div>
         ) : null}
@@ -1835,7 +1835,7 @@ function PriceComparison({ detection, onRetailer }: { detection: ProductDetectio
           >
             <span>
               <small>Current online offer</small>
-              {cheaperOnline ? "Buy cheaper at Barbora" : "View at Barbora"} · €{offer.price.toFixed(2)}
+              {cheaperOnline ? `Buy cheaper at ${offer.retailer}` : `View at ${offer.retailer}`} · €{offer.price.toFixed(2)}
             </span>
             <ArrowUpRight aria-hidden="true" size={19} />
           </a>
@@ -1851,23 +1851,23 @@ function CompactProductPrice({ detection }: { detection?: ProductDetection }) {
   const shelfPrice = detection?.shelfPrice;
   if (!shelfPrice) return null;
   const offer = detection.retailerOffer?.exactSku ? detection.retailerOffer : null;
-  const cheaperAtBarbora = Boolean(offer && offer.price < shelfPrice.amount);
+  const cheaperOnline = Boolean(offer && offer.price < shelfPrice.amount);
   const shelfPriceLabel = shelfPrice.observedText.startsWith("Demo shelf price") ? "Demo shelf price" : "Shelf price";
-  const accessibleLabel = cheaperAtBarbora && offer
-    ? `${shelfPriceLabel} €${shelfPrice.amount.toFixed(2)}, Barbora €${offer.price.toFixed(2)}, cheaper at Barbora`
+  const accessibleLabel = cheaperOnline && offer
+    ? `${shelfPriceLabel} €${shelfPrice.amount.toFixed(2)}, ${offer.retailer} €${offer.price.toFixed(2)}, cheaper at ${offer.retailer}`
     : `${shelfPriceLabel} €${shelfPrice.amount.toFixed(2)}`;
 
   return (
     <div className={styles.compactProductPrice} role="group" aria-label={accessibleLabel}>
-      {cheaperAtBarbora ? (
+      {cheaperOnline ? (
         <s className={styles.compactCrossedPrice}>€{shelfPrice.amount.toFixed(2)}</s>
       ) : (
         <span>€{shelfPrice.amount.toFixed(2)}</span>
       )}
-      {cheaperAtBarbora && offer ? (
+      {cheaperOnline && offer ? (
         <>
           <strong>€{offer.price.toFixed(2)}</strong>
-          <small>Barbora</small>
+          <small>{offer.retailer}</small>
         </>
       ) : (
         <small>shelf</small>
@@ -1881,8 +1881,10 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
   const criteria = matchCriteria(product);
   const nutritionSourceLabel = product.ratingBasis.startsWith("catalog_")
     ? "Sugar.no badge"
-    : product.ratingBasis.startsWith("barbora_")
+      : product.ratingBasis.startsWith("barbora_")
       ? "Exact Barbora nutrition"
+      : product.ratingBasis.startsWith("retailer_catalog_")
+        ? "Connected retailer nutrition"
       : product.ratingBasis.startsWith("open_food_facts_")
         ? "Open Food Facts nutrition"
         : product.ratingBasis.startsWith("web_search_")

@@ -22,11 +22,15 @@
     "catalog:sync": "tsx scripts/sync-barbora.ts",
     "catalog:sync:barbora-index": "tsx scripts/sync-barbora-index.ts",
     "catalog:sync:barbora-nutrition": "tsx scripts/sync-barbora-nutrition-index.ts",
+    "catalog:sync:rimi": "RETAILER_SYNC_SOURCE=rimi tsx scripts/sync-retailer-catalog.ts",
+    "catalog:sync:livin": "RETAILER_SYNC_SOURCE=livin tsx scripts/sync-retailer-catalog.ts",
+    "catalog:import:off": "tsx scripts/import-open-food-facts-bulk.ts",
     "catalog:validate": "tsx scripts/validate-catalog.ts",
     "catalog:validate:barbora-coverage": "tsx scripts/validate-barbora-coverage.ts",
     "benchmark:focus": "tsx scripts/benchmark-focus.ts",
     "benchmark:recognition": "node --import tsx scripts/benchmark-recognition.ts",
-    "supabase:seed": "tsx scripts/seed-supabase.ts"
+    "supabase:seed": "tsx scripts/seed-supabase.ts",
+    "supabase:seed:external": "tsx scripts/seed-external-catalog.ts"
   },
   "dependencies": {
     "@google/genai": "^2.18.0",

@@ -1,6 +1,6 @@
 # Sugar.no Live Scanner
 
-Mobile-first Latvia proof of concept for identifying packaged groceries from a live camera or saved photo, comparing visible products with a transparent Sugar.no fit, and linking an exact product to Barbora when available.
+Mobile-first Latvia proof of concept for identifying packaged groceries from a live camera or saved photo, comparing visible products with a transparent Sugar.no fit, and linking an exact product to a connected retailer when available.
 
 - Production: [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
 - Repository: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
@@ -21,13 +21,13 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - `Great fit`, `Moderate fit` and `Low fit` camera markers use the same 46 px visual disc; the full detected-product outline remains the larger touch target.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
-- Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Open Food Facts match, then exact Google Search-grounded web nutrition.
+- Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Rimi/Livin snapshot, isolated Open Food Facts bulk/API match, then exact Google Search-grounded web nutrition.
 - Internet enrichment runs after the first identity result. It is bounded to 18 seconds and never receives or stores the camera image.
 - A product remains visible while exact nutrition is being checked, then stays in the result only when source-backed protein and total sugar produce a Sugar.no fit. A shelf price by itself never creates a result card.
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
 - Product overlays use Gemini's native `box2d [ymin, xmin, ymax, xmax]` coordinates and exclude shelf labels and neighboring packages from the product box.
 - A high-confidence Latvian comma-decimal shelf label can be accepted even when the printed `€` symbol is not readable; numbers printed on a package remain excluded.
-- A crossed-out shelf price and `Buy cheaper at Barbora` appear only when the exact Barbora SKU is currently cheaper.
+- A crossed-out shelf price and retailer purchase action appear only when the exact connected-retailer SKU is currently cheaper.
 - `Better alternatives` are fail-closed: they must share the same exact product type, full retailer subcategory/form and nutrition basis, have an equal or better Sugar.no fit, and resolve to a current exact Barbora offer. Equal-fit candidates are ordered by lower live price and then the closest pack size. If no true substitute is available, the section is hidden.
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
 - The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
@@ -44,7 +44,8 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 - Next.js 16, React 19, TypeScript
 - Gemini for visual identity and optional Google Search-grounded exact nutrition
-- Versioned Barbora and curated JSON snapshots in `data/`
+- Versioned curated, Barbora, Rimi and Livin snapshots in `data/`
+- An isolated Open Food Facts ODbL layer with explicit attribution and separate Supabase storage
 - Supabase schema for managed catalog and metadata-only analytics
 - Vitest and Playwright WebKit
 - Railway production deployment from GitHub `main`
@@ -92,6 +93,10 @@ npm run test:e2e:smoke      # four critical Mobile Safari flows
 npm run verify              # lint + typecheck + all unit/integration tests + build
 CI=1 npm run test:e2e       # complete Mobile Safari acceptance suite
 npm run catalog:validate    # curated catalog validation
+npm run catalog:sync:rimi  # low-rate Rimi page snapshot
+npm run catalog:sync:livin # low-rate Livin page snapshot
+npm run catalog:import:off # import official OFF JSONL/JSONL.GZ into its isolated layer
+npm run supabase:seed:external # seed retailer and ODbL layers after migrations
 npm run benchmark:recognition -- /absolute/path/photo.jpg
 ```
 
@@ -118,8 +123,12 @@ Checked-in generated snapshots make the investor demo reproducible and fast:
 - `data/barbora-product-index.generated.json`: retailer identity index.
 - `data/barbora-food-product-index.generated.json`: active food subset.
 - `data/barbora-nutrition-index.generated.json`: source-backed nutrition snapshot.
+- `data/rimi-catalog.generated.json`: exact Rimi product-page bootstrap snapshot.
+- `data/livin-catalog.generated.json`: exact Livin product-page bootstrap snapshot.
+- `data/open-food-facts-lv.generated.json`: attributed Latvia subset imported through the ODbL bulk pipeline.
+- `data/catalog-sources.generated.json`: source, license and redistribution manifest.
 
-Regeneration and validation scripts live in `scripts/`. Supabase migrations and seed tooling live in `supabase/`. Do not hand-edit generated JSON.
+Regeneration and validation scripts live in `scripts/`. Supabase migrations and seed tooling live in `supabase/`. Do not hand-edit generated JSON. Rimi/Livin snapshots are for the private proof of concept; production reuse and recurring ingestion require retailer permission. Open Food Facts rows stay logically and physically separate because of ODbL obligations. See [catalog sources](docs/catalog-sources.md).
 
 ## Railway release
 
@@ -153,7 +162,9 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 
 - Latvia-wide coverage is not guaranteed. Private labels, unreadable variants and products without an exact public per-100 table can remain unresolved in recognition; they are hidden from the final comparison rather than shown as price-only or identity-only cards.
 - Real shelf, glare, low-light, moving-belt and price-label accuracy still require a physical store benchmark.
-- Barbora is the only connected retailer, so the demo cannot claim a market-wide best price.
+- Barbora, Rimi and Livin can produce exact offers for their own matched SKUs, but the bootstrap Rimi/Livin snapshots are deliberately tiny and are not a market-wide price engine.
+- The release contains only a five-row Open Food Facts bootstrap imported through the bulk path. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
+- FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
 - Grounded web nutrition has variable latency and cost. Production should persist human-reviewed successful results in Supabase.
 
 ## Supporting docs
@@ -162,6 +173,8 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 - [Product QA](docs/product-qa.md)
 - [Team handoff](docs/team-handoff.md)
 - [Latvia coverage plan](docs/latvia-coverage-plan.md)
+- [Catalog sources, licensing and refresh](docs/catalog-sources.md)
+- [Partner data request drafts](docs/partner-data-requests.md)
 - [Week-one lessons](docs/week-one-lessons.md)
 - [Latest feature evidence](docs/test-runs/2026-08-25-five-product-web-enrichment.md)
 - [Open and recent bugs](Bugs.md)

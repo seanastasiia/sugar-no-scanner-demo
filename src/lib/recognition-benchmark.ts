@@ -25,7 +25,7 @@ export interface RecognitionBenchmarkCaseResult {
   duplicateCount: number;
   ratedProductCount: number;
   identityKinds: Record<
-    "verified_catalog" | "barbora" | "open_food_facts" | "web_search" | "package_label" | "visual_only" | "unknown",
+    "verified_catalog" | "barbora" | "retailer_catalog" | "open_food_facts" | "web_search" | "package_label" | "visual_only" | "unknown",
     number
   >;
   ratingStatuses: Record<"complete" | "partial_overall" | "limited_signal" | "identity_only" | "unavailable", number>;
@@ -80,7 +80,7 @@ export function buildRecognitionRequestBody(bytes: Uint8Array, mimeType: Support
 }
 
 function emptyIdentityKinds(): RecognitionBenchmarkCaseResult["identityKinds"] {
-  return { verified_catalog: 0, barbora: 0, open_food_facts: 0, web_search: 0, package_label: 0, visual_only: 0, unknown: 0 };
+  return { verified_catalog: 0, barbora: 0, retailer_catalog: 0, open_food_facts: 0, web_search: 0, package_label: 0, visual_only: 0, unknown: 0 };
 }
 
 function emptyRatingStatuses(): RecognitionBenchmarkCaseResult["ratingStatuses"] {

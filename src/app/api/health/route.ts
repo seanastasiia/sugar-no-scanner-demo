@@ -3,10 +3,13 @@ import foodProductIndex from "../../../../data/barbora-food-product-index.genera
 import nutritionIndex from "../../../../data/barbora-nutrition-index.generated.json";
 import { investorCategoryForRetailPath } from "@/lib/supported-categories";
 import type { BarboraNutritionIndexProduct } from "@/server/barbora-nutrition-index";
+import { externalCatalogCounts } from "@/server/external-catalog";
+import { openFoodFactsBulkCount } from "@/server/open-food-facts";
 
 export const dynamic = "force-dynamic";
 
 export function GET() {
+  const retailerCatalogs = externalCatalogCounts();
   const investorPack = (nutritionIndex as BarboraNutritionIndexProduct[]).reduce(
     (counts, product) => {
       const category = investorCategoryForRetailPath(product.category);
@@ -23,6 +26,8 @@ export function GET() {
       catalog: {
         activeFoodProducts: foodProductIndex.length,
         productsWithAutomaticFit: nutritionIndex.length,
+        connectedRetailerProducts: retailerCatalogs,
+        openFoodFactsBulkProducts: openFoodFactsBulkCount(),
         investorPack: {
           ...investorPack,
           total: investorPack.snacks + investorPack.dairy_desserts,

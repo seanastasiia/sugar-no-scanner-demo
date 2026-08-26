@@ -7,6 +7,8 @@ export type RatingBasis =
   | "catalog_percentile_partial"
   | "barbora_reference"
   | "barbora_reference_partial"
+  | "retailer_catalog_reference"
+  | "retailer_catalog_reference_partial"
   | "open_food_facts_reference"
   | "open_food_facts_reference_partial"
   | "web_search_reference"
@@ -99,7 +101,14 @@ export interface RecognizedProductIdentity {
   variant: string | null;
   packSize: string | null;
   category: string | null;
-  matchKind: "verified_catalog" | "barbora" | "open_food_facts" | "web_search" | "package_label" | "visual_only";
+  matchKind:
+    | "verified_catalog"
+    | "barbora"
+    | "retailer_catalog"
+    | "open_food_facts"
+    | "web_search"
+    | "package_label"
+    | "visual_only";
   searchQuery?: string;
   barcode?: string | null;
 }
@@ -118,7 +127,7 @@ export interface ShelfPrice {
 }
 
 export interface RetailerOffer {
-  retailer: "Barbora";
+  retailer: "Barbora" | "Rimi" | "Livin";
   slug: string;
   title: string;
   brand: string;

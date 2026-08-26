@@ -1,0 +1,32 @@
+[
+  {
+    "id": "rimi_lv",
+    "displayName": "Rimi Latvia e-store",
+    "layer": "retailer_snapshot",
+    "license": "Retailer public product-page snapshot; production reuse requires retailer permission",
+    "attribution": "Product identity, nutrition, availability and price from Rimi Latvia product pages",
+    "termsUrl": "https://www.rimi.lv/e-veikals/lv/noteikumi",
+    "dataUrl": "https://www.rimi.lv/e-veikals/sitemap.xml",
+    "redistributable": false
+  },
+  {
+    "id": "livin_lv",
+    "displayName": "LIVIN Latvia",
+    "layer": "retailer_snapshot",
+    "license": "Retailer public product-page snapshot; production reuse requires retailer permission",
+    "attribution": "Product identity, nutrition, availability and price from LIVIN Latvia product pages",
+    "termsUrl": "https://www.livin.lv/page/lietosanas-noteikumi",
+    "dataUrl": "https://www.livin.lv/sitemap/products.xml",
+    "redistributable": false
+  },
+  {
+    "id": "open_food_facts",
+    "displayName": "Open Food Facts",
+    "layer": "odbl_bulk",
+    "license": "Open Database License 1.0; database contents under Database Contents License",
+    "attribution": "Open Food Facts contributors",
+    "termsUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+    "dataUrl": "https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz",
+    "redistributable": true
+  }
+]
