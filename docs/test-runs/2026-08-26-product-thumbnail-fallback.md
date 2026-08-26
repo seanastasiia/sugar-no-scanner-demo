@@ -10,6 +10,8 @@ The expanded comparison also removes the large duplicate `Cheaper at Barbora` pa
 
 The shared scan limit is increased from five to ten unique high-confidence SKUs. Repeated facings still count once; the compact camera sheet previews the first four ranked products and `View all` exposes the complete result.
 
+The live iPhone preview no longer crops the camera stream to fill a tall viewport. It uses the complete `object-fit: contain` field, while a dedicated coordinate transform keeps detection boxes aligned inside the rendered camera area. Saved images and deterministic demo scenes retain their intentional edge-to-edge crop.
+
 ## Technical checks
 
 - `npm run check:fast` — passed: ESLint, TypeScript, 25 Vitest files and 135 tests.
@@ -24,6 +26,10 @@ The shared scan limit is increased from five to ten unique high-confidence SKUs.
 - `CI=1 npx playwright test tests/e2e/scanner.spec.ts --project="Mobile Safari" --grep "up to ten different"` — passed: 1/1; ten camera markers resolve, four compact preview cards remain visible and `View all` contains all ten ranked products.
 - `npm run verify` after the ten-product change — passed: ESLint, TypeScript, 25 Vitest files / 136 tests and production build.
 - `CI=1 npm run test:e2e` after the ten-product change — passed: all 25 Mobile Safari acceptance tests.
+- `npx vitest run src/lib/camera-focus.test.ts` — passed: 1 file / 6 tests, including landscape-camera to portrait-stage contain mapping.
+- `CI=1 npx playwright test tests/e2e/scanner.spec.ts --project="Mobile Safari" --grep "up to ten different"` after the camera change — passed: live preview reports `object-fit: contain` and the ten-product flow remains intact.
+- `npm run verify` after the camera change — passed: ESLint, TypeScript, 25 Vitest files / 137 tests and production build.
+- `CI=1 npm run test:e2e` after the camera change — passed: all 25 Mobile Safari acceptance tests, including iPhone 17 Pro portrait/landscape and enlarged-text coverage.
 - Checkout acceptance checks require three compact and three expanded thumbnails with real pixel variation, preventing a blank gray image from passing on dimensions alone.
 - Visual inspection: Shelf uses exact product images; Checkout uses recognizable crops for Sproud, Schnitzer and Stockmann products that have no catalog image.
 - Visual inspection: the completed Checkout demo shows the product outlines followed directly by the compact white results sheet, with no duplicate dark count banner.
@@ -35,6 +41,7 @@ The shared scan limit is increased from five to ten unique high-confidence SKUs.
 - Result-banner commit: `7d151a6`
 - Inline Barbora deal commit: `d88ac5a`
 - Ten-product scan-limit commit: `e07f90c`
+- Full-field iPhone camera commit: `07919e1`
 - Railway deployment: pending
 - Production health: pending
 
@@ -48,3 +55,4 @@ The shared scan limit is increased from five to ten unique high-confidence SKUs.
 6. Confirm scanning, offline and recoverable-error feedback still appears before a successful result.
 7. Expand Shelf demo and confirm the BAREBELLS deal is inside rank `#1`, the shelf price is crossed out, and no separate price panel appears below the ranking.
 8. Scan a dense shelf with more than ten readable products. Confirm the compact sheet stays short, `View all` shows no more than ten unique ranked products and repeated facings appear once.
+9. Open live camera on iPhone and compare it with the native Camera app at 1x. Confirm the web preview shows the complete field instead of a center crop; after recognition, each product outline must remain on its package.
