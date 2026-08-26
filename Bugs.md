@@ -9,10 +9,11 @@ This file tracks open limitations and only the most recent resolved regressions.
 - **Shelf-price association needs a benchmark.** Ambiguous labels stay hidden; a package number, deposit or unrelated nearby tag must not become the product price.
 - **Only Barbora is connected.** The demo may say `Barbora online`, but cannot claim `best price` without comparable exact-SKU data from multiple retailers.
 - **Retailer snapshots age.** The checked-in product and nutrition indexes are reproducible discovery snapshots, not real-time stock or price guarantees.
-- **Grounded nutrition can be slow or unavailable.** Identity appears first; the exact internet check is background-only and bounded to 18 seconds.
+- **Grounded nutrition can be slow or unavailable.** Identity appears first; the exact internet check is background-only and bounded to 18 seconds per outbound lookup. A ten-product shelf still resolves in two bounded waves of five.
 
 ## Recently resolved
 
+- **2026-08-26: five uncatalogued products waited through two sequential internet-search waves.** Exact nutrition enrichment now resolves five products concurrently in one bounded wave; the strict exact-SKU and cited-source checks are unchanged.
 - **2026-08-26: the live iPhone camera looked strongly zoomed in.** The browser was cropping the camera stream to fill the tall stage with `object-fit: cover`; live video now preserves the complete field with `contain`, and detection boxes use the matching letterbox-aware coordinate mapping.
 - **2026-08-26: dense shelf results stopped after five unique products.** The shared recognition, upload merge, API and enrichment limit is now ten; repeated facings still count once and the compact camera sheet stays intentionally short before `View all`.
 - **2026-08-26: the expanded result repeated a selected product's price in a large standalone `Cheaper at Barbora` panel.** The panel is removed; an exact lower Barbora price and its one-tap action now live inside the matching horizontal ranked-product card.

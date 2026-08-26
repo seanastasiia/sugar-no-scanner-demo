@@ -41,7 +41,7 @@ describe("product enrichment route", () => {
       [expect.objectContaining({ brand: "Coca-Cola", searchQuery: "Coca-Cola Original 330 ml" })],
       [],
       undefined,
-      3,
+      5,
       "complete"
     );
     expect(await response.json()).toMatchObject({ imageStored: false, detections: [detection] });
