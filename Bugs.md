@@ -13,9 +13,10 @@ This file tracks open limitations and only the most recent resolved regressions.
 
 ## Recently resolved
 
+- **2026-08-26: green, yellow and red camera markers had inconsistent visual sizes.** All rated fit discs, including the leading result, now render at the same 46 px diameter while the full product outline remains the larger touch target.
 - **2026-08-26: the first filled amber fit pill used white text with insufficient contrast.** The label now uses dark `#2D2106` text, reaching 6.97:1 contrast; the full Mobile Safari accessibility suite passes.
 - **2026-08-26: the website-derived blue treatment did not resemble the shipped Sugar.no app UI closely enough.** The scanner now follows the supplied iOS screens with a cool gray canvas, white cards/sheets, neutral separators, black hierarchy and filled semantic fit pills; blue is limited to actions and focus.
-- **2026-08-26: the compact sheet repeated scanning controls and yellow markers obscured too much packaging.** The redundant compact refresh action is removed, leaving `View all`; `Moderate fit` discs are smaller while the full product box remains tappable.
+- **2026-08-26: the compact sheet repeated scanning controls.** The redundant compact refresh action is removed, leaving `View all` as the single compact-sheet action.
 - **2026-08-26: saved-photo views repeated their source in a large overlay badge.** The redundant `Saved shelf or checkout photo` badge is removed while `Back to live` stays aligned to the right.
 - **2026-08-26: compact product previews hid their ranking and nutrition context.** Rated preview cards now show the same `#1`, `#2`, `#3…` order as the expanded comparison plus a small total-sugar value per 100 g or 100 ml.
 - **2026-08-26: Similar options shared one ambiguous Barbora CTA and showed no per-card price.** Every exact Barbora alternative now has its own non-blocking `Buy online` action and current price; `Cheaper online` is reserved for the same SKU with a higher scanned shelf price.

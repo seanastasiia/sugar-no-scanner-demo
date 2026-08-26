@@ -330,11 +330,17 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   });
   expect(bestChrome.borderColor).not.toBe("rgb(255, 255, 255)");
   expect(bestChrome.boxShadow).not.toContain("rgb(255, 255, 255)");
+  const markerDiscs = shelfOverlay.locator('button[aria-label^="Open "] > span');
+  await expect(markerDiscs).toHaveCount(4);
+  const markerDiscSizes = await markerDiscs.evaluateAll((elements) =>
+    elements.map((element) => {
+      const box = element.getBoundingClientRect();
+      return `${Math.round(box.width)}x${Math.round(box.height)}`;
+    })
+  );
+  expect(markerDiscSizes).toEqual(["46x46", "46x46", "46x46", "46x46"]);
   const moderateMarker = shelfOverlay.locator('button[aria-label*="Moderate fit"]').first();
   await moderateMarker.click();
-  const moderateIcon = moderateMarker.locator(":scope > span");
-  expect((await moderateIcon.boundingBox())?.width).toBeLessThanOrEqual(42);
-  expect((await moderateIcon.boundingBox())?.height).toBeLessThanOrEqual(42);
   const selectedChrome = await moderateMarker.evaluate((element) => {
     const style = getComputedStyle(element);
     return { borderColor: style.borderColor, boxShadow: style.boxShadow };

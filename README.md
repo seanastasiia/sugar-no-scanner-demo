@@ -18,7 +18,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Expanded multi-product results show only the collapse control, `Best fit first` and the ranked product cards; duplicate summaries, counters and scan-again controls are omitted.
 - The compact camera preview mirrors that ranking with `#1`, `#2`, `#3…` badges and shows total sugar per 100 g or 100 ml beneath each rated fit.
 - The compact sheet keeps `View all` as its only action; returning to live camera starts a new scan.
-- `Moderate fit` camera markers use a smaller 38–42 px visual disc while the detected-product button keeps its minimum 44 px touch target.
+- `Great fit`, `Moderate fit` and `Low fit` camera markers use the same 46 px visual disc; the full detected-product outline remains the larger touch target.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Open Food Facts match, then exact Google Search-grounded web nutrition.
