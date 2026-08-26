@@ -1,7 +1,7 @@
 # Sugar.no app surface alignment
 
 Date: 2026-08-26
-Feature commit: recorded after production deployment
+Feature commit: `b3f9dcb8cdcd85feb5e98e62bed8a7d56eb06a67`
 
 ## Change under test
 
@@ -34,4 +34,10 @@ Feature commit: recorded after production deployment
 
 ## Production verification
 
-- Pending GitHub `main` push and Railway health/smoke verification.
+- GitHub `main`: `b3f9dcb8cdcd85feb5e98e62bed8a7d56eb06a67`.
+- Railway deployment `56a2fab0-44dc-4051-a973-5cd2c7d8b9f2`: `SUCCESS`; instance `RUNNING`.
+- `/api/health`: returned the exact feature commit and `status: ok`.
+- Production WebKit smoke on an iPhone 13 viewport: Shelf produced four rated products and Checkout produced three rated products.
+- Production style contract: canvas `#f3f4f8`, surface `#fff`, tinted surface `#f5f5f7`, ink `#11131f`, muted `#69696f`, system blue `#0a84ff` and border `#e8e9ef`.
+- Compact and expanded results both had no horizontal overflow. Compact sheets rendered gray with white cards; the selected ranked row rendered white with one near-black outline; the filled Great pill rendered `rgb(23, 116, 71)`.
+- Production screenshots inspected: Shelf camera, expanded Shelf ranking and Checkout camera all matched the supplied app-surface hierarchy.
