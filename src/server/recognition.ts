@@ -750,7 +750,7 @@ async function mapWithConcurrency<T, R>(
 }
 
 /**
- * Resolves at most five visible identities while bounding outbound lookups.
+ * Resolves at most ten visible identities while bounding outbound lookups.
  * The vision model supplies identity only; nutrition is linked through an exact
  * catalog/database result or a cited, high-confidence grounded web result.
  */

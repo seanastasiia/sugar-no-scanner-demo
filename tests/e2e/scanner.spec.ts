@@ -1043,7 +1043,7 @@ test("an unrated package can receive a Sugar.no fit from automatic online enrich
   await expect(page.getByLabel("Sugar.no badge")).toBeVisible();
 });
 
-test("a broad live shelf scan keeps several different Sugar.no-rated products in one result", async ({ page }) => {
+test("a broad live shelf scan keeps up to ten different Sugar.no-rated products in one result", async ({ page }) => {
   await mockLiveCamera(page);
 
   let recognitionAttempts = 0;
@@ -1073,6 +1073,55 @@ test("a broad live shelf scan keeps several different Sugar.no-rated products in
         confidence: 0.93,
         box: { x: 0.68, y: 0.23, width: 0.25, height: 0.47 },
         observedText: "ICONFIT Cookie Bliss"
+      },
+      {
+        productId: "prot-batonins-go-on-kakao-sokolade-50-g",
+        catalogProductId: "prot-batonins-go-on-kakao-sokolade-50-g",
+        confidence: 0.92,
+        box: { x: 0.03, y: 0.62, width: 0.15, height: 0.24 },
+        observedText: "GO ON Cocoa"
+      },
+      {
+        productId: "prot-baton-ar-dzerven-un-godzi-go-on-50-g",
+        catalogProductId: "prot-baton-ar-dzerven-un-godzi-go-on-50-g",
+        confidence: 0.91,
+        box: { x: 0.22, y: 0.62, width: 0.15, height: 0.24 },
+        observedText: "GO ON Cranberry"
+      },
+      {
+        productId: "prot-bat-zemesr-maz-cukura-snickers-57-g",
+        catalogProductId: "prot-bat-zemesr-maz-cukura-snickers-57-g",
+        confidence: 0.9,
+        box: { x: 0.41, y: 0.62, width: 0.15, height: 0.24 },
+        observedText: "SNICKERS Protein"
+      },
+      {
+        productId: "prot-bat-zemesriekstu-karameli-go-on-50-g",
+        catalogProductId: "prot-bat-zemesriekstu-karameli-go-on-50-g",
+        confidence: 0.89,
+        box: { x: 0.6, y: 0.62, width: 0.15, height: 0.24 },
+        observedText: "GO ON Peanut Caramel"
+      },
+      {
+        productId: "prot-batonins-creamy-crisp-barebells-55-g",
+        catalogProductId: "prot-batonins-creamy-crisp-barebells-55-g",
+        confidence: 0.88,
+        box: { x: 0.79, y: 0.62, width: 0.15, height: 0.24 },
+        observedText: "Barebells Creamy Crisp"
+      },
+      {
+        productId: "prot-bat-pann-cot-zemenu-33-proc-go-on-50-g",
+        catalogProductId: "prot-bat-pann-cot-zemenu-33-proc-go-on-50-g",
+        confidence: 0.87,
+        box: { x: 0.18, y: 0.88, width: 0.15, height: 0.1 },
+        observedText: "GO ON Panna Cotta"
+      },
+      {
+        productId: "prot-bat-kokosr-un-karamele-nutego-45-g",
+        catalogProductId: "prot-bat-kokosr-un-karamele-nutego-45-g",
+        confidence: 0.86,
+        box: { x: 0.58, y: 0.88, width: 0.15, height: 0.1 },
+        observedText: "NUTEGO Coconut Caramel"
       }
     ];
     await route.fulfill({
@@ -1097,14 +1146,15 @@ test("a broad live shelf scan keeps several different Sugar.no-rated products in
   });
   await unlock(page);
 
-  await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit", { timeout: 10_000 });
+  await expect(page.getByRole("status")).toContainText("10 products · 10 with Sugar.no fit", { timeout: 10_000 });
   expect(recognitionAttempts).toBe(2);
   expect(focusModes).toEqual([false, false]);
   const scanner = page.getByLabel("Live camera scanner");
-  await expect(scanner.locator('button[aria-label^="Open "]')).toHaveCount(3);
-  await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
+  await expect(scanner.locator('button[aria-label^="Open "]')).toHaveCount(10);
+  await expect(page.getByRole("status")).toContainText("10 products · 10 with Sugar.no fit");
+  await expect(page.getByLabel("Product result preview").locator("article")).toHaveCount(4);
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByLabel("Products ranked by Sugar.no fit").getByRole("button")).toHaveCount(3);
+  await expect(page.getByLabel("Products ranked by Sugar.no fit").getByRole("button")).toHaveCount(10);
 });
 
 test("live camera shows package identities before optional retailer enrichment finishes", async ({ page }) => {

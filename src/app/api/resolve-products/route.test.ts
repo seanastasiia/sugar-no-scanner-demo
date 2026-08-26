@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { ConfirmedProviderDetection } from "@/server/recognition";
 import { createResolveProductsPost } from "./route";
 
 const detection = {
@@ -51,6 +52,34 @@ describe("product enrichment route", () => {
       limiter: { consume: () => ({ allowed: true, remaining: 20, retryAfterSeconds: 0 }) }
     });
     expect((await post(request({ detections: [detection], imageDataUrl: "data:image/jpeg;base64,YWJj" }))).status).toBe(400);
-    expect((await post(request({ detections: Array.from({ length: 6 }, () => detection) }))).status).toBe(400);
+    expect((await post(request({ detections: Array.from({ length: 11 }, () => detection) }))).status).toBe(400);
+  });
+
+  it("accepts ten image-free identities in one bounded enrichment request", async () => {
+    const resolve = vi.fn(async (detections: ConfirmedProviderDetection[]) =>
+      detections.map((_, index) => ({
+        ...detection,
+        productId: `visual:product-${index + 1}`,
+        observedText: `Product ${index + 1}`,
+        identity: { ...detection.identity, name: `Product ${index + 1}` }
+      }))
+    );
+    const post = createResolveProductsPost({
+      listProducts: async () => [],
+      resolve,
+      limiter: { consume: () => ({ allowed: true, remaining: 20, retryAfterSeconds: 0 }) }
+    });
+    const detections = Array.from({ length: 10 }, (_, index) => ({
+      ...detection,
+      productId: `visual:product-${index + 1}`,
+      observedText: `Product ${index + 1}`,
+      identity: { ...detection.identity, name: `Product ${index + 1}` }
+    }));
+
+    const response = await post(request({ detections }));
+
+    expect(response.status).toBe(200);
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(resolve.mock.calls[0]?.[0]).toHaveLength(10);
   });
 });

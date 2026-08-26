@@ -18,7 +18,7 @@ The scanner uses the four supplied Sugar.no iOS screenshots as its closest visua
 
 Blue is reserved for interaction and keyboard focus rather than general decoration. The active ranked card stays white and uses one near-black outline. Evidence-backed fit semantics remain independent: Great stays green, Moderate amber and Low red, with explicit labels inside filled pills. Camera controls still use an 82–86% `#14151E` scrim so white labels remain readable over bright packages and price tags.
 
-The broad camera pass follows the multi-product shelf pattern: it scans the complete frame, keeps at most five high-confidence distinct readable front-facing SKUs and groups repeated facings of the same SKU. The focused center retry is only a fallback after the broad pass is uncertain.
+The broad camera pass follows the multi-product shelf pattern: it scans the complete frame, keeps at most ten high-confidence distinct readable front-facing SKUs and groups repeated facings of the same SKU. The focused center retry is only a fallback after the broad pass is uncertain.
 
 The checkout fixture must be visually unmistakable as a supermarket conveyor, not a generic dark tabletop. It uses a real project-owner checkout photo. The public copy is cropped, resized and stripped of EXIF/GPS metadata; its deterministic result names the three package identities Gemini could read and overlays all three because each now has a source-backed two-factor fit. Official manufacturer nutrition supports Sproud and Schnitzer; the chanterelle badge explicitly identifies its generic food-composition reference instead of implying an exact Stockmann record.
 

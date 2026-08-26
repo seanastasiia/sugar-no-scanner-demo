@@ -132,9 +132,22 @@ describe("multi-pass uploaded shelf recognition", () => {
     ]);
   });
 
-  it("keeps only the five highest-confidence distinct products from a dense photo", () => {
-    const names = ["Almond", "Berry", "Coconut", "Date", "Espresso", "Fig", "Ginger", "Hazelnut"];
-    const detections = Array.from({ length: 8 }, (_, index) =>
+  it("keeps only the ten highest-confidence distinct products from a dense photo", () => {
+    const names = [
+      "Almond",
+      "Berry",
+      "Coconut",
+      "Date",
+      "Espresso",
+      "Fig",
+      "Ginger",
+      "Hazelnut",
+      "Ice cream",
+      "Jasmine",
+      "Kiwi",
+      "Lemon"
+    ];
+    const detections = Array.from({ length: 12 }, (_, index) =>
       detection({
         productId: `visual:product-${index + 1}`,
         confidence: 0.99 - index * 0.02,
@@ -155,9 +168,9 @@ describe("multi-pass uploaded shelf recognition", () => {
       { crop: { x: 0, y: 0, width: 1, height: 1 }, response: response(detections) }
     ]);
 
-    expect(merged.detections).toHaveLength(5);
+    expect(merged.detections).toHaveLength(10);
     expect(merged.detections.map((item) => item.productId)).toEqual(
-      detections.slice(0, 5).map((item) => item.productId)
+      detections.slice(0, 10).map((item) => item.productId)
     );
   });
 });
