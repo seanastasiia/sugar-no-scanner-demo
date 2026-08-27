@@ -179,5 +179,5 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 - [Catalog sources, licensing and refresh](docs/catalog-sources.md)
 - [Partner data request drafts](docs/partner-data-requests.md)
 - [Week-one lessons](docs/week-one-lessons.md)
-- [Latest release evidence](docs/test-runs/2026-08-26-project-cleanup.md)
+- [Latest release evidence](docs/test-runs/2026-08-27-scanner-ui-catalog-completion.md)
 - [Open and recent bugs](Bugs.md)
