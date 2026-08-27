@@ -12,6 +12,26 @@ interface RankedExternalCatalogCandidate {
 
 const products = [...(rimiSnapshot as ExternalCatalogProduct[]), ...(livinSnapshot as ExternalCatalogProduct[])];
 const stopWords = new Set(["and", "ar", "bar", "bez", "for", "from", "in", "of", "the", "un", "with"]);
+const identityPhraseAliases: Array<[RegExp, string]> = [
+  [/\bpastry twists? salty\b/g, "salsstandzinas"],
+  [/\bsalty pastry twists?\b/g, "salsstandzinas"],
+  [/\bpastry twists? cheese\b/g, "salsstandzinas siers"],
+  [/\bcheese pastry twists?\b/g, "salsstandzinas siers"],
+  [/\bmulti fruit\b/g, "multiauglu"],
+  [/\bmultifruit\b/g, "multiauglu"]
+];
+const identityTokenAliases: Record<string, string> = {
+  banana: "bananu",
+  cheese: "siers",
+  drink: "dzeriens",
+  drinks: "dzeriens",
+  juice: "sula",
+  siera: "siers",
+  sieru: "siers",
+  strawberry: "zemenu",
+  sulas: "sula",
+  sulu: "sula"
+};
 
 function canonicalPack(value: string | null | undefined): { amount: number; dimension: "solid" | "liquid" } | null {
   if (!value) return null;
@@ -31,10 +51,15 @@ function canonicalPack(value: string | null | undefined): { amount: number; dime
 }
 
 function tokens(value: string, excluded: Set<string> = new Set()): string[] {
+  const normalized = identityPhraseAliases.reduce(
+    (text, [pattern, replacement]) => text.replace(pattern, replacement),
+    normalizeRetailText(value)
+  );
   return [
     ...new Set(
-      normalizeRetailText(value)
+      normalized
         .split(" ")
+        .map((token) => identityTokenAliases[token] || token)
         .filter((token) => token.length >= 3 && !stopWords.has(token) && !excluded.has(token))
     )
   ];
@@ -44,6 +69,13 @@ function coverage(query: string[], candidate: string[]): number {
   if (!query.length || !candidate.length) return 0;
   const set = new Set(candidate);
   return query.filter((token) => set.has(token)).length / query.length;
+}
+
+function balancedCoverage(query: string[], candidate: string[]): number {
+  const queryCoverage = coverage(query, candidate);
+  const candidateCoverage = coverage(candidate, query);
+  if (!queryCoverage || !candidateCoverage) return 0;
+  return (2 * queryCoverage * candidateCoverage) / (queryCoverage + candidateCoverage);
 }
 
 export function rankExternalCatalogCandidates(
@@ -57,7 +89,7 @@ export function rankExternalCatalogCandidates(
     .flatMap((product): RankedExternalCatalogCandidate[] => {
       if (!retailerBrandMatches(input.brand, product.brand)) return [];
       const candidateTokens = tokens(product.title, brandTokens);
-      const nameScore = Math.max(coverage(queryTokens, candidateTokens), coverage(candidateTokens, queryTokens) * 0.9);
+      const nameScore = balancedCoverage(queryTokens, candidateTokens);
       const candidatePack = canonicalPack(product.packSize);
       const packMatches = observedPack && candidatePack
         ? observedPack.dimension === candidatePack.dimension &&

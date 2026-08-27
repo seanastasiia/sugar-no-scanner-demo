@@ -133,6 +133,8 @@ Checked-in generated snapshots make the investor demo reproducible and fast:
 
 Regeneration and validation scripts live in `scripts/`. Supabase migrations and seed tooling live in `supabase/`. Do not hand-edit generated JSON. Rimi/Livin snapshots are for the private proof of concept; production reuse and recurring ingestion require retailer permission. Open Food Facts rows stay logically and physically separate because of ODbL obligations. See [catalog sources](docs/catalog-sources.md).
 
+Connected-retailer resolution runs before Open Food Facts and grounded web lookup. The Rimi matcher normalizes a small audited set of English package labels to their Latvian catalog identity while still requiring the same brand, pack size and an unambiguous top candidate. A translated identity that remains ambiguous is not accepted and may proceed to the bounded fallback chain.
+
 ## Railway release
 
 Normal releases are pushed once, after the requested batch is complete:
@@ -160,6 +162,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 7. Confirm each overlay tightly follows its package rather than a nearby shelf label.
 8. Move the camera after a result and confirm it remains held until `Scan again`.
 9. Open a rated product and confirm `Better alternatives` contains only the same product type with an equal or better fit and a live price; products without a valid substitute should show no alternatives block.
+10. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
 
 ## Known limits
 

@@ -38,11 +38,24 @@ All 6,822 retained Rimi rows have a source URL, product image, current page pric
 | `npm run catalog:validate` | Pass; Rimi 6,822 / 7,617 configured pages, Livin 6 / 169 pages, no failed URLs |
 | Parser unit test | Pass; 4/4 |
 | External catalog tests | Pass; 6/6 across two files |
-| `npm run verify` | Pass; ESLint, TypeScript, 29 test files / 150 tests and Next.js 16 production build |
-| `CI=1 npm run test:e2e` | Pass; 25/25 Mobile Safari scenarios in 56.6 seconds |
+| `npm run verify` | Pass; ESLint, TypeScript, 29 test files / 153 tests and Next.js 16 production build |
+| `CI=1 npm run test:e2e` | Pass; 25/25 Mobile Safari scenarios in 54.6 seconds |
 | `git diff --check` | Pass |
 
 Intermittent `ECONNRESET` messages from the local Playwright web server occurred only after browser requests were intentionally aborted; all 25 scenarios passed and the process exited successfully.
+
+### Bilingual Rimi identity follow-up
+
+The reported Rimi packages were present in the snapshot but their visible English names did not overlap with the Latvian retailer titles. The matcher now normalizes only the audited phrase pairs and uses balanced two-way token coverage, exact pack size, brand and a minimum top-candidate margin.
+
+| Visible package identity | Local Rimi match | Confidence / next-candidate gap |
+| --- | --- | ---: |
+| `Pastry twists SALTY 125g` | `Sālsstandziņas Rimi 125g` | 1.000 / 0.104 |
+| `Pastry twists CHEESE 125g` | `Sālsstandziņas Rimi ar sieru 125g` | 1.000 / 0.104 |
+| `Sulu dzēriens multi fruit 200ml` | `Sulas dzēriens Rimi multiaugļu 200ml` | 1.000 / 0.130 |
+| `Sulu dzēriens strawberry banana 200ml` | `Sulas dzēriens Rimi Banānu un zemeņu 200ml` | 1.000 / 0.142 |
+
+Targeted external-catalog and recognition tests pass 28/28. The pipeline assertion verifies that these matches skip both Open Food Facts and grounded web nutrition. A generic `Juice drink 200ml` stays below the required uniqueness margin and is not guessed.
 
 ## Product check
 

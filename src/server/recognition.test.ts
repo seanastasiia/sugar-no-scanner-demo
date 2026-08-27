@@ -14,6 +14,7 @@ import {
   resolveVisibleDetections,
   type ProviderDetection
 } from "./recognition";
+import { resolveExternalCatalogProduct } from "./external-catalog";
 
 const originalKey = process.env.GEMINI_API_KEY;
 
@@ -431,6 +432,38 @@ describe("resolveVisibleDetections", () => {
       inlineProduct: { id: "rimi_lv:100006", ratingBasis: "retailer_catalog_reference" },
       identity: { matchKind: "retailer_catalog" },
       retailerOffer: { retailer: "Rimi", price: 2.27, exactSku: true }
+    });
+    expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
+    expect(resolveWebNutrition).not.toHaveBeenCalled();
+  });
+
+  it("resolves an English Rimi pack label from the Latvian snapshot without web search", async () => {
+    const resolveOpenFoodFacts = vi.fn(async () => null);
+    const resolveWebNutrition = vi.fn(async () => null);
+    const detections = await resolveVisibleDetections(
+      [
+        providerDetection(1, {
+          brand: "Rimi",
+          productName: "Pastry twists SALTY 125g",
+          searchQuery: "Rimi Pastry twists SALTY 125g"
+        })
+      ],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveExternalCatalog: resolveExternalCatalogProduct,
+        resolveOpenFoodFacts,
+        resolveIndexedCandidate: () => null,
+        resolveWebNutrition
+      }
+    );
+
+    expect(detections[0]).toMatchObject({
+      productId: "rimi_lv:801291",
+      nutritionLinkConfidence: 1,
+      identity: { matchKind: "retailer_catalog" },
+      inlineProduct: { id: "rimi_lv:801291", ratingBasis: "retailer_catalog_reference" }
     });
     expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
     expect(resolveWebNutrition).not.toHaveBeenCalled();
