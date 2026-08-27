@@ -15,7 +15,8 @@
 - `CI=1 npm run test:e2e`: passed — 25/25 Mobile Safari scenarios, including narrow portrait, landscape, iPhone 17 Pro, enlarged text, reduced motion and WCAG A/AA checks.
 - `git diff --check`: passed.
 - Local evidence: `test-results/price-cta-compact-mobile.png` and `test-results/price-comparison-mobile.png`.
-- Code commit and production deployment are recorded below after publication.
+- Verified code commit: `165170b3845ba04aa1df28941afc5d4700ec2db4`.
+- Production deployment is recorded below after publication.
 
 ## Product checks
 
