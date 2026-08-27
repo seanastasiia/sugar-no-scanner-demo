@@ -392,6 +392,8 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
     "href",
     "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g"
   );
+  await expect(shelfOffer).toHaveText("Buy cheaper · Barbora");
+  expect((await shelfOffer.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await expect(page.getByText("Outlines show products with both protein and total sugar available.", { exact: true })).toHaveCount(0);
   await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g/).first()).toBeVisible();
@@ -1463,6 +1465,15 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
     "href",
     "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
   );
+  await expect(inlineOffer).toHaveText("Buy cheaper · Barbora");
+  await expect(inlineOffer.getByText("€1.69 shelf", { exact: true })).toHaveCount(0);
+  const expandedPrice = page.getByLabel("Shelf price €1.69, Barbora €0.99, cheaper at Barbora").last();
+  await expect(expandedPrice.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "line-through");
+  await expect(expandedPrice.getByText("€0.99", { exact: true })).toBeVisible();
+  expect((await inlineOffer.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  const inlineOfferBox = await inlineOffer.boundingBox();
+  const inlineOfferCardBox = await inlineOffer.locator("..").boundingBox();
+  expect(inlineOfferBox?.width ?? 0).toBeLessThan((inlineOfferCardBox?.width ?? 0) * 0.75);
   await expect(page.getByText("Nutrition not verified online", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await expect(page.getByText("How this result was made", { exact: true })).toHaveCount(0);
@@ -1487,7 +1498,9 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await expect(page.getByLabel(/Shelf price €/)).toHaveCount(0);
   await expect(page.getByText(/Keep the package and its shelf label/)).toHaveCount(0);
   await expect(page.getByLabel("Product result preview").getByRole("link", { name: /Buy .* cheaper at Barbora/ })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Buy online Zero Peach.* at Barbora for €0\.99/ })).toBeVisible();
+  const onlineOnlyOffer = page.getByRole("link", { name: /Buy online Zero Peach.* at Barbora for €0\.99/ });
+  await expect(onlineOnlyOffer).toBeVisible();
+  await expect(onlineOnlyOffer).toHaveText("Buy online · Barbora");
 });
 
 test("an exact Barbora food gets an on-demand two-factor Sugar.no fit", async ({ page }) => {

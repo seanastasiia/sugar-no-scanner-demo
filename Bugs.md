@@ -15,6 +15,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-27: exact online offers repeated prices in a full-width retailer block.** Ranked cards now show the crossed camera price and lower exact online price once, plus a compact 44 px `Buy cheaper · …` action inside the same card.
 - **2026-08-27: camera fit markers used abstract check/minus/arrow glyphs and obscured too much packaging.** They now use compact, equally sized thumbs-up, raised-hand and thumbs-down SVG icons while the full product outline remains the accessible touch target.
 - **2026-08-27: English Rimi private-label text missed the Latvian snapshot.** Audited bilingual identity normalization now links the four reported pastry-twist and juice variants locally using brand, exact pack size and a uniqueness margin; generic ambiguous juice labels remain unresolved. Pending UI copy now says `Matching product` instead of implying every lookup is online.
 - **2026-08-27: Rimi coverage was limited to a 500-row bootstrap.** A resumable category-scoped sync now accounts for every URL in the seven approved Rimi sections and retains 6,822 exact products with source-backed energy, protein and total sugar; Livin's entire Latvia sitemap is also accounted for.

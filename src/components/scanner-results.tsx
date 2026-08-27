@@ -102,12 +102,15 @@ export function ProductResult({
       {showSummary && product.ratingSignalCount > 0 ? <SugarNoBadge product={product} /> : null}
 
       {showSummary ? (
-        <OnlineOfferAction
-          productName={product.shortName}
-          detection={detection}
-          offer={offer}
-          onRetailer={() => onRetailer(product.id)}
-        />
+        <>
+          <CompactProductPrice detection={detection} offer={offer} />
+          <OnlineOfferAction
+            productName={product.shortName}
+            detection={detection}
+            offer={offer}
+            onRetailer={() => onRetailer(product.id)}
+          />
+        </>
       ) : null}
 
       {showSummary && product.ratingStatus === "identity_only" ? (
@@ -309,11 +312,8 @@ export function OnlineOfferAction({
       onClick={onRetailer}
       aria-label={`${cheaperOnline ? "Buy cheaper online" : "Buy online"} ${productName} at ${offer.retailer} for €${offer.price.toFixed(2)}`}
     >
-      <span>
-        <strong>{cheaperOnline ? `Buy cheaper at ${offer.retailer}` : `Buy online at ${offer.retailer}`}</strong>
-        {cheaperOnline && shelfPrice ? <s>€{shelfPrice.amount.toFixed(2)} shelf</s> : null}
-      </span>
-      <span className={styles.onlineOfferPrice}>€{offer.price.toFixed(2)} <ArrowUpRight aria-hidden="true" size={16} /></span>
+      <strong>{cheaperOnline ? `Buy cheaper · ${offer.retailer}` : `Buy online · ${offer.retailer}`}</strong>
+      <ArrowUpRight aria-hidden="true" size={15} />
     </a>
   );
 }
