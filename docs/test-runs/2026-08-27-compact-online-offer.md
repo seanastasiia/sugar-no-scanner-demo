@@ -16,7 +16,8 @@
 - `git diff --check`: passed.
 - Local evidence: `test-results/price-cta-compact-mobile.png` and `test-results/price-comparison-mobile.png`.
 - Verified code commit: `165170b3845ba04aa1df28941afc5d4700ec2db4`.
-- Production deployment is recorded below after publication.
+- Railway deployment `a86b926e-f34b-4f7e-ba0c-a887a8902020`: `SUCCESS`.
+- Production health: `/api/health` returned `status: ok` and commit `2392931ced04d8c1b1f9bb81aa8bb3cd2dd48948`; root returned HTTP 200.
 
 ## Product checks
 
