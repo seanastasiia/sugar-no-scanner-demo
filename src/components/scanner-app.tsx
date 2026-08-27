@@ -3,20 +3,21 @@
 import Image from "next/image";
 import {
   ArrowUpRight,
-  ArrowDown,
   Camera,
   Check,
   ChevronDown,
   CircleAlert,
   FileImage,
+  Hand,
   Info,
   Layers3,
   LoaderCircle,
   List,
-  Minus,
   RefreshCw,
   ScanLine,
   ShoppingBasket,
+  ThumbsDown,
+  ThumbsUp,
   X
 } from "lucide-react";
 import { ChangeEvent, type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -96,10 +97,16 @@ function toneClass(tone: MatchTone) {
 }
 
 function OverlayToneIcon({ tone }: { tone: MatchTone }) {
-  if (tone === "strong") return <Check aria-hidden="true" size={22} strokeWidth={3} />;
-  if (tone === "middle") return <Minus aria-hidden="true" size={22} strokeWidth={3} />;
-  if (tone === "lower") return <ArrowDown aria-hidden="true" size={21} strokeWidth={2.6} />;
-  return <ScanLine aria-hidden="true" size={20} strokeWidth={2.5} />;
+  if (tone === "strong") {
+    return <ThumbsUp aria-hidden="true" data-fit-icon="great" size={12} strokeWidth={2.5} />;
+  }
+  if (tone === "middle") {
+    return <Hand aria-hidden="true" data-fit-icon="moderate" size={12} strokeWidth={2.5} />;
+  }
+  if (tone === "lower") {
+    return <ThumbsDown aria-hidden="true" data-fit-icon="low" size={12} strokeWidth={2.5} />;
+  }
+  return <ScanLine aria-hidden="true" data-fit-icon="pending" size={12} strokeWidth={2.5} />;
 }
 
 function completenessClass(completeness: SignalCompleteness) {

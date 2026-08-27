@@ -339,7 +339,10 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
       return `${Math.round(box.width)}x${Math.round(box.height)}`;
     })
   );
-  expect(markerDiscSizes).toEqual(["46x46", "46x46", "46x46", "46x46"]);
+  expect(markerDiscSizes).toEqual(["24x24", "24x24", "24x24", "24x24"]);
+  await expect(shelfOverlay.locator('svg[data-fit-icon="great"]')).toHaveCount(2);
+  await expect(shelfOverlay.locator('svg[data-fit-icon="moderate"]')).toHaveCount(2);
+  await expect(shelfOverlay.locator('svg[data-fit-icon="low"]')).toHaveCount(0);
   const moderateMarker = shelfOverlay.locator('button[aria-label*="Moderate fit"]').first();
   await moderateMarker.click();
   const selectedChrome = await moderateMarker.evaluate((element) => {
@@ -1574,6 +1577,7 @@ test("an exact Barbora food gets an on-demand two-factor Sugar.no fit", async ({
   const cameraOverlay = page.getByLabel("Saved shelf or checkout photo scanner");
   const ratedMarker = cameraOverlay.locator('button[aria-label^="Open "]').first();
   await expect(ratedMarker).toBeVisible();
+  await expect(ratedMarker.locator('svg[data-fit-icon="low"]')).toHaveCount(1);
   await expect(ratedMarker).not.toHaveAttribute("aria-label", /signals/i);
   await expect(cameraOverlay.getByText("2/2 signals", { exact: true })).toHaveCount(0);
   const markerChrome = await ratedMarker.evaluate((element) => {

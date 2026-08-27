@@ -438,21 +438,21 @@
   top: 50%;
   left: 50%;
   display: flex;
-  width: 46px;
-  height: 46px;
+  width: 24px;
+  height: 24px;
   align-items: center;
   justify-content: center;
-  border: 2px solid #ffffff;
+  border: 1.5px solid #ffffff;
   border-radius: 50%;
   background: var(--tone, #ffffff);
-  color: var(--tone-on, #111111);
+  color: #ffffff;
   box-shadow: 0 7px 20px rgb(0 0 0 / 30%);
   transform: translate(-50%, -50%);
 }
 
 .detectionBox span strong {
   position: absolute;
-  top: 49px;
+  top: 28px;
   left: 50%;
   min-height: 22px;
   padding: 3px 7px;

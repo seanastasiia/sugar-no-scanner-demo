@@ -18,7 +18,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Expanded multi-product results show only the collapse control, `Best fit first` and the ranked product cards; duplicate summaries, counters and scan-again controls are omitted.
 - The compact camera preview mirrors that ranking with `#1`, `#2`, `#3…` badges and shows total sugar per 100 g or 100 ml beneath each rated fit.
 - The compact sheet keeps `View all` as its only action; returning to live camera starts a new scan.
-- `Great fit`, `Moderate fit` and `Low fit` camera markers use the same 46 px visual disc; the full detected-product outline remains the larger touch target.
+- `Great fit`, `Moderate fit` and `Low fit` camera markers use the same compact 24 px visual disc with thumbs-up, raised-hand and thumbs-down icons; the full detected-product outline remains the larger touch target.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Rimi/Livin snapshot, isolated Open Food Facts bulk/API match, then exact Google Search-grounded web nutrition.
@@ -163,6 +163,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 8. Move the camera after a result and confirm it remains held until `Scan again`.
 9. Open a rated product and confirm `Better alternatives` contains only the same product type with an equal or better fit and a live price; products without a valid substitute should show no alternatives block.
 10. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
+11. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
 
 ## Known limits
 
