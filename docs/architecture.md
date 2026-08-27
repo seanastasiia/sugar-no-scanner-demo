@@ -31,6 +31,8 @@ Do not open the full files during ordinary code work:
 - `data/barbora-nutrition-index.generated.json`
 - `data/barbora-product-index.generated.json`
 - `data/barbora-food-product-index.generated.json`
+- `data/rimi-catalog.generated.json`
+- `data/livin-catalog.generated.json`
 
 Use a narrow `jq` query or the validators in `scripts/`. Generated snapshots are reproducible inputs, not hand-edited source.
 

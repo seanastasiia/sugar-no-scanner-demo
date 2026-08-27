@@ -14,7 +14,7 @@ Current proof-of-concept state:
 - the checked-in 2026-08-25 snapshot contains 9,707 active non-adult food SKUs and 7,433 complete automatic-fit records: 76.57% source-data coverage across 817 brands and 276 retailer categories.
 - 40 protein-snack records remain as the deterministic category-percentile benchmark, not the Latvia coverage ceiling.
 - exact products in the broad snapshot receive a runtime two-factor reference fit; fiber is not a rating input.
-- strict Rimi and Livin adapters now provide 500 and 6 complete product-page rows respectively. Livin's count comes after checking the full 169-URL sitemap, which also contains cosmetics and localized duplicates; neither count is visual-recognition or full-retailer coverage.
+- strict Rimi and Livin adapters now provide 6,822 and 6 complete product-page rows respectively. Rimi's count comes from checking all 7,617 pages in seven approved food and drink categories. Livin's count comes after checking the full 169-URL Latvia sitemap, which also contains cosmetics and localized duplicates; neither count is visual-recognition or full-retailer coverage.
 - Open Food Facts now has 500 complete Latvia-tagged records in a separate ODbL layer plus a streaming daily-JSONL importer. A scheduled full bulk import is still required for production-scale coverage.
 - records without enough exact nutrition and non-food pages remain unrated; the current demo does not invent values or ask the user for a second label scan.
 

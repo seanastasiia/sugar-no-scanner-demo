@@ -54,6 +54,32 @@ const externalProductSchema = z.object({
   checkedAt: z.iso.datetime()
 });
 
+const retailerSyncReportSchema = z.object({
+  source: z.enum(["rimi", "livin"]),
+  categories: z.array(z.string().min(1)).min(1).nullable(),
+  startedAt: z.iso.datetime(),
+  completedAt: z.iso.datetime(),
+  checkedAt: z.iso.datetime(),
+  discoveredUrls: z.number().int().positive(),
+  processedUrls: z.number().int().positive(),
+  completeProducts: z.number().int().positive(),
+  skippedWithoutCompleteNutrition: z.number().int().nonnegative(),
+  notFoundUrls: z.number().int().nonnegative(),
+  failedUrls: z.literal(0),
+  requestSpacingMs: z.number().int().min(100),
+  concurrency: z.number().int().min(1).max(8)
+});
+
+const rimiScopedCategories = [
+  "gala-zivis-un-gatava-kulinarija",
+  "piena-produkti-un-olas",
+  "maize-un-konditoreja",
+  "saldetie-edieni",
+  "iepakota-partika",
+  "saldumi-un-uzkodas",
+  "dzerieni"
+];
+
 async function externalSnapshot(file: string, source: "rimi_lv" | "livin_lv" | "open_food_facts", minimum: number) {
   const products = z.array(externalProductSchema).min(minimum).parse(JSON.parse(await readFile(file, "utf8")));
   if (products.some((product) => product.source !== source)) throw new Error(`${file} mixes catalog source layers`);
@@ -61,6 +87,21 @@ async function externalSnapshot(file: string, source: "rimi_lv" | "livin_lv" | "
     throw new Error(`${file} contains duplicate source product IDs`);
   }
   return products;
+}
+
+async function completedRetailerSync(
+  file: string,
+  source: "rimi" | "livin",
+  completeProducts: number
+) {
+  const report = retailerSyncReportSchema.parse(JSON.parse(await readFile(file, "utf8")));
+  if (report.source !== source) throw new Error(`${file} belongs to ${report.source}, not ${source}`);
+  if (report.processedUrls !== report.discoveredUrls) throw new Error(`${file} does not cover its complete configured URL scope`);
+  if (report.completeProducts !== completeProducts) throw new Error(`${file} does not match its generated snapshot`);
+  if (report.completeProducts + report.skippedWithoutCompleteNutrition + report.notFoundUrls !== report.processedUrls) {
+    throw new Error(`${file} coverage totals do not reconcile`);
+  }
+  return report;
 }
 
 async function main() {
@@ -75,6 +116,18 @@ async function main() {
     externalSnapshot("data/livin-catalog.generated.json", "livin_lv", 6),
     externalSnapshot("data/open-food-facts-lv.generated.json", "open_food_facts", 500)
   ]);
+  const [rimiReport, livinReport] = await Promise.all([
+    completedRetailerSync("data/rimi-catalog-sync-report.generated.json", "rimi", rimi.length),
+    completedRetailerSync("data/livin-catalog-sync-report.generated.json", "livin", livin.length)
+  ]);
+  if (JSON.stringify(rimiReport.categories) !== JSON.stringify(rimiScopedCategories)) {
+    throw new Error("Rimi snapshot does not match the approved seven-category scope");
+  }
+  if (livinReport.categories !== null) throw new Error("Livin sync must cover its complete Latvia product sitemap");
+  const allowedRimiCategories = new Set(rimiScopedCategories);
+  if (rimi.some((product) => !allowedRimiCategories.has(product.category?.split(" > ")[0] || ""))) {
+    throw new Error("Rimi snapshot contains a product outside the approved category scope");
+  }
   const uniqueIds = new Set(products.map((product) => product.id));
   const uniqueRetailerIds = new Set(products.map((product) => product.retailerProductId));
   if (uniqueIds.size !== products.length || uniqueRetailerIds.size !== products.length) {
@@ -91,8 +144,8 @@ async function main() {
   console.log(`Complete two-factor fit nutrition: ${complete.length}`);
   console.log(`Optional raw fiber data: ${withFiber.length}`);
   console.log(`Barbora product index: ${barboraIndex.length}`);
-  console.log(`Rimi verified snapshot: ${rimi.length}`);
-  console.log(`Livin verified snapshot: ${livin.length}`);
+  console.log(`Rimi verified snapshot: ${rimi.length} from ${rimiReport.processedUrls} sitemap pages`);
+  console.log(`Livin verified snapshot: ${livin.length} from ${livinReport.processedUrls} sitemap pages`);
   console.log(`Open Food Facts Latvia ODbL layer: ${openFoodFacts.length}`);
   if (process.argv.includes("--require-complete") && complete.length !== products.length) {
     throw new Error("Catalog is not ready for public two-factor fit scores");

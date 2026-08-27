@@ -127,6 +127,7 @@ Checked-in generated snapshots make the investor demo reproducible and fast:
 - `data/barbora-nutrition-index.generated.json`: source-backed nutrition snapshot.
 - `data/rimi-catalog.generated.json`: exact Rimi product-page bootstrap snapshot.
 - `data/livin-catalog.generated.json`: exact Livin product-page bootstrap snapshot.
+- `data/rimi-catalog-sync-report.generated.json` and `data/livin-catalog-sync-report.generated.json`: complete configured-scope accounting.
 - `data/open-food-facts-lv.generated.json`: attributed Latvia subset imported through the ODbL bulk pipeline.
 - `data/catalog-sources.generated.json`: source, license and redistribution manifest.
 
@@ -164,7 +165,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 
 - Latvia-wide coverage is not guaranteed. Private labels, unreadable variants and products without an exact public per-100 table can remain unresolved in recognition; they are hidden from the final comparison rather than shown as price-only or identity-only cards.
 - Real shelf, glare, low-light, moving-belt and price-label accuracy still require a physical store benchmark.
-- Barbora, Rimi and Livin can produce exact offers for their own matched SKUs. The checked-in Rimi layer contains 500 complete product pages; Livin's complete public food subset currently contains 6 rows after checking its full 169-URL sitemap. These snapshots are not a market-wide real-time price engine.
+- Barbora, Rimi and Livin can produce exact offers for their own matched SKUs. The checked-in Rimi layer contains 6,822 complete products after checking all 7,617 pages in the seven approved food and drink categories. Livin contributes 6 complete rows after checking its full 169-URL Latvia sitemap. These snapshots are not a market-wide real-time price engine.
 - The release contains 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
 - FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
 - Grounded web nutrition has variable latency and cost. Production should persist human-reviewed successful results in Supabase.

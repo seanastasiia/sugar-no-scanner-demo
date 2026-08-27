@@ -10,12 +10,12 @@ This document separates product coverage from visual recognition. A catalog row 
 | --- | --- | --- | --- | --- |
 | 1 | Sugar.no curated catalog | deterministic demo and reviewed products | 40 records | Sugar.no-owned |
 | 2 | Barbora Latvia | exact identity, nutrition and offer | broad checked-in food snapshot | private demo snapshot; obtain permission for production reuse |
-| 3 | Rimi Latvia | exact identity, nutrition and offer | 500 complete product pages | non-redistributable retailer snapshot; obtain permission before recurring production use |
+| 3 | Rimi Latvia | exact identity, nutrition and offer | 6,822 complete products from all 7,617 pages in seven approved categories | non-redistributable retailer snapshot; obtain permission before recurring production use |
 | 4 | Livin Latvia | exact identity, nutrition and offer | 6 complete food pages from the full 169-URL public sitemap | non-redistributable retailer snapshot; obtain permission before recurring production use |
 | 5 | Open Food Facts | exact GTIN/name nutrition fallback | 500 complete Latvia-tagged records | ODbL database; attribution required; images have separate CC BY-SA terms |
 | 6 | Cited web result | last-resort exact per-100 nutrition | runtime only | keep source URL and reject ambiguous variants |
 
-The Rimi/Livin counts are source-backed snapshot counts, not visual-recognition or market-coverage claims. The Open Food Facts release file is a bounded Latvia subset; the same isolated schema also accepts the official daily bulk export.
+The Rimi/Livin counts are source-backed snapshot counts, not visual-recognition or market-coverage claims. Rimi covers meat/fish/prepared food, dairy/eggs, bakery, frozen food, packaged food, sweets/snacks and drinks. The Open Food Facts release file is a bounded Latvia subset; the same isolated schema also accepts the official daily bulk export.
 
 ## Data separation
 
@@ -37,14 +37,19 @@ The deployed scanner can run from checked-in snapshots when Supabase is not conf
 
 ## Rimi and Livin refresh
 
-The sync reads public product sitemaps and then fetches product pages slowly. It accepts a row only when exact identity, energy, protein and total sugar are present. It never estimates missing nutrition.
+The sync reads public product sitemaps and then fetches product pages at a bounded global rate. It accepts a rated row only when exact identity, energy, protein and total sugar are present. It never estimates missing nutrition. Full runs checkpoint under ignored `.catalog-sync/`, resume automatically and write a generated coverage report only after every sitemap URL has been accounted for.
 
 ```bash
 RETAILER_SYNC_LIMIT=500 RETAILER_SYNC_MAX_FETCHES=1000 npm run catalog:sync:rimi
 RETAILER_SYNC_LIMIT=100 RETAILER_SYNC_MAX_FETCHES=800 npm run catalog:sync:livin
+
+# Full resumable import of the configured seven-category Rimi scope and all Livin Latvia URLs.
+# Zero is the explicit unlimited value inside that configured scope.
+RETAILER_SYNC_LIMIT=0 RETAILER_SYNC_MAX_FETCHES=0 npm run catalog:sync:rimi
+RETAILER_SYNC_LIMIT=0 RETAILER_SYNC_MAX_FETCHES=0 npm run catalog:sync:livin
 ```
 
-Review the generated diff for wrong brand, pack size, basis, availability, duplicate SKU and source timestamp before seeding or committing. A production refresh must run only after permission from the retailer or an approved data provider.
+Review the generated snapshot and `data/*-catalog-sync-report.generated.json` for wrong brand, pack size, basis, availability, duplicate SKU, complete configured-scope accounting and source timestamp before seeding or committing. Set `RETAILER_SYNC_RIMI_CATEGORIES=all` only for an explicitly approved whole-store run. A production refresh must run only after permission from the retailer or an approved data provider.
 
 ## Open Food Facts bulk import
 
