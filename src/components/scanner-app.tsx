@@ -1220,8 +1220,8 @@ export function ScannerApp() {
                             ? `${ratedCount} rated · Checking the rest…`
                             : `${ratedCount} rated · Best fit first`
                           : pendingProductIds.size
-                            ? "Checking exact nutrition online…"
-                            : "Products identified · Nutrition checked online"}
+                            ? "Matching products…"
+                            : "Products identified · No verified nutrition"}
                       </span>
                     </div>
                     <div className={styles.sheetActions}>
@@ -1328,7 +1328,7 @@ export function ScannerApp() {
                           {ratedCount > 0
                             ? "Ready to compare"
                             : pendingProductIds.size
-                              ? "Checking product online…"
+                              ? "Matching product…"
                               : "Product identified"}
                         </strong>
                         <span>{resultLocked ? "Result held while you read" : "Product result"}</span>
@@ -1347,7 +1347,7 @@ export function ScannerApp() {
                     <section className={styles.rankingSection} aria-labelledby="scan-ranking-title">
                       <div className={styles.rankingHeading}>
                         <h2 id="scan-ranking-title">
-                          {ratedCount > 0 ? "Best fit first" : pendingProductIds.size ? "Checking nutrition online" : "Products identified"}
+                          {ratedCount > 0 ? "Best fit first" : pendingProductIds.size ? "Matching products" : "Products identified"}
                         </h2>
                       </div>
                       <ol className={styles.rankedList} aria-label="Products ranked by Sugar.no fit">

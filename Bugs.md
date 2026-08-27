@@ -15,7 +15,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
-- **2026-08-27: English Rimi private-label text missed the Latvian snapshot.** Audited bilingual identity normalization now links the four reported pastry-twist and juice variants locally using brand, exact pack size and a uniqueness margin; generic ambiguous juice labels remain unresolved.
+- **2026-08-27: English Rimi private-label text missed the Latvian snapshot.** Audited bilingual identity normalization now links the four reported pastry-twist and juice variants locally using brand, exact pack size and a uniqueness margin; generic ambiguous juice labels remain unresolved. Pending UI copy now says `Matching product` instead of implying every lookup is online.
 - **2026-08-27: Rimi coverage was limited to a 500-row bootstrap.** A resumable category-scoped sync now accounts for every URL in the seven approved Rimi sections and retains 6,822 exact products with source-backed energy, protein and total sugar; Livin's entire Latvia sitemap is also accounted for.
 - **2026-08-27: camera/results UI retained unfinished five-product and price-comparison behavior.** The scan cap is ten, camera framing no longer forces a zoomed 16:9 crop, result-status/Best overlays are visually removed, missing packshots fall back to the scanned package crop, and exact online actions live inside their own product cards.
 - **2026-08-27: external catalog snapshots were still 3/2/5 proof rows.** Reproducible syncs now cover the approved Rimi scope, all 6 complete Livin food pages discoverable in its public sitemap, and 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer.

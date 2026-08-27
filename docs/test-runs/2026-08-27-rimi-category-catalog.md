@@ -39,7 +39,7 @@ All 6,822 retained Rimi rows have a source URL, product image, current page pric
 | Parser unit test | Pass; 4/4 |
 | External catalog tests | Pass; 6/6 across two files |
 | `npm run verify` | Pass; ESLint, TypeScript, 29 test files / 153 tests and Next.js 16 production build |
-| `CI=1 npm run test:e2e` | Pass; 25/25 Mobile Safari scenarios in 54.6 seconds |
+| `CI=1 npm run test:e2e` | Pass; 25/25 Mobile Safari scenarios in 53.1 seconds |
 | `git diff --check` | Pass |
 
 Intermittent `ECONNRESET` messages from the local Playwright web server occurred only after browser requests were intentionally aborted; all 25 scenarios passed and the process exited successfully.
@@ -56,6 +56,8 @@ The reported Rimi packages were present in the snapshot but their visible Englis
 | `Sulu dzēriens strawberry banana 200ml` | `Sulas dzēriens Rimi Banānu un zemeņu 200ml` | 1.000 / 0.142 |
 
 Targeted external-catalog and recognition tests pass 28/28. The pipeline assertion verifies that these matches skip both Open Food Facts and grounded web nutrition. A generic `Juice drink 200ml` stays below the required uniqueness margin and is not guessed.
+
+Pending-state copy now says `Matching product` because this stage starts with the checked-in Sugar.no and retailer snapshots. The UI no longer claims every enrichment request is an online nutrition search.
 
 ## Product check
 

@@ -207,7 +207,7 @@ export function RecognizedProductResult({ detection }: { detection: ProductDetec
       <div className={styles.pendingDataAction}>
         <Info aria-hidden="true" size={18} />
         <span>
-          <strong>Nutrition not verified online</strong>
+          <strong>Nutrition not verified</strong>
           Sugar.no will not invent protein or sugar values when an exact source cannot be confirmed.
         </span>
       </div>
@@ -228,8 +228,8 @@ export function LoadingProductResult({ detection }: { detection: ProductDetectio
       <div className={styles.pendingData}>
         <LoaderCircle className={styles.spin} aria-hidden="true" size={18} />
         <span>
-          <strong>Checking nutrition online…</strong>
-          Checking the Sugar.no catalog, connected Latvia retailers, Open Food Facts and cited web results.
+          <strong>Matching product…</strong>
+          Checking the Sugar.no catalog first, then trusted fallback sources only when needed.
         </span>
       </div>
     </article>
