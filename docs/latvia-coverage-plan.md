@@ -1,6 +1,6 @@
 # Latvia product coverage plan
 
-Checked: 2026-08-26
+Checked: 2026-08-27
 
 ## Two different coverage metrics
 
@@ -14,9 +14,9 @@ Current proof-of-concept state:
 - the checked-in 2026-08-25 snapshot contains 9,707 active non-adult food SKUs and 7,433 complete automatic-fit records: 76.57% source-data coverage across 817 brands and 276 retailer categories.
 - 40 protein-snack records remain as the deterministic category-percentile benchmark, not the Latvia coverage ceiling.
 - exact products in the broad snapshot receive a runtime two-factor reference fit; fiber is not a rating input.
-- strict Rimi and Livin adapters now prove exact page parsing and matching, but their checked-in snapshots contain only 3 and 2 complete rows respectively; this is connection evidence, not retailer coverage.
-- Open Food Facts now has a streaming daily-JSONL importer and separate ODbL storage. The checked-in five-row Latvia bootstrap validates the path; a scheduled full import is still required.
-- records without enough nutrition and non-food pages remain unrated; a food package can recover through one explicit scan of its printed per-100 nutrition table.
+- strict Rimi and Livin adapters now provide 500 and 6 complete product-page rows respectively. Livin's count comes after checking the full 169-URL sitemap, which also contains cosmetics and localized duplicates; neither count is visual-recognition or full-retailer coverage.
+- Open Food Facts now has 500 complete Latvia-tagged records in a separate ODbL layer plus a streaming daily-JSONL importer. A scheduled full bulk import is still required for production-scale coverage.
+- records without enough exact nutrition and non-food pages remain unrated; the current demo does not invent values or ask the user for a second label scan.
 
 The pre-expansion public smoke found 20 distinct package identities across five Latvia scenes but only 5 automatic ratings. On the two close mayonnaise shelves, 4 of 12 identities were rated. The other three scenes include alcohol, cleaning products and distant checkout views, so the 25% aggregate is a release smoke baseline rather than a grocery accuracy estimate.
 

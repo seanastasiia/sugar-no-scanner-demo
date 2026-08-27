@@ -7,13 +7,16 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **Latvia coverage is not universal.** Private labels, unreadable variants and products without an exact cited per-100 table can remain unresolved. They must not receive a guessed fit.
 - **Physical-store accuracy is not validated.** Packaging glare, low light, distance and a moving checkout belt need a real-store benchmark.
 - **Shelf-price association needs a benchmark.** Ambiguous labels stay hidden; a package number, deposit or unrelated nearby tag must not become the product price.
-- **Rimi/Livin coverage is only a bootstrap.** Their exact page adapters work, but production-scale refresh and reuse require retailer permission.
-- **Open Food Facts bulk coverage is only a bootstrap.** The isolated importer is production-shaped; the checked-in layer contains five verified Latvia proof rows.
+- **Rimi/Livin snapshots are not market-wide.** The checked-in layers contain 500 and 6 complete source pages respectively; production-scale refresh and reuse require retailer permission.
+- **Open Food Facts is incomplete and community-maintained.** The isolated checked-in layer contains 500 complete Latvia-tagged records; a scheduled full bulk import and quality review are still needed for production.
 - **Retailer snapshots age.** Checked-in product and nutrition indexes are reproducible discovery snapshots, not real-time stock or price guarantees.
 - **Grounded nutrition can be slow or unavailable.** Identity appears first; exact internet enrichment is background-only and bounded to 18 seconds.
 - **Railway config-as-code needs migration before 1 December 2026.** The current `railway.json`/`railway.toml` deployment still works, but Railway now recommends `.railway/railway.ts` and prints a deprecation warning during deploys.
 
 ## Recently resolved
+
+- **2026-08-27: camera/results UI retained unfinished five-product and price-comparison behavior.** The scan cap is ten, camera framing no longer forces a zoomed 16:9 crop, result-status/Best overlays are visually removed, missing packshots fall back to the scanned package crop, and exact online actions live inside their own product cards.
+- **2026-08-27: external catalog snapshots were still 3/2/5 proof rows.** Low-rate reproducible syncs now check in 500 complete Rimi pages, all 6 complete Livin food pages discoverable in its public sitemap, and 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer.
 
 - **2026-08-26: removed features and QA artifacts still inflated the active codebase.** The unreachable nutrition-label follow-up was deleted from client, API and server code; camera results and demo fixtures were split into focused modules; Playwright screenshots now stay in ignored test artifacts instead of Git.
 - **2026-08-26: nutrition resolution depended on Barbora plus runtime web search.** Strict Rimi and Livin adapters now resolve exact identity, per-100 protein/sugar, page price and provenance; Open Food Facts has a separate ODbL import and Supabase layer.

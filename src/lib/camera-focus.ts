@@ -68,3 +68,29 @@ export function mapBoxToObjectCover(
     height: (bottom - top) / stage.height
   };
 }
+
+/**
+ * Maps model coordinates into an `object-fit: contain` preview. Unlike cover,
+ * contain keeps the complete camera frame visible and adds letterboxing when
+ * the camera and phone screen use different aspect ratios.
+ */
+export function mapBoxToObjectContain(
+  box: BoundingBox,
+  media: MediaDimensions,
+  stage: MediaDimensions
+): BoundingBox {
+  if (media.width <= 0 || media.height <= 0 || stage.width <= 0 || stage.height <= 0) return box;
+
+  const scale = Math.min(stage.width / media.width, stage.height / media.height);
+  const renderedWidth = media.width * scale;
+  const renderedHeight = media.height * scale;
+  const offsetX = (stage.width - renderedWidth) / 2;
+  const offsetY = (stage.height - renderedHeight) / 2;
+
+  return {
+    x: (offsetX + box.x * renderedWidth) / stage.width,
+    y: (offsetY + box.y * renderedHeight) / stage.height,
+    width: (box.width * renderedWidth) / stage.width,
+    height: (box.height * renderedHeight) / stage.height
+  };
+}

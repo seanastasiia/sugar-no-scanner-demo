@@ -1,8 +1,8 @@
 # Partner data evaluation requests
 
-Status: **drafts only — not sent**. Checked: 2026-08-26.
+Status: **approved for submission, not yet transmitted**. Checked: 2026-08-27.
 
-These messages are intentionally short and make no promise that a trial will become a commercial contract. Send only after Anastasiia approves the final text.
+These messages are intentionally short and make no promise that a trial will become a commercial contract. Anastasiia directed Codex to proceed on 2026-08-27. The confirmed outreach mailbox is `anastasiia@intend.com`; browser submission still requires action-time confirmation before that contact data is transmitted to each provider.
 
 ## FatSecret Premier
 
@@ -66,10 +66,10 @@ Official route: [NIQ Brandbank contact](https://nielseniq.com/global/en/landing-
 
 Official routes: [GS1 Latvia contact](https://gs1lv.org/kontakti), [Verified by GS1](https://gs1lv.org/verified_by_gs1), and [product data exchange](https://gs1lv.org/produktu_datu_apmainja). Verified by GS1 describes core identity attributes; nutrition should not be assumed to be present.
 
-## Approval checklist before sending
+## Submission checklist
 
-1. Confirm the `6,000+ users` line is still the preferred public company description.
-2. Confirm the target categories and retailer list.
-3. Confirm whether replies should go to Anastasiia personally or a Sugar.no data/partnership address.
-4. Approve the three texts verbatim or provide edits.
-5. After approval, submit once and record provider, date, route and response status to avoid duplicate outreach.
+1. `6,000+ users`, the target categories and retailer list are approved public context.
+2. Replies go to `anastasiia@intend.com`; operating entity is INTENDUM LTD.
+3. Obtain the required action-time confirmation before typing or submitting contact data in provider forms.
+4. Submit each request once and record provider, date, route and response status to avoid duplicate outreach.
+5. Do not mark FatSecret, NIQ or GS1 as connected until credentials or an actual data delivery have been received and verified.

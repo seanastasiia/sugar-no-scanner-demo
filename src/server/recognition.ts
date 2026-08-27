@@ -210,7 +210,7 @@ export function recognitionInstruction(
   const scope = focusMode
     ? `This is a center crop after a broad scan was uncertain. Identify the most prominent readable package in the crop. ` +
       `Repeated copies of the same package are one SKU; return it once rather than returning an empty result. `
-    : `Scan the complete frame from left to right and top to bottom. Identify the five most confidently readable distinct front-facing ` +
+    : `Scan the complete frame from left to right and top to bottom. Identify up to ${MAX_SCAN_PRODUCTS} of the most confidently readable distinct front-facing ` +
       `packaged retail SKUs, including several different products on the same shelf. ` +
       `Do not stop after the central or most prominent package. Include that package as a fallback, but also return readable ` +
       `products elsewhere in the frame. Repeated facings of the same SKU are one product type and must be returned once. `;
@@ -434,7 +434,7 @@ async function mapWithConcurrency<T, R>(
 }
 
 /**
- * Resolves at most five visible identities while bounding outbound lookups.
+ * Resolves at most ten visible identities while bounding outbound lookups.
  * The vision model supplies identity only; nutrition is linked through an exact
  * catalog/database result or a cited, high-confidence grounded web result.
  */

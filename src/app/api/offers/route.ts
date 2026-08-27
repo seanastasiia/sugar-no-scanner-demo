@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { getKnownBarboraOfferBySlug } from "@/server/barbora-catalog";
 
 const requestSchema = z.object({
-  slugs: z.array(z.string().min(1).max(180).regex(/^[a-z0-9-]+$/)).min(1).max(8)
+  slugs: z.array(z.string().min(1).max(180).regex(/^[a-z0-9-]+$/)).min(1).max(MAX_SCAN_PRODUCTS)
 });
 
 export async function POST(request: Request) {

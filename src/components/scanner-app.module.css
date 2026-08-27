@@ -89,7 +89,6 @@
 .primaryButton,
 .uploadButton,
 .demoGrid button,
-.retailerButton,
 .alternativeOpen,
 .rankedProduct,
 .cameraError button {
@@ -115,7 +114,6 @@
 .primaryButton:active,
 .demoGrid button:active,
 .uploadButton:active,
-.retailerButton:active,
 .alternativeOpen:active {
   opacity: 0.72;
 }
@@ -237,7 +235,8 @@
   z-index: -3;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #000000;
 }
 
 .stage::after {
@@ -351,6 +350,18 @@
 
 .stageStatus > span {
   min-width: 0;
+}
+
+.stageStatusResultHidden {
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
 }
 
 .recognitionRetry {
@@ -769,6 +780,23 @@
   object-fit: contain;
 }
 
+.sceneProductCrop {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background-color: var(--surface-tinted);
+  background-repeat: no-repeat;
+}
+
+.productThumbFallbackIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: var(--muted);
+  opacity: 0.45;
+  transform: translate(-50%, -50%);
+}
+
 .sheetPreviewCopy {
   display: grid;
   min-width: 0;
@@ -877,6 +905,19 @@
   list-style: none;
 }
 
+.rankedProductCard {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 8px 22px rgb(17 19 31 / 4%);
+}
+
+.activeRankedProductCard {
+  border-color: var(--ink);
+  box-shadow: 0 10px 28px rgb(17 19 31 / 7%);
+}
+
 .rankedProduct {
   display: grid;
   width: 100%;
@@ -886,8 +927,8 @@
   gap: 10px;
   padding: 10px;
   cursor: pointer;
-  border: 1px solid var(--border);
-  border-radius: 20px;
+  border: 0;
+  border-radius: 0;
   background: var(--surface);
   color: var(--ink);
   text-align: left;
@@ -899,9 +940,8 @@
 }
 
 .activeRankedProduct {
-  border-color: var(--ink);
   background: var(--surface);
-  box-shadow: 0 10px 28px rgb(17 19 31 / 7%);
+  box-shadow: none;
 }
 
 .rankPosition {
@@ -1136,89 +1176,6 @@
   font-weight: 800;
 }
 
-.priceComparison {
-  margin-top: 14px;
-  padding: 13px;
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  background: var(--surface);
-  box-shadow: 0 10px 28px rgb(17 19 31 / 4%);
-}
-
-.priceComparisonDeal {
-  border-color: #9cc8ae;
-  background: #f2faf5;
-}
-
-.priceHeading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.priceHeading span {
-  color: var(--accent-deep);
-  font-size: 10px;
-  font-weight: 840;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.priceHeading strong {
-  color: #0e5734;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.priceValues {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.priceValues > div {
-  display: grid;
-  gap: 3px;
-  padding: 10px;
-  border-radius: 13px;
-  background: var(--surface-tinted);
-}
-
-.priceValues > div:only-child {
-  grid-column: 1 / -1;
-}
-
-.priceValues small {
-  color: var(--muted);
-  font-size: 9px;
-  font-weight: 750;
-}
-
-.priceValues strong {
-  font-size: 24px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.05em;
-}
-
-.priceValues .crossedPrice {
-  color: var(--muted);
-  text-decoration: line-through 2px #c84f43;
-  text-decoration-skip-ink: none;
-}
-
-.priceComparison > p {
-  margin: 9px 1px 0;
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 1.4;
-}
-
-.priceComparison .retailerButton {
-  margin-top: 11px;
-}
-
 .compactProductPrice {
   display: flex;
   min-width: 0;
@@ -1260,6 +1217,54 @@
   color: var(--muted);
   text-decoration: line-through 1.5px #c84f43;
   text-decoration-skip-ink: none;
+}
+
+.onlineOfferAction {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 10px 10px;
+  padding: 8px 11px;
+  border-radius: 13px;
+  background: var(--ink);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.productResult > .onlineOfferAction {
+  margin: 14px 0 0;
+}
+
+.onlineOfferDeal {
+  background: #0e5734;
+}
+
+.onlineOfferAction > span:first-child {
+  display: grid;
+  gap: 1px;
+}
+
+.onlineOfferAction strong,
+.onlineOfferAction s,
+.onlineOfferPrice {
+  color: inherit;
+  font-size: 11px;
+  line-height: 1.15;
+}
+
+.onlineOfferAction s {
+  color: rgb(255 255 255 / 68%);
+  font-size: 9px;
+}
+
+.onlineOfferPrice {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 850;
+  white-space: nowrap;
 }
 
 .pendingData,
@@ -1483,34 +1488,6 @@
   line-height: 1.25;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-}
-
-.retailerButton {
-  display: flex;
-  min-height: 58px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-top: 15px;
-  padding: 10px 14px;
-  border-radius: 15px;
-  background: var(--ink);
-  color: #ffffff;
-  text-decoration: none;
-}
-
-.retailerButton span {
-  display: grid;
-  gap: 1px;
-  font-size: 13px;
-  font-weight: 750;
-}
-
-.retailerButton small {
-  color: rgb(255 255 255 / 56%);
-  font-size: 9px;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
 }
 
 .emptyResult {
@@ -1791,15 +1768,13 @@
   .alternativeCard,
   .pendingData,
   .pendingDataAction,
-  .priceComparison,
-  .priceValues > div,
   .rankedProduct,
   .rankedProductThumb {
     background: var(--surface);
     color: var(--ink);
   }
 
-  .activeRankedProduct {
+  .activeRankedProductCard {
     border-color: var(--ink);
     background: var(--surface);
     box-shadow: 0 10px 28px rgb(0 0 0 / 20%);
@@ -1808,11 +1783,6 @@
   .rankPending {
     background: var(--surface-tinted);
     color: var(--ink);
-  }
-
-  .priceComparisonDeal {
-    border-color: #315e45;
-    background: #1c3024;
   }
 
   .compactProductPrice {
@@ -1830,7 +1800,6 @@
   .emptyResult,
   .pendingData,
   .pendingDataAction,
-  .priceComparison > p,
   .rankedProductMeta > small,
   .demoGrid button span {
     color: var(--muted);

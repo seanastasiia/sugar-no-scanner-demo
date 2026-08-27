@@ -48,9 +48,9 @@ describe("POST /api/offers", () => {
     expect(getKnownOffer).toHaveBeenCalledTimes(1);
   });
 
-  it("accepts enough candidates to verify availability before showing four alternatives", async () => {
+  it("accepts one offer candidate for every product in a ten-product scan", async () => {
     getKnownOffer.mockImplementation(async (slug: string) => ({ ...offer, slug }));
-    const slugs = Array.from({ length: 8 }, (_, index) => `example-${index + 1}`);
+    const slugs = Array.from({ length: 10 }, (_, index) => `example-${index + 1}`);
     const response = await POST(new Request("http://localhost/api/offers", {
       method: "POST",
       body: JSON.stringify({ slugs })
@@ -58,6 +58,6 @@ describe("POST /api/offers", () => {
 
     expect(response.status).toBe(200);
     expect(Object.keys((await response.json()).offers)).toEqual(slugs);
-    expect(getKnownOffer).toHaveBeenCalledTimes(8);
+    expect(getKnownOffer).toHaveBeenCalledTimes(10);
   });
 });

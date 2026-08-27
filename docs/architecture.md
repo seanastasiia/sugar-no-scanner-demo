@@ -10,7 +10,7 @@ Use this page to locate a change without scanning the whole repository.
 4. `src/server/recognition.ts` asks Gemini for package identity and geometry, then resolves exact catalog records.
 5. `src/server/demo-scenes.ts` supplies the deterministic Shelf and Checkout fixtures. They prove the UX, not real-world CV accuracy.
 6. `src/app/api/resolve-products/route.ts` performs the image-free enrichment pass after the first identities appear.
-7. `src/components/scanner-results.tsx` renders source-backed fit, price comparison and Better alternatives.
+7. `src/components/scanner-results.tsx` renders source-backed fit, per-card online purchase state and Better alternatives.
 
 ## Data resolution
 

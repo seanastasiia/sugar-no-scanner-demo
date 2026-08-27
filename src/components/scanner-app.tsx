@@ -19,10 +19,11 @@ import {
   ShoppingBasket,
   X
 } from "lucide-react";
-import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CAMERA_FOCUS_CROP,
   mapBoxToObjectCover,
+  mapBoxToObjectContain,
   remapRecognitionFromCrop,
   type MediaDimensions
 } from "@/lib/camera-focus";
@@ -37,6 +38,7 @@ import { imageFileToScanFrames, type PreparedUploadFrame } from "@/lib/client-im
 import { mergeEnrichedDetections } from "@/lib/detection-merge";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
+import { barboraProductSlug } from "@/lib/online-offer";
 import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { compareFairCohorts } from "@/lib/scoring";
 import { mergeUploadScanResults } from "@/lib/upload-scan";
@@ -44,6 +46,7 @@ import type {
   ProductDetection,
   RecognitionEnrichmentResponse,
   RecognitionResponse,
+  RetailerOffer,
   ScanSource,
   ScoredProduct
 } from "@/lib/types";
@@ -51,6 +54,7 @@ import {
   CompactProductPrice,
   LoadingProductResult,
   MatchPill,
+  OnlineOfferAction,
   ProductResult,
   RecognizedProductResult,
   type ProductPayload
@@ -103,6 +107,42 @@ function completenessClass(completeness: SignalCompleteness) {
   if (completeness === "partial") return styles.completenessPartial;
   if (completeness === "limited") return styles.completenessLimited;
   return styles.completenessIdentified;
+}
+
+function cropBackgroundStyle(imageUrl: string, box: ProductDetection["box"]): CSSProperties {
+  const width = Math.max(0.01, Math.min(1, box.width));
+  const height = Math.max(0.01, Math.min(1, box.height));
+  const x = Math.max(0, Math.min(1 - width, box.x));
+  const y = Math.max(0, Math.min(1 - height, box.y));
+  return {
+    backgroundImage: `url(${JSON.stringify(imageUrl)})`,
+    backgroundPosition: `${(x / Math.max(0.001, 1 - width)) * 100}% ${(y / Math.max(0.001, 1 - height)) * 100}%`,
+    backgroundSize: `${100 / width}% ${100 / height}%`
+  };
+}
+
+function ProductThumbnail({
+  imageUrl,
+  sceneImageUrl,
+  detection,
+  sizes
+}: {
+  imageUrl?: string | null;
+  sceneImageUrl?: string | null;
+  detection?: ProductDetection;
+  sizes: string;
+}) {
+  if (imageUrl) return <Image src={imageUrl} alt="" fill sizes={sizes} />;
+  if (sceneImageUrl && detection) {
+    return (
+      <span
+        className={styles.sceneProductCrop}
+        data-testid="scene-product-crop"
+        style={cropBackgroundStyle(sceneImageUrl, detection.box)}
+      />
+    );
+  }
+  return <ScanLine className={styles.productThumbFallbackIcon} aria-hidden="true" size={18} />;
 }
 
 function trapFocus(event: KeyboardEvent, container: HTMLElement) {
@@ -159,6 +199,8 @@ export function ScannerApp() {
   const [enrichingProductIds, setEnrichingProductIds] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [scanFrameUrl, setScanFrameUrl] = useState<string | null>(null);
+  const [scanOffers, setScanOffers] = useState<Record<string, RetailerOffer | null>>({});
   const [statusMessage, setStatusMessage] = useState("Ready when you are");
   const [resultLocked, setResultLocked] = useState(false);
   const [resultsExpanded, setResultsExpanded] = useState(false);
@@ -620,9 +662,11 @@ export function ScannerApp() {
       canvas.width,
       canvas.height
     );
+    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.76);
+    if (!focusMode) setScanFrameUrl(imageDataUrl);
     void recognize({
       source: "camera",
-      imageDataUrl: canvas.toDataURL("image/jpeg", 0.76),
+      imageDataUrl,
       focusMode
     });
   }, [recognize]);
@@ -633,6 +677,8 @@ export function ScannerApp() {
     const requestId = cameraRequestRef.current;
     setSource("camera");
     setPreviewUrl(null);
+    setScanFrameUrl(null);
+    setScanOffers({});
     setCameraState("requesting");
     setDetections([]);
     setTray([]);
@@ -650,9 +696,7 @@ export function ScannerApp() {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera API unavailable");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 1920 }
+          facingMode: { ideal: "environment" }
         },
         audio: false
       });
@@ -707,6 +751,8 @@ export function ScannerApp() {
     setDetections([]);
     setTray([]);
     setSelectedId(null);
+    setScanFrameUrl(null);
+    setScanOffers({});
     manualSelectionRef.current = false;
     setRecognitionState("idle");
     setResultLocked(false);
@@ -732,6 +778,8 @@ export function ScannerApp() {
     stopActiveCapture();
     setSource("sample-shelf");
     setPreviewUrl(null);
+    setScanFrameUrl(null);
+    setScanOffers({});
     setMediaDimensions(null);
     setCameraState("idle");
     setDetections([]);
@@ -751,6 +799,8 @@ export function ScannerApp() {
     stopActiveCapture();
     setSource("sample-conveyor");
     setPreviewUrl(null);
+    setScanFrameUrl(null);
+    setScanOffers({});
     setMediaDimensions(null);
     setCameraState("idle");
     setDetections([]);
@@ -776,6 +826,8 @@ export function ScannerApp() {
     sessionIdRef.current = makeSessionId();
     stopActiveCapture();
     setSource("upload");
+    setScanFrameUrl(null);
+    setScanOffers({});
     setMediaDimensions(null);
     setCameraState("idle");
     setDetections([]);
@@ -872,6 +924,56 @@ export function ScannerApp() {
     () => rankedTrayIds.filter((id) => hasSugarNoRating(productById[id])),
     [productById, rankedTrayIds]
   );
+  const offerSlugsByProductId = useMemo(
+    () =>
+      Object.fromEntries(
+        rankedTrayIds.flatMap((id) => {
+          const slug = productById[id] ? barboraProductSlug(productById[id].retailerUrl) : null;
+          return slug ? [[id, slug] as const] : [];
+        })
+      ),
+    [productById, rankedTrayIds]
+  );
+  const scanOfferKey = Object.values(offerSlugsByProductId).sort().join("|");
+
+  useEffect(() => {
+    if (!scanOfferKey) return;
+    const controller = new AbortController();
+    void fetch("/api/offers", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slugs: [...new Set(Object.values(offerSlugsByProductId))] }),
+      signal: controller.signal
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Scan offers unavailable");
+        return response.json() as Promise<{ offers: Record<string, RetailerOffer | null> }>;
+      })
+      .then((response) => setScanOffers(response.offers))
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) setScanOffers({});
+      });
+    return () => controller.abort();
+  }, [offerSlugsByProductId, scanOfferKey]);
+
+  const scanOfferForId = useCallback(
+    (id: string): RetailerOffer | null => {
+      const detected = detectionById[id]?.retailerOffer;
+      if (detected && !detected.exactSku) return null;
+      if (detected?.exactSku) return detected;
+      const slug = offerSlugsByProductId[id];
+      return slug ? scanOffers[slug] || null : null;
+    },
+    [detectionById, offerSlugsByProductId, scanOffers]
+  );
+  const sceneImageUrl =
+    source === "sample-shelf"
+      ? "/samples/latvia-shelf.jpg"
+      : source === "sample-conveyor"
+        ? "/samples/latvia-checkout.jpg"
+        : source === "upload"
+          ? previewUrl
+          : scanFrameUrl;
   const firstRankedId = rankedRatedIds[0] || rankedTrayIds[0];
   const effectiveSelectedId = selectedId && visibleTrayIdSet.has(selectedId)
     ? selectedId
@@ -1019,7 +1121,9 @@ export function ScannerApp() {
               const presentation = overlayMatchPresentation(product);
               const displayName = product?.name || detection.identity?.name || detection.observedText || "product";
               const mappedBox = mediaDimensions && stageDimensions
-                ? mapBoxToObjectCover(detection.box, mediaDimensions, stageDimensions)
+                ? ["camera", "upload"].includes(source)
+                  ? mapBoxToObjectContain(detection.box, mediaDimensions, stageDimensions)
+                  : mapBoxToObjectCover(detection.box, mediaDimensions, stageDimensions)
                 : detection.box;
               const isBest = bestId === detection.productId;
               return (
@@ -1039,11 +1143,11 @@ export function ScannerApp() {
                     setSelectedId(detection.productId);
                     track("result_opened", source, detection.productId);
                   }}
-                  aria-label={`Open ${displayName}: ${presentation.label}${isBest ? ", best in this scan" : ""}`}
+                  aria-label={`Open ${displayName}: ${presentation.label}`}
                 >
                   <span>
                     <OverlayToneIcon tone={presentation.tone} />
-                    <strong>{isBest ? `Best · ${presentation.label}` : presentation.label}</strong>
+                    <strong>{presentation.label}</strong>
                   </span>
                 </button>
               );
@@ -1063,7 +1167,11 @@ export function ScannerApp() {
               </button>
             </div>
 
-            <div className={styles.stageStatus} role="status" aria-live="polite">
+            <div
+              className={`${styles.stageStatus} ${visibleTrayIds.length > 0 && ["matched", "retained"].includes(recognitionState) ? styles.stageStatusResultHidden : ""}`}
+              role="status"
+              aria-live="polite"
+            >
               {recognitionState === "scanning" ? (
                 <LoaderCircle className={styles.spin} aria-hidden="true" size={17} />
               ) : recognitionState === "matched" || recognitionState === "retained" ? (
@@ -1171,7 +1279,12 @@ export function ScannerApp() {
                             {rank ? `#${rank}` : "—"}
                           </span>
                           <div className={styles.sheetPreviewThumb} aria-hidden="true">
-                            {item?.imageUrl ? <Image src={item.imageUrl} alt="" fill sizes="42px" /> : null}
+                            <ProductThumbnail
+                              imageUrl={item?.imageUrl || scanOfferForId(id)?.imageUrl}
+                              sceneImageUrl={sceneImageUrl}
+                              detection={detection}
+                              sizes="42px"
+                            />
                           </div>
                           <div className={styles.sheetPreviewCopy}>
                             <span>{item?.brand || detection?.identity?.brand || "Product"}</span>
@@ -1183,7 +1296,7 @@ export function ScannerApp() {
                             ) : (
                               <small>{pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}</small>
                             )}
-                            <CompactProductPrice detection={detection} />
+                            <CompactProductPrice detection={detection} offer={scanOfferForId(id)} />
                           </div>
                         </button>
                         {cheaperOffer ? (
@@ -1246,10 +1359,11 @@ export function ScannerApp() {
                           const isRated = hasSugarNoRating(item);
                           const rank = isRated ? rankedRatedIds.indexOf(id) + 1 : null;
                           const presentation = isRated ? overlayMatchPresentation(item) : null;
+                          const onlineOffer = scanOfferForId(id);
                           const protein = item?.nutrientsPer100g.proteinG;
                           const sugar = item?.nutrientsPer100g.totalSugarG;
                           return (
-                            <li key={id}>
+                            <li className={`${styles.rankedProductCard} ${effectiveSelectedId === id ? styles.activeRankedProductCard : ""}`} key={id}>
                               <button
                                 type="button"
                                 aria-label={
@@ -1268,7 +1382,12 @@ export function ScannerApp() {
                                   {rank ? `#${rank}` : "—"}
                                 </span>
                                 <span className={styles.rankedProductThumb} aria-hidden="true">
-                                  {item?.imageUrl ? <Image src={item.imageUrl} alt="" fill sizes="48px" /> : null}
+                                  <ProductThumbnail
+                                    imageUrl={item?.imageUrl || onlineOffer?.imageUrl}
+                                    sceneImageUrl={sceneImageUrl}
+                                    detection={detection}
+                                    sizes="48px"
+                                  />
                                 </span>
                                 <div className={styles.rankedProductCopy}>
                                   <small>{itemBrand}</small>
@@ -1283,9 +1402,15 @@ export function ScannerApp() {
                                       <small>{pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}</small>
                                     )}
                                   </div>
-                                  <CompactProductPrice detection={detection} />
+                                  <CompactProductPrice detection={detection} offer={onlineOffer} />
                                 </div>
                               </button>
+                              <OnlineOfferAction
+                                productName={itemName}
+                                detection={detection}
+                                offer={onlineOffer}
+                                onRetailer={() => track("retailer_link_clicked", source, id, { placement: "ranked_product" })}
+                              />
                             </li>
                           );
                         })}
@@ -1297,6 +1422,7 @@ export function ScannerApp() {
                     <ProductResult
                       payload={selectedPayload}
                       detection={selectedDetection}
+                      offer={effectiveSelectedId ? scanOfferForId(effectiveSelectedId) : null}
                       scanDetections={detectionById}
                       showSummary={visibleTrayIds.length === 1}
                       onAlternative={(id) => {
@@ -1310,10 +1436,7 @@ export function ScannerApp() {
                   ) : selectedDetection?.identity && effectiveSelectedId && pendingProductIds.has(effectiveSelectedId) ? (
                     <LoadingProductResult detection={selectedDetection} />
                   ) : selectedDetection?.identity ? (
-                    <RecognizedProductResult
-                      detection={selectedDetection}
-                      onRetailer={() => track("retailer_link_clicked", source, selectedDetection.productId, { placement: "recognized_product" })}
-                    />
+                    <RecognizedProductResult detection={selectedDetection} />
                   ) : null}
                 </div>
               )}

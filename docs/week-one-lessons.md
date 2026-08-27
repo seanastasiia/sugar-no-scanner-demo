@@ -93,7 +93,7 @@ Never collapse these states. A confident visual identity may still have no exact
 
 **What failed:** A center-biased prompt returned one package from a shelf that contained several useful choices.
 
-**Guardrail:** The first pass scans the complete frame left-to-right and top-to-bottom and keeps at most five high-confidence distinct readable front-facing SKUs. The focused center crop is a fallback only after an uncertain broad pass.
+**Guardrail:** The first pass scans the complete frame left-to-right and top-to-bottom and keeps at most ten high-confidence distinct readable front-facing SKUs. The focused center crop is a fallback only after an uncertain broad pass.
 
 **Regression:** A live-camera browser scenario must retain several distinct products from one frame; the focused retry has a separate threshold and box-remapping test.
 

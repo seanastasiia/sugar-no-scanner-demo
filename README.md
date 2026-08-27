@@ -12,7 +12,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Camera starts after permission without requiring a shutter action.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
 - Saved-photo views omit the redundant source badge and keep only the `Back to live` action in the top overlay.
-- A scan keeps at most five distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
+- A scan keeps at most ten distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
 - Rated products are ordered best fit first and use `Great fit`, `Moderate fit`, or `Low fit`.
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.
 - Expanded multi-product results show only the collapse control, `Best fit first` and the ranked product cards; duplicate summaries, counters and scan-again controls are omitted.
@@ -96,6 +96,7 @@ CI=1 npm run test:e2e       # complete Mobile Safari acceptance suite
 npm run catalog:validate    # curated catalog validation
 npm run catalog:sync:rimi  # low-rate Rimi page snapshot
 npm run catalog:sync:livin # low-rate Livin page snapshot
+npm run catalog:sync:off-latvia # refresh a bounded Latvia OFF API snapshot
 npm run catalog:import:off # import official OFF JSONL/JSONL.GZ into its isolated layer
 npm run supabase:seed:external # seed retailer and ODbL layers after migrations
 npm run benchmark:recognition -- /absolute/path/photo.jpg
@@ -111,8 +112,8 @@ Use the project change lanes in `AGENTS.md`:
 ## API
 
 - `POST /api/recognize`: image data URL plus source type, returns bounded detections.
-- `POST /api/resolve-products`: up to five image-free identities, returns optional exact retailer/nutrition enrichment.
-- `POST /api/offers`: up to eight known exact Barbora slugs, returns current per-card offers without blocking recognition.
+- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment.
+- `POST /api/offers`: up to ten known exact Barbora slugs, returns current per-card offers without blocking recognition.
 - `POST /api/events`: metadata-only product events with image-like values rejected.
 - `GET /api/health`: service, catalog and deployed commit status.
 
@@ -150,7 +151,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 ## Product check
 
 1. Open production in iPhone Safari and allow camera access.
-2. Scan a shelf with more than five visible products and confirm no more than five distinct results appear.
+2. Scan a shelf with more than ten visible products and confirm no more than ten distinct results appear.
 3. Confirm verified results gain fit labels and unresolved products disappear after the exact lookup finishes.
 4. Open Shelf and Checkout demos and expand `View all`.
 5. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
@@ -163,8 +164,8 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 
 - Latvia-wide coverage is not guaranteed. Private labels, unreadable variants and products without an exact public per-100 table can remain unresolved in recognition; they are hidden from the final comparison rather than shown as price-only or identity-only cards.
 - Real shelf, glare, low-light, moving-belt and price-label accuracy still require a physical store benchmark.
-- Barbora, Rimi and Livin can produce exact offers for their own matched SKUs, but the bootstrap Rimi/Livin snapshots are deliberately tiny and are not a market-wide price engine.
-- The release contains only a five-row Open Food Facts bootstrap imported through the bulk path. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
+- Barbora, Rimi and Livin can produce exact offers for their own matched SKUs. The checked-in Rimi layer contains 500 complete product pages; Livin's complete public food subset currently contains 6 rows after checking its full 169-URL sitemap. These snapshots are not a market-wide real-time price engine.
+- The release contains 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
 - FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
 - Grounded web nutrition has variable latency and cost. Production should persist human-reviewed successful results in Supabase.
 

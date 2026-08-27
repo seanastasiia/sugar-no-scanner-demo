@@ -124,7 +124,7 @@ describe("recognitionInstruction", () => {
     expect(instruction).toContain("several different products on the same shelf");
     expect(instruction).toContain("Do not stop after the central or most prominent package");
     expect(instruction).toContain("Repeated facings of the same SKU are one product type");
-    expect(instruction).toContain("no more than 5 boxes");
+    expect(instruction).toContain("no more than 10 boxes");
     expect(instruction).toContain("retailCategory as snack");
     expect(instruction).toContain("EAN-8, EAN-13 or UPC barcode");
     expect(instruction).toContain("box2d [ymin, xmin, ymax, xmax]");
@@ -312,7 +312,7 @@ describe("resolveVisibleDetections", () => {
     expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
   });
 
-  it("resolves no more than five identities with bounded concurrency", async () => {
+  it("resolves up to ten identities with bounded concurrency", async () => {
     const attempted: string[] = [];
     let active = 0;
     let peak = 0;
@@ -334,11 +334,11 @@ describe("resolveVisibleDetections", () => {
       3
     );
 
-    expect(attempted).toHaveLength(5);
+    expect(attempted).toHaveLength(8);
     expect(attempted).toContain("Snack Five 50 g");
-    expect(attempted).not.toContain("Snack Six 50 g");
+    expect(attempted).toContain("Snack Six 50 g");
     expect(peak).toBeLessThanOrEqual(3);
-    expect(detections).toHaveLength(5);
+    expect(detections).toHaveLength(8);
   });
 
   it("deduplicates repeated facings after every facing receives the same resolution path", async () => {
