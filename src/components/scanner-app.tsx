@@ -1074,11 +1074,25 @@ export function ScannerApp() {
 
       <section className={styles.experience} aria-label={`${sourceLabel(source)} scanner`}>
           <div
-            ref={stageRef}
             className={`${styles.stage} ${visibleTrayIds.length ? styles.stageWithResults : ""}`}
             inert={resultsAreExpanded || demoOpen}
             aria-hidden={resultsAreExpanded || demoOpen || undefined}
           >
+            <div className={`${styles.stageTopbar} ${source === "upload" ? styles.stageTopbarEnd : ""}`}>
+              {source === "upload" ? null : <span>{sourceLabel(source)}</span>}
+              <button
+                ref={source === "camera" ? demoTriggerRef : undefined}
+                className={styles.demoTrigger}
+                type="button"
+                onClick={source === "camera" ? openDemo : startCamera}
+                aria-label={source === "camera" ? "Show demo" : "Back to live camera"}
+              >
+                {source === "camera" ? <Layers3 aria-hidden="true" size={17} /> : <Camera aria-hidden="true" size={17} />}
+                {source === "camera" ? "Show demo" : "Back to live"}
+              </button>
+            </div>
+
+            <div ref={stageRef} className={styles.cameraViewport} data-testid="camera-viewport">
             {cameraState === "live" || cameraState === "requesting" ? (
               <video
                 ref={videoRef}
@@ -1160,20 +1174,6 @@ export function ScannerApp() {
               );
             })}
 
-            <div className={`${styles.stageTopbar} ${source === "upload" ? styles.stageTopbarEnd : ""}`}>
-              {source === "upload" ? null : <span>{sourceLabel(source)}</span>}
-              <button
-                ref={source === "camera" ? demoTriggerRef : undefined}
-                className={styles.demoTrigger}
-                type="button"
-                onClick={source === "camera" ? openDemo : startCamera}
-                aria-label={source === "camera" ? "Show demo" : "Back to live camera"}
-              >
-                {source === "camera" ? <Layers3 aria-hidden="true" size={17} /> : <Camera aria-hidden="true" size={17} />}
-                {source === "camera" ? "Show demo" : "Back to live"}
-              </button>
-            </div>
-
             <div
               className={`${styles.stageStatus} ${visibleTrayIds.length > 0 && ["matched", "retained"].includes(recognitionState) ? styles.stageStatusResultHidden : ""}`}
               role="status"
@@ -1194,6 +1194,7 @@ export function ScannerApp() {
                   <RefreshCw aria-hidden="true" size={15} /> Try again
                 </button>
               ) : null}
+            </div>
             </div>
             <p className={styles.privacyNoteStage}>Frames are analyzed, never stored.</p>
           </div>

@@ -15,6 +15,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-28: camera media still filled the entire browser canvas and did not match the Sugar.no iOS camera.** Live, upload and deterministic demo media now share one inset rounded viewport with black gutters; overlay geometry is measured against that viewport so product boxes remain aligned across iPhone portrait and landscape sizes.
 - **2026-08-28: compact prices repeated `Barbora online`, including in hidden accessibility copy.** Exact offers now show only their price in the compact row; both visible and accessibility copy are retailer-neutral, while the purchase link still names its destination for assistive technology.
 - **2026-08-27: camera fit markers used abstract check/minus/arrow glyphs and obscured too much packaging.** They now use compact, equally sized thumbs-up, raised-hand and thumbs-down SVG icons while the full product outline remains the accessible touch target.
 - **2026-08-27: English Rimi private-label text missed the Latvian snapshot.** Audited bilingual identity normalization now links the four reported pastry-twist and juice variants locally using brand, exact pack size and a uniqueness margin; generic ambiguous juice labels remain unresolved. Pending UI copy now says `Matching product` instead of implying every lookup is online.

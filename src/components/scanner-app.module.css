@@ -208,6 +208,7 @@
 .experience {
   --collapsed-sheet-height: 158px;
   --sheet-clearance: 12px;
+  --camera-bottom-offset: 58px;
 
   position: absolute;
   inset: 0;
@@ -229,19 +230,34 @@
   color: #ffffff;
 }
 
+.cameraViewport {
+  position: absolute;
+  z-index: 0;
+  top: calc(124px + env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(var(--camera-bottom-offset) + env(safe-area-inset-bottom));
+  left: max(16px, env(safe-area-inset-left));
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: clamp(28px, 8vw, 36px);
+  background: #000000;
+  box-shadow: 0 18px 48px rgb(0 0 0 / 34%);
+  isolation: isolate;
+}
+
 .video,
 .uploadPreview {
   position: absolute;
-  z-index: -3;
+  z-index: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
   background: #000000;
 }
 
-.stage::after {
+.cameraViewport::after {
   position: absolute;
-  z-index: -1;
+  z-index: 1;
   inset: 0;
   background: linear-gradient(to bottom, rgb(0 0 0 / 34%), transparent 35%, transparent 62%, rgb(0 0 0 / 46%));
   content: "";
@@ -250,7 +266,7 @@
 
 .stageTopbar {
   position: absolute;
-  z-index: 10;
+  z-index: 20;
   top: calc(70px + env(safe-area-inset-top));
   right: max(14px, env(safe-area-inset-right));
   left: max(14px, env(safe-area-inset-left));
@@ -329,9 +345,9 @@
 .stageStatus {
   position: absolute;
   z-index: 10;
-  right: max(16px, env(safe-area-inset-right));
-  bottom: 42px;
-  left: max(16px, env(safe-area-inset-left));
+  right: 12px;
+  bottom: 14px;
+  left: 12px;
   display: flex;
   min-height: 44px;
   align-items: center;
@@ -384,7 +400,7 @@
 }
 
 .stageWithResults .stageStatus {
-  bottom: calc(var(--collapsed-sheet-height) + var(--sheet-clearance) + env(safe-area-inset-bottom));
+  bottom: calc(var(--collapsed-sheet-height) - var(--camera-bottom-offset) + var(--sheet-clearance));
 }
 
 .detectionBox {
@@ -1526,7 +1542,7 @@
 .shelfScene,
 .checkoutScene {
   position: absolute;
-  z-index: -3;
+  z-index: 0;
   inset: 0;
   overflow: hidden;
   background: var(--ink-strong);
@@ -1666,6 +1682,14 @@
 }
 
 @media (min-width: 760px) {
+  .cameraViewport {
+    top: 86px;
+    right: 24px;
+    bottom: 24px;
+    left: 24px;
+    border-radius: 36px;
+  }
+
   .resultsCollapsed {
     right: 24px;
     bottom: 24px;
@@ -1683,8 +1707,8 @@
   }
 
   .stageWithResults .stageStatus {
-    right: max(40px, calc(min(680px, 54vw) + 32px));
-    bottom: 32px;
+    right: 12px;
+    bottom: 14px;
   }
 }
 
@@ -1711,6 +1735,12 @@
 @media (max-height: 720px) and (max-width: 759px) {
   .experience {
     --collapsed-sheet-height: 150px;
+    --camera-bottom-offset: 48px;
+  }
+
+  .cameraViewport {
+    top: calc(116px + env(safe-area-inset-top));
+    border-radius: 26px;
   }
 
   .sheetChrome {
@@ -1732,6 +1762,29 @@
 @media (max-height: 500px) and (max-width: 759px) {
   .experience {
     --collapsed-sheet-height: 86px;
+    --camera-bottom-offset: 8px;
+  }
+
+  .scannerHeader {
+    display: none;
+  }
+
+  .cameraViewport {
+    top: max(8px, env(safe-area-inset-top));
+    right: max(72px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: max(72px, env(safe-area-inset-left));
+    border-radius: 24px;
+  }
+
+  .stageTopbar {
+    top: max(12px, env(safe-area-inset-top));
+    right: max(84px, env(safe-area-inset-right));
+    left: max(84px, env(safe-area-inset-left));
+  }
+
+  .privacyNoteStage {
+    display: none;
   }
 
   .resultsCollapsed {
@@ -1743,7 +1796,7 @@
   }
 
   .stageWithResults .stageStatus {
-    bottom: calc(var(--collapsed-sheet-height) + 8px + env(safe-area-inset-bottom));
+    bottom: calc(var(--collapsed-sheet-height) - var(--camera-bottom-offset) + 8px);
   }
 }
 

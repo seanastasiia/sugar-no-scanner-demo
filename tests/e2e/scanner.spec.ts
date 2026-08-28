@@ -561,6 +561,14 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
   const sheet = page.locator("aside");
   const status = page.getByRole("status");
   const viewAll = page.getByRole("button", { name: "View all", exact: true });
+  const cameraViewport = page.getByTestId("camera-viewport");
+
+  await expect(cameraViewport).toHaveCSS("overflow", "hidden");
+  const cameraViewportBox = await cameraViewport.boundingBox();
+  expect(cameraViewportBox?.x).toBeGreaterThanOrEqual(15);
+  expect(cameraViewportBox?.y).toBeGreaterThanOrEqual(110);
+  expect((cameraViewportBox?.x ?? 0) + (cameraViewportBox?.width ?? 0)).toBeLessThanOrEqual(402 - 15);
+  expect(parseFloat(await cameraViewport.evaluate((element) => getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(28);
 
   await expectInsideViewport(page, sheet);
   await expectInsideViewport(page, status);

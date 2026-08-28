@@ -9,6 +9,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 ## Current product behavior
 
 - The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
+- The live feed and saved/demo scenes sit inside a large rounded camera viewport on a black scanner canvas, matching the camera composition in the Sugar.no iOS app while keeping automatic recognition and the existing result sheet.
 - Camera starts after permission without requiring a shutter action.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
 - Saved-photo views omit the redundant source badge and keep only the `Back to live` action in the top overlay.
@@ -155,16 +156,17 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 ## Product check
 
 1. Open production in iPhone Safari and allow camera access.
-2. Scan a shelf with more than ten visible products and confirm no more than ten distinct results appear.
-3. Confirm verified results gain fit labels and unresolved products disappear after the exact lookup finishes.
-4. Open Shelf and Checkout demos and expand `View all`.
-5. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
-6. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
-7. Confirm each overlay tightly follows its package rather than a nearby shelf label.
-8. Move the camera after a result and confirm it remains held until `Scan again`.
-9. Open a rated product and confirm `Better alternatives` contains only the same product type with an equal or better fit and a live price; products without a valid substitute should show no alternatives block.
-10. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
-11. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
+2. Confirm the camera is a large rounded card with visible black gutters; the logo and source/demo controls remain outside it, while recognition status stays inside it.
+3. Scan a shelf with more than ten visible products and confirm no more than ten distinct results appear.
+4. Confirm verified results gain fit labels and unresolved products disappear after the exact lookup finishes.
+5. Open Shelf and Checkout demos and expand `View all`.
+6. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
+7. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
+8. Confirm each overlay tightly follows its package rather than a nearby shelf label.
+9. Move the camera after a result and confirm it remains held until `Scan again`.
+10. Open a rated product and confirm `Better alternatives` contains only the same product type with an equal or better fit and a live price; products without a valid substitute should show no alternatives block.
+11. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
+12. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
 
 ## Known limits
 
