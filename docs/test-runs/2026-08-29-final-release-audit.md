@@ -58,4 +58,13 @@ No P0 issue remained. The cost/privacy risk from public Gemini endpoints was clo
 - Retailer snapshots are reproducible discovery data, not real-time stock or price guarantees.
 - Products without exact source-backed protein and total sugar remain unrated by design.
 
-Production deployment identifiers and health checks are appended after Railway verifies the final GitHub revision.
+## Production evidence
+
+- GitHub release revision: `b8a41b629a86f9242242265270058d0d44d6254d` on `main`.
+- Railway deployment: `d8bb3e4a-2d5f-4c02-a2de-7219c906b43b` (`SUCCESS`).
+- Production URL: `https://sugar-no-scanner-demo-production.up.railway.app`.
+- Public `GET /api/health`: HTTP 200 and the returned commit matched the GitHub release revision.
+- Unauthenticated `GET /`: HTTP 307 to `/access?next=%2F`.
+- Unauthenticated `POST /api/recognize`: HTTP 401.
+- Authenticated access exchange: HTTP 200, session cookie issued and authenticated `GET /` returned HTTP 200.
+- Authenticated `sample-shelf` recognition: HTTP 200, four detections and `imageStored: false`.
