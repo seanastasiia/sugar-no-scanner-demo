@@ -3,7 +3,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { classifyUserAgent, metadataIsSafe } from "@/server/event-privacy";
 import { readBoundedJson } from "@/server/request-body";
+import { hasTrustedBrowserOrigin } from "@/server/request-origin";
+import { createRecognitionRateLimiter, recognitionClientKey } from "@/server/rate-limit";
 import { getSupabaseAdmin } from "@/server/supabase";
+
+const eventsRateLimiter = createRecognitionRateLimiter({ RECOGNITION_RATE_LIMIT: "120" });
 
 const eventSchema = z.object({
   sessionId: z.uuid(),
@@ -22,10 +26,34 @@ const eventSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  if (!hasTrustedBrowserOrigin(request)) {
+    return NextResponse.json(
+      { error: "untrusted_origin" },
+      { status: 403, headers: { "cache-control": "no-store" } }
+    );
+  }
+  const decision = eventsRateLimiter.consume(recognitionClientKey(request));
+  if (!decision.allowed) {
+    return NextResponse.json(
+      { error: "rate_limited", retryAfterSeconds: decision.retryAfterSeconds },
+      {
+        status: 429,
+        headers: { "retry-after": String(decision.retryAfterSeconds), "cache-control": "no-store" }
+      }
+    );
+  }
   const parsed = eventSchema.safeParse(await readBoundedJson(request, 32_000).catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "invalid_event" }, { status: 400 });
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "invalid_event" },
+      { status: 400, headers: { "cache-control": "no-store" } }
+    );
+  }
   if (!metadataIsSafe(parsed.data.metadata)) {
-    return NextResponse.json({ error: "unsafe_event_metadata" }, { status: 400 });
+    return NextResponse.json(
+      { error: "unsafe_event_metadata" },
+      { status: 400, headers: { "cache-control": "no-store" } }
+    );
   }
   const row = {
     id: randomUUID(),
@@ -45,17 +73,30 @@ export async function POST(request: Request) {
       },
       { onConflict: "id", ignoreDuplicates: true }
     );
-    if (sessionError) return NextResponse.json({ error: "session_storage_failed" }, { status: 503 });
+    if (sessionError) {
+      return NextResponse.json(
+        { error: "session_storage_failed" },
+        { status: 503, headers: { "cache-control": "no-store" } }
+      );
+    }
     const { error } = await supabase.from("scan_events").insert(row);
-    if (error) return NextResponse.json({ error: "event_storage_failed" }, { status: 503 });
+    if (error) {
+      return NextResponse.json(
+        { error: "event_storage_failed" },
+        { status: 503, headers: { "cache-control": "no-store" } }
+      );
+    }
     if (parsed.data.name === "scan_completed") {
       await supabase
         .from("scan_sessions")
         .update({ completed_at: new Date().toISOString() })
         .eq("id", parsed.data.sessionId);
     }
-    return NextResponse.json({ ok: true, storage: "supabase" });
+    return NextResponse.json({ ok: true, storage: "supabase" }, { headers: { "cache-control": "no-store" } });
   }
   console.info(JSON.stringify({ event: "scan_event", ...row }));
-  return NextResponse.json({ ok: true, storage: "structured_log" });
+  return NextResponse.json(
+    { ok: true, storage: "structured_log" },
+    { headers: { "cache-control": "no-store" } }
+  );
 }

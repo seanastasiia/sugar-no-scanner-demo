@@ -18,15 +18,23 @@ const detection = {
   shelfPrice: null
 };
 
-function request(body: unknown) {
+function request(body: unknown, headers: Record<string, string> = {}) {
   return new Request("https://scanner.example/api/resolve-products", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body)
   });
 }
 
 describe("product enrichment route", () => {
+  it("rejects a cross-origin browser request before enrichment", async () => {
+    const resolve = vi.fn();
+    const post = createResolveProductsPost({ resolve });
+    const response = await post(request({ detections: [detection] }, { origin: "https://attacker.example" }));
+    expect(response.status).toBe(403);
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
   it("resolves identity-only detections without receiving another image", async () => {
     const resolve = vi.fn(async () => [detection]);
     const post = createResolveProductsPost({

@@ -1,7 +1,16 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
+async function authenticate(page: Page) {
+  const response = await page.request.post("/api/auth", {
+    headers: { origin: "http://127.0.0.1:3000" },
+    data: { code: "e2e-demo-code" }
+  });
+  expect(response.status()).toBe(200);
+}
+
 async function unlock(page: Page) {
+  await authenticate(page);
   await page.goto("/");
   await page.waitForLoadState("networkidle");
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
@@ -34,10 +43,46 @@ async function expectNoDocumentOverflow(page: Page) {
   ).toBe(true);
 }
 
+async function expectVisibleTouchTargets(page: Page) {
+  const undersized = await page.locator("button, a[href], label").evaluateAll((elements) =>
+    elements.flatMap((element) => {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      const visible =
+        style.display !== "none" &&
+        style.visibility !== "hidden" &&
+        Number(style.opacity) > 0 &&
+        rect.width > 0 &&
+        rect.height > 0 &&
+        rect.right > 0 &&
+        rect.bottom > 0 &&
+        rect.left < window.innerWidth &&
+        rect.top < window.innerHeight;
+      if (!visible || (rect.width >= 44 && rect.height >= 44)) return [];
+      return [{
+        label: element.getAttribute("aria-label") || element.textContent?.trim().slice(0, 80) || element.tagName,
+        width: Math.round(rect.width),
+        height: Math.round(rect.height)
+      }];
+    })
+  );
+  expect(undersized).toEqual([]);
+}
+
 async function expectOfficialSugarNoLogo(page: Page) {
   const logo = page.getByAltText("Sugar.no", { exact: true });
   await expect(logo).toHaveCount(1);
   await expect(logo).toBeVisible();
+  await expect
+    .poll(
+      () =>
+        logo.evaluate((element) => {
+          const image = element as HTMLImageElement;
+          return image.complete ? image.naturalWidth : 0;
+        }),
+      { timeout: 5_000 }
+    )
+    .toBeGreaterThan(0);
   const details = await logo.evaluate((element) => {
     const image = element as HTMLImageElement;
     const rect = image.getBoundingClientRect();
@@ -60,6 +105,31 @@ async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
   await expect(chooser).toBeVisible();
   await chooser.getByRole("button", { name: new RegExp(name) }).click();
+}
+
+async function mockSampleShelfRecognition(page: Page) {
+  await authenticate(page);
+  const response = await page.request.post("/api/recognize", { data: { source: "sample-shelf" } });
+  expect(response.ok()).toBe(true);
+  const sampleShelfBody = await response.text();
+  await page.route("**/api/recognize", async (route) => {
+    const body = route.request().postDataJSON() as { source?: string } | null;
+    if (body?.source === "sample-shelf") {
+      await route.fulfill({ contentType: "application/json", body: sampleShelfBody });
+      return;
+    }
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: "cross-browser-camera-layout",
+        status: "not_sure",
+        detections: [],
+        latencyMs: 1,
+        model: "qa-mock",
+        imageStored: false
+      })
+    });
+  });
 }
 
 async function waitForAlternativeImages(page: Page) {
@@ -252,14 +322,21 @@ async function mockLiveCamera(page: Page) {
   });
 }
 
-test("public root opens directly into the camera-first experience", async ({ page }) => {
+test("private entry opens into the camera-first experience without an in-scanner badge", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
       value: { getUserMedia: () => Promise.reject(new DOMException("Denied in test", "NotAllowedError")) }
     });
   });
-  await unlock(page);
+  await page.goto("/");
+  const accessCode = page.getByLabel("Demo access code");
+  await expect(accessCode).toBeVisible();
+  await accessCode.fill("e2e-demo-code");
+  const authResponse = page.waitForResponse((response) => response.url().endsWith("/api/auth"));
+  await page.getByRole("button", { name: "Open scanner" }).click();
+  expect((await authResponse).status()).toBe(200);
+  await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expectOfficialSugarNoLogo(page);
   await expect(page.getByText("Live camera", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Camera permission is off")).toBeVisible();
@@ -268,9 +345,6 @@ test("public root opens directly into the camera-first experience", async ({ pag
   const demoButtonBox = await page.getByRole("button", { name: "Show demo" }).boundingBox();
   const cameraViewportBox = await page.getByTestId("camera-viewport").boundingBox();
   expect((cameraViewportBox?.y ?? 0) - ((demoButtonBox?.y ?? 0) + (demoButtonBox?.height ?? 0))).toBeGreaterThanOrEqual(20);
-  await page.goto("/access");
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByLabel("Investor access code")).toHaveCount(0);
   await expect(page.getByText("Private demo", { exact: true })).toHaveCount(0);
 });
 
@@ -639,6 +713,143 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
       await page.screenshot({ path: "test-results/iphone-17-pro-landscape.png" });
     }
     await page.getByRole("button", { name: "View all", exact: true }).click();
+  }
+});
+
+test("scanner shell and results remain usable across the supported phone and tablet matrix", async ({ page }) => {
+  test.setTimeout(90_000);
+  await mockSampleShelfRecognition(page);
+  const viewports = [
+    { width: 375, height: 667, label: "iPhone SE" },
+    { width: 402, height: 874, label: "iPhone 17 Pro" },
+    { width: 440, height: 956, label: "iPhone Pro Max" },
+    { width: 412, height: 915, label: "Pixel 7" },
+    { width: 360, height: 780, label: "Galaxy S" },
+    { width: 768, height: 1024, label: "iPad portrait" },
+    { width: 874, height: 402, label: "iPhone landscape" },
+    { width: 915, height: 412, label: "Pixel landscape" },
+    { width: 1024, height: 768, label: "iPad landscape" }
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await unlock(page);
+    await openDemoScene(page, "Shelf demo");
+
+    const cameraViewport = page.getByTestId("camera-viewport");
+    await expectInsideViewport(page, cameraViewport);
+    await expectInsideViewport(page, page.getByRole("button", { name: "View all", exact: true }));
+    await expectNoDocumentOverflow(page);
+    await expectVisibleTouchTargets(page);
+
+    await page.getByRole("button", { name: "View all", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Products from this scan" });
+    await expectInsideViewport(page, dialog);
+    await expectInsideViewport(page, page.getByRole("button", { name: "Collapse product results" }));
+    await expectNoDocumentOverflow(page);
+    await expectVisibleTouchTargets(page);
+
+    await test.info().attach(`${viewport.label} layout`, {
+      body: await page.screenshot(),
+      contentType: "image/png"
+    });
+  }
+});
+
+test("scanner reflows with large text in light and dark themes", async ({ page }) => {
+  await mockSampleShelfRecognition(page);
+  await page.addInitScript(() => {
+    document.documentElement.style.setProperty("-webkit-text-size-adjust", "200%");
+    document.documentElement.style.setProperty("text-size-adjust", "200%");
+  });
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+  await unlock(page);
+  await openDemoScene(page, "Shelf demo");
+  await expectNoDocumentOverflow(page);
+  await expectVisibleTouchTargets(page);
+  await page.getByRole("button", { name: "View all", exact: true }).click();
+  await expectNoDocumentOverflow(page);
+  await expectVisibleTouchTargets(page);
+
+  const accessibility = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(accessibility.violations).toEqual([]);
+});
+
+test("live camera preserves full-resolution capture geometry and a stable untappable preview", async ({ page }) => {
+  test.setTimeout(45_000);
+  await mockLiveCamera(page);
+  let capturedFrame: string | null = null;
+  await page.route("**/api/recognize", async (route) => {
+    const body = route.request().postDataJSON() as { source?: string; imageDataUrl?: string } | null;
+    if (body?.source === "camera" && body.imageDataUrl) capturedFrame = body.imageDataUrl;
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: "camera-geometry",
+        status: "not_sure",
+        detections: [],
+        latencyMs: 1,
+        model: "qa-mock",
+        imageStored: false
+      })
+    });
+  });
+
+  await unlock(page);
+  const video = page.getByLabel("Live camera preview");
+  await expect.poll(async () => video.evaluate((element) => (element as HTMLVideoElement).videoHeight)).toBe(960);
+  await expect.poll(() => capturedFrame, { timeout: 5_000 }).not.toBeNull();
+  const frameDataUrl: unknown = capturedFrame;
+  if (typeof frameDataUrl !== "string") throw new Error("The live camera did not produce a JPEG frame");
+  const capturedSize = await page.evaluate(async (dataUrl) => {
+    const image = new Image();
+    image.src = dataUrl;
+    await image.decode();
+    return { width: image.naturalWidth, height: image.naturalHeight };
+  }, frameDataUrl);
+  expect(capturedSize).toEqual({ width: 640, height: 960 });
+
+  const viewports = [
+    { width: 375, height: 667, label: "iPhone SE" },
+    { width: 402, height: 874, label: "iPhone 17 Pro" },
+    { width: 440, height: 956, label: "iPhone Pro Max" },
+    { width: 412, height: 915, label: "Pixel 7" },
+    { width: 360, height: 780, label: "Galaxy S" },
+    { width: 768, height: 1024, label: "iPad" },
+    { width: 874, height: 402, label: "phone landscape" }
+  ];
+  for (const viewport of viewports) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    const frame = page.getByTestId("camera-viewport");
+    await expectInsideViewport(page, frame);
+    const initialBox = await frame.boundingBox();
+    await page.waitForTimeout(100);
+    const stableBox = await frame.boundingBox();
+    expect(Math.abs((initialBox?.width ?? 0) - (stableBox?.width ?? 0))).toBeLessThanOrEqual(1);
+    expect(Math.abs((initialBox?.height ?? 0) - (stableBox?.height ?? 0))).toBeLessThanOrEqual(1);
+    const geometry = await page.evaluate(() => {
+      const frame = document.querySelector<HTMLElement>('[data-testid="camera-viewport"]');
+      const video = document.querySelector<HTMLVideoElement>('video[aria-label="Live camera preview"]');
+      if (!frame || !video) throw new Error("Live camera preview is unavailable");
+      const rect = frame.getBoundingClientRect();
+      const style = getComputedStyle(video);
+      return {
+        frameRatio: rect.width / rect.height,
+        mediaRatio: video.videoWidth / video.videoHeight,
+        objectFit: style.objectFit,
+        pointerEvents: style.pointerEvents,
+        filter: style.filter
+      };
+    });
+    expect(geometry.frameRatio).toBeCloseTo(geometry.mediaRatio, 2);
+    expect(geometry.objectFit).toBe("contain");
+    expect(geometry.pointerEvents).toBe("none");
+    expect(geometry.filter).toBe("none");
+    await expectNoDocumentOverflow(page);
+    await expectVisibleTouchTargets(page);
   }
 });
 
@@ -1210,8 +1421,7 @@ test("live camera applies each online result without waiting for the slowest pro
     });
   });
 
-  await page.goto("/");
-  await expect(page.getByLabel("Live camera scanner")).toBeVisible();
+  await unlock(page);
   const liveCameraVideo = page.getByLabel("Live camera preview");
   await expect.poll(async () => liveCameraVideo.evaluate((video) => (video as HTMLVideoElement).videoHeight)).toBe(960);
   const previewGeometry = await page.evaluate(() => {

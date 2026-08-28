@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { externalCatalogToScoredProduct, rankExternalCatalogCandidates } from "./external-catalog";
+import {
+  dedupeExternalCatalogProducts,
+  externalCatalogToScoredProduct,
+  rankExternalCatalogCandidates
+} from "./external-catalog";
 import type { ExternalCatalogProduct } from "./external-catalog-types";
 
 const product: ExternalCatalogProduct = {
@@ -93,5 +97,33 @@ describe("external retailer catalog", () => {
       candidates
     );
     expect(ranked[0]!.confidence - ranked[1]!.confidence).toBeLessThan(0.08);
+  });
+
+  it("matches Russian identity text and decimal pack units to an exact Latvian SKU", () => {
+    const candidates = [
+      rimiProduct("801291", "Sālsstandziņas Rimi 125g", "125g"),
+      rimiProduct("801292", "Sālsstandziņas Rimi ar sieru 125g", "125g")
+    ];
+    const ranked = rankExternalCatalogCandidates(
+      { brand: "Rimi", name: "Солёные палочки", variant: "", packSize: "0,125 кг", searchTerms: [] },
+      candidates
+    );
+    expect(ranked[0]?.product.sourceProductId).toBe("801291");
+    expect(ranked[0]?.confidence).toBeGreaterThanOrEqual(0.84);
+  });
+
+  it("preserves decimal packs instead of treating 0,33 l as 33 litres", () => {
+    const candidate = rimiProduct("330", "Dzēriens Rimi apelsīnu 330ml", "330ml");
+    const ranked = rankExternalCatalogCandidates(
+      { brand: "Rimi", name: candidate.title, variant: "", packSize: "0,33 l", searchTerms: [] },
+      [candidate]
+    );
+    expect(ranked[0]?.product.sourceProductId).toBe("330");
+  });
+
+  it("deduplicates identical retailer identities and prefers an available record", () => {
+    const unavailable = { ...rimiProduct("old", "Sālsstandziņas Rimi 125g", "125g"), available: false };
+    const available = { ...rimiProduct("new", "Sālsstandziņas Rimi 125g", "125g"), available: true };
+    expect(dedupeExternalCatalogProducts([unavailable, available])).toEqual([available]);
   });
 });

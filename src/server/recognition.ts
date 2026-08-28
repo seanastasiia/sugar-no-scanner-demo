@@ -40,6 +40,19 @@ export function recognitionModel(
   return environment.GEMINI_RECOGNITION_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
 }
 
+export function recognitionThinkingLevel(model: string): ThinkingLevel {
+  return model.startsWith("gemini-3.7") ? ThinkingLevel.LOW : ThinkingLevel.MINIMAL;
+}
+
+export function recognitionRequestTimeoutMs(
+  environment: Record<string, string | undefined> = process.env
+): number {
+  const configured = Number.parseInt(environment.GEMINI_RECOGNITION_TIMEOUT_MS ?? "", 10);
+  return Number.isFinite(configured) && configured >= 1_000 && configured <= 60_000
+    ? configured
+    : 15_000;
+}
+
 const rawProviderResponseSchema = z.object({
   detections: z.array(
     z.object({
@@ -305,9 +318,12 @@ export function applyBarboraCandidateConfirmations(
 async function fetchCandidateImage(
   candidate: VisualBarboraCandidate
 ): Promise<{ candidate: VisualBarboraCandidate; base64: string; mimeType: string } | null> {
-  if (!candidate.imageUrl) return null;
+  if (!candidate.imageUrl || !isTrustedCandidateImageUrl(candidate.imageUrl)) return null;
   try {
-    const response = await fetch(candidate.imageUrl, { signal: AbortSignal.timeout(2_500) });
+    const response = await fetch(candidate.imageUrl, {
+      signal: AbortSignal.timeout(2_500),
+      redirect: "error"
+    });
     const mimeType = response.headers.get("content-type")?.split(";")[0] || "";
     if (!response.ok || !/^image\/(?:jpeg|png|webp)$/.test(mimeType)) return null;
     const bytes = Buffer.from(await response.arrayBuffer());
@@ -315,6 +331,15 @@ async function fetchCandidateImage(
     return { candidate, base64: bytes.toString("base64"), mimeType };
   } catch {
     return null;
+  }
+}
+
+export function isTrustedCandidateImageUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname === "cdn.barbora.lv";
+  } catch {
+    return false;
   }
 }
 
@@ -621,7 +646,8 @@ export async function recognizeProducts(input: {
       // Shelf recognition is a bounded visual extraction task. Minimal thinking
       // returns the structured boxes much faster; exact nutrition matching and
       // retailer verification still happen in the separate grounded resolver.
-      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+      thinkingConfig: { thinkingLevel: recognitionThinkingLevel(model) },
+      httpOptions: { timeout: recognitionRequestTimeoutMs() },
       mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
       responseMimeType: "application/json",
       responseJsonSchema: {

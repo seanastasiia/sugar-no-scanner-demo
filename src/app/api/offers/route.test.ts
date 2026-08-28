@@ -28,6 +28,16 @@ const offer: RetailerOffer = {
 beforeEach(() => getKnownOffer.mockReset());
 
 describe("POST /api/offers", () => {
+  it("rejects a cross-origin browser request before retailer lookup", async () => {
+    const response = await POST(new Request("http://localhost/api/offers", {
+      method: "POST",
+      headers: { origin: "https://attacker.example" },
+      body: JSON.stringify({ slugs: ["example-200-g"] })
+    }));
+    expect(response.status).toBe(403);
+    expect(getKnownOffer).not.toHaveBeenCalled();
+  });
+
   it("rejects malformed requests", async () => {
     const response = await POST(new Request("http://localhost/api/offers", {
       method: "POST",

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { ThinkingLevel } from "@google/genai";
 import { getCatalog } from "@/lib/catalog";
 import {
   DEFAULT_GEMINI_MODEL,
@@ -7,10 +8,13 @@ import {
   fitBoxToFrame,
   geminiBox2dToFrame,
   isTrustedShelfPriceDetection,
+  isTrustedCandidateImageUrl,
   matchCatalogProduct,
   recognitionInstruction,
   recognitionConfidenceThreshold,
   recognitionModel,
+  recognitionRequestTimeoutMs,
+  recognitionThinkingLevel,
   recognizeProducts,
   resolveVisibleDetections,
   type ProviderDetection
@@ -22,6 +26,15 @@ const originalKey = process.env.GEMINI_API_KEY;
 afterEach(() => {
   if (originalKey === undefined) delete process.env.GEMINI_API_KEY;
   else process.env.GEMINI_API_KEY = originalKey;
+});
+
+describe("candidate packshot trust boundary", () => {
+  it("allows only direct HTTPS Barbora CDN images", () => {
+    expect(isTrustedCandidateImageUrl("https://cdn.barbora.lv/products/example.jpg")).toBe(true);
+    expect(isTrustedCandidateImageUrl("http://cdn.barbora.lv/products/example.jpg")).toBe(false);
+    expect(isTrustedCandidateImageUrl("https://cdn.barbora.lv.attacker.example/image.jpg")).toBe(false);
+    expect(isTrustedCandidateImageUrl("not-a-url")).toBe(false);
+  });
 });
 
 describe("recognizeProducts", () => {
@@ -104,6 +117,19 @@ describe("recognitionModel", () => {
         GEMINI_RECOGNITION_MODEL: "gemini-3.6-flash"
       })
     ).toBe("gemini-3.6-flash");
+  });
+
+  it("uses only thinking levels supported by the selected stable model", () => {
+    expect(recognitionThinkingLevel("gemini-3.5-flash")).toBe(ThinkingLevel.MINIMAL);
+    expect(recognitionThinkingLevel("gemini-3.6-flash")).toBe(ThinkingLevel.MINIMAL);
+    expect(recognitionThinkingLevel("gemini-3.7-flash")).toBe(ThinkingLevel.LOW);
+  });
+
+  it("bounds the provider request while allowing a safe environment override", () => {
+    expect(recognitionRequestTimeoutMs({})).toBe(15_000);
+    expect(recognitionRequestTimeoutMs({ GEMINI_RECOGNITION_TIMEOUT_MS: "12000" })).toBe(12_000);
+    expect(recognitionRequestTimeoutMs({ GEMINI_RECOGNITION_TIMEOUT_MS: "999" })).toBe(15_000);
+    expect(recognitionRequestTimeoutMs({ GEMINI_RECOGNITION_TIMEOUT_MS: "90000" })).toBe(15_000);
   });
 });
 

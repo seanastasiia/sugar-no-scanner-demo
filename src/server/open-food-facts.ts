@@ -2,7 +2,13 @@ import { scoreReferenceProduct } from "@/lib/scoring";
 import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
 import bulkSnapshot from "../../data/open-food-facts-lv.generated.json";
 import type { ExternalCatalogProduct } from "./external-catalog-types";
-import { normalizeRetailText, retailerBrandMatches, type BarboraLookupInput } from "./barbora-catalog";
+import {
+  normalizeRetailQuantityText,
+  normalizeRetailText,
+  retailIdentityTokenMatches,
+  retailerBrandMatches,
+  type BarboraLookupInput
+} from "./barbora-catalog";
 
 interface OpenFoodFactsNutriments {
   "energy-kcal_100g"?: number;
@@ -86,14 +92,19 @@ function meaningfulTokens(value: string, excluded: Set<string> = new Set()): str
     ...new Set(
       normalizeRetailText(value)
         .split(" ")
-        .filter((token) => token.length >= 3 && !stopWords.has(token) && !excluded.has(token))
+        .filter((token) =>
+          token.length >= 3 &&
+          !/^\d+(?:kg|g|ml|cl|l)?$/.test(token) &&
+          !stopWords.has(token) &&
+          !excluded.has(token)
+        )
     )
   ];
 }
 
 function canonicalQuantity(value: string | null | undefined): CanonicalQuantity | null {
   if (!value) return null;
-  const normalized = normalizeRetailText(value);
+  const normalized = normalizeRetailQuantityText(value);
   const multi = normalized.match(/(\d+)\s*x\s*(\d+(?:[.,]\d+)?)\s*(kg|g|ml|cl|l)\b/i);
   const single = normalized.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|ml|cl|l)\b/i);
   const match = multi || single;
@@ -119,8 +130,9 @@ function quantityMatches(observed: string, candidate: string | null | undefined)
 
 function tokenCoverage(query: string[], candidate: string[]): number {
   if (!query.length || !candidate.length) return 0;
-  const candidateSet = new Set(candidate);
-  return query.filter((token) => candidateSet.has(token)).length / query.length;
+  return query.filter((token) =>
+    candidate.some((candidateToken) => retailIdentityTokenMatches(token, candidateToken))
+  ).length / query.length;
 }
 
 export function rankOpenFoodFactsCandidates(
@@ -140,7 +152,9 @@ export function rankOpenFoodFactsCandidates(
       const candidateNameTokens = meaningfulTokens(product.product_name || "", observedBrandTokens);
       const nameCoverage = tokenCoverage(observedNameTokens, candidateNameTokens);
       const reverseCoverage = tokenCoverage(candidateNameTokens, observedNameTokens);
-      const nameScore = Math.max(nameCoverage, reverseCoverage * 0.9);
+      const nameScore = nameCoverage && reverseCoverage
+        ? (2 * nameCoverage * reverseCoverage) / (nameCoverage + reverseCoverage)
+        : 0;
       const packMatch = input.packSize ? quantityMatches(input.packSize, product.quantity) : null;
       if (packMatch === false) return [];
       const hasNutrition =
@@ -148,7 +162,11 @@ export function rankOpenFoodFactsCandidates(
         finite(product.nutriments?.sugars_100g) !== null &&
         (finite(product.nutriments?.["energy-kcal_100g"]) !== null ||
           finite(product.nutriments?.["energy-kj_100g"]) !== null);
-      if (!hasNutrition || nameScore < 0.58) return [];
+      // A specific OFF variant must not inherit nutrition from a shorter,
+      // generic camera label (for example, "Immune Support" versus a
+      // blueberry SKU). Require candidate-side identity coverage as well as
+      // the balanced score before an exact-SKU result can be considered.
+      if (!hasNutrition || nameScore < 0.58 || reverseCoverage < 0.72) return [];
       const confidence = Math.min(1, 0.28 + nameScore * 0.52 + (packMatch === true ? 0.2 : 0.04));
       return [{ product, confidence }];
     })

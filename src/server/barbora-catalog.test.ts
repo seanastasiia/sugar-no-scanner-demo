@@ -5,12 +5,25 @@ import {
   parseBarboraProductPage,
   rankBarboraCandidates,
   rankIndexedBarboraCandidates,
+  normalizeRetailText,
   retailerBrandMatches
 } from "./barbora-catalog";
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Barbora product lookup", () => {
+  it("normalizes Latvian diacritics and Russian Cyrillic without losing identity", () => {
+    expect(normalizeRetailText("Sālsstandziņas")).toBe("salsstandzinas");
+    expect(normalizeRetailText("Кока-Кола")).toBe("koka kola");
+    expect(retailerBrandMatches("Кока-Кола", "Coca-Cola")).toBe(true);
+  });
+
+  it("fails closed for missing or unrelated short brands", () => {
+    expect(retailerBrandMatches("", "Pepsi")).toBe(false);
+    expect(retailerBrandMatches("A", "Pepsi")).toBe(false);
+    expect(retailerBrandMatches("AB", "AB")).toBe(true);
+  });
+
   it("returns a current exact-SKU offer for a known Barbora slug", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(`
       <script>window.product = {"title":"SANPELLEGRINO Zero peach 330ml","brand_name":"SANPELLEGRINO","price":1.49,"comparative_unit":"l","comparative_unit_price":4.52,"image":"https://cdn.example/peach.png","Url":"gaz-dz-sanpellegrino-zero-peach-0-33-l-d","status":"active"};</script>

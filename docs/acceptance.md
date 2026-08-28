@@ -4,7 +4,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 
 | Criterion | Current evidence | Status |
 | --- | --- | --- |
-| Public camera-first entry | Proxy unit test allows `/`, recognition and product APIs without a session; `/access` redirects to `/`; browser regression asserts that no code field or `Private demo` copy remains | Pass locally |
+| Private camera-first entry | Proxy unit tests keep only access/auth/health public, redirect an unauthenticated page and reject an unauthenticated API. A valid 12-hour HTTP-only session opens the scanner; the scanner itself shows no redundant `Private demo` badge | Pass locally |
 | Official Sugar.no header brand | Scanner header uses the exact white symbol-and-wordmark SVG published on `sugar.no`, keeps its source aspect ratio, provides `alt="Sugar.no"` and makes no runtime request to the website or Framer CDN | Pass locally |
 | 40 Latvia SKUs | Generated catalog validation and unit test | Pass |
 | Broad Barbora discovery | Reproducible public-sitemap index contains 18,554 unique product slugs | Pass as discovery index |

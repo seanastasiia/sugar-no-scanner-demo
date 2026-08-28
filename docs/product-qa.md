@@ -1,10 +1,10 @@
 # Product QA: Latvia scanner demo
 
-Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a private tab first so the public entry and camera permissions are tested from a clean state.
+Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a private tab first so access and camera permissions are tested from a clean state.
 
 ## Core investor path
 
-1. Open the link. Confirm that it goes directly to the camera-first scanner with no access-code form or `Private demo` label. The top-left brand must be the official white Sugar.no symbol plus wordmark from `sugar.no`, not styled text, and it must stay fully visible in portrait and landscape.
+1. Open the link. Confirm that it asks for the separately provided demo code, rejects a wrong code and opens the camera-first scanner after the correct code. The scanner must not contain a redundant `Private demo` label. The top-left brand must be the official white Sugar.no symbol plus wordmark from `sugar.no`, not styled text, and it must stay fully visible in portrait and landscape.
 2. Confirm the camera permission prompt begins immediately and `Show demo` remains visible if permission is denied or the camera is unavailable.
 3. Tap `Show demo`, then `Shelf demo`. Confirm that the camera scene fills the phone and four markers appear directly over the four supported packages. Rated markers must say `Great fit`, `Moderate fit` or `Low fit`; neutral identities must not masquerade as rated picks.
 4. Confirm that only a compact bottom sheet overlays the shelf. It should say `4 products · 4 with Sugar.no fit`, show product thumbnails, rank rated cards as `#1`, `#2`, `#3…`, show `Sugar …g` in each rated preview and expose `View all`. The first Barebells preview must cross out the explicitly demo €3.49 shelf value, show Barbora €2.79 and expose a one-tap `Buy cheaper` link to that exact SKU. Tap `View all` and confirm the full-height comparison repeats the same ranking and prices, identifies the shelf value as a demo and crosses out only €3.49; collapse it and confirm the held shelf returns unchanged.

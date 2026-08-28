@@ -67,6 +67,5 @@ export function createRecognitionRateLimiter(
 export function recognitionClientKey(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   const address = forwarded || request.headers.get("x-real-ip")?.trim() || "unknown";
-  const userAgent = request.headers.get("user-agent")?.slice(0, 240) || "unknown";
-  return createHash("sha256").update(`${address}|${userAgent}`).digest("hex");
+  return createHash("sha256").update(address).digest("hex");
 }

@@ -2,7 +2,13 @@ import livinSnapshot from "../../data/livin-catalog.generated.json";
 import rimiSnapshot from "../../data/rimi-catalog.generated.json";
 import { scoreReferenceProduct } from "@/lib/scoring";
 import type { ProductRecord, RetailerOffer, ScoredProduct } from "@/lib/types";
-import { normalizeRetailText, retailerBrandMatches, type BarboraLookupInput } from "./barbora-catalog";
+import {
+  normalizeRetailQuantityText,
+  normalizeRetailText,
+  retailIdentityTokenMatches,
+  retailerBrandMatches,
+  type BarboraLookupInput
+} from "./barbora-catalog";
 import type { ExternalCatalogProduct } from "./external-catalog-types";
 
 interface RankedExternalCatalogCandidate {
@@ -10,7 +16,7 @@ interface RankedExternalCatalogCandidate {
   confidence: number;
 }
 
-const products = [...(rimiSnapshot as ExternalCatalogProduct[]), ...(livinSnapshot as ExternalCatalogProduct[])];
+const rawProducts = [...(rimiSnapshot as ExternalCatalogProduct[]), ...(livinSnapshot as ExternalCatalogProduct[])];
 const stopWords = new Set(["and", "ar", "bar", "bez", "for", "from", "in", "of", "the", "un", "with"]);
 const identityPhraseAliases: Array<[RegExp, string]> = [
   [/\bpastry twists? salty\b/g, "salsstandzinas"],
@@ -18,24 +24,48 @@ const identityPhraseAliases: Array<[RegExp, string]> = [
   [/\bpastry twists? cheese\b/g, "salsstandzinas siers"],
   [/\bcheese pastry twists?\b/g, "salsstandzinas siers"],
   [/\bmulti fruit\b/g, "multiauglu"],
-  [/\bmultifruit\b/g, "multiauglu"]
+  [/\bmultifruit\b/g, "multiauglu"],
+  [/\bsolen(?:ye|yi|aia) palochki\b/g, "salsstandzinas"],
+  [/\bsyrn(?:ye|yi|aia) palochki\b/g, "salsstandzinas siers"],
+  [/\bmultifruktovyi (?:napitok|sok)\b/g, "multiauglu sula"],
+  [/\bklubnichno bananovyi (?:napitok|sok)\b/g, "zemenu bananu sula"]
 ];
 const identityTokenAliases: Record<string, string> = {
   banana: "bananu",
+  banan: "bananu",
   cheese: "siers",
+  chesnok: "kiploku",
+  chernika: "mellenu",
+  desert: "deserts",
   drink: "dzeriens",
   drinks: "dzeriens",
+  iogurt: "jogurts",
   juice: "sula",
+  karamel: "karamelu",
+  klubnika: "zemenu",
+  kokos: "kokosriekstu",
+  maionez: "majoneze",
+  malina: "avenu",
+  moloko: "piens",
+  pechene: "cepumi",
+  persik: "persiku",
+  puding: "pudins",
+  shokolad: "sokolades",
   siera: "siers",
   sieru: "siers",
+  syr: "siers",
   strawberry: "zemenu",
   sulas: "sula",
-  sulu: "sula"
+  sulu: "sula",
+  tunets: "tunzivs",
+  tvorog: "biezpiens",
+  vanil: "vanilas",
+  vishnia: "kirsu"
 };
 
 function canonicalPack(value: string | null | undefined): { amount: number; dimension: "solid" | "liquid" } | null {
   if (!value) return null;
-  const normalized = normalizeRetailText(value).replaceAll(",", ".");
+  const normalized = normalizeRetailQuantityText(value);
   const multi = normalized.match(/(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*(kg|g|ml|cl|l)\b/i);
   const single = normalized.match(/(\d+(?:\.\d+)?)\s*(kg|g|ml|cl|l)\b/i);
   const match = multi || single;
@@ -50,6 +80,46 @@ function canonicalPack(value: string | null | undefined): { amount: number; dime
   };
 }
 
+function dedupeIdentityKey(product: ExternalCatalogProduct): string {
+  if (product.gtin) return `${product.source}:gtin:${product.gtin}`;
+  const pack = canonicalPack(product.packSize);
+  const packKey = pack ? `${pack.dimension}:${pack.amount}` : normalizeRetailText(product.packSize);
+  return [
+    product.source,
+    normalizeRetailText(product.brand).replaceAll(" ", ""),
+    normalizeRetailText(product.title),
+    packKey
+  ].join(":");
+}
+
+function candidatePriority(product: ExternalCatalogProduct): number {
+  return (product.available === true ? 8 : product.available === null ? 2 : 0) +
+    (product.gtin ? 4 : 0) +
+    (product.imageUrl ? 2 : 0) +
+    (product.price !== null ? 1 : 0);
+}
+
+export function dedupeExternalCatalogProducts(candidates: ExternalCatalogProduct[]): ExternalCatalogProduct[] {
+  const deduped = new Map<string, ExternalCatalogProduct>();
+  for (const candidate of candidates) {
+    const key = dedupeIdentityKey(candidate);
+    const current = deduped.get(key);
+    if (
+      !current ||
+      candidatePriority(candidate) > candidatePriority(current) ||
+      (candidatePriority(candidate) === candidatePriority(current) && candidate.checkedAt > current.checkedAt) ||
+      (candidatePriority(candidate) === candidatePriority(current) &&
+        candidate.checkedAt === current.checkedAt &&
+        candidate.sourceProductId.localeCompare(current.sourceProductId) < 0)
+    ) {
+      deduped.set(key, candidate);
+    }
+  }
+  return [...deduped.values()].sort((left, right) => left.sourceProductId.localeCompare(right.sourceProductId));
+}
+
+const products = dedupeExternalCatalogProducts(rawProducts);
+
 function tokens(value: string, excluded: Set<string> = new Set()): string[] {
   const normalized = identityPhraseAliases.reduce(
     (text, [pattern, replacement]) => text.replace(pattern, replacement),
@@ -60,15 +130,21 @@ function tokens(value: string, excluded: Set<string> = new Set()): string[] {
       normalized
         .split(" ")
         .map((token) => identityTokenAliases[token] || token)
-        .filter((token) => token.length >= 3 && !stopWords.has(token) && !excluded.has(token))
+        .filter((token) =>
+          token.length >= 3 &&
+          !/^\d+(?:\.\d+)?(?:kg|g|ml|cl|l)$/.test(token) &&
+          !stopWords.has(token) &&
+          !excluded.has(token)
+        )
     )
   ];
 }
 
 function coverage(query: string[], candidate: string[]): number {
   if (!query.length || !candidate.length) return 0;
-  const set = new Set(candidate);
-  return query.filter((token) => set.has(token)).length / query.length;
+  return query.filter((token) =>
+    candidate.some((candidateToken) => retailIdentityTokenMatches(token, candidateToken))
+  ).length / query.length;
 }
 
 function balancedCoverage(query: string[], candidate: string[]): number {

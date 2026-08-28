@@ -20,6 +20,12 @@ describe("FixedWindowRateLimiter", () => {
     const key = recognitionClientKey(request);
     expect(key).toMatch(/^[a-f0-9]{64}$/);
     expect(key).not.toContain("203.0.113.8");
+    const rotatedUserAgent = recognitionClientKey(
+      new Request("https://scanner.example/api/recognize", {
+        headers: { "x-forwarded-for": "203.0.113.8", "user-agent": "Different Agent" }
+      })
+    );
+    expect(rotatedUserAgent).toBe(key);
   });
 
   it("allows the 30-call camera cadence by default but remains bounded", () => {

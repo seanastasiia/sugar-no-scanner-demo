@@ -6,6 +6,7 @@ import { listProducts } from "@/server/catalog-repository";
 import { recognizeProducts } from "@/server/recognition";
 import { createRecognitionRateLimiter, recognitionClientKey, type RateLimiter } from "@/server/rate-limit";
 import { readBoundedJson } from "@/server/request-body";
+import { hasTrustedBrowserOrigin } from "@/server/request-origin";
 
 export const runtime = "nodejs";
 
@@ -39,6 +40,12 @@ export function createRecognizePost(overrides: Partial<RecognizeRouteDependencie
     ...overrides
   };
   return async function post(request: Request) {
+    if (!hasTrustedBrowserOrigin(request)) {
+      return NextResponse.json(
+        { error: "untrusted_origin" },
+        { status: 403, headers: { "cache-control": "no-store" } }
+      );
+    }
     let body: unknown;
     try {
       body = await readBoundedJson(request, MAX_REQUEST_BYTES);
@@ -48,12 +55,18 @@ export function createRecognizePost(overrides: Partial<RecognizeRouteDependencie
           error:
             error instanceof Error && error.message === "body_too_large" ? "request_too_large" : "invalid_request"
         },
-        { status: error instanceof Error && error.message === "body_too_large" ? 413 : 400 }
+        {
+          status: error instanceof Error && error.message === "body_too_large" ? 413 : 400,
+          headers: { "cache-control": "no-store" }
+        }
       );
     }
     const parsed = requestSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "invalid_request", details: parsed.error.flatten() }, { status: 400 });
+      return NextResponse.json(
+        { error: "invalid_request", details: parsed.error.flatten() },
+        { status: 400, headers: { "cache-control": "no-store" } }
+      );
     }
     if (!parsed.data.source.startsWith("sample-")) {
       const decision = dependencies.limiter.consume(recognitionClientKey(request));
@@ -87,7 +100,7 @@ export function createRecognizePost(overrides: Partial<RecognizeRouteDependencie
       );
       return NextResponse.json(
         { error: "recognition_failed", requestId, imageStored: false },
-        { status: 502 }
+        { status: 502, headers: { "cache-control": "no-store" } }
       );
     }
   };

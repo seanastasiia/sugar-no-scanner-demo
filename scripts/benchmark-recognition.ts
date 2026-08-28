@@ -34,6 +34,7 @@ interface CliOptions {
   outputPath: string | null;
   timeoutMs: number;
   imagePaths: string[];
+  authCookie: string | null;
 }
 
 function usage() {
@@ -87,7 +88,24 @@ function parseArgs(argv: string[]): CliOptions | null {
   }
   if (manifestPath && imagePaths.length) throw new Error("choose_manifest_or_paths: do not pass both");
   if (!manifestPath && !imagePaths.length) throw new Error("missing_images: pass image paths or --manifest");
-  return { endpoint, manifestPath, outputPath, timeoutMs, imagePaths };
+  return { endpoint, manifestPath, outputPath, timeoutMs, imagePaths, authCookie: null };
+}
+
+async function authenticate(options: CliOptions) {
+  const code = process.env.DEMO_ACCESS_CODE?.trim();
+  if (!code || options.endpoint.hostname === "127.0.0.1" || options.endpoint.hostname === "localhost") {
+    return;
+  }
+  const authUrl = new URL("/api/auth", options.endpoint);
+  const response = await fetch(authUrl, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: options.endpoint.origin },
+    body: JSON.stringify({ code }),
+    cache: "no-store"
+  });
+  if (!response.ok) throw new Error(`demo_auth_http_${response.status}`);
+  options.authCookie = response.headers.get("set-cookie")?.split(";")[0] || null;
+  if (!options.authCookie) throw new Error("demo_auth_cookie_missing");
 }
 
 async function loadCases(options: CliOptions): Promise<BenchmarkInputCase[]> {
@@ -107,9 +125,15 @@ async function loadCases(options: CliOptions): Promise<BenchmarkInputCase[]> {
   }));
 }
 
-async function readProductDetail(endpoint: URL, productId: string): Promise<BenchmarkProductDetail | null> {
-  const productUrl = new URL(`/api/products/${encodeURIComponent(productId)}`, endpoint);
-  const response = await fetch(productUrl, { headers: { accept: "application/json" }, cache: "no-store" });
+async function readProductDetail(options: CliOptions, productId: string): Promise<BenchmarkProductDetail | null> {
+  const productUrl = new URL(`/api/products/${encodeURIComponent(productId)}`, options.endpoint);
+  const response = await fetch(productUrl, {
+    headers: {
+      accept: "application/json",
+      ...(options.authCookie ? { cookie: options.authCookie } : {})
+    },
+    cache: "no-store"
+  });
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`product_detail_http_${response.status}`);
   const payload = await response.json() as { product?: BenchmarkProductDetail };
@@ -130,7 +154,12 @@ async function benchmarkCase(
     const body = buildRecognitionRequestBody(bytes, mimeType);
     const response = await fetch(options.endpoint, {
       method: "POST",
-      headers: { accept: "application/json", "content-type": "application/json", "content-length": String(Buffer.byteLength(body)) },
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "content-length": String(Buffer.byteLength(body)),
+        ...(options.authCookie ? { cookie: options.authCookie } : {})
+      },
       body,
       cache: "no-store",
       signal: AbortSignal.timeout(options.timeoutMs)
@@ -145,7 +174,7 @@ async function benchmarkCase(
     for (const productId of [...new Set(payload.detections.map((detection) => detection.productId))]) {
       let pending = productCache.get(productId);
       if (!pending) {
-        pending = readProductDetail(options.endpoint, productId).catch(() => null);
+        pending = readProductDetail(options, productId).catch(() => null);
         productCache.set(productId, pending);
       }
       details.set(productId, await pending);
@@ -184,6 +213,7 @@ async function main() {
     console.log(usage());
     return;
   }
+  await authenticate(options);
   const inputs = await loadCases(options);
   const productCache = new Map<string, Promise<BenchmarkProductDetail | null>>();
   const cases: RecognitionBenchmarkCaseResult[] = [];

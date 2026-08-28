@@ -56,69 +56,91 @@ const stopWords = new Set([
 ]);
 
 const synonymMap: Record<string, string[]> = {
-  tuna: ["tonno", "tunzivs"],
-  tonno: ["tuna", "tunzivs"],
-  tunzivs: ["tuna", "tonno"],
+  tuna: ["tonno", "tunets", "tunzivs"],
+  tonno: ["tuna", "tunets", "tunzivs"],
+  tunets: ["tuna", "tonno", "tunzivs"],
+  tunzivs: ["tuna", "tonno", "tunets"],
   brine: ["sava", "sula"],
   olive: ["oliva", "olivella"],
   oliva: ["olive", "olivella"],
   olivella: ["olive", "oliva"],
-  chocolate: ["sokolades"],
-  sokolades: ["chocolate"],
-  banana: ["bananu"],
-  bananu: ["banana"],
-  mayonnaise: ["majoneze", "mayo"],
-  majoneze: ["mayonnaise", "mayo"],
-  mayo: ["mayonnaise", "majoneze"],
-  garlic: ["kiploku"],
-  kiploku: ["garlic"],
-  cheese: ["siera", "siers"],
-  siera: ["cheese", "siers"],
-  cookie: ["cepumi", "biscuit"],
-  cookies: ["cepumi", "biscuits"],
-  biscuit: ["cepumi", "cookie"],
-  biscuits: ["cepumi", "cookies"],
-  cepumi: ["cookie", "cookies", "biscuit", "biscuits"],
-  yogurt: ["jogurts", "yoghurt"],
-  yoghurt: ["jogurts", "yogurt"],
-  jogurts: ["yogurt", "yoghurt"],
-  milk: ["piens"],
-  piens: ["milk"],
-  curd: ["biezpiena", "biezpiens"],
-  biezpiena: ["curd", "biezpiens"],
-  biezpiens: ["curd", "biezpiena"],
+  chocolate: ["shokolad", "sokolades"],
+  shokolad: ["chocolate", "sokolades"],
+  sokolades: ["chocolate", "shokolad"],
+  banana: ["banan", "bananu"],
+  banan: ["banana", "bananu"],
+  bananu: ["banana", "banan"],
+  mayonnaise: ["maionez", "majoneze", "mayo"],
+  maionez: ["mayonnaise", "majoneze", "mayo"],
+  majoneze: ["maionez", "mayonnaise", "mayo"],
+  mayo: ["maionez", "mayonnaise", "majoneze"],
+  garlic: ["chesnok", "kiploku"],
+  chesnok: ["garlic", "kiploku"],
+  kiploku: ["chesnok", "garlic"],
+  cheese: ["siera", "siers", "syr"],
+  siera: ["cheese", "siers", "syr"],
+  siers: ["cheese", "siera", "syr"],
+  syr: ["cheese", "siera", "siers"],
+  cookie: ["cepumi", "biscuit", "pechene"],
+  cookies: ["cepumi", "biscuits", "pechene"],
+  biscuit: ["cepumi", "cookie", "pechene"],
+  biscuits: ["cepumi", "cookies", "pechene"],
+  cepumi: ["cookie", "cookies", "biscuit", "biscuits", "pechene"],
+  pechene: ["cepumi", "cookie", "cookies", "biscuit", "biscuits"],
+  yogurt: ["iogurt", "jogurts", "yoghurt"],
+  yoghurt: ["iogurt", "jogurts", "yogurt"],
+  iogurt: ["jogurts", "yoghurt", "yogurt"],
+  jogurts: ["iogurt", "yogurt", "yoghurt"],
+  milk: ["moloko", "piens"],
+  moloko: ["milk", "piens"],
+  piens: ["milk", "moloko"],
+  curd: ["biezpiena", "biezpiens", "tvorog"],
+  biezpiena: ["curd", "biezpiens", "tvorog"],
+  biezpiens: ["curd", "biezpiena", "tvorog"],
+  tvorog: ["biezpiena", "biezpiens", "curd"],
   dessert: ["deserts"],
   deserts: ["dessert"],
-  pudding: ["pudins"],
-  pudins: ["pudding"],
-  classic: ["klasiska", "klasiskais"],
-  klasiska: ["classic", "klasiskais"],
+  pudding: ["pudins", "puding"],
+  puding: ["pudding", "pudins"],
+  pudins: ["pudding", "puding"],
+  classic: ["klassicheskii", "klasiska", "klasiskais"],
+  klassicheskii: ["classic", "klasiska", "klasiskais"],
+  klasiska: ["classic", "klassicheskii", "klasiskais"],
   original: ["originala", "originalais"],
   originala: ["original", "originalais"],
-  pesca: ["peach", "persiku"],
-  peach: ["pesca", "persiku"],
-  persiku: ["peach", "pesca"],
-  strawberry: ["zemenu"],
-  zemenu: ["strawberry"],
-  raspberry: ["avenu"],
-  avenu: ["raspberry"],
-  blueberry: ["mellenu"],
-  mellenu: ["blueberry"],
-  cherry: ["kirsu"],
-  kirsu: ["cherry"],
-  vanilla: ["vanilas"],
-  vanilas: ["vanilla"],
-  caramel: ["karamelu"],
-  karamelu: ["caramel"],
-  coconut: ["kokosriekstu"],
-  kokosriekstu: ["coconut"],
+  pesca: ["peach", "persik", "persiku"],
+  peach: ["pesca", "persik", "persiku"],
+  persik: ["peach", "pesca", "persiku"],
+  persiku: ["peach", "pesca", "persik"],
+  strawberry: ["klubnika", "zemenu"],
+  klubnika: ["strawberry", "zemenu"],
+  zemenu: ["klubnika", "strawberry"],
+  raspberry: ["avenu", "malina"],
+  avenu: ["malina", "raspberry"],
+  malina: ["avenu", "raspberry"],
+  blueberry: ["chernika", "mellenu"],
+  chernika: ["blueberry", "mellenu"],
+  mellenu: ["blueberry", "chernika"],
+  cherry: ["kirsu", "vishnia"],
+  kirsu: ["cherry", "vishnia"],
+  vishnia: ["cherry", "kirsu"],
+  vanilla: ["vanil", "vanilas"],
+  vanil: ["vanilla", "vanilas"],
+  vanilas: ["vanil", "vanilla"],
+  caramel: ["karamel", "karamelu"],
+  karamel: ["caramel", "karamelu"],
+  karamelu: ["caramel", "karamel"],
+  coconut: ["kokos", "kokosriekstu"],
+  kokos: ["coconut", "kokosriekstu"],
+  kokosriekstu: ["coconut", "kokos"],
   condensed: ["iebiezinata", "kondenseta"],
   iebiezinata: ["condensed", "kondenseta"],
   kondenseta: ["condensed", "iebiezinata"],
   clementina: ["clementine", "klementinu"],
   clementine: ["clementina", "klementinu"],
-  limone: ["lemon", "citronu"],
-  lemon: ["limone", "citronu"]
+  limone: ["lemon", "limon", "citronu"],
+  lemon: ["limone", "limon", "citronu"],
+  limon: ["lemon", "limone", "citronu"]
 };
 
 const flavorTokens = new Set([
@@ -144,8 +166,25 @@ const flavorTokens = new Set([
 
 const productLineTokens = new Set(["cirks", "gimenei", "mini", "nature", "treat"]);
 
+const cyrillicToLatin: Record<string, string> = {
+  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i", й: "i",
+  к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f",
+  х: "kh", ц: "ts", ч: "ch", ш: "sh", щ: "shch", ъ: "", ы: "y", ь: "", э: "e", ю: "iu", я: "ia"
+};
+
+const canonicalBrandAliases: Record<string, string> = {
+  cocacola: "cocacola",
+  kokakola: "cocacola",
+  sanpellegrino: "sanpellegrino",
+  sanpellegrinozero: "sanpellegrinozero"
+};
+
+function transliterateCyrillic(value: string): string {
+  return [...value].map((character) => cyrillicToLatin[character.toLowerCase()] ?? character).join("");
+}
+
 export function normalizeRetailText(value: string): string {
-  return value
+  return transliterateCyrillic(value)
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -153,10 +192,24 @@ export function normalizeRetailText(value: string): string {
     .trim();
 }
 
+export function normalizeRetailQuantityText(value: string): string {
+  return transliterateCyrillic(value)
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replaceAll("×", "x")
+    .replaceAll(",", ".")
+    .replace(/[^a-z0-9.+]+/g, " ")
+    .trim();
+}
+
 export function retailerBrandMatches(observedBrand: string, retailerBrand: string): boolean {
-  const observed = normalizeRetailText(observedBrand).replaceAll(" ", "");
-  const retailer = normalizeRetailText(retailerBrand).replaceAll(" ", "");
-  if (observed.length < 3 || retailer.length < 3) return true;
+  const rawObserved = normalizeRetailText(observedBrand).replaceAll(" ", "");
+  const rawRetailer = normalizeRetailText(retailerBrand).replaceAll(" ", "");
+  const observed = canonicalBrandAliases[rawObserved] || rawObserved;
+  const retailer = canonicalBrandAliases[rawRetailer] || rawRetailer;
+  if (!observed || !retailer) return false;
+  if (observed.length < 3 || retailer.length < 3) return observed === retailer;
   return observed.includes(retailer) || retailer.includes(observed);
 }
 
@@ -186,6 +239,14 @@ function tokenMatches(left: string, right: string): boolean {
   let prefix = 0;
   while (prefix < shorter && left[prefix] === right[prefix]) prefix += 1;
   return prefix >= shorter - 1;
+}
+
+export function retailIdentityTokenMatches(left: string, right: string): boolean {
+  const leftAlternatives = [left, ...(synonymMap[left] || [])];
+  const rightAlternatives = [right, ...(synonymMap[right] || [])];
+  return leftAlternatives.some((leftAlternative) =>
+    rightAlternatives.some((rightAlternative) => tokenMatches(leftAlternative, rightAlternative))
+  );
 }
 
 function scoreText(query: string, candidate: string, brand = ""): number {
@@ -220,14 +281,7 @@ interface CanonicalQuantity {
 }
 
 function canonicalQuantity(value: string): CanonicalQuantity | null {
-  const normalized = value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replaceAll("×", "x")
-    .replaceAll(",", ".")
-    .replace(/[^a-z0-9.+]+/g, " ")
-    .trim();
+  const normalized = normalizeRetailQuantityText(value);
   const multi = normalized.match(/(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*(kg|g|ml|cl|l)\b/);
   const promotion = normalized.match(/\b(\d+)\s*\+\s*(\d+)\b/);
   const match = multi || normalized.match(/(\d+(?:\.\d+)?)\s*(kg|g|ml|cl|l)\b/);

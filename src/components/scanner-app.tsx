@@ -1282,7 +1282,9 @@ export function ScannerApp() {
               ) : null}
             </div>
             </div>
-            <p className={styles.privacyNoteStage}>Frames are analyzed, never stored.</p>
+            <p className={styles.privacyNoteStage}>
+              Sent to Google Gemini for recognition. Not stored by Sugar.no.
+            </p>
           </div>
 
           {visibleTrayIds.length ? (

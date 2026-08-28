@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ScanSource } from "@/lib/types";
+import { hasTrustedBrowserOrigin } from "@/server/request-origin";
 import { createRecognizePost } from "./route";
 
 function request(body: unknown, headers: Record<string, string> = {}) {
@@ -22,6 +23,31 @@ function matchedResponse(source: "camera" | "upload" | "sample-shelf" | "sample-
 }
 
 describe("public recognition route", () => {
+  it("accepts same-origin browser posts and non-browser benchmark clients", () => {
+    expect(hasTrustedBrowserOrigin(request({}, { origin: "https://scanner.example" }))).toBe(true);
+    expect(hasTrustedBrowserOrigin(request({}))).toBe(true);
+    expect(
+      hasTrustedBrowserOrigin(
+        request({}, { "sec-fetch-site": "same-origin", referer: "https://scanner.example/" })
+      )
+    ).toBe(true);
+  });
+
+  it("rejects Chromium-style requests when fetch metadata or referer proves they are cross-site", () => {
+    expect(hasTrustedBrowserOrigin(request({}, { "sec-fetch-site": "cross-site" }))).toBe(false);
+    expect(hasTrustedBrowserOrigin(request({}, { referer: "https://attacker.example/" }))).toBe(false);
+  });
+
+  it("rejects cross-origin browser posts before consuming Gemini capacity", async () => {
+    const recognize = vi.fn();
+    const post = createRecognizePost({ recognize });
+    const response = await post(request({}, { origin: "https://attacker.example" }));
+    expect(response.status).toBe(403);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.json()).toEqual({ error: "untrusted_origin" });
+    expect(recognize).not.toHaveBeenCalled();
+  });
+
   it("serves a sample without a password cookie and never rate-limits samples", async () => {
     const recognize = vi.fn(async (input: { source: "camera" | "upload" | "sample-shelf" | "sample-conveyor" }) =>
       matchedResponse(input.source)

@@ -55,6 +55,28 @@ describe("Open Food Facts matching", () => {
     expect(rankOpenFoodFactsCandidates(input, [product({ quantity: "200 g" })])).toEqual([]);
   });
 
+  it("matches decimal and Russian pack units without changing the SKU quantity", () => {
+    const ranked = rankOpenFoodFactsCandidates(
+      { ...input, packSize: "0,05 кг" },
+      [product({ quantity: "50 g" })]
+    );
+    expect(ranked).toHaveLength(1);
+  });
+
+  it("does not treat a generic label as an exact flavored OFF variant", () => {
+    const ranked = rankOpenFoodFactsCandidates(
+      {
+        brand: "Actimel",
+        name: "Immune Support 100g",
+        variant: "",
+        packSize: "100g",
+        searchTerms: []
+      },
+      [product({ product_name: "Immune Support Blueberry 100g", brands: ["Actimel"], quantity: "100g" })]
+    );
+    expect(ranked).toEqual([]);
+  });
+
   it("turns source-backed protein and sugar into a two-factor reference fit", () => {
     const scored = openFoodFactsToScoredProduct(product());
     expect(scored?.id).toBe("off:7350104401012");

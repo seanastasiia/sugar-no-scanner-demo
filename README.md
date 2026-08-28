@@ -4,7 +4,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 - Production: [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
 - Repository: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
-- Status: public investor demo, not a medical device or production-wide grocery catalog.
+- Status: access-code protected investor demo, not a medical device or production-wide grocery catalog.
 
 ## Current product behavior
 
@@ -41,7 +41,8 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Recognition confidence and nutrition confidence are separate.
 - The app never estimates missing nutrition, converts a serving into per-100 values, or borrows data from another flavor or pack size.
 - A possible retailer match cannot drive a price, purchase link, or fit.
-- Raw images are analyzed in memory and are not written to analytics or Supabase.
+- Camera frames are sent to Google Gemini for recognition. Sugar.no does not write them to analytics, logs or Supabase; the UI names this third-party processing explicitly.
+- The investor build is protected by a 12-hour HTTP-only access session. Recognition, enrichment, offer and analytics POST endpoints also reject cross-origin browser requests, bound request bodies and apply rate limits. The limiter key is a one-way hash of the client address and does not retain the address itself.
 - Commercial availability never changes Sugar.no ranking.
 
 ## Stack
@@ -82,9 +83,10 @@ Core runtime values:
 - `GEMINI_API_KEY`: enables live visual recognition and grounded nutrition fallback.
 - `GEMINI_MODEL`: general Gemini fallback used outside the dedicated live-recognition path.
 - `GEMINI_RECOGNITION_MODEL`: optional live-recognition override; defaults to `gemini-3.5-flash` for the measured shelf speed/recall balance.
+- `GEMINI_RECOGNITION_TIMEOUT_MS`: optional bounded Gemini request timeout (1,000–60,000 ms); defaults to 15,000 ms so a stalled provider call cannot hold the camera indefinitely.
 - `GEMINI_WEB_NUTRITION_MODEL`: optional grounded-search model override.
-- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`: optional catalog/analytics client configuration.
-- `SUPABASE_SERVICE_ROLE_KEY`: server-only seed and managed data operations.
+- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: optional server-only catalog and metadata analytics configuration. The service role key must never be exposed through a `NEXT_PUBLIC_` variable.
+- `DEMO_ACCESS_CODE` and `DEMO_SESSION_SECRET`: server-only values that protect the investor build and sign its 12-hour access session.
 - `COMMIT_SHA`: fallback health metadata for direct Railway uploads.
 
 Never commit real secrets. Railway stores production values.
@@ -153,11 +155,11 @@ npx @railway/cli up --detach \
   --service sugar-no-scanner-demo --environment production
 ```
 
-Then verify `/api/health`, the public root, one critical recognition path and the no-image-storage contract. Docs-only changes do not require a Railway release unless explicitly requested.
+Then verify `/api/health`, the unauthenticated access redirect, a valid access session, one critical recognition path and the no-image-storage contract. Docs-only changes do not require a Railway release unless explicitly requested.
 
 ## Product check
 
-1. Open production in iPhone Safari and allow camera access.
+1. Open production in iPhone Safari, enter the separately provided demo code and allow camera access. The scanner itself must not show a redundant `Private demo` badge.
 2. Confirm the camera is a large rounded card whose live image reaches the rounded top and bottom edges without black bands; `Live camera` is not repeated as a badge, `Show demo` remains outside the card with at least 20 px clearance, and recognition status stays inside it.
 3. Scan a shelf with more than ten visible products and confirm no more than ten distinct results appear.
 4. Confirm verified results gain fit labels and every confidently named product remains in the list after lookup. An unresolved product must stay neutral with no invented fit; an anonymous price-only finding must stay hidden.
@@ -184,6 +186,8 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 - The release contains 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
 - FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
 - Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable pack size or barcode and is capped at 6 seconds; production should persist human-reviewed successful results in Supabase.
+- The access gate limits this release to invited demo viewers, but API limiters are still process-local. Production scale-out needs a shared counter or edge gateway quota in addition to Gemini project budgets.
+- The five-shelf model screen measures unique returned identities, not labeled ground-truth recall. Gemini 3.5 Flash returned 38 identities at 7.1 s mean; a lean schema was faster (4.2 s) but returned fewer and unstable results (30, then 24), so it was rejected. Gemini 3.6 returned 32 at 7.8 s. True precision/recall still requires a labeled physical-store dataset.
 
 ## Supporting docs
 
@@ -202,4 +206,5 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 - [Final accumulated UI publish evidence](docs/test-runs/2026-08-28-accumulated-ui-publish.md)
 - [Camera framing and fit-overlay release evidence](docs/test-runs/2026-08-28-camera-framing-fit-overlays.md)
 - [Physical shelf autofocus and recognition release evidence](docs/test-runs/2026-08-28-physical-shelf-autofocus-recognition.md)
+- [Final release audit and production evidence](docs/test-runs/2026-08-29-final-release-audit.md)
 - [Open and recent bugs](Bugs.md)

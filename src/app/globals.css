@@ -189,6 +189,105 @@ a {
   color: var(--ink);
 }
 
+.access-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+  background: #101116;
+  color: #fff;
+}
+
+.access-card {
+  width: min(100%, 420px);
+  padding: 34px 28px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 30px;
+  background: #181920;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 30%);
+}
+
+.access-card img {
+  display: block;
+  width: auto;
+  height: 42px;
+}
+
+.access-eyebrow {
+  margin: 34px 0 8px;
+  color: #a6a7ad;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.access-card h1 {
+  margin: 0;
+  font-size: clamp(38px, 11vw, 54px);
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.access-copy {
+  margin: 16px 0 26px;
+  color: #c4c5ca;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.access-form {
+  display: grid;
+  gap: 12px;
+}
+
+.access-form label {
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.access-form input,
+.access-form button {
+  min-height: 52px;
+  border-radius: 16px;
+  font: inherit;
+}
+
+.access-form input {
+  width: 100%;
+  border: 1px solid rgb(255 255 255 / 20%);
+  padding: 0 16px;
+  background: #0f1015;
+  color: #fff;
+  font-size: 17px;
+}
+
+.access-form input:focus-visible {
+  outline: 3px solid #409cff;
+  outline-offset: 2px;
+}
+
+.access-form button {
+  border: 0;
+  padding: 0 20px;
+  background: #fff;
+  color: #0d0e12;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.access-form button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.access-error {
+  margin: 0;
+  color: #ff9c93;
+  font-size: 14px;
+  font-weight: 650;
+}
+
 @media (max-width: 420px) {
   .foundation-card {
     padding: 26px 22px;

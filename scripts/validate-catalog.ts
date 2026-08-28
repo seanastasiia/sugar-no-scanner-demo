@@ -54,6 +54,17 @@ const externalProductSchema = z.object({
   checkedAt: z.iso.datetime()
 });
 
+const catalogSourceManifestSchema = z.object({
+  id: z.enum(["rimi_lv", "livin_lv", "open_food_facts"]),
+  displayName: z.string().min(1),
+  layer: z.enum(["retailer_snapshot", "odbl_bulk"]),
+  license: z.string().min(1),
+  attribution: z.string().min(1),
+  termsUrl: z.url().startsWith("https://"),
+  dataUrl: z.url().startsWith("https://"),
+  redistributable: z.boolean()
+});
+
 const retailerSyncReportSchema = z.object({
   source: z.enum(["rimi", "livin"]),
   categories: z.array(z.string().min(1)).min(1).nullable(),
@@ -116,6 +127,30 @@ async function main() {
     externalSnapshot("data/livin-catalog.generated.json", "livin_lv", 6),
     externalSnapshot("data/open-food-facts-lv.generated.json", "open_food_facts", 500)
   ]);
+  const sourceManifests = z.array(catalogSourceManifestSchema).length(3).parse(
+    JSON.parse(await readFile("data/catalog-sources.generated.json", "utf8"))
+  );
+  if (new Set(sourceManifests.map((source) => source.id)).size !== sourceManifests.length) {
+    throw new Error("Catalog source manifests must have unique IDs");
+  }
+  const rimiSource = sourceManifests.find((source) => source.id === "rimi_lv")!;
+  const livinSource = sourceManifests.find((source) => source.id === "livin_lv")!;
+  const offSource = sourceManifests.find((source) => source.id === "open_food_facts")!;
+  if (rimiSource.redistributable || livinSource.redistributable) {
+    throw new Error("Retailer snapshots must remain non-redistributable without permission");
+  }
+  if (!offSource.redistributable || !/ODbL|Open Database License/i.test(offSource.license) || !/CC BY-SA/i.test(offSource.license)) {
+    throw new Error("Open Food Facts manifest must retain database and product-image license notices");
+  }
+  for (const [file, snapshot] of [
+    ["Rimi", rimi],
+    ["Livin", livin],
+    ["Open Food Facts", openFoodFacts]
+  ] as const) {
+    if (snapshot.some((product) => product.imageUrl && !product.imageUrl.startsWith("https://"))) {
+      throw new Error(`${file} snapshot contains a non-HTTPS product image`);
+    }
+  }
   const [rimiReport, livinReport] = await Promise.all([
     completedRetailerSync("data/rimi-catalog-sync-report.generated.json", "rimi", rimi.length),
     completedRetailerSync("data/livin-catalog-sync-report.generated.json", "livin", livin.length)

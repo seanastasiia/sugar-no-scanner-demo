@@ -10,6 +10,7 @@ import {
 } from "@/server/recognition";
 import { createRecognitionRateLimiter, recognitionClientKey, type RateLimiter } from "@/server/rate-limit";
 import { readBoundedJson } from "@/server/request-body";
+import { hasTrustedBrowserOrigin } from "@/server/request-origin";
 
 export const runtime = "nodejs";
 
@@ -107,17 +108,31 @@ export function createResolveProductsPost(overrides: Partial<ResolveRouteDepende
     ...overrides
   };
   return async function post(request: Request) {
+    if (!hasTrustedBrowserOrigin(request)) {
+      return NextResponse.json(
+        { error: "untrusted_origin" },
+        { status: 403, headers: { "cache-control": "no-store" } }
+      );
+    }
     let body: unknown;
     try {
       body = await readBoundedJson(request, MAX_REQUEST_BYTES);
     } catch (error) {
       return NextResponse.json(
         { error: error instanceof Error && error.message === "body_too_large" ? "request_too_large" : "invalid_request" },
-        { status: error instanceof Error && error.message === "body_too_large" ? 413 : 400 }
+        {
+          status: error instanceof Error && error.message === "body_too_large" ? 413 : 400,
+          headers: { "cache-control": "no-store" }
+        }
       );
     }
     const parsed = requestSchema.safeParse(body);
-    if (!parsed.success) return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "invalid_request" },
+        { status: 400, headers: { "cache-control": "no-store" } }
+      );
+    }
     const decision = dependencies.limiter.consume(recognitionClientKey(request));
     if (!decision.allowed) {
       return NextResponse.json(
@@ -147,7 +162,10 @@ export function createResolveProductsPost(overrides: Partial<ResolveRouteDepende
           error: error instanceof Error ? error.message : "unknown"
         })
       );
-      return NextResponse.json({ error: "resolution_failed", imageStored: false }, { status: 502 });
+      return NextResponse.json(
+        { error: "resolution_failed", imageStored: false },
+        { status: 502, headers: { "cache-control": "no-store" } }
+      );
     }
   };
 }
