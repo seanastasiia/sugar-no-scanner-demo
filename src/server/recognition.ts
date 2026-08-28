@@ -1,4 +1,10 @@
-import { GoogleGenAI, ThinkingLevel, createPartFromBase64, createPartFromText } from "@google/genai";
+import {
+  GoogleGenAI,
+  MediaResolution,
+  ThinkingLevel,
+  createPartFromBase64,
+  createPartFromText
+} from "@google/genai";
 import { z } from "zod";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
@@ -24,9 +30,15 @@ import { resolveExternalCatalogProduct } from "./external-catalog";
 import { resolveWebNutritionProduct } from "./web-nutrition";
 import { sampleResponse } from "./demo-scenes";
 
-export const DEFAULT_GEMINI_MODEL = "gemini-3.7-flash";
+export const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
 const DEFAULT_RECOGNITION_THRESHOLD = 0.72;
 const DEFAULT_FOCUSED_RECOGNITION_THRESHOLD = 0.58;
+
+export function recognitionModel(
+  environment: Record<string, string | undefined> = process.env
+): string {
+  return environment.GEMINI_RECOGNITION_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
+}
 
 const rawProviderResponseSchema = z.object({
   detections: z.array(
@@ -566,7 +578,9 @@ export async function recognizeProducts(input: {
 }): Promise<RecognitionResponse> {
   const startedAt = performance.now();
   const sample = sampleResponse(input.source);
-  const model = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+  // Keep visual extraction independent from the slower model used by grounded
+  // web nutrition. Dense shelf recognition is latency-sensitive and bounded.
+  const model = recognitionModel();
   if (sample) {
     return {
       requestId: input.requestId,
@@ -604,7 +618,11 @@ export async function recognizeProducts(input: {
       createPartFromBase64(base64, mimeType)
     ],
     config: {
-      thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+      // Shelf recognition is a bounded visual extraction task. Minimal thinking
+      // returns the structured boxes much faster; exact nutrition matching and
+      // retailer verification still happen in the separate grounded resolver.
+      thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+      mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
       responseMimeType: "application/json",
       responseJsonSchema: {
         type: "object",

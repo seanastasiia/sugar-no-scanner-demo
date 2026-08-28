@@ -10,6 +10,7 @@ import {
   matchCatalogProduct,
   recognitionInstruction,
   recognitionConfidenceThreshold,
+  recognitionModel,
   recognizeProducts,
   resolveVisibleDetections,
   type ProviderDetection
@@ -89,6 +90,13 @@ describe("recognizeProducts", () => {
     expect(result.detections).toEqual([]);
     expect(result.imageStored).toBe(false);
     expect(result.model).toBe(DEFAULT_GEMINI_MODEL);
+  });
+});
+
+describe("recognitionModel", () => {
+  it("uses the low-latency visual model unless a dedicated override is configured", () => {
+    expect(recognitionModel({})).toBe("gemini-3.5-flash-lite");
+    expect(recognitionModel({ GEMINI_RECOGNITION_MODEL: " gemini-3.6-flash " })).toBe("gemini-3.6-flash");
   });
 });
 

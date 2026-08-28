@@ -255,7 +255,7 @@ Never collapse these states. A confident visual identity may still have no exact
 
 **Guardrail:** Use one best-fit-first vertical list for full comparison. Keep the fit attached to each product. Remove repeated legends, generic source accordions and explanations that do not change the next action.
 
-**Regression:** Confirm the first rated row is the highest fit and unresolved products disappear after lookup without a rank or price-only card.
+**Regression:** Confirm the first rated row is the highest fit, while confidently named unresolved products remain as neutral rows and anonymous price-only findings stay hidden.
 
 ### 28. Camera markers must be compact and semantic
 

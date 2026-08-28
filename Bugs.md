@@ -15,6 +15,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-28: a ten-product recognition result shrank to only two products after nutrition lookup.** The server had returned all ten confident identities, but the final UI filter retained only rated rows. Confidently named visual detections now remain visible as neutral unrated rows; anonymous price-only findings and generic placeholders are still hidden.
 - **2026-08-28: fit icons were hard to read over visually busy packaging.** Rated package outlines now include a transparent semantic tint matching the green, yellow or red marker; selected results use a slightly stronger tint while the package remains visible.
 - **2026-08-28: the camera control row sat too close to the rounded media card and repeated a `Live camera` badge.** The redundant live-source badge is removed, the remaining action is right-aligned and phone layouts reserve at least 20 px before the camera frame.
 - **2026-08-28: uploaded photos could inherit the camera aspect ratio and appear stretched.** Saved landscape and portrait media now size the rounded viewport from the uploaded image's real dimensions while staying inside the device viewport.
@@ -38,7 +39,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **2026-08-26: broad Similar options were not guaranteed substitutes.** The block is now fail-closed Better alternatives: same exact type/subcategory/form, equal or better fit, active exact offer, then price and pack-size tie-breaks.
 - **2026-08-26: camera marker colors rendered at inconsistent sizes.** Great, Moderate and Low fit discs share one visual diameter while the package outline remains the touch target.
 - **2026-08-26: scanner surfaces had drifted from the shipped Sugar.no app.** The current UI uses the cool gray canvas, white cards, neutral separators, black hierarchy and semantic fit pills from the supplied iOS screens.
-- **2026-08-26: price-only and identity-only products remained in final comparison.** A source miss now removes the incomplete row and its price/retailer action rather than inventing a fit.
+- **2026-08-26: anonymous price-only findings remained in final comparison.** A source miss now removes the anonymous row and its retailer action rather than inventing a fit; named visual identities remain useful as neutral unrated rows.
 - **2026-08-25: live Gemini boxes drifted onto shelf labels.** Recognition now uses native normalized box coordinates, tighter package instructions and guarded shelf-label association.
 - **2026-08-25: active live-camera work could overwrite Checkout demo.** Source changes abort and ignore stale camera requests before deterministic scenes start.
 

@@ -159,7 +159,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 1. Open production in iPhone Safari and allow camera access.
 2. Confirm the camera is a large rounded card whose live image reaches the rounded top and bottom edges without black bands; `Live camera` is not repeated as a badge, `Show demo` remains outside the card with at least 20 px clearance, and recognition status stays inside it.
 3. Scan a shelf with more than ten visible products and confirm no more than ten distinct results appear.
-4. Confirm verified results gain fit labels and unresolved products disappear after the exact lookup finishes.
+4. Confirm verified results gain fit labels and every confidently named product remains in the list after lookup. An unresolved product must stay neutral with no invented fit; an anonymous price-only finding must stay hidden.
 5. Open Shelf and Checkout demos and expand `View all`.
 6. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
 7. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
@@ -177,7 +177,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 
 ## Known limits
 
-- Latvia-wide coverage is not guaranteed. Private labels, unreadable variants and products without an exact public per-100 table can remain unresolved in recognition; they are hidden from the final comparison rather than shown as price-only or identity-only cards.
+- Latvia-wide nutrition coverage is not guaranteed. Private labels, unreadable variants and products without an exact public per-100 table can remain as clearly unrated visual identities in the comparison. They never receive an invented fit or retailer claim; anonymous price-only findings stay hidden.
 - Real shelf, glare, low-light, moving-belt and price-label accuracy still require a physical store benchmark.
 - Barbora, Rimi and Livin can produce exact offers for their own matched SKUs. The checked-in Rimi layer contains 6,822 complete products after checking all 7,617 pages in the seven approved food and drink categories. Livin contributes 6 complete rows after checking its full 169-URL Latvia sitemap. These snapshots are not a market-wide real-time price engine.
 - The release contains 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
