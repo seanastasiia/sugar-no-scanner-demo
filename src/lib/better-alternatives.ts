@@ -1,3 +1,4 @@
+import { overallMatchPresentation } from "./match-presentation";
 import type { ProductFormat, RetailerOffer, ScoredProduct } from "./types";
 
 type InterchangeableProduct = Pick<
@@ -72,8 +73,13 @@ export function areInterchangeable(current: InterchangeableProduct, candidate: I
   return Boolean(currentKey && currentKey === interchangeabilityKey(candidate));
 }
 
+export function hasGreatFit(product: Pick<ScoredProduct, "matchScore">): boolean {
+  return overallMatchPresentation(product.matchScore).tone === "strong";
+}
+
 /**
  * The UI only exposes alternatives whose exact Barbora offer resolved now.
+ * Every alternative must be a Great fit and no worse than the current item.
  * Equal-fit products are ordered by lower current price and then the closest
  * pack size, keeping commercial data out of the fit itself.
  */
@@ -94,6 +100,7 @@ export function rankAvailableBetterAlternatives(
         slug &&
         offer?.exactSku &&
         candidate.matchScore !== null &&
+        hasGreatFit(candidate) &&
         candidate.matchScore >= currentMatchScore &&
         areInterchangeable(current, candidate)
       );

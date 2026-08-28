@@ -32,7 +32,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - A high-confidence Latvian comma-decimal shelf label can be accepted even when the printed `€` symbol is not readable; numbers printed on a package remain excluded.
 - A crossed-out shelf price and full-width green `Buy cheaper online` action appear only when the exact connected-retailer SKU is currently cheaper. The compact price row and its accessibility copy stay retailer-neutral; the exact destination remains in the purchase link and its accessible label.
 - Exact online offers stay inside the matching product card: the camera-read shelf price is crossed out beside the lower online price, while a full-width action repeats the destination price for a clear one-tap purchase.
-- `Better alternatives` are fail-closed: they must share the same exact product type, full retailer subcategory/form and nutrition basis, have an equal or better Sugar.no fit, and resolve to a current exact Barbora offer. Equal-fit candidates are ordered by lower live price and then the closest pack size. If no true substitute is available, the section is hidden.
+- `Better alternatives` are fail-closed: they must share the same exact product type, full retailer subcategory/form and nutrition basis, have `Great fit` that is no worse than the scanned product, and resolve to a current exact Barbora offer. Equal-fit candidates are ordered by lower live price and then the closest pack size. `Moderate fit`, `Low fit` and unrated products are excluded; if no qualifying substitute is available, the section is hidden.
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
 - The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
 
@@ -165,7 +165,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 7. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
 8. Confirm each overlay tightly follows its package rather than a nearby shelf label.
 9. Move the camera after a result and confirm it remains held until `Scan again`.
-10. Open a rated product and confirm `Better alternatives` contains only the same product type with an equal or better fit and a live price; products without a valid substitute should show no alternatives block.
+10. Open a rated product and confirm `Better alternatives` contains only the same product type with `Great fit` no worse than the source and a live price; `Moderate fit`, `Low fit`, unrated products, and products without a valid substitute should show no alternatives block.
 11. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
 12. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
 13. Scan a product without an exact packshot and confirm its preview thumbnail keeps the package proportions; a little neighboring shelf context is acceptable, but the package must not look stretched.

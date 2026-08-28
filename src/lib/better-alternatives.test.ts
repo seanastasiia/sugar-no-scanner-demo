@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { areInterchangeable, interchangeabilityKey, rankAvailableBetterAlternatives } from "./better-alternatives";
+import { areInterchangeable, hasGreatFit, interchangeabilityKey, rankAvailableBetterAlternatives } from "./better-alternatives";
 import type { RetailerOffer, ScoredProduct } from "./types";
 
 function product(overrides: Partial<ScoredProduct> & Pick<ScoredProduct, "id" | "name">): ScoredProduct {
@@ -64,18 +64,37 @@ describe("interchangeabilityKey", () => {
 });
 
 describe("rankAvailableBetterAlternatives", () => {
-  it("requires a live exact offer and a fit no worse than the current product", () => {
+  it("requires a live exact offer, Great fit and a fit no worse than the current product", () => {
     const current = product({ id: "current", name: "Sinepes 200g", matchScore: 55 });
     const better = product({ id: "better", name: "Dižonas sinepes 210g", matchScore: 100 });
+    const moderate = product({ id: "moderate", name: "Maigas sinepes 200g", matchScore: 60 });
     const worse = product({ id: "worse", name: "Saldās sinepes 200g", matchScore: 20 });
     const unavailable = product({ id: "unavailable", name: "Graudainās sinepes 180g", matchScore: 100 });
     const result = rankAvailableBetterAlternatives(
       current,
-      [worse, unavailable, better],
-      { better: offer("better", 1.49), worse: offer("worse", 0.99), unavailable: null },
+      [worse, moderate, unavailable, better],
+      {
+        better: offer("better", 1.49),
+        moderate: offer("moderate", 0.79),
+        worse: offer("worse", 0.99),
+        unavailable: null
+      },
       (candidate) => candidate.id
     );
     expect(result.map((candidate) => candidate.id)).toEqual(["better"]);
+  });
+
+  it("hides the block when no Great fit substitute is available", () => {
+    const current = product({ id: "current", name: "Sinepes 200g", matchScore: 55 });
+    const moderate = product({ id: "moderate", name: "Maigas sinepes 200g", matchScore: 60 });
+    expect(
+      rankAvailableBetterAlternatives(
+        current,
+        [moderate],
+        { moderate: offer("moderate", 0.79) },
+        (candidate) => candidate.id
+      )
+    ).toEqual([]);
   });
 
   it("uses lower price and then nearest pack size only when fit is equal", () => {
@@ -92,5 +111,18 @@ describe("rankAvailableBetterAlternatives", () => {
       rankAvailableBetterAlternatives(current, [expensive, cheapFar, cheapNear], offers, (candidate) => candidate.id)
         .map((candidate) => candidate.id)
     ).toEqual(["cheap-near", "cheap-far", "expensive"]);
+  });
+});
+
+describe("hasGreatFit", () => {
+  it.each([
+    [null, false],
+    [49, false],
+    [50, false],
+    [66, false],
+    [67, true],
+    [100, true]
+  ])("classifies score %s with the shared Sugar.no fit thresholds", (matchScore, expected) => {
+    expect(hasGreatFit({ matchScore })).toBe(expected);
   });
 });

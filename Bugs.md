@@ -15,6 +15,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-28: Better alternatives could include non-green fit ratings.** Alternative ranking now requires the shared Sugar.no `Great fit` threshold in addition to strict interchangeability, no-worse fit and a current exact retailer offer. `Moderate fit`, `Low fit` and unrated candidates are excluded, and an empty alternatives section stays hidden.
 - **2026-08-28: fallback product thumbnails stretched tight shelf crops into portrait cards.** Scene-derived previews now expand around the detected package and calculate an aspect-correct crop, preserving the original photo proportions even when neighboring products remain visible.
 - **2026-08-28: camera media still filled the entire browser canvas and did not match the Sugar.no iOS camera.** Live, upload and deterministic demo media now share one inset rounded viewport with black gutters; overlay geometry is measured against that viewport so product boxes remain aligned across iPhone portrait and landscape sizes.
 - **2026-08-28: compact prices repeated `Barbora online`, including in hidden accessibility copy.** Exact offers now show only their price in the compact row; both visible and accessibility copy are retailer-neutral, while the purchase link still names its destination for assistive technology.

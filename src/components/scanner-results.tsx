@@ -134,7 +134,7 @@ export function ProductResult({
           <div className={styles.sectionHeading}>
             <div>
               <p>Better alternatives</p>
-              <h3 id={`alternatives-${product.id}`}>Same product type · equal or better fit</h3>
+              <h3 id={`alternatives-${product.id}`}>Same product type · Great fit only</h3>
             </div>
           </div>
           <div className={styles.alternativeList}>

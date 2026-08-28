@@ -68,7 +68,7 @@ describe("broad Barbora nutrition snapshot", () => {
     });
   });
 
-  it("keeps alternatives inside the same exact type with a fit no worse than the source product", () => {
+  it("keeps Great fit alternatives inside the same exact type with a fit no worse than the source product", () => {
     const result = getIndexedBarboraProductWithAlternatives("3-graudu-parslas-extra-line-400-g", 4);
     expect(result?.product.id).toBe("barbora:3-graudu-parslas-extra-line-400-g");
     expect(result?.alternatives.length).toBeGreaterThan(0);
@@ -77,6 +77,7 @@ describe("broad Barbora nutrition snapshot", () => {
         (candidate) =>
           candidate.category === result.product.category &&
           candidate.nutritionBasis === result.product.nutritionBasis &&
+          candidate.matchScore! >= 67 &&
           candidate.matchScore! >= result.product.matchScore! &&
           candidate.id !== result.product.id
       )

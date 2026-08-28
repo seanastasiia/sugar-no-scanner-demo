@@ -1,5 +1,5 @@
 import type { ProductRecord, RatingSignal, ScoredProduct } from "./types";
-import { areInterchangeable } from "./better-alternatives";
+import { areInterchangeable, hasGreatFit } from "./better-alternatives";
 
 type CriterionScores = NonNullable<ScoredProduct["criterionScores"]>;
 
@@ -206,6 +206,7 @@ export function rankSimilarProducts(
       (candidate) =>
         candidate.id !== current.id &&
         candidate.matchScore !== null &&
+        hasGreatFit(candidate) &&
         candidate.matchScore >= currentMatchScore &&
         areInterchangeable(current, candidate) &&
         candidate.retailerUrl.startsWith("https://barbora.lv/produkti/")

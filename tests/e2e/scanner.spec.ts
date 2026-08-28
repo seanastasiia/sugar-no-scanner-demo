@@ -375,8 +375,11 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await page.screenshot({ path: "test-results/shelf-results-mobile.png" });
   await expect(resultsDialog.getByLabel("Sugar.no badge")).toHaveCount(0);
   await expect(resultsDialog.getByText("Better alternatives", { exact: true })).toBeVisible();
-  const betterAlternatives = resultsDialog.getByRole("region", { name: "Same product type · equal or better fit" });
+  const betterAlternatives = resultsDialog.getByRole("region", { name: "Same product type · Great fit only" });
   await expect(betterAlternatives.getByRole("link", { name: /Buy online .* for €1\.49/ })).toHaveCount(2);
+  await expect(betterAlternatives.getByText("Great fit", { exact: true })).toHaveCount(2);
+  await expect(betterAlternatives.getByText("Moderate fit", { exact: true })).toHaveCount(0);
+  await expect(betterAlternatives.getByText("Low fit", { exact: true })).toHaveCount(0);
   await expect(page.getByText("View at Barbora · check current price", { exact: true })).toHaveCount(0);
   await ranking.getByRole("button", { name: /BAREBELLS.*Lemon Cheesecake/i }).click();
   const cheaperAlternative = betterAlternatives.getByRole("link", { name: /Buy cheaper online .* for €1\.49/ });

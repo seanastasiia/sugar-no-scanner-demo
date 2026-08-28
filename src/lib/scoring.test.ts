@@ -221,7 +221,7 @@ describe("compareFairCohorts", () => {
 });
 
 describe("rankSimilarProducts", () => {
-  it("keeps only interchangeable Barbora products with an equal or better fit", () => {
+  it("keeps only interchangeable Barbora products with Great fit no worse than the source", () => {
     const scored = scoreCatalog([
       product("current", 20, null, 8, "bar"),
       product("better", 30, null, 2, "bar"),

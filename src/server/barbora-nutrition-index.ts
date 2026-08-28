@@ -1,6 +1,6 @@
 import snapshot from "../../data/barbora-nutrition-index.generated.json";
 import activeFoodSnapshot from "../../data/barbora-food-product-index.generated.json";
-import { areInterchangeable } from "@/lib/better-alternatives";
+import { areInterchangeable, hasGreatFit } from "@/lib/better-alternatives";
 import { scoreBarboraProduct } from "@/lib/scoring";
 import type { ScoredProduct } from "@/lib/types";
 
@@ -120,6 +120,7 @@ export function rankIndexedBetterAlternatives(
       (candidate) =>
         candidate.ratingStatus === "complete" &&
         candidate.matchScore !== null &&
+        hasGreatFit(candidate) &&
         candidate.matchScore >= currentMatchScore &&
         areInterchangeable(product, candidate)
     )
