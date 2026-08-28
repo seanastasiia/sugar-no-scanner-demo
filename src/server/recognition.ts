@@ -30,7 +30,7 @@ import { resolveExternalCatalogProduct } from "./external-catalog";
 import { resolveWebNutritionProduct } from "./web-nutrition";
 import { sampleResponse } from "./demo-scenes";
 
-export const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
+export const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
 const DEFAULT_RECOGNITION_THRESHOLD = 0.72;
 const DEFAULT_FOCUSED_RECOGNITION_THRESHOLD = 0.58;
 

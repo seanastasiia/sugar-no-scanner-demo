@@ -15,6 +15,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-28: live Safari could submit a soft startup frame and Flash-Lite returned no products on a real shelf.** The camera now requests a 1080p/30 fps rear feed, enables continuous focus when supported, waits for two stable post-focus frames, blocks Safari's native video overlay and uses Gemini 3.5 Flash with minimal thinking. On the reported Adazu shelf photo, the provider result changed from 0 detections in 1.5 seconds to 5 detections in 4.7 seconds.
 - **2026-08-28: a ten-product recognition result shrank to only two products after nutrition lookup.** The server had returned all ten confident identities, but the final UI filter retained only rated rows. Confidently named visual detections now remain visible as neutral unrated rows; anonymous price-only findings and generic placeholders are still hidden.
 - **2026-08-28: fit icons were hard to read over visually busy packaging.** Rated package outlines now include a transparent semantic tint matching the green, yellow or red marker; selected results use a slightly stronger tint while the package remains visible.
 - **2026-08-28: the camera control row sat too close to the rounded media card and repeated a `Live camera` badge.** The redundant live-source badge is removed, the remaining action is right-aligned and phone layouts reserve at least 20 px before the camera frame.

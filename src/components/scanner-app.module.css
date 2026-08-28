@@ -261,6 +261,10 @@
   background: #000000;
 }
 
+.video {
+  pointer-events: none;
+}
+
 .cameraViewport::after {
   position: absolute;
   z-index: 1;

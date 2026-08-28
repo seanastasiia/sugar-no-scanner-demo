@@ -10,7 +10,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 - The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
 - The live feed and saved/demo scenes sit inside a large rounded camera viewport on a black scanner canvas. Live and uploaded media use their native aspect ratio, so portrait and landscape images reach the rounded edges without stretching or artificial black bands.
-- Camera starts after permission without requiring a shutter action.
+- Camera starts after permission without requiring a shutter action. Mobile Safari requests the rear 1920x1080 feed at up to 30 fps, asks for continuous focus when the device exposes it, and waits for two stable post-focus frames before sending the first image so a soft startup frame is not analyzed.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
 - Live and saved-photo views omit the redundant source badge. The camera keeps only `Show demo`, saved photos keep only `Back to live`, and the camera card begins at least 20 px below that control row on phone layouts.
 - A scan keeps at most ten distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
@@ -80,7 +80,8 @@ See `.env.example` for the complete list.
 Core runtime values:
 
 - `GEMINI_API_KEY`: enables live visual recognition and grounded nutrition fallback.
-- `GEMINI_MODEL`: optional visual-model override.
+- `GEMINI_MODEL`: general Gemini fallback used outside the dedicated live-recognition path.
+- `GEMINI_RECOGNITION_MODEL`: optional live-recognition override; defaults to `gemini-3.5-flash` for the measured shelf speed/recall balance.
 - `GEMINI_WEB_NUTRITION_MODEL`: optional grounded-search model override.
 - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`: optional catalog/analytics client configuration.
 - `SUPABASE_SERVICE_ROLE_KEY`: server-only seed and managed data operations.
@@ -200,4 +201,5 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 - [Great-fit-only alternatives release evidence](docs/test-runs/2026-08-28-great-fit-alternatives.md)
 - [Final accumulated UI publish evidence](docs/test-runs/2026-08-28-accumulated-ui-publish.md)
 - [Camera framing and fit-overlay release evidence](docs/test-runs/2026-08-28-camera-framing-fit-overlays.md)
+- [Physical shelf autofocus and recognition release evidence](docs/test-runs/2026-08-28-physical-shelf-autofocus-recognition.md)
 - [Open and recent bugs](Bugs.md)

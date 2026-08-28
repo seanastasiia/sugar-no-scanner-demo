@@ -68,6 +68,10 @@ import styles from "./scanner-app.module.css";
 type CameraState = "idle" | "requesting" | "live" | "denied" | "error";
 type RecognitionState = "idle" | "scanning" | "matched" | "retained" | "not_sure" | "unavailable" | "rate_limited" | "error";
 
+const CAMERA_AUTOFOCUS_SETTLE_MS = 850;
+const CAMERA_SCAN_INTERVAL_MS = 350;
+const CAMERA_SCAN_KICKOFF_MS = 900;
+
 const shelfIds = [
   "prot-bat-sal-riekst-saldin-barebells-55-g",
   "prot-bat-barebells-lemon-cheesecake-55-g",
@@ -199,6 +203,8 @@ export function ScannerApp() {
   const recognitionAbortRef = useRef<AbortController | null>(null);
   const enrichmentAbortRef = useRef<AbortController | null>(null);
   const lowResFrameRef = useRef<Uint8ClampedArray | null>(null);
+  const cameraReadyAtRef = useRef(0);
+  const stableFrameCountRef = useRef(0);
   const focusRetryRef = useRef(false);
   const shelfCompletionRetryRef = useRef(false);
   const provisionalResponseRef = useRef<RecognitionResponse | null>(null);
@@ -648,6 +654,8 @@ export function ScannerApp() {
     streamRef.current?.getTracks().forEach((trackItem) => trackItem.stop());
     streamRef.current = null;
     lowResFrameRef.current = null;
+    cameraReadyAtRef.current = 0;
+    stableFrameCountRef.current = 0;
     focusRetryRef.current = false;
     shelfCompletionRetryRef.current = false;
     provisionalResponseRef.current = null;
@@ -657,6 +665,8 @@ export function ScannerApp() {
   const captureStableFrame = useCallback(() => {
     const video = videoRef.current;
     if (!video || video.readyState < 2 || inFlightRef.current) return;
+    const now = Date.now();
+    if (now - cameraReadyAtRef.current < CAMERA_AUTOFOCUS_SETTLE_MS) return;
     const lowCanvas = document.createElement("canvas");
     lowCanvas.width = 64;
     lowCanvas.height = 48;
@@ -666,16 +676,23 @@ export function ScannerApp() {
     const current = lowContext.getImageData(0, 0, 64, 48).data;
     const previous = lowResFrameRef.current;
     lowResFrameRef.current = new Uint8ClampedArray(current);
-    let difference = 0;
-    if (previous) {
-      for (let index = 0; index < current.length; index += 16) {
-        difference += Math.abs(current[index] - previous[index]);
-      }
-      difference /= current.length / 16;
+    if (!previous) {
+      stableFrameCountRef.current = 0;
+      return;
     }
-    const now = Date.now();
-    const stableEnough = !previous || difference < 11;
-    if (!stableEnough || now - lastCaptureRef.current < 2_100) return;
+    let difference = 0;
+    for (let index = 0; index < current.length; index += 16) {
+      difference += Math.abs(current[index] - previous[index]);
+    }
+    difference /= current.length / 16;
+    if (difference >= 11) {
+      stableFrameCountRef.current = 0;
+      return;
+    }
+    stableFrameCountRef.current += 1;
+    if (stableFrameCountRef.current < 2) return;
+    if (now - lastCaptureRef.current < 2_100) return;
+    stableFrameCountRef.current = 0;
     lastCaptureRef.current = now;
 
     const canvas = document.createElement("canvas");
@@ -733,7 +750,10 @@ export function ScannerApp() {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera API unavailable");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: { ideal: "environment" }
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          frameRate: { ideal: 30, max: 30 }
         },
         audio: false
       });
@@ -748,6 +768,19 @@ export function ScannerApp() {
       if (!videoRef.current) throw new Error("Camera preview is not ready");
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack?.getCapabilities && videoTrack.applyConstraints) {
+        const capabilities = videoTrack.getCapabilities() as MediaTrackCapabilities & { focusMode?: string[] };
+        if (capabilities.focusMode?.includes("continuous")) {
+          try {
+            await videoTrack.applyConstraints({
+              advanced: [{ focusMode: "continuous" } as MediaTrackConstraintSet]
+            });
+          } catch {
+            // Continuous focus is a best-effort enhancement on supported mobile browsers.
+          }
+        }
+      }
       if (videoRef.current.videoWidth && videoRef.current.videoHeight) {
         setMediaDimensions({ width: videoRef.current.videoWidth, height: videoRef.current.videoHeight });
       }
@@ -756,8 +789,10 @@ export function ScannerApp() {
       setStatusMessage("Point at several products and hold steady");
       track("scan_started", "camera");
       lastCaptureRef.current = 0;
-      scanKickoffRef.current = setTimeout(captureStableFrame, 120);
-      scanTimerRef.current = setInterval(captureStableFrame, 450);
+      cameraReadyAtRef.current = Date.now();
+      stableFrameCountRef.current = 0;
+      scanKickoffRef.current = setTimeout(captureStableFrame, CAMERA_SCAN_KICKOFF_MS);
+      scanTimerRef.current = setInterval(captureStableFrame, CAMERA_SCAN_INTERVAL_MS);
     } catch (error) {
       const denied = error instanceof DOMException && ["NotAllowedError", "SecurityError"].includes(error.name);
       setCameraState(denied ? "denied" : "error");
@@ -784,6 +819,8 @@ export function ScannerApp() {
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
     scanTimerRef.current = null;
     lowResFrameRef.current = null;
+    cameraReadyAtRef.current = Date.now();
+    stableFrameCountRef.current = 0;
     focusRetryRef.current = false;
     shelfCompletionRetryRef.current = false;
     provisionalResponseRef.current = null;
@@ -807,8 +844,8 @@ export function ScannerApp() {
       .play()
       .then(() => {
         track("scan_started", "camera");
-        scanKickoffRef.current = setTimeout(captureStableFrame, 120);
-        scanTimerRef.current = setInterval(captureStableFrame, 450);
+        scanKickoffRef.current = setTimeout(captureStableFrame, CAMERA_SCAN_KICKOFF_MS);
+        scanTimerRef.current = setInterval(captureStableFrame, CAMERA_SCAN_INTERVAL_MS);
       })
       .catch(() => void startCamera());
   }, [captureStableFrame, source, startCamera, track]);

@@ -95,8 +95,15 @@ describe("recognizeProducts", () => {
 
 describe("recognitionModel", () => {
   it("uses the low-latency visual model unless a dedicated override is configured", () => {
-    expect(recognitionModel({})).toBe("gemini-3.5-flash-lite");
+    expect(recognitionModel({})).toBe("gemini-3.5-flash");
+    expect(recognitionModel({ GEMINI_MODEL: " gemini-3.7-flash " })).toBe("gemini-3.5-flash");
     expect(recognitionModel({ GEMINI_RECOGNITION_MODEL: " gemini-3.6-flash " })).toBe("gemini-3.6-flash");
+    expect(
+      recognitionModel({
+        GEMINI_MODEL: "gemini-3.7-flash",
+        GEMINI_RECOGNITION_MODEL: "gemini-3.6-flash"
+      })
+    ).toBe("gemini-3.6-flash");
   });
 });
 

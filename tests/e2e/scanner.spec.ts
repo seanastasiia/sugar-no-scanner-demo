@@ -242,7 +242,12 @@ async function mockLiveCamera(page: Page) {
     };
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
-      value: { getUserMedia: async () => canvas.captureStream(5) }
+      value: {
+        getUserMedia: async (constraints: MediaStreamConstraints) => {
+          (window as Window & { __cameraConstraints?: MediaStreamConstraints }).__cameraConstraints = constraints;
+          return canvas.captureStream(5);
+        }
+      }
     });
   });
 }
@@ -1218,12 +1223,26 @@ test("live camera applies each online result without waiting for the slowest pro
       viewportRatio: viewportRect.width / viewportRect.height,
       mediaRatio: video.videoWidth / video.videoHeight,
       objectFit: getComputedStyle(video).objectFit,
+      pointerEvents: getComputedStyle(video).pointerEvents,
       borderRadius: parseFloat(getComputedStyle(viewport).borderRadius)
     };
   });
   expect(previewGeometry.viewportRatio).toBeCloseTo(previewGeometry.mediaRatio, 2);
   expect(previewGeometry.objectFit).toBe("contain");
+  expect(previewGeometry.pointerEvents).toBe("none");
   expect(previewGeometry.borderRadius).toBeGreaterThanOrEqual(26);
+  const cameraConstraints = await page.evaluate(
+    () => (window as Window & { __cameraConstraints?: MediaStreamConstraints }).__cameraConstraints
+  );
+  expect(cameraConstraints).toMatchObject({
+    audio: false,
+    video: {
+      facingMode: { ideal: "environment" },
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
+      frameRate: { ideal: 30, max: 30 }
+    }
+  });
   const preview = page.getByLabel("Product result preview");
   await expect(preview.getByText("Checking online…", { exact: true })).toHaveCount(1, { timeout: 5_000 });
   await expect(preview.getByText("Low fit", { exact: true })).toBeVisible();
