@@ -13,6 +13,7 @@ Candidate commit: `4ff6234ef634ae7b0b859caf13435511fb0b33c6`
   - Next.js production build: passed.
 - `npx playwright test tests/e2e/scanner.spec.ts --grep "sample shelf photo highlights|a rated product receives an honest price comparison"`: 2 Mobile Safari tests passed.
 - Regression assertions confirm that no compact price has visible or accessibility text containing `Barbora online`; retailer-neutral labels use `Online price €…`.
+- Railway CLI deployment `8b004b85-7129-4c9d-8ceb-0caec36636aa`: `SUCCESS`; the subsequent GitHub-main deployment is the production source-of-truth check.
 
 ## Product check
 
