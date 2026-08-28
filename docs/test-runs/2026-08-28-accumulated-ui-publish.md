@@ -1,7 +1,9 @@
 # Accumulated UI publish check
 
-Date: 2026-08-28  
-Tested code commit: `e2c3f654870db5029f286bb642d6c129e0ccedcd`  
+Date: 2026-08-28
+
+Tested code commit: `e2c3f654870db5029f286bb642d6c129e0ccedcd`
+
 Target: Railway production, Mobile Safari-first
 
 ## Change
