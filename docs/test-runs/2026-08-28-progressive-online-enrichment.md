@@ -39,4 +39,10 @@ Production still submitted all recognized products as one enrichment batch. The 
 - Deterministic shelf recognition: HTTP 200 in 304 ms, four detections and `imageStored: false`.
 - Exact-size Pringles enrichment: HTTP 200 in 805 ms; the same identity without a pack size reproduced the regression at 17.6 seconds before the fail-fast fix.
 
-Final commit, deployment and post-fix latency are recorded after the follow-up release.
+## Final production evidence
+
+- Code commit: `9e06baba158bb75e83a9696cbce9e95f5ba9ec61`.
+- Railway deployment: `83adcdd8-72db-430b-86fe-ede507a04b17` (`SUCCESS`).
+- `/api/health`: HTTP 200, exact code commit and 9,707 active food products.
+- Root: HTTP 200 in 180 ms.
+- The same incomplete Pringles identity that took 17.6 seconds before the fix returned in 348 ms after deploy (`serverLatencyMs: 176`, `matchKind: visual_only`, `imageStored: false`).
