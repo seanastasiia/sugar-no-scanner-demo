@@ -39,7 +39,9 @@ The selected model returned five distinct visible Adazu variants at 0.95 confide
 - `git diff --check`: passed.
 - `npm run verify`: passed — ESLint, TypeScript, 169 Vitest tests and the Next.js production build.
 - `CI=1 npm run test:e2e`: passed — 25/25 Mobile Safari scenarios, including camera sizing, multi-product shelves, progressive enrichment, privacy and accessibility.
-- Railway deployment and production smoke are recorded after the release reaches `main`.
+- GitHub `main`: `eb44617ef829805e1fb496f6694e089d4eb3f3ed`.
+- Railway deployment `78c5bc32-d497-4b6e-82df-ed29485aff54`: success; `/api/health` returned `status: ok` and the same commit SHA.
+- Production recognition smoke on the reported real-store Adazu photo: HTTP 200, 7 unique products, 0 duplicates, 4.278 s provider latency and 6.290 s total round trip; `imageStored: false`.
 
 ## Product verification after deploy
 
