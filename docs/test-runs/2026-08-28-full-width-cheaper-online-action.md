@@ -24,3 +24,10 @@
 3. Confirm its green `Buy cheaper online` action fills the product card width and shows the lower price at the right.
 4. Confirm products without a verified saving use the neutral `Buy online` action.
 5. Confirm `Barbora online` is not displayed beside product prices.
+
+## Deployment evidence
+
+- GitHub `main`: code and verification commits pushed successfully.
+- Railway direct CLI deployment: `38f56b33-1f9d-44c0-ade6-7af4872a7bf8`, status `SUCCESS`.
+- Railway health check: `GET /api/health` returned HTTP 200 with `status: ok`.
+- Railway runtime log: Next.js standalone server started successfully and reported ready on port 8080.
