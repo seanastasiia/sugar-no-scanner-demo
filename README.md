@@ -199,4 +199,5 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 - [Aspect-correct thumbnail release evidence](docs/test-runs/2026-08-28-thumbnail-context-crop.md)
 - [Great-fit-only alternatives release evidence](docs/test-runs/2026-08-28-great-fit-alternatives.md)
 - [Final accumulated UI publish evidence](docs/test-runs/2026-08-28-accumulated-ui-publish.md)
+- [Camera framing and fit-overlay release evidence](docs/test-runs/2026-08-28-camera-framing-fit-overlays.md)
 - [Open and recent bugs](Bugs.md)
