@@ -188,4 +188,5 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 - [Partner data request drafts](docs/partner-data-requests.md)
 - [Week-one lessons](docs/week-one-lessons.md)
 - [Latest release evidence](docs/test-runs/2026-08-27-scanner-ui-catalog-completion.md)
+- [Rounded camera viewport release evidence](docs/test-runs/2026-08-28-rounded-camera-viewport.md)
 - [Open and recent bugs](Bugs.md)
