@@ -256,10 +256,10 @@ export function CompactProductPrice({
   const cheaperOnline = Boolean(offer && shelfPrice && offer.price < shelfPrice.amount);
   const shelfPriceLabel = shelfPrice?.observedText.startsWith("Demo shelf price") ? "Demo shelf price" : "Shelf price";
   const accessibleLabel = cheaperOnline && offer
-    ? `${shelfPriceLabel} €${shelfPrice!.amount.toFixed(2)}, ${offer.retailer} €${offer.price.toFixed(2)}, cheaper at ${offer.retailer}`
+    ? `${shelfPriceLabel} €${shelfPrice!.amount.toFixed(2)}, online price €${offer.price.toFixed(2)}, cheaper online`
     : shelfPrice
       ? `${shelfPriceLabel} €${shelfPrice.amount.toFixed(2)}`
-      : `${offer?.retailer} online €${offer?.price.toFixed(2)}`;
+      : `Online price €${offer?.price.toFixed(2)}`;
 
   return (
     <div className={styles.compactProductPrice} role="group" aria-label={accessibleLabel}>

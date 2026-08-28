@@ -303,7 +303,7 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(shelfPreview.getByText(/^#[1-4]$/)).toHaveCount(4);
   await expect(shelfPreview.getByText(/^Sugar \d+(?:\.\d+)?g$/)).toHaveCount(4);
   await expect(shelfPreview.getByRole("button").first()).toHaveAccessibleName(/^Rank 1,.*Sugar .* grams per 100 grams$/);
-  const shelfDeal = shelfPreview.getByLabel("Demo shelf price €3.49, Barbora €2.79, cheaper at Barbora");
+  const shelfDeal = shelfPreview.getByLabel("Demo shelf price €3.49, online price €2.79, cheaper online");
   await expect(shelfDeal).toBeVisible();
   await expect(shelfDeal.getByText("€3.49", { exact: true })).toHaveCSS("text-decoration-line", "line-through");
   const shelfBuy = shelfPreview.getByRole("link", { name: /Buy .* cheaper at Barbora for €2\.79/ });
@@ -400,6 +400,7 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   const shelfOfferCardBox = await shelfOffer.locator("..").boundingBox();
   expect(shelfOfferBox?.width ?? 0).toBeGreaterThan((shelfOfferCardBox?.width ?? 0) * 0.9);
   await expect(ranking.getByText("Barbora online", { exact: true })).toHaveCount(0);
+  await expect(ranking.locator('[aria-label*="Barbora online"]')).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await expect(page.getByText("Outlines show products with both protein and total sugar available.", { exact: true })).toHaveCount(0);
   await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g/).first()).toBeVisible();
@@ -1449,7 +1450,7 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
   await expect(page.getByText("Saved shelf or checkout photo", { exact: true })).toHaveCount(0);
   await expect(
-    page.getByLabel("Product result preview").getByLabel("Shelf price €1.69, Barbora €0.99, cheaper at Barbora")
+    page.getByLabel("Product result preview").getByLabel("Shelf price €1.69, online price €0.99, cheaper online")
   ).toBeVisible();
   const compactBuy = page.getByLabel("Product result preview").getByRole("link", {
     name: /Buy Zero Peach.*cheaper at Barbora for €0.99/
@@ -1474,7 +1475,7 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await expect(inlineOffer).toContainText("Buy cheaper online");
   await expect(inlineOffer).toContainText("€0.99");
   await expect(inlineOffer.getByText("€1.69 shelf", { exact: true })).toHaveCount(0);
-  const expandedPrice = page.getByLabel("Shelf price €1.69, Barbora €0.99, cheaper at Barbora").last();
+  const expandedPrice = page.getByLabel("Shelf price €1.69, online price €0.99, cheaper online").last();
   await expect(expandedPrice.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "line-through");
   await expect(expandedPrice.getByText("€0.99", { exact: true })).toBeVisible();
   expect((await inlineOffer.boundingBox())?.height).toBeGreaterThanOrEqual(44);
@@ -1510,6 +1511,8 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await expect(onlineOnlyOffer).toContainText("Buy online");
   await expect(onlineOnlyOffer).toContainText("€0.99");
   await expect(page.getByText("Barbora online", { exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("Online price €0.99")).toBeVisible();
+  await expect(page.locator('[aria-label*="Barbora online"]')).toHaveCount(0);
 });
 
 test("an exact Barbora food gets an on-demand two-factor Sugar.no fit", async ({ page }) => {

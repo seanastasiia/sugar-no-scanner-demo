@@ -28,7 +28,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
 - Product overlays use Gemini's native `box2d [ymin, xmin, ymax, xmax]` coordinates and exclude shelf labels and neighboring packages from the product box.
 - A high-confidence Latvian comma-decimal shelf label can be accepted even when the printed `€` symbol is not readable; numbers printed on a package remain excluded.
-- A crossed-out shelf price and full-width green `Buy cheaper online` action appear only when the exact connected-retailer SKU is currently cheaper. The visible price row stays retailer-neutral; the exact destination remains in the link and its accessible label.
+- A crossed-out shelf price and full-width green `Buy cheaper online` action appear only when the exact connected-retailer SKU is currently cheaper. The compact price row and its accessibility copy stay retailer-neutral; the exact destination remains in the purchase link and its accessible label.
 - Exact online offers stay inside the matching product card: the camera-read shelf price is crossed out beside the lower online price, while a full-width action repeats the destination price for a clear one-tap purchase.
 - `Better alternatives` are fail-closed: they must share the same exact product type, full retailer subcategory/form and nutrition basis, have an equal or better Sugar.no fit, and resolve to a current exact Barbora offer. Equal-fit candidates are ordered by lower live price and then the closest pack size. If no true substitute is available, the section is hidden.
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
