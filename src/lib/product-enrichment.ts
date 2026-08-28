@@ -1,42 +1,5 @@
 import type { ProductDetection } from "@/lib/types";
-
-function detectionResolutionRank(detection: ProductDetection): number {
-  if (detection.inlineProduct || detection.catalogProductId) return 3;
-  if (detection.identity?.matchKind && detection.identity.matchKind !== "visual_only") return 2;
-  return 1;
-}
-
-function mergeEnrichedDetection(
-  initial: ProductDetection,
-  resolved: ProductDetection | undefined
-): ProductDetection {
-  if (!resolved) return initial;
-  const preferred = detectionResolutionRank(resolved) >= detectionResolutionRank(initial) ? resolved : initial;
-  const mergedIdentity = preferred.identity
-    ? {
-        ...initial.identity,
-        ...preferred.identity,
-        variant: preferred.identity.variant || initial.identity?.variant || null,
-        packSize: preferred.identity.packSize || initial.identity?.packSize || null,
-        category: preferred.identity.category || initial.identity?.category || null
-      }
-    : initial.identity;
-  return {
-    ...initial,
-    ...preferred,
-    identity: mergedIdentity,
-    shelfPrice: preferred.shelfPrice || initial.shelfPrice || null,
-    retailerOffer: preferred.retailerOffer || initial.retailerOffer || null,
-    inlineProduct: preferred.inlineProduct || initial.inlineProduct || null
-  };
-}
-
-export function mergeEnrichedDetections(
-  initialDetections: ProductDetection[],
-  resolvedDetections: ProductDetection[]
-): ProductDetection[] {
-  return initialDetections.map((initial, index) => mergeEnrichedDetection(initial, resolvedDetections[index]));
-}
+import { mergeEnrichedDetections } from "@/lib/detection-merge";
 
 export function mergeProgressiveEnrichment(
   currentDetections: ProductDetection[],
@@ -45,7 +8,7 @@ export function mergeProgressiveEnrichment(
 ): ProductDetection[] {
   return currentDetections.map((current) =>
     current.productId === requestedDetection.productId
-      ? mergeEnrichedDetection(current, resolvedDetection)
+      ? mergeEnrichedDetections([current], resolvedDetection ? [resolvedDetection] : [])[0]
       : current
   );
 }
