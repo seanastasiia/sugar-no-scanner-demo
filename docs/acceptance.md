@@ -43,7 +43,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Permission denied | Mocked WebKit browser scenario verifies explanation, retry and continued access to `Show demo` | Pass locally |
 | Saved-image fallback | Client resize and provider-unavailable state tested | Pass locally |
 | Shelf-price comparison | UI regression proves a trusted €1.69 shelf price is crossed out inside the matching product row only for an exact €0.99 Barbora match; the former standalone price-comparison block is absent | Pass as logic |
-| Per-card online purchase | Every exact current retailer offer owns its `Buy online` action inside the matching compact/expanded product card. The copy changes to `Buy cheaper` only when a trusted physical shelf price is higher; possible matches expose no action | Pass locally |
+| Per-card online purchase | Every exact current retailer offer owns its full-width `Buy online` action inside the matching expanded product card. The action becomes green and says `Buy cheaper online` only when a trusted physical shelf price is higher; possible matches expose no action | Pass locally |
 | Live shelf-label OCR | Real Gemini call on the concept shelf identified six distinct front-facing products and associated €1.79/€2.29 labels in 7,159 ms; physical Latvia benchmark is absent | Partially measured |
 | Live recognition rate limit | Default 36/60 allowance covers the roughly 29/min camera cadence; samples are exempt and API `429` includes `Retry-After`. Client code pauses capture, preserves a provisional product and exposes retry/demo actions; unit and browser regressions encode the contract | Pass locally |
 | Production build | `next build` succeeds and standalone assets are prepared | Pass locally |

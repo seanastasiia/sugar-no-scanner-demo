@@ -271,14 +271,11 @@ export function CompactProductPrice({
         )
       ) : null}
       {cheaperOnline && offer ? (
-        <>
-          <strong>€{offer.price.toFixed(2)}</strong>
-          <small>{offer.retailer}</small>
-        </>
+        <strong>€{offer.price.toFixed(2)}</strong>
       ) : shelfPrice ? (
         <small>shelf</small>
       ) : offer ? (
-        <><strong>€{offer.price.toFixed(2)}</strong><small>{offer.retailer} online</small></>
+        <strong>€{offer.price.toFixed(2)}</strong>
       ) : null}
     </div>
   );
@@ -312,8 +309,11 @@ export function OnlineOfferAction({
       onClick={onRetailer}
       aria-label={`${cheaperOnline ? "Buy cheaper online" : "Buy online"} ${productName} at ${offer.retailer} for €${offer.price.toFixed(2)}`}
     >
-      <strong>{cheaperOnline ? `Buy cheaper · ${offer.retailer}` : `Buy online · ${offer.retailer}`}</strong>
-      <ArrowUpRight aria-hidden="true" size={15} />
+      <strong>{cheaperOnline ? "Buy cheaper online" : "Buy online"}</strong>
+      <span className={styles.onlineOfferPrice}>
+        €{offer.price.toFixed(2)}
+        <ArrowUpRight aria-hidden="true" size={15} />
+      </span>
     </a>
   );
 }
