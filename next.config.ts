@@ -19,6 +19,16 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.openfoodfacts.org",
         pathname: "/images/products/**"
+      },
+      {
+        protocol: "https",
+        hostname: "rimibaltic-res.cloudinary.com",
+        pathname: "/image/upload/**"
+      },
+      {
+        protocol: "https",
+        hostname: "images.livinn.lt",
+        pathname: "/**"
       }
     ]
   },

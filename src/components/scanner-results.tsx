@@ -163,23 +163,25 @@ export function ProductResult({
                       <MatchPill product={alternative} />
                     </span>
                   </button>
-                  <a
-                    className={styles.alternativeBuy}
-                    href={offer.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => onRetailer(alternative.id)}
-                    aria-label={`${cheaperOnline ? "Buy cheaper online" : "Buy online"} ${alternative.name} for €${offer.price.toFixed(2)}`}
-                  >
-                    <span>
-                      <strong>{cheaperOnline ? "Cheaper online" : "Buy online"}</strong>
-                      {cheaperOnline && shelfPrice ? <s>€{shelfPrice.amount.toFixed(2)} shelf</s> : null}
-                    </span>
-                    <span className={styles.alternativeBuyPrice}>
-                      €{offer.price.toFixed(2)}
-                      <ArrowUpRight aria-hidden="true" size={16} />
-                    </span>
-                  </a>
+                  {cheaperOnline && shelfPrice ? (
+                    <a
+                      className={styles.alternativeBuy}
+                      href={offer.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => onRetailer(alternative.id)}
+                      aria-label={`Buy cheaper online ${alternative.name} for €${offer.price.toFixed(2)}`}
+                    >
+                      <span>
+                        <strong>Cheaper online</strong>
+                        <s>€{shelfPrice.amount.toFixed(2)} shelf</s>
+                      </span>
+                      <span className={styles.alternativeBuyPrice}>
+                        €{offer.price.toFixed(2)}
+                        <ArrowUpRight aria-hidden="true" size={16} />
+                      </span>
+                    </a>
+                  ) : null}
                 </article>
               );
             })}
@@ -297,19 +299,18 @@ export function OnlineOfferAction({
     : detection?.retailerOffer?.exactSku
       ? detection.retailerOffer
       : null;
-  if (!offer) return null;
   const shelfPrice = detection?.shelfPrice;
-  const cheaperOnline = Boolean(shelfPrice && offer.price < shelfPrice.amount);
+  if (!offer || !isExactOnlineSaving(offer, shelfPrice)) return null;
   return (
     <a
-      className={`${styles.onlineOfferAction} ${cheaperOnline ? styles.onlineOfferDeal : ""}`}
+      className={`${styles.onlineOfferAction} ${styles.onlineOfferDeal}`}
       href={offer.url}
       target="_blank"
       rel="noopener noreferrer"
       onClick={onRetailer}
-      aria-label={`${cheaperOnline ? "Buy cheaper online" : "Buy online"} ${productName} at ${offer.retailer} for €${offer.price.toFixed(2)}`}
+      aria-label={`Buy cheaper online ${productName} at ${offer.retailer} for €${offer.price.toFixed(2)}`}
     >
-      <strong>{cheaperOnline ? "Buy cheaper online" : "Buy online"}</strong>
+      <strong>Buy cheaper online</strong>
       <span className={styles.onlineOfferPrice}>
         €{offer.price.toFixed(2)}
         <ArrowUpRight aria-hidden="true" size={15} />

@@ -376,7 +376,7 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(resultsDialog.getByLabel("Sugar.no badge")).toHaveCount(0);
   await expect(resultsDialog.getByText("Better alternatives", { exact: true })).toBeVisible();
   const betterAlternatives = resultsDialog.getByRole("region", { name: "Same product type · Great fit only" });
-  await expect(betterAlternatives.getByRole("link", { name: /Buy online .* for €1\.49/ })).toHaveCount(2);
+  await expect(betterAlternatives.getByRole("link", { name: /Buy online .* for €1\.49/ })).toHaveCount(0);
   await expect(betterAlternatives.getByText("Great fit", { exact: true })).toHaveCount(2);
   await expect(betterAlternatives.getByText("Moderate fit", { exact: true })).toHaveCount(0);
   await expect(betterAlternatives.getByText("Low fit", { exact: true })).toHaveCount(0);
@@ -1157,6 +1157,23 @@ test("live camera shows package identities before optional retailer enrichment f
 
   await page.goto("/");
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
+  const liveCameraVideo = page.getByLabel("Live camera preview");
+  await expect.poll(async () => liveCameraVideo.evaluate((video) => (video as HTMLVideoElement).videoHeight)).toBe(960);
+  const previewGeometry = await page.evaluate(() => {
+    const viewport = document.querySelector<HTMLElement>('[data-testid="camera-viewport"]');
+    const video = document.querySelector<HTMLVideoElement>('video[aria-label="Live camera preview"]');
+    if (!viewport || !video) throw new Error("Live camera preview is unavailable");
+    const viewportRect = viewport.getBoundingClientRect();
+    return {
+      viewportRatio: viewportRect.width / viewportRect.height,
+      mediaRatio: video.videoWidth / video.videoHeight,
+      objectFit: getComputedStyle(video).objectFit,
+      borderRadius: parseFloat(getComputedStyle(viewport).borderRadius)
+    };
+  });
+  expect(previewGeometry.viewportRatio).toBeCloseTo(previewGeometry.mediaRatio, 2);
+  expect(previewGeometry.objectFit).toBe("contain");
+  expect(previewGeometry.borderRadius).toBeGreaterThanOrEqual(26);
   await expect(page.getByRole("status")).toContainText("Products found. Checking Sugar.no signals", { timeout: 5_000 });
   await expect(page.getByLabel("Product result preview").getByText("Checking online…", { exact: true })).toHaveCount(2);
   expect(enrichmentFinished).toBe(false);
@@ -1528,10 +1545,8 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await expect(page.getByLabel(/Shelf price €/)).toHaveCount(0);
   await expect(page.getByText(/Keep the package and its shelf label/)).toHaveCount(0);
   await expect(page.getByLabel("Product result preview").getByRole("link", { name: /Buy .* cheaper at Barbora/ })).toHaveCount(0);
-  const onlineOnlyOffer = page.getByRole("link", { name: /Buy online Zero Peach.* at Barbora for €0\.99/ });
-  await expect(onlineOnlyOffer).toBeVisible();
-  await expect(onlineOnlyOffer).toContainText("Buy online");
-  await expect(onlineOnlyOffer).toContainText("€0.99");
+  await expect(page.getByRole("link", { name: /Buy online Zero Peach.* at Barbora for €0\.99/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Buy cheaper online Zero Peach.* at Barbora for €0\.99/ })).toHaveCount(0);
   await expect(page.getByText("Barbora online", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Online price €0.99")).toBeVisible();
   await expect(page.locator('[aria-label*="Barbora online"]')).toHaveCount(0);

@@ -733,6 +733,9 @@ export function ScannerApp() {
       if (!videoRef.current) throw new Error("Camera preview is not ready");
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
+      if (videoRef.current.videoWidth && videoRef.current.videoHeight) {
+        setMediaDimensions({ width: videoRef.current.videoWidth, height: videoRef.current.videoHeight });
+      }
       setCameraState("live");
       setRecognitionState("idle");
       setStatusMessage("Point at several products and hold steady");
@@ -1107,7 +1110,18 @@ export function ScannerApp() {
               </button>
             </div>
 
-            <div ref={stageRef} className={styles.cameraViewport} data-testid="camera-viewport">
+            <div
+              ref={stageRef}
+              className={`${styles.cameraViewport} ${source === "camera" ? styles.cameraViewportLive : ""}`}
+              data-testid="camera-viewport"
+              style={source === "camera"
+                ? ({
+                    "--camera-media-aspect": mediaDimensions
+                      ? `${mediaDimensions.width} / ${mediaDimensions.height}`
+                      : "3 / 4"
+                  } as CSSProperties)
+                : undefined}
+            >
             {cameraState === "live" || cameraState === "requesting" ? (
               <video
                 ref={videoRef}
@@ -1117,6 +1131,9 @@ export function ScannerApp() {
                 autoPlay
                 aria-label="Live camera preview"
                 onLoadedMetadata={(event) =>
+                  setMediaDimensions({ width: event.currentTarget.videoWidth, height: event.currentTarget.videoHeight })
+                }
+                onResize={(event) =>
                   setMediaDimensions({ width: event.currentTarget.videoWidth, height: event.currentTarget.videoHeight })
                 }
               />

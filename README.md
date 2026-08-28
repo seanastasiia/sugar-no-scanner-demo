@@ -9,7 +9,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 ## Current product behavior
 
 - The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
-- The live feed and saved/demo scenes sit inside a large rounded camera viewport on a black scanner canvas, matching the camera composition in the Sugar.no iOS app while keeping automatic recognition and the existing result sheet.
+- The live feed and saved/demo scenes sit inside a large rounded camera viewport on a black scanner canvas. Live media uses its native aspect ratio, so the image fills the rounded card without artificial black bands above or below it.
 - Camera starts after permission without requiring a shutter action.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
 - Saved-photo views omit the redundant source badge and keep only the `Back to live` action in the top overlay.
@@ -157,7 +157,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 ## Product check
 
 1. Open production in iPhone Safari and allow camera access.
-2. Confirm the camera is a large rounded card with visible black gutters; the logo and source/demo controls remain outside it, while recognition status stays inside it.
+2. Confirm the camera is a large rounded card whose live image reaches the rounded top and bottom edges without black bands; the logo and source/demo controls remain outside it, while recognition status stays inside it.
 3. Scan a shelf with more than ten visible products and confirm no more than ten distinct results appear.
 4. Confirm verified results gain fit labels and unresolved products disappear after the exact lookup finishes.
 5. Open Shelf and Checkout demos and expand `View all`.
@@ -169,6 +169,8 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 11. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
 12. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
 13. Scan a product without an exact packshot and confirm its preview thumbnail keeps the package proportions; a little neighboring shelf context is acceptable, but the package must not look stretched.
+14. Confirm a purchase button is absent when the exact online offer is not cheaper than the visible shelf price; when it is cheaper, confirm the card shows one full-width green `Buy cheaper online` action.
+15. Scan exact Rimi and Livin products and confirm their retailer packshots load instead of a broken-image icon.
 
 ## Known limits
 
@@ -193,4 +195,5 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 - [Rounded camera viewport release evidence](docs/test-runs/2026-08-28-rounded-camera-viewport.md)
 - [Aspect-correct thumbnail release evidence](docs/test-runs/2026-08-28-thumbnail-context-crop.md)
 - [Great-fit-only alternatives release evidence](docs/test-runs/2026-08-28-great-fit-alternatives.md)
+- [Final accumulated UI publish evidence](docs/test-runs/2026-08-28-accumulated-ui-publish.md)
 - [Open and recent bugs](Bugs.md)

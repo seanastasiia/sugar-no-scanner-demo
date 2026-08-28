@@ -245,6 +245,11 @@
   isolation: isolate;
 }
 
+.cameraViewportLive {
+  bottom: auto;
+  aspect-ratio: var(--camera-media-aspect, 3 / 4);
+}
+
 .video,
 .uploadPreview {
   position: absolute;
