@@ -256,9 +256,13 @@ test("public root opens directly into the camera-first experience", async ({ pag
   });
   await unlock(page);
   await expectOfficialSugarNoLogo(page);
+  await expect(page.getByText("Live camera", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Camera permission is off")).toBeVisible();
   await expect(page.getByRole("button", { name: "Enable camera" })).toBeVisible();
   await expect(page.getByTestId("scan-guide")).toHaveCount(0);
+  const demoButtonBox = await page.getByRole("button", { name: "Show demo" }).boundingBox();
+  const cameraViewportBox = await page.getByTestId("camera-viewport").boundingBox();
+  expect((cameraViewportBox?.y ?? 0) - ((demoButtonBox?.y ?? 0) + (demoButtonBox?.height ?? 0))).toBeGreaterThanOrEqual(20);
   await page.goto("/access");
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByLabel("Investor access code")).toHaveCount(0);
@@ -292,6 +296,15 @@ test("scanner follows the current Sugar.no app surface language without changing
   await expect(markers).toHaveCount(4);
   await expect(markers.filter({ hasText: "Great fit" })).toHaveCount(2);
   await expect(markers.filter({ hasText: "Moderate fit" })).toHaveCount(2);
+  const markerFillAlphas = await markers.evaluateAll((elements) =>
+    elements.map((element) => {
+      const color = getComputedStyle(element).backgroundColor;
+      const rgbaAlpha = color.match(/rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)/)?.[1];
+      const modernAlpha = color.match(/\/\s*([\d.]+)\)/)?.[1];
+      return Number(rgbaAlpha || modernAlpha || 1);
+    })
+  );
+  expect(markerFillAlphas.every((alpha) => alpha >= 0.2 && alpha <= 0.3)).toBe(true);
 });
 
 test("sample shelf photo highlights products and ranks two-factor Sugar.no fits", async ({ page }) => {
@@ -740,6 +753,9 @@ test("a landscape saved shelf is scanned as a full frame plus three row close-up
   await chooseLandscapeSavedPhoto(page);
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
   expect(recognitionRequests).toBe(4);
+  const uploadedViewport = await page.getByTestId("camera-viewport").boundingBox();
+  expect((uploadedViewport?.width ?? 0) / (uploadedViewport?.height ?? 1)).toBeCloseTo(4 / 3, 1);
+  await expectInsideViewport(page, page.getByTestId("camera-viewport"));
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /BAREBELLS/ })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Barebells protein bar/ })).toHaveCount(0);
@@ -819,6 +835,10 @@ test("a long online-store screenshot is scanned in four passes and opens one mer
   await chooseLongPortraitSavedPhoto(page);
   const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
   await expect(resultsDialog).toBeVisible({ timeout: 10_000 });
+  const uploadedViewport = page.getByTestId("camera-viewport");
+  const uploadedViewportBox = await uploadedViewport.boundingBox();
+  expect((uploadedViewportBox?.width ?? 0) / (uploadedViewportBox?.height ?? 1)).toBeCloseTo(900 / 2000, 1);
+  await expectInsideViewport(page, uploadedViewport);
   expect(recognitionRequests).toBe(4);
   const ranking = resultsDialog.getByLabel("Products ranked by Sugar.no fit");
   await expect(ranking.getByRole("button")).toHaveCount(3);

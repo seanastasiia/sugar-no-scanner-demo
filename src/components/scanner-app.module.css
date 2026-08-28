@@ -233,7 +233,7 @@
 .cameraViewport {
   position: absolute;
   z-index: 0;
-  top: calc(124px + env(safe-area-inset-top));
+  top: calc(144px + env(safe-area-inset-top));
   right: max(16px, env(safe-area-inset-right));
   bottom: calc(var(--camera-bottom-offset) + env(safe-area-inset-bottom));
   left: max(16px, env(safe-area-inset-left));
@@ -245,8 +245,9 @@
   isolation: isolate;
 }
 
-.cameraViewportLive {
+.cameraViewportMediaRatio {
   bottom: auto;
+  max-height: calc(100% - 144px - var(--camera-bottom-offset) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   aspect-ratio: var(--camera-media-aspect, 3 / 4);
 }
 
@@ -417,7 +418,7 @@
   padding: 0;
   border: 2px solid color-mix(in srgb, var(--tone, #ffffff) 72%, transparent);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--tone, #ffffff) 7%, transparent);
+  background: var(--tone-overlay, rgb(255 255 255 / 12%));
   box-shadow: 0 10px 28px rgb(0 0 0 / 14%);
   transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease, opacity 180ms ease;
 }
@@ -445,7 +446,7 @@
 
 .selectedBox {
   border-color: var(--tone, #ffffff);
-  background: color-mix(in srgb, var(--tone, #ffffff) 14%, transparent);
+  background: color-mix(in srgb, var(--tone, #ffffff) 28%, transparent);
   box-shadow: 0 12px 34px rgb(0 0 0 / 32%);
 }
 
@@ -495,7 +496,7 @@
 .toneStrong {
   --tone: #177447;
   --tone-soft: #e4f4ea;
-  --tone-overlay: rgb(23 116 71 / 14%);
+  --tone-overlay: rgb(23 116 71 / 20%);
   --tone-text: #0e5734;
   --tone-on: #ffffff;
 }
@@ -503,7 +504,7 @@
 .toneMiddle {
   --tone: #e0a11a;
   --tone-soft: #fff3ce;
-  --tone-overlay: rgb(224 161 26 / 16%);
+  --tone-overlay: rgb(224 161 26 / 22%);
   --tone-text: #6f4a00;
   --tone-on: #2d2106;
 }
@@ -511,7 +512,7 @@
 .toneLower {
   --tone: #c84f43;
   --tone-soft: #fbe7e4;
-  --tone-overlay: rgb(200 79 67 / 14%);
+  --tone-overlay: rgb(200 79 67 / 20%);
   --tone-text: #7d291f;
   --tone-on: #ffffff;
 }
@@ -522,6 +523,16 @@
   --tone-overlay: rgb(143 143 161 / 12%);
   --tone-text: #525252;
   --tone-on: #ffffff;
+}
+
+.detectionBox.toneStrong,
+.detectionBox.toneMiddle,
+.detectionBox.toneLower {
+  background: var(--tone-overlay);
+}
+
+.detectionBox.selectedBox {
+  background: color-mix(in srgb, var(--tone, #ffffff) 28%, transparent);
 }
 
 .cameraError {
@@ -1745,7 +1756,7 @@
   }
 
   .cameraViewport {
-    top: calc(116px + env(safe-area-inset-top));
+    top: calc(136px + env(safe-area-inset-top));
     border-radius: 26px;
   }
 

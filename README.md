@@ -9,10 +9,10 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 ## Current product behavior
 
 - The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
-- The live feed and saved/demo scenes sit inside a large rounded camera viewport on a black scanner canvas. Live media uses its native aspect ratio, so the image fills the rounded card without artificial black bands above or below it.
+- The live feed and saved/demo scenes sit inside a large rounded camera viewport on a black scanner canvas. Live and uploaded media use their native aspect ratio, so portrait and landscape images reach the rounded edges without stretching or artificial black bands.
 - Camera starts after permission without requiring a shutter action.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
-- Saved-photo views omit the redundant source badge and keep only the `Back to live` action in the top overlay.
+- Live and saved-photo views omit the redundant source badge. The camera keeps only `Show demo`, saved photos keep only `Back to live`, and the camera card begins at least 20 px below that control row on phone layouts.
 - A scan keeps at most ten distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
 - Rated products are ordered best fit first and use `Great fit`, `Moderate fit`, or `Low fit`.
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.
@@ -20,7 +20,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - The compact camera preview mirrors that ranking with `#1`, `#2`, `#3…` badges and shows total sugar per 100 g or 100 ml beneath each rated fit.
 - Product thumbnails preserve the source photo proportions. When no exact retailer packshot exists, the fallback crop keeps a little neighboring shelf context instead of stretching a tight detection box.
 - The compact sheet keeps `View all` as its only action; returning to live camera starts a new scan.
-- `Great fit`, `Moderate fit` and `Low fit` camera markers use the same compact 24 px visual disc with thumbs-up, raised-hand and thumbs-down icons; the full detected-product outline remains the larger touch target.
+- `Great fit`, `Moderate fit` and `Low fit` camera markers use the same compact 24 px visual disc with thumbs-up, raised-hand and thumbs-down icons; the full detected-product outline remains the larger touch target. The outlined package also receives a transparent semantic tint (20% green/red, 22% yellow and 28% for the selected result), keeping the product visible while making the marker easier to read.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Rimi/Livin snapshot, isolated Open Food Facts bulk/API match, then exact Google Search-grounded web nutrition.
@@ -157,7 +157,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 ## Product check
 
 1. Open production in iPhone Safari and allow camera access.
-2. Confirm the camera is a large rounded card whose live image reaches the rounded top and bottom edges without black bands; the logo and source/demo controls remain outside it, while recognition status stays inside it.
+2. Confirm the camera is a large rounded card whose live image reaches the rounded top and bottom edges without black bands; `Live camera` is not repeated as a badge, `Show demo` remains outside the card with at least 20 px clearance, and recognition status stays inside it.
 3. Scan a shelf with more than ten visible products and confirm no more than ten distinct results appear.
 4. Confirm verified results gain fit labels and unresolved products disappear after the exact lookup finishes.
 5. Open Shelf and Checkout demos and expand `View all`.
@@ -172,6 +172,8 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 14. Confirm a purchase button is absent when the exact online offer is not cheaper than the visible shelf price; when it is cheaper, confirm the card shows one full-width green `Buy cheaper online` action.
 15. Scan exact Rimi and Livin products and confirm their retailer packshots load instead of a broken-image icon.
 16. Scan several packages whose size is not readable and confirm `Checking online…` clears quickly instead of waiting for an unverifiable web search; a complete unfamiliar SKU may still use the bounded fallback.
+17. Upload one landscape and one tall portrait shelf photo; confirm the rounded camera card follows each photo's proportions without stretching or leaving the frame outside the viewport.
+18. Confirm each rated package outline has a light green, yellow or red transparent fill matching its fit icon; the packaging must remain readable through the tint.
 
 ## Known limits
 

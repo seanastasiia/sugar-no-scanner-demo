@@ -1111,8 +1111,10 @@ export function ScannerApp() {
             inert={resultsAreExpanded || demoOpen}
             aria-hidden={resultsAreExpanded || demoOpen || undefined}
           >
-            <div className={`${styles.stageTopbar} ${source === "upload" ? styles.stageTopbarEnd : ""}`}>
-              {source === "upload" ? null : <span>{sourceLabel(source)}</span>}
+            <div
+              className={`${styles.stageTopbar} ${source === "camera" || source === "upload" ? styles.stageTopbarEnd : ""}`}
+            >
+              {source === "sample-shelf" || source === "sample-conveyor" ? <span>{sourceLabel(source)}</span> : null}
               <button
                 ref={source === "camera" ? demoTriggerRef : undefined}
                 className={styles.demoTrigger}
@@ -1127,9 +1129,9 @@ export function ScannerApp() {
 
             <div
               ref={stageRef}
-              className={`${styles.cameraViewport} ${source === "camera" ? styles.cameraViewportLive : ""}`}
+              className={`${styles.cameraViewport} ${source === "camera" || source === "upload" ? styles.cameraViewportMediaRatio : ""}`}
               data-testid="camera-viewport"
-              style={source === "camera"
+              style={source === "camera" || source === "upload"
                 ? ({
                     "--camera-media-aspect": mediaDimensions
                       ? `${mediaDimensions.width} / ${mediaDimensions.height}`

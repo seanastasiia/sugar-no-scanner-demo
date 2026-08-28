@@ -15,6 +15,9 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-28: fit icons were hard to read over visually busy packaging.** Rated package outlines now include a transparent semantic tint matching the green, yellow or red marker; selected results use a slightly stronger tint while the package remains visible.
+- **2026-08-28: the camera control row sat too close to the rounded media card and repeated a `Live camera` badge.** The redundant live-source badge is removed, the remaining action is right-aligned and phone layouts reserve at least 20 px before the camera frame.
+- **2026-08-28: uploaded photos could inherit the camera aspect ratio and appear stretched.** Saved landscape and portrait media now size the rounded viewport from the uploaded image's real dimensions while staying inside the device viewport.
 - **2026-08-28: incomplete shelf identities could remain on `Checking online…` for about 18 seconds.** Missing pack-size/barcode identities now fail fast because they cannot support an exact-SKU nutrition link, while complete identities get a 6-second grounded-search ceiling instead of 18 seconds.
 - **2026-08-28: five uncatalogued products waited for sequential enrichment and the slowest lookup blocked every card.** The client now resolves up to five identities independently and applies each exact result as soon as it returns; the server also supports five concurrent identities in one request.
 - **2026-08-28: online purchase actions appeared without a demonstrated saving.** Product and alternative cards now render the retailer action only when an exact current online offer is strictly cheaper than the camera-read shelf price; the qualifying action is full-width, green and labelled `Buy cheaper online`.
