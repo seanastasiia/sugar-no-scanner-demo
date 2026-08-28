@@ -15,6 +15,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-28: fallback product thumbnails stretched tight shelf crops into portrait cards.** Scene-derived previews now expand around the detected package and calculate an aspect-correct crop, preserving the original photo proportions even when neighboring products remain visible.
 - **2026-08-28: camera media still filled the entire browser canvas and did not match the Sugar.no iOS camera.** Live, upload and deterministic demo media now share one inset rounded viewport with black gutters; overlay geometry is measured against that viewport so product boxes remain aligned across iPhone portrait and landscape sizes.
 - **2026-08-28: compact prices repeated `Barbora online`, including in hidden accessibility copy.** Exact offers now show only their price in the compact row; both visible and accessibility copy are retailer-neutral, while the purchase link still names its destination for assistive technology.
 - **2026-08-27: camera fit markers used abstract check/minus/arrow glyphs and obscured too much packaging.** They now use compact, equally sized thumbs-up, raised-hand and thumbs-down SVG icons while the full product outline remains the accessible touch target.

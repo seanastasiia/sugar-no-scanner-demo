@@ -51,6 +51,7 @@ import type {
   ScanSource,
   ScoredProduct
 } from "@/lib/types";
+import { thumbnailCrop, type ImageDimensions } from "@/lib/thumbnail-crop";
 import {
   CompactProductPrice,
   LoadingProductResult,
@@ -116,28 +117,41 @@ function completenessClass(completeness: SignalCompleteness) {
   return styles.completenessIdentified;
 }
 
-function cropBackgroundStyle(imageUrl: string, box: ProductDetection["box"]): CSSProperties {
-  const width = Math.max(0.01, Math.min(1, box.width));
-  const height = Math.max(0.01, Math.min(1, box.height));
-  const x = Math.max(0, Math.min(1 - width, box.x));
-  const y = Math.max(0, Math.min(1 - height, box.y));
+function cropBackgroundStyle(
+  imageUrl: string,
+  box: ProductDetection["box"],
+  sourceDimensions: ImageDimensions | null | undefined,
+  targetAspect: number
+): CSSProperties {
+  if (!sourceDimensions) {
+    return {
+      backgroundImage: `url(${JSON.stringify(imageUrl)})`,
+      backgroundPosition: `${Math.max(0, Math.min(1, box.x + box.width / 2)) * 100}% ${Math.max(0, Math.min(1, box.y + box.height / 2)) * 100}%`,
+      backgroundSize: "cover"
+    };
+  }
+  const crop = thumbnailCrop(box, sourceDimensions, targetAspect);
   return {
     backgroundImage: `url(${JSON.stringify(imageUrl)})`,
-    backgroundPosition: `${(x / Math.max(0.001, 1 - width)) * 100}% ${(y / Math.max(0.001, 1 - height)) * 100}%`,
-    backgroundSize: `${100 / width}% ${100 / height}%`
+    backgroundPosition: `${(crop.x / Math.max(0.001, 1 - crop.width)) * 100}% ${(crop.y / Math.max(0.001, 1 - crop.height)) * 100}%`,
+    backgroundSize: `${100 / crop.width}% ${100 / crop.height}%`
   };
 }
 
 function ProductThumbnail({
   imageUrl,
   sceneImageUrl,
+  sceneDimensions,
   detection,
-  sizes
+  sizes,
+  targetAspect
 }: {
   imageUrl?: string | null;
   sceneImageUrl?: string | null;
+  sceneDimensions?: ImageDimensions | null;
   detection?: ProductDetection;
   sizes: string;
+  targetAspect: number;
 }) {
   if (imageUrl) return <Image src={imageUrl} alt="" fill sizes={sizes} />;
   if (sceneImageUrl && detection) {
@@ -145,7 +159,8 @@ function ProductThumbnail({
       <span
         className={styles.sceneProductCrop}
         data-testid="scene-product-crop"
-        style={cropBackgroundStyle(sceneImageUrl, detection.box)}
+        data-thumbnail-mode="context-crop"
+        style={cropBackgroundStyle(sceneImageUrl, detection.box, sceneDimensions, targetAspect)}
       />
     );
   }
@@ -1290,8 +1305,10 @@ export function ScannerApp() {
                             <ProductThumbnail
                               imageUrl={item?.imageUrl || scanOfferForId(id)?.imageUrl}
                               sceneImageUrl={sceneImageUrl}
+                              sceneDimensions={mediaDimensions}
                               detection={detection}
                               sizes="42px"
+                              targetAspect={42 / 54}
                             />
                           </div>
                           <div className={styles.sheetPreviewCopy}>
@@ -1393,8 +1410,10 @@ export function ScannerApp() {
                                   <ProductThumbnail
                                     imageUrl={item?.imageUrl || onlineOffer?.imageUrl}
                                     sceneImageUrl={sceneImageUrl}
+                                    sceneDimensions={mediaDimensions}
                                     detection={detection}
                                     sizes="48px"
+                                    targetAspect={48 / 60}
                                   />
                                 </span>
                                 <div className={styles.rankedProductCopy}>

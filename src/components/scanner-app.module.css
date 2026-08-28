@@ -802,6 +802,7 @@
   display: block;
   background-color: var(--surface-tinted);
   background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .productThumbFallbackIcon {

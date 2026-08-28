@@ -18,6 +18,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.
 - Expanded multi-product results show only the collapse control, `Best fit first` and the ranked product cards; duplicate summaries, counters and scan-again controls are omitted.
 - The compact camera preview mirrors that ranking with `#1`, `#2`, `#3…` badges and shows total sugar per 100 g or 100 ml beneath each rated fit.
+- Product thumbnails preserve the source photo proportions. When no exact retailer packshot exists, the fallback crop keeps a little neighboring shelf context instead of stretching a tight detection box.
 - The compact sheet keeps `View all` as its only action; returning to live camera starts a new scan.
 - `Great fit`, `Moderate fit` and `Low fit` camera markers use the same compact 24 px visual disc with thumbs-up, raised-hand and thumbs-down icons; the full detected-product outline remains the larger touch target.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
@@ -167,6 +168,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 10. Open a rated product and confirm `Better alternatives` contains only the same product type with an equal or better fit and a live price; products without a valid substitute should show no alternatives block.
 11. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
 12. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
+13. Scan a product without an exact packshot and confirm its preview thumbnail keeps the package proportions; a little neighboring shelf context is acceptable, but the package must not look stretched.
 
 ## Known limits
 

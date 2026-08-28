@@ -423,7 +423,17 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await expect(checkoutMarkers.filter({ hasText: "Great fit" })).toHaveCount(2);
   await expect(checkoutMarkers.filter({ hasText: "Moderate fit" })).toHaveCount(1);
   await expect(page.getByText("3 rated · Best fit first", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Product result preview").getByTestId("scene-product-crop")).toHaveCount(3);
+  const checkoutPreviewCrops = page.getByLabel("Product result preview").getByTestId("scene-product-crop");
+  await expect(checkoutPreviewCrops).toHaveCount(3);
+  expect(
+    await checkoutPreviewCrops.evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("data-thumbnail-mode"))
+    )
+  ).toEqual(["context-crop", "context-crop", "context-crop"]);
+  const cropBackgroundSizes = await checkoutPreviewCrops.evaluateAll((elements) =>
+    elements.map((element) => getComputedStyle(element).backgroundSize)
+  );
+  expect(cropBackgroundSizes.every((size) => size !== "cover" && size.includes("%"))).toBe(true);
   await expect(page.getByAltText("Groceries on a real supermarket checkout conveyor belt")).toBeVisible();
   await page.waitForFunction(() =>
     [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Real supermarket checkout belt sample with three recognized packaged products"] img')]
@@ -434,6 +444,7 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   const ranking = page.getByLabel("Products ranked by Sugar.no fit");
   await expect(ranking).toBeVisible({ timeout: 8_000 });
   await expect(ranking.getByRole("button")).toHaveCount(3);
+  await expect(ranking.getByTestId("scene-product-crop")).toHaveCount(3);
   await expect(ranking.getByText("SPROUD", { exact: true })).toBeVisible();
   await expect(ranking.getByText("SCHNITZER", { exact: true })).toBeVisible();
   await expect(ranking.getByText("STOCKMANN", { exact: true })).toBeVisible();
