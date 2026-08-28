@@ -493,6 +493,31 @@ describe("resolveVisibleDetections", () => {
     });
   });
 
+  it("skips slow network nutrition fallbacks when the package size and barcode are both missing", async () => {
+    const resolveOpenFoodFacts = vi.fn(async () => null);
+    const resolveWebNutrition = vi.fn(async () => null);
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, { brand: "Pringles", productName: "Pringles Sour Cream & Onion" })],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveExternalCatalog: () => null,
+        resolveOpenFoodFacts,
+        resolveIndexedCandidate: () => null,
+        resolveWebNutrition
+      }
+    );
+
+    expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
+    expect(resolveWebNutrition).not.toHaveBeenCalled();
+    expect(detections[0]).toMatchObject({
+      productId: "visual:pringles-pringles-sour-cream-onion",
+      inlineProduct: null,
+      identity: { matchKind: "visual_only", packSize: null }
+    });
+  });
+
   it("promotes an exact broad Barbora nutrition match outside the 40-product catalog", async () => {
     let openFoodFactsAttempts = 0;
     const indexedProduct = { ...getCatalog()[0], id: "barbora:majoneze-siera-spilva-250-g" };

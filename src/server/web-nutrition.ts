@@ -6,7 +6,9 @@ import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
 import { normalizeRetailText, type BarboraLookupInput } from "./barbora-catalog";
 
 const DEFAULT_MODEL = "gemini-3.7-flash";
-const WEB_NUTRITION_TIMEOUT_MS = 18_000;
+// Grounded search is the last fallback, not the primary catalog path. Keep it
+// bounded so one obscure SKU cannot hold a result card for ~18 seconds.
+const WEB_NUTRITION_TIMEOUT_MS = 6_000;
 const SUCCESS_CACHE_TTL_MS = 24 * 60 * 60_000;
 const MISS_CACHE_TTL_MS = 30 * 60_000;
 const responseCache = new Map<string, { expiresAt: number; result: WebNutritionResolution | null }>();

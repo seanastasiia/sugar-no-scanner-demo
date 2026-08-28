@@ -24,7 +24,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Rimi/Livin snapshot, isolated Open Food Facts bulk/API match, then exact Google Search-grounded web nutrition.
-- Internet enrichment runs after the first identity result. It is bounded to 18 seconds and never receives or stores the camera image.
+- Internet enrichment runs after the first identity result and never receives or stores the camera image. Products without a readable pack size or barcode fail fast instead of starting an unverifiable network search; the final grounded-search fallback for a complete identity is bounded to 6 seconds.
 - The retired nutrition-label follow-up is removed from the UI and API; automatic exact-source enrichment is the only nutrition path.
 - A product remains visible while exact nutrition is being checked, then stays in the result only when source-backed protein and total sugar produce a Sugar.no fit. A shelf price by itself never creates a result card.
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
@@ -115,7 +115,7 @@ Use the project change lanes in `AGENTS.md`:
 ## API
 
 - `POST /api/recognize`: image data URL plus source type, returns bounded detections.
-- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products; successful exact web lookups remain cached for 24 hours in the running service.
+- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products. An incomplete identity never starts the slow network fallbacks; successful exact web lookups remain cached for 24 hours in the running service.
 - `POST /api/offers`: up to ten known exact Barbora slugs, returns current per-card offers without blocking recognition.
 - `POST /api/events`: metadata-only product events with image-like values rejected.
 - `GET /api/health`: service, catalog and deployed commit status.
@@ -171,6 +171,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 13. Scan a product without an exact packshot and confirm its preview thumbnail keeps the package proportions; a little neighboring shelf context is acceptable, but the package must not look stretched.
 14. Confirm a purchase button is absent when the exact online offer is not cheaper than the visible shelf price; when it is cheaper, confirm the card shows one full-width green `Buy cheaper online` action.
 15. Scan exact Rimi and Livin products and confirm their retailer packshots load instead of a broken-image icon.
+16. Scan several packages whose size is not readable and confirm `Checking online…` clears quickly instead of waiting for an unverifiable web search; a complete unfamiliar SKU may still use the bounded fallback.
 
 ## Known limits
 
@@ -179,7 +180,7 @@ Then verify `/api/health`, the public root, one critical recognition path and th
 - Barbora, Rimi and Livin can produce exact offers for their own matched SKUs. The checked-in Rimi layer contains 6,822 complete products after checking all 7,617 pages in the seven approved food and drink categories. Livin contributes 6 complete rows after checking its full 169-URL Latvia sitemap. These snapshots are not a market-wide real-time price engine.
 - The release contains 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
 - FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
-- Grounded web nutrition has variable latency and cost. Production should persist human-reviewed successful results in Supabase.
+- Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable pack size or barcode and is capped at 6 seconds; production should persist human-reviewed successful results in Supabase.
 
 ## Supporting docs
 

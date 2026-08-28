@@ -476,15 +476,19 @@ export async function resolveVisibleDetections(
       ? dependencies.getIndexedProduct?.(exactRetailerOffer.slug)?.product || null
       : null;
     const knownProduct = initialCatalogMatch?.product || indexedProduct || exactOfferProduct || null;
+    // A missing pack size (and no readable barcode) cannot support an exact-SKU
+    // nutrition link. Do not spend several seconds searching the web for a
+    // result that our strict verifier must reject anyway.
+    const hasExactIdentityEvidence = Boolean(packSize || /^\d{8,14}$/.test(detection.barcode));
     // Open Food Facts is the first internet fallback. A visual Barbora slug is
     // not enough to skip it when that exact SKU has no local nutrition record.
     const externalCatalogCandidate = mode === "fast" || knownProduct
       ? null
       : dependencies.resolveExternalCatalog?.(lookupInput, detection.barcode) || null;
-    const openFoodFactsCandidate = mode === "fast" || knownProduct || externalCatalogCandidate
+    const openFoodFactsCandidate = mode === "fast" || knownProduct || externalCatalogCandidate || !hasExactIdentityEvidence
       ? null
       : await dependencies.resolveOpenFoodFacts(lookupInput, detection.barcode).catch(() => null);
-    const webNutrition = mode === "fast" || knownProduct || externalCatalogCandidate || openFoodFactsCandidate
+    const webNutrition = mode === "fast" || knownProduct || externalCatalogCandidate || openFoodFactsCandidate || !hasExactIdentityEvidence
       ? null
       : await dependencies.resolveWebNutrition?.(lookupInput, detection.confidence).catch(() => null) || null;
     const resolvedProduct = knownProduct || externalCatalogCandidate?.product || openFoodFactsCandidate?.product || webNutrition?.product || null;

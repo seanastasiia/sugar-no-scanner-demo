@@ -10,11 +10,12 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **Rimi/Livin snapshots are not market-wide.** Rimi is intentionally limited to seven selected food and drink categories (6,822 complete rows from 7,617 pages); Livin contributes 6 complete rows. Recurring production reuse still requires retailer permission.
 - **Open Food Facts is incomplete and community-maintained.** The isolated checked-in layer contains 500 complete Latvia-tagged records; a scheduled full bulk import and quality review are still needed for production.
 - **Retailer snapshots age.** Checked-in product and nutrition indexes are reproducible discovery snapshots, not real-time stock or price guarantees.
-- **Grounded nutrition can be slow or unavailable.** Identity appears first; exact internet enrichment is background-only and bounded to 18 seconds.
+- **Grounded nutrition can be unavailable.** Identity appears first; exact internet enrichment is background-only, requires a readable pack size or barcode, and its final grounded-search fallback is bounded to 6 seconds.
 - **Railway config-as-code needs migration before 1 December 2026.** The current `railway.json`/`railway.toml` deployment still works, but Railway now recommends `.railway/railway.ts` and prints a deprecation warning during deploys.
 
 ## Recently resolved
 
+- **2026-08-28: incomplete shelf identities could remain on `Checking online…` for about 18 seconds.** Missing pack-size/barcode identities now fail fast because they cannot support an exact-SKU nutrition link, while complete identities get a 6-second grounded-search ceiling instead of 18 seconds.
 - **2026-08-28: five uncatalogued products waited for sequential enrichment and the slowest lookup blocked every card.** The client now resolves up to five identities independently and applies each exact result as soon as it returns; the server also supports five concurrent identities in one request.
 - **2026-08-28: online purchase actions appeared without a demonstrated saving.** Product and alternative cards now render the retailer action only when an exact current online offer is strictly cheaper than the camera-read shelf price; the qualifying action is full-width, green and labelled `Buy cheaper online`.
 - **2026-08-28: the rounded live-camera card retained black bands inside the media frame.** The live viewport now follows the actual camera stream aspect ratio and updates when Safari reports a dimension change, so media reaches the rounded top and bottom edges without distorting the feed.
