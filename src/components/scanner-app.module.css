@@ -266,8 +266,7 @@
 }
 
 .video,
-.uploadPreview,
-.capturedCameraFrame {
+.uploadPreview {
   position: absolute;
   z-index: 0;
   width: 100%;
@@ -280,16 +279,23 @@
   pointer-events: none;
 }
 
-.capturedCameraFrame {
-  pointer-events: none;
-}
-
 .cameraViewport::after {
   position: absolute;
   z-index: 1;
   inset: 0;
   background: linear-gradient(to bottom, rgb(0 0 0 / 34%), transparent 35%, transparent 62%, rgb(0 0 0 / 46%));
   content: "";
+  pointer-events: none;
+}
+
+.cameraCandidateBox {
+  position: absolute;
+  z-index: 4;
+  border: 1.5px dashed rgb(255 255 255 / 72%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 6%);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 14%);
+  opacity: 0.82;
   pointer-events: none;
 }
 

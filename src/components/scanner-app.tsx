@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import { ChangeEvent, type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  CAMERA_FOCUS_CROP,
   mapBoxToObjectCover,
   mapBoxToObjectContain,
   remapRecognitionFromCrop,
@@ -39,6 +38,16 @@ import { imageFileToScanFrames, type PreparedUploadFrame } from "@/lib/client-im
 import { mergeEnrichedDetections } from "@/lib/detection-merge";
 import { prioritizeDetectionsForEnrichment } from "@/lib/enrichment-priority";
 import { luminanceEdgeScore } from "@/lib/frame-quality";
+import {
+  estimateFrameTranslation,
+  isSameCameraScene,
+  proposeCameraCandidates,
+  rgbaToLuma,
+  translateDetection,
+  type CameraCandidateBox,
+  type FrameTranslation,
+  type LumaFrame
+} from "@/lib/live-camera-tracking";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
 import { barboraProductSlug } from "@/lib/online-offer";
@@ -70,11 +79,15 @@ import styles from "./scanner-app.module.css";
 type CameraState = "idle" | "requesting" | "live" | "denied" | "error";
 type RecognitionState = "idle" | "scanning" | "matched" | "retained" | "not_sure" | "unavailable" | "rate_limited" | "error";
 
-const CAMERA_AUTOFOCUS_SETTLE_MS = 550;
-const CAMERA_SCAN_INTERVAL_MS = 350;
-const CAMERA_SCAN_KICKOFF_MS = 600;
-const CAMERA_MIN_CAPTURE_INTERVAL_MS = 1_600;
-const CAMERA_MIN_EDGE_SCORE = 5.5;
+const CAMERA_AUTOFOCUS_SETTLE_MS = 320;
+const CAMERA_SCAN_INTERVAL_MS = 240;
+const CAMERA_SCAN_KICKOFF_MS = 340;
+const CAMERA_MIN_CAPTURE_INTERVAL_MS = 1_000;
+const CAMERA_FORCE_CAPTURE_MS = 1_250;
+const CAMERA_SCENE_RETRY_MS = 900;
+const CAMERA_MIN_EDGE_SCORE = 4.1;
+const CAMERA_SAMPLE_WIDTH = 96;
+const CAMERA_SAMPLE_HEIGHT = 72;
 
 interface NativeBarcodeDetector {
   detect(source: ImageBitmapSource): Promise<Array<{ rawValue?: string }>>;
@@ -213,11 +226,15 @@ export function ScannerApp() {
   const recognitionAbortRef = useRef<AbortController | null>(null);
   const enrichmentAbortRef = useRef<AbortController | null>(null);
   const lowResFrameRef = useRef<Uint8ClampedArray | null>(null);
+  const latestCameraFrameRef = useRef<LumaFrame | null>(null);
+  const recognitionFrameRef = useRef<LumaFrame | null>(null);
+  const trackingTranslationRef = useRef<FrameTranslation | null>(null);
+  const trackingMismatchRef = useRef(0);
+  const trackingActiveRef = useRef(false);
+  const captureWaitStartedRef = useRef(0);
+  const retryRecognitionAtRef = useRef(0);
   const cameraReadyAtRef = useRef(0);
   const stableFrameCountRef = useRef(0);
-  const focusRetryRef = useRef(false);
-  const shelfCompletionRetryRef = useRef(false);
-  const provisionalResponseRef = useRef<RecognitionResponse | null>(null);
   const lastCaptureRef = useRef(0);
   const sessionIdRef = useRef<string | null>(null);
   const resultsSheetRef = useRef<HTMLElement>(null);
@@ -248,6 +265,8 @@ export function ScannerApp() {
   const [stageDimensions, setStageDimensions] = useState<MediaDimensions | null>(null);
   const [mediaDimensions, setMediaDimensions] = useState<MediaDimensions | null>(null);
   const [networkOnline, setNetworkOnline] = useState(true);
+  const [trackingTranslation, setTrackingTranslation] = useState<FrameTranslation | null>(null);
+  const [candidateBoxes, setCandidateBoxes] = useState<CameraCandidateBox[]>([]);
 
   const ensureSession = useCallback(() => {
     if (!sessionIdRef.current) sessionIdRef.current = makeSessionId();
@@ -386,63 +405,32 @@ export function ScannerApp() {
   }, []);
 
   const applyRecognition = useCallback(
-    (result: RecognitionResponse, eventSource: ScanSource, focusMode = false) => {
+    (result: RecognitionResponse, eventSource: ScanSource) => {
       if (result.status === "provider_unavailable") {
-        const provisional = provisionalResponseRef.current;
         pauseRecognitionLoop();
-        shelfCompletionRetryRef.current = false;
         setRecognitionState("unavailable");
-        setResultLocked(Boolean(provisional));
-        setStatusMessage(
-          provisional
-            ? "Recognition is unavailable. 1 product found from the last frame — try again or open the demo."
-            : "Recognition is unavailable — try again or open the demo."
-        );
+        setResultLocked(false);
+        setStatusMessage("Recognition is unavailable — try again or open the demo.");
         return;
       }
       if (result.status !== "matched" || result.detections.length === 0) {
-        if (eventSource === "camera" && shelfCompletionRetryRef.current) {
-          const provisional = provisionalResponseRef.current;
-          shelfCompletionRetryRef.current = false;
-          provisionalResponseRef.current = null;
-          pauseRecognitionLoop();
-          if (provisional) {
-            const provisionalDetections = dedupeProductDetections(provisional.detections).slice(0, MAX_SCAN_PRODUCTS);
-            const provisionalIds = provisionalDetections.map((detection) => detection.productId);
-            setDetections(provisionalDetections);
-            setTray(provisionalIds);
-            setSelectedId(provisionalIds[0] || null);
-            setResultLocked(true);
-            setRecognitionState("retained");
-            setStatusMessage("1 product found");
-            track("scan_completed", eventSource, provisionalIds[0], {
-              count: provisionalIds.length,
-              latencyMs: provisional.latencyMs,
-              model: provisional.model,
-              completionRetry: true
-            });
-            return;
-          }
-          setResultLocked(true);
-          setRecognitionState("not_sure");
-          setStatusMessage("Could not confirm the shelf — scan again");
-        } else if (eventSource === "camera" && !focusMode) {
-          focusRetryRef.current = true;
+        if (eventSource === "camera") {
+          trackingActiveRef.current = false;
+          recognitionFrameRef.current = null;
+          retryRecognitionAtRef.current = Date.now() + CAMERA_SCENE_RETRY_MS;
           lastCaptureRef.current = 0;
-          setRecognitionState("scanning");
-          setStatusMessage("Trying a closer center read…");
+          setTrackingTranslation(null);
+          setRecognitionState("not_sure");
+          setStatusMessage("Keep the shelf steady — scanning again…");
         } else {
           setRecognitionState("not_sure");
-          setStatusMessage(
-            eventSource === "camera" ? "Not sure — center one package" : "Not sure — use a clearer package photo"
-          );
+          setStatusMessage("Not sure — use a clearer package photo");
         }
         setDetections([]);
         setTray([]);
         setSelectedId(null);
         return;
       }
-      focusRetryRef.current = false;
       const uniqueDetections = dedupeProductDetections(result.detections).slice(0, MAX_SCAN_PRODUCTS);
       const inlineEntries: Array<[string, ProductPayload]> = uniqueDetections.flatMap((detection) =>
         detection.inlineProduct
@@ -452,12 +440,7 @@ export function ScannerApp() {
       if (inlineEntries.length) {
         setProducts((current) => ({ ...current, ...Object.fromEntries(inlineEntries) }));
       }
-      const needsShelfCompletionRetry =
-        eventSource === "camera" &&
-        !focusMode &&
-        uniqueDetections.length === 1 &&
-        !shelfCompletionRetryRef.current;
-      setRecognitionState(needsShelfCompletionRetry ? "scanning" : "matched");
+      setRecognitionState("matched");
       setDetections(uniqueDetections);
       const ids = uniqueDetections.map((detection) => detection.productId);
       const catalogIds = uniqueDetections
@@ -471,24 +454,10 @@ export function ScannerApp() {
         )
         .filter((id) => !uniqueDetections.some((detection) => detection.productId === id && detection.inlineProduct))
         .filter((id): id is string => Boolean(id));
-      if (needsShelfCompletionRetry) {
-        shelfCompletionRetryRef.current = true;
-        provisionalResponseRef.current = { ...result, detections: uniqueDetections };
-        setResultLocked(false);
-        setResultsExpanded(false);
-        setStatusMessage("1 product found. Scanning the rest of the shelf…");
-        setTray(ids);
-        manualSelectionRef.current = false;
-        setSelectedId(ids[0] || null);
-        lastCaptureRef.current = 0;
-        void hydrateProducts(catalogIds);
-        return;
-      }
-      shelfCompletionRetryRef.current = false;
-      provisionalResponseRef.current = null;
       if (eventSource === "camera") {
-        if (scanTimerRef.current) clearInterval(scanTimerRef.current);
-        scanTimerRef.current = null;
+        trackingActiveRef.current = true;
+        trackingMismatchRef.current = 0;
+        setCandidateBoxes([]);
         setResultLocked(true);
       }
       setResultsExpanded(eventSource === "upload" && ids.length > 1);
@@ -537,8 +506,7 @@ export function ScannerApp() {
         if (response.status === 429) {
           const retrySeconds = retryAfterSeconds(response.headers.get("retry-after"));
           pauseRecognitionLoop();
-          shelfCompletionRetryRef.current = false;
-          setResultLocked(Boolean(provisionalResponseRef.current));
+          setResultLocked(false);
           setRecognitionState("rate_limited");
           setStatusMessage(`Scanning paused. Try again in ${retrySeconds}s or open the demo.`);
           track("recognition_failed", payload.source, undefined, {
@@ -550,16 +518,30 @@ export function ScannerApp() {
         if (!response.ok) throw new Error(`Recognition returned ${response.status}`);
         const result = (await response.json()) as RecognitionResponse;
         if (controller.signal.aborted) return;
+        if (payload.source === "camera") {
+          const liveTranslation = recognitionFrameRef.current && latestCameraFrameRef.current
+            ? estimateFrameTranslation(recognitionFrameRef.current, latestCameraFrameRef.current)
+            : null;
+          if (!isSameCameraScene(liveTranslation)) {
+            trackingActiveRef.current = false;
+            recognitionFrameRef.current = null;
+            retryRecognitionAtRef.current = Date.now() + 250;
+            lastCaptureRef.current = 0;
+            setRecognitionState("idle");
+            setStatusMessage("Scene changed — reading the new shelf…");
+            return;
+          }
+          trackingTranslationRef.current = liveTranslation;
+          setTrackingTranslation(liveTranslation);
+        }
         applyRecognition(
           payload.focusMode ? remapRecognitionFromCrop(result) : result,
-          payload.source,
-          Boolean(payload.focusMode)
+          payload.source
         );
       } catch (error) {
         if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
         pauseRecognitionLoop();
-        shelfCompletionRetryRef.current = false;
-        setResultLocked(Boolean(provisionalResponseRef.current));
+        setResultLocked(false);
         setRecognitionState("error");
         setStatusMessage("The scan paused. Try again.");
         track("recognition_failed", payload.source, undefined, {
@@ -664,11 +646,17 @@ export function ScannerApp() {
     streamRef.current?.getTracks().forEach((trackItem) => trackItem.stop());
     streamRef.current = null;
     lowResFrameRef.current = null;
+    latestCameraFrameRef.current = null;
+    recognitionFrameRef.current = null;
+    trackingTranslationRef.current = null;
+    trackingMismatchRef.current = 0;
+    trackingActiveRef.current = false;
+    captureWaitStartedRef.current = 0;
+    retryRecognitionAtRef.current = 0;
+    setTrackingTranslation(null);
+    setCandidateBoxes([]);
     cameraReadyAtRef.current = 0;
     stableFrameCountRef.current = 0;
-    focusRetryRef.current = false;
-    shelfCompletionRetryRef.current = false;
-    provisionalResponseRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
@@ -709,8 +697,7 @@ export function ScannerApp() {
                     model: "local-barcode-catalog-v1",
                     imageStored: false
                   },
-                  "camera",
-                  true
+                  "camera"
                 );
                 return;
               }
@@ -729,32 +716,75 @@ export function ScannerApp() {
 
   const captureStableFrame = useCallback(() => {
     const video = videoRef.current;
-    if (!video || video.readyState < 2 || inFlightRef.current) return;
+    if (!video || video.readyState < 2) return;
     const now = Date.now();
     if (now - cameraReadyAtRef.current < CAMERA_AUTOFOCUS_SETTLE_MS) return;
     const lowCanvas = document.createElement("canvas");
-    lowCanvas.width = 64;
-    lowCanvas.height = 48;
+    lowCanvas.width = CAMERA_SAMPLE_WIDTH;
+    lowCanvas.height = CAMERA_SAMPLE_HEIGHT;
     const lowContext = lowCanvas.getContext("2d", { willReadFrequently: true });
     if (!lowContext) return;
-    lowContext.drawImage(video, 0, 0, 64, 48);
-    const current = lowContext.getImageData(0, 0, 64, 48).data;
-    if (luminanceEdgeScore(current, 64, 48) < CAMERA_MIN_EDGE_SCORE) {
+    lowContext.drawImage(video, 0, 0, CAMERA_SAMPLE_WIDTH, CAMERA_SAMPLE_HEIGHT);
+    const current = lowContext.getImageData(0, 0, CAMERA_SAMPLE_WIDTH, CAMERA_SAMPLE_HEIGHT).data;
+    const currentLuma = rgbaToLuma(current, CAMERA_SAMPLE_WIDTH, CAMERA_SAMPLE_HEIGHT);
+    latestCameraFrameRef.current = currentLuma;
+
+    if (!trackingActiveRef.current && !inFlightRef.current) {
+      setCandidateBoxes(proposeCameraCandidates(currentLuma));
+    }
+
+    if (recognitionFrameRef.current) {
+      const translation = estimateFrameTranslation(recognitionFrameRef.current, currentLuma);
+      if (isSameCameraScene(translation)) {
+        trackingMismatchRef.current = 0;
+        trackingTranslationRef.current = translation;
+        setTrackingTranslation(translation);
+        if (trackingActiveRef.current || inFlightRef.current) return;
+      } else {
+        trackingMismatchRef.current += 1;
+        if (trackingMismatchRef.current < 2) return;
+        recognitionAbortRef.current?.abort();
+        recognitionAbortRef.current = null;
+        inFlightRef.current = false;
+        trackingActiveRef.current = false;
+        recognitionFrameRef.current = null;
+        trackingTranslationRef.current = null;
+        trackingMismatchRef.current = 0;
+        retryRecognitionAtRef.current = now + 180;
+        captureWaitStartedRef.current = now;
+        lastCaptureRef.current = 0;
+        setTrackingTranslation(null);
+        setDetections([]);
+        setTray([]);
+        setSelectedId(null);
+        setResultLocked(false);
+        setResultsExpanded(false);
+        setRecognitionState("idle");
+        setStatusMessage("Scene changed — reading the new shelf…");
+      }
+    }
+
+    if (inFlightRef.current || now < retryRecognitionAtRef.current) return;
+    if (!captureWaitStartedRef.current) captureWaitStartedRef.current = now;
+    const forceCapture = now - captureWaitStartedRef.current >= CAMERA_FORCE_CAPTURE_MS;
+    if (luminanceEdgeScore(current, CAMERA_SAMPLE_WIDTH, CAMERA_SAMPLE_HEIGHT) < CAMERA_MIN_EDGE_SCORE && !forceCapture) {
       stableFrameCountRef.current = 0;
       return;
     }
     const previous = lowResFrameRef.current;
     lowResFrameRef.current = new Uint8ClampedArray(current);
-    if (!previous) {
+    if (!previous && !forceCapture) {
       stableFrameCountRef.current = 0;
       return;
     }
     let difference = 0;
-    for (let index = 0; index < current.length; index += 16) {
-      difference += Math.abs(current[index] - previous[index]);
+    if (previous) {
+      for (let index = 0; index < current.length; index += 16) {
+        difference += Math.abs(current[index] - previous[index]);
+      }
+      difference /= current.length / 16;
     }
-    difference /= current.length / 16;
-    if (difference >= 11) {
+    if (difference >= 13 && !forceCapture) {
       stableFrameCountRef.current = 0;
       return;
     }
@@ -763,13 +793,13 @@ export function ScannerApp() {
     if (now - lastCaptureRef.current < CAMERA_MIN_CAPTURE_INTERVAL_MS) return;
     stableFrameCountRef.current = 0;
     lastCaptureRef.current = now;
+    captureWaitStartedRef.current = 0;
 
     const canvas = document.createElement("canvas");
     const sourceWidth = video.videoWidth || 960;
     const sourceHeight = video.videoHeight || 1280;
-    const focusMode = focusRetryRef.current;
-    const crop = focusMode ? CAMERA_FOCUS_CROP : { x: 0, y: 0, width: 1, height: 1 };
-    const targetWidth = Math.min(sourceWidth * crop.width, 1152);
+    const crop = { x: 0, y: 0, width: 1, height: 1 };
+    const targetWidth = Math.min(sourceWidth, 960);
     canvas.width = targetWidth;
     canvas.height = Math.round(targetWidth * ((sourceHeight * crop.height) / (sourceWidth * crop.width)));
     const context = canvas.getContext("2d");
@@ -785,9 +815,13 @@ export function ScannerApp() {
       canvas.width,
       canvas.height
     );
-    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.74);
-    if (!focusMode) setScanFrameUrl(imageDataUrl);
-    void recognizeCameraFrame(canvas, imageDataUrl, focusMode);
+    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.68);
+    recognitionFrameRef.current = currentLuma;
+    trackingTranslationRef.current = { dx: 0, dy: 0, difference: 0, confidence: 1 };
+    trackingMismatchRef.current = 0;
+    setTrackingTranslation(trackingTranslationRef.current);
+    setScanFrameUrl(imageDataUrl);
+    void recognizeCameraFrame(canvas, imageDataUrl, false);
   }, [recognizeCameraFrame]);
 
   const requestCamera = useCallback(async () => {
@@ -805,11 +839,7 @@ export function ScannerApp() {
     manualSelectionRef.current = false;
     setResultLocked(false);
     setResultsExpanded(false);
-    setDemoOpen(false);
     setMediaDimensions(null);
-    focusRetryRef.current = false;
-    shelfCompletionRetryRef.current = false;
-    provisionalResponseRef.current = null;
     setStatusMessage("Waiting for camera permission…");
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera API unavailable");
@@ -855,6 +885,8 @@ export function ScannerApp() {
       track("scan_started", "camera");
       lastCaptureRef.current = 0;
       cameraReadyAtRef.current = Date.now();
+      captureWaitStartedRef.current = cameraReadyAtRef.current;
+      retryRecognitionAtRef.current = 0;
       stableFrameCountRef.current = 0;
       scanKickoffRef.current = setTimeout(captureStableFrame, CAMERA_SCAN_KICKOFF_MS);
       scanTimerRef.current = setInterval(captureStableFrame, CAMERA_SCAN_INTERVAL_MS);
@@ -884,11 +916,17 @@ export function ScannerApp() {
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
     scanTimerRef.current = null;
     lowResFrameRef.current = null;
+    latestCameraFrameRef.current = null;
+    recognitionFrameRef.current = null;
+    trackingTranslationRef.current = null;
+    trackingMismatchRef.current = 0;
+    trackingActiveRef.current = false;
+    captureWaitStartedRef.current = Date.now();
+    retryRecognitionAtRef.current = 0;
+    setTrackingTranslation(null);
+    setCandidateBoxes([]);
     cameraReadyAtRef.current = Date.now();
     stableFrameCountRef.current = 0;
-    focusRetryRef.current = false;
-    shelfCompletionRetryRef.current = false;
-    provisionalResponseRef.current = null;
     lastCaptureRef.current = 0;
     setDetections([]);
     setTray([]);
@@ -1054,6 +1092,13 @@ export function ScannerApp() {
     () => detections.filter((detection) => ratedTrayIdSet.has(detection.productId)),
     [detections, ratedTrayIdSet]
   );
+  const displayedRatedDetections = useMemo(
+    () =>
+      source === "camera" && trackingTranslation
+        ? ratedDetections.map((detection) => translateDetection(detection, trackingTranslation))
+        : ratedDetections,
+    [ratedDetections, source, trackingTranslation]
+  );
   const fairComparison = useMemo(() => compareFairCohorts(loadedTray), [loadedTray]);
   const bestId = globalBestProductId(fairComparison);
   const ratedCount = ratedDetections.length;
@@ -1116,10 +1161,6 @@ export function ScannerApp() {
         : source === "upload"
           ? previewUrl
           : scanFrameUrl;
-  const showCapturedCameraFrame =
-    source === "camera" &&
-    Boolean(scanFrameUrl) &&
-    (recognitionState === "scanning" || recognitionState === "matched" || recognitionState === "retained" || resultLocked);
   const firstRankedId = rankedRatedIds[0] || rankedTrayIds[0];
   const effectiveSelectedId = selectedId && visibleTrayIdSet.has(selectedId)
     ? selectedId
@@ -1265,19 +1306,6 @@ export function ScannerApp() {
               />
             ) : null}
 
-            {showCapturedCameraFrame && scanFrameUrl ? (
-              <Image
-                className={styles.capturedCameraFrame}
-                src={scanFrameUrl}
-                alt="Captured camera frame"
-                data-testid="captured-camera-frame"
-                fill
-                sizes="100vw"
-                unoptimized
-                priority
-              />
-            ) : null}
-
             {source === "sample-shelf" ? <ShelfScene onLoad={setMediaDimensions} /> : null}
 
             {source === "sample-conveyor" ? <CheckoutScene onLoad={setMediaDimensions} /> : null}
@@ -1308,7 +1336,29 @@ export function ScannerApp() {
               </div>
             ) : null}
 
-            {ratedDetections.map((detection) => {
+            {source === "camera" && candidateBoxes.length > 0 && displayedRatedDetections.length === 0
+              ? candidateBoxes.map((box, index) => {
+                  const mappedBox = mediaDimensions && stageDimensions
+                    ? mapBoxToObjectContain(box, mediaDimensions, stageDimensions)
+                    : box;
+                  return (
+                    <span
+                      aria-hidden="true"
+                      className={styles.cameraCandidateBox}
+                      data-testid="camera-candidate-box"
+                      key={`${box.x}-${box.y}-${index}`}
+                      style={{
+                        left: `${mappedBox.x * 100}%`,
+                        top: `${mappedBox.y * 100}%`,
+                        width: `${mappedBox.width * 100}%`,
+                        height: `${mappedBox.height * 100}%`
+                      }}
+                    />
+                  );
+                })
+              : null}
+
+            {displayedRatedDetections.map((detection) => {
               const product = products[detection.productId]?.product;
               const presentation = overlayMatchPresentation(product);
               const displayName = product?.name || detection.identity?.name || detection.observedText || "product";

@@ -11,10 +11,16 @@ async function authenticate(page: Page) {
 
 async function unlock(page: Page) {
   await authenticate(page);
-  await page.goto("/");
-  await page.waitForLoadState("networkidle");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
+  await expect
+    .poll(async () => {
+      const retryVisible = await page.getByRole("button", { name: "Enable camera" }).isVisible().catch(() => false);
+      const liveVideoVisible = await page.locator("video").isVisible().catch(() => false);
+      return retryVisible || liveVideoVisible;
+    })
+    .toBe(true);
 }
 
 async function expectInsideViewport(page: Page, locator: Locator) {
@@ -288,6 +294,7 @@ function ratedInlineProduct(input: {
 
 async function mockLiveCamera(page: Page) {
   await page.addInitScript(() => {
+    (window as Window & { __cameraScene?: number }).__cameraScene = 0;
     const canvas = document.createElement("canvas");
     canvas.width = 640;
     canvas.height = 960;
@@ -310,13 +317,16 @@ async function mockLiveCamera(page: Page) {
       sh: number,
       settings?: ImageDataSettings
     ) {
-      if (sw === 64 && sh === 48) {
+      if (sw === 96 && sh === 72) {
         const imageData = originalGetImageData.call(this, sx, sy, sw, sh, settings);
         const { data } = imageData;
+        const scene = (window as Window & { __cameraScene?: number }).__cameraScene || 0;
         for (let y = 0; y < sh; y += 1) {
           for (let x = 0; x < sw; x += 1) {
             const offset = (y * sw + x) * 4;
-            const value = (x + y) % 2 === 0 ? 32 : 224;
+            const value = scene === 0
+              ? (x * 37 + y * 71 + x * y * 13) % 223 + 16
+              : (x * 19 + y * 43 + x * y * 7 + 97) % 223 + 16;
             data[offset] = value;
             data[offset + 1] = value;
             data[offset + 2] = value;
@@ -1340,7 +1350,7 @@ test("a broad live shelf scan keeps several different Sugar.no-rated products in
         latencyMs: 1_200,
         model: "gemini-3.7-flash",
         imageStored: false,
-        detections: recognitionAttempts === 1 ? detections.slice(0, 1) : detections
+        detections
       })
     });
   });
@@ -1355,8 +1365,8 @@ test("a broad live shelf scan keeps several different Sugar.no-rated products in
   await unlock(page);
 
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit", { timeout: 10_000 });
-  expect(recognitionAttempts).toBe(2);
-  expect(focusModes).toEqual([false, false]);
+  expect(recognitionAttempts).toBe(1);
+  expect(focusModes).toEqual([false]);
   const scanner = page.getByLabel("Live camera scanner");
   await expect(scanner.locator('button[aria-label^="Open "]')).toHaveCount(3);
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
@@ -1501,7 +1511,7 @@ test("live camera applies each online result without waiting for the slowest pro
   await expect(preview.getByText("Nutrition not verified online", { exact: true })).toBeVisible();
 });
 
-test("a not-sure completion retry retains the confidently named provisional product", async ({ page }) => {
+test("a visual-only live result is shown after one request without a completion retry", async ({ page }) => {
   await mockLiveCamera(page);
   let recognitionRequests = 0;
   const focusModes: boolean[] = [];
@@ -1511,49 +1521,46 @@ test("a not-sure completion retry retains the confidently named provisional prod
     focusModes.push(Boolean(request.focusMode));
     await route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify(
-        recognitionRequests === 1
-          ? {
-              requestId: "provisional-product",
-              status: "matched",
-              latencyMs: 700,
-              model: "qa-mock",
-              imageStored: false,
-              detections: [{
-                productId: "visual:first-product",
-                catalogProductId: null,
-                confidence: 0.96,
-                box: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 },
-                observedText: "First Product",
-                identity: {
-                  brand: "First",
-                  name: "First Product",
-                  variant: null,
-                  packSize: null,
-                  category: null,
-                  matchKind: "visual_only"
-                },
-                shelfPrice: null,
-                retailerOffer: null
-              }]
-            }
-          : {
-              requestId: "completion-not-sure",
-              status: "not_sure",
-              latencyMs: 700,
-              model: "qa-mock",
-              imageStored: false,
-              detections: []
-            }
-      )
+      body: JSON.stringify({
+        requestId: "visual-only-product",
+        status: "matched",
+        latencyMs: 700,
+        model: "qa-mock",
+        imageStored: false,
+        detections: [{
+          productId: "visual:first-product",
+          catalogProductId: null,
+          confidence: 0.96,
+          box: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 },
+          observedText: "First Product",
+          identity: {
+            brand: "First",
+            name: "First Product",
+            variant: null,
+            packSize: null,
+            category: null,
+            matchKind: "visual_only"
+          },
+          shelfPrice: null,
+          retailerOffer: null
+        }]
+      })
+    });
+  });
+
+  await page.route("**/api/resolve-products", async (route) => {
+    const { detections } = route.request().postDataJSON() as { detections: unknown[] };
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ detections, latencyMs: 1, imageStored: false })
     });
   });
 
   await unlock(page);
-  await expect(page.getByRole("status")).toContainText("1 product found", { timeout: 10_000 });
+  await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit", { timeout: 10_000 });
   await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open First Product"]')).toHaveCount(0);
-  await expect.poll(() => recognitionRequests, { timeout: 5_000 }).toBe(2);
-  expect(focusModes).toEqual([false, false]);
+  await expect.poll(() => recognitionRequests, { timeout: 5_000 }).toBe(1);
+  expect(focusModes).toEqual([false]);
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: "First Product" })).toBeVisible();
   await expect(page.getByText("Nutrition not verified", { exact: true })).toBeVisible();
@@ -1586,43 +1593,11 @@ test("provider unavailability pauses live recognition and offers manual recovery
   expect(recognitionRequests).toBe(1);
 });
 
-test("HTTP 429 preserves a provisional product and pauses automatic spending retries", async ({ page }) => {
+test("HTTP 429 pauses automatic recognition and offers manual recovery", async ({ page }) => {
   await mockLiveCamera(page);
   let recognitionRequests = 0;
   await page.route("**/api/recognize", async (route) => {
     recognitionRequests += 1;
-    if (recognitionRequests === 1) {
-      await route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify({
-          requestId: "rate-limit-provisional",
-          status: "matched",
-          latencyMs: 200,
-          model: "qa-mock",
-          imageStored: false,
-          detections: [
-            {
-              productId: "visual:rate-limit-product",
-              catalogProductId: null,
-              confidence: 0.9,
-              box: { x: 0.2, y: 0.2, width: 0.6, height: 0.6 },
-              observedText: "Rate Limit Product",
-              identity: {
-                brand: "Rate Limit",
-                name: "Rate Limit Product",
-                variant: null,
-                packSize: null,
-                category: null,
-                matchKind: "visual_only"
-              },
-              shelfPrice: null,
-              retailerOffer: null
-            }
-          ]
-        })
-      });
-      return;
-    }
     await route.fulfill({
       status: 429,
       headers: { "Retry-After": "7" },
@@ -1638,12 +1613,11 @@ test("HTTP 429 preserves a provisional product and pauses automatic spending ret
   );
   await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
-  await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open Rate Limit Product"]')).toHaveCount(0);
   await page.waitForTimeout(2_500);
-  expect(recognitionRequests).toBe(2);
+  expect(recognitionRequests).toBe(1);
 });
 
-test("live camera groups repeated packs, holds the result and replaces it only after Scan again", async ({ page }) => {
+test("live camera groups repeated packs, tracks a stable scene and automatically replaces a changed scene", async ({ page }) => {
   await mockLiveCamera(page);
 
   let currentProduct: "coke" | "activia" = "coke";
@@ -1707,9 +1681,8 @@ test("live camera groups repeated packs, holds the result and replaces it only a
   await unlock(page);
 
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
-  const capturedCameraFrame = page.getByTestId("captured-camera-frame");
-  await expect(capturedCameraFrame).toBeVisible();
-  await expect(capturedCameraFrame).toHaveAttribute("src", /^data:image\/jpeg/);
+  await expect(page.getByTestId("captured-camera-frame")).toHaveCount(0);
+  await expect(page.getByLabel("Live camera preview")).toBeVisible();
   await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toBeVisible();
@@ -1719,18 +1692,19 @@ test("live camera groups repeated packs, holds the result and replaces it only a
   expect(scanAgainBox?.height).toBeGreaterThanOrEqual(44);
   await expect(page.getByLabel("Products ranked by Sugar.no fit")).toHaveCount(0);
   await page.waitForTimeout(2_500);
-  expect(recognitionRequests).toBe(2);
-  expect(focusModes).toEqual([false, false]);
+  expect(recognitionRequests).toBe(1);
+  expect(focusModes).toEqual([false]);
 
   currentProduct = "activia";
-  await page.getByRole("button", { name: "Scan again" }).click();
-  await expect(capturedCameraFrame).toHaveCount(0);
+  await page.evaluate(() => {
+    (window as Window & { __cameraScene?: number }).__cameraScene = 1;
+  });
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Activia Forest Berries Yogurt/ })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toHaveCount(0);
-  expect(recognitionRequests).toBe(4);
-  expect(focusModes).toEqual([false, false, false, false]);
+  expect(recognitionRequests).toBe(2);
+  expect(focusModes).toEqual([false, false]);
 });
 
 test("a rated product receives an honest price comparison", async ({ page }) => {

@@ -28,7 +28,7 @@ Open the Barbora CTA, then return.
 
 “The retailer action is deliberately secondary. If the camera can associate a shelf label with an exact package, its price appears under the recognized product and we check the live Barbora page. We cross out the shelf price and say `Buy cheaper at Barbora` only when the exact online SKU is genuinely cheaper. With one retailer this is a Barbora price check, not the best price, and we do not claim affiliate revenue that does not exist.”
 
-For the optional live-camera moment, first show several different products across one shelf and explain that the broad pass scans the whole frame rather than only the center. Then show several facings of one SKU: repeated cans count as one product type and the successful frame is held while the viewer reads. Tap `Scan again` before showing a different product; the new scan replaces the old one instead of accumulating it.
+For the optional live-camera moment, first show several different products across one shelf and explain that the broad pass scans the whole frame rather than only the center. Before the AI answer, neutral dashed regions may appear as aiming feedback; they are not product ratings. Then show several facings of one SKU: repeated cans count as one product type. Move the phone slightly so the confirmed outlines follow, then point at a clearly different shelf and show that stale results disappear and the new scene is read automatically.
 
 ## Checkout
 
