@@ -31,4 +31,9 @@ Railway runtime logs showed every unfamiliar-product web enrichment failing befo
 
 ## Production evidence
 
-To be completed after the GitHub `main` push and Railway deployment.
+- GitHub `main` release SHA: `94ad65cd2a675d5b9f77424779e46415efc07fb2`.
+- Railway deployment: `a850a370-a84c-461c-9922-bacbffbdf28b` (`SUCCESS`).
+- `GET /api/health`: `200`; reported commit matched the GitHub release SHA and the production catalog was readable.
+- Authenticated `POST /api/resolve-products` with `MAGGI Sātīgais Vistas Buljons 120g`: `200` in 6.56 seconds at the Railway edge (`latencyMs: 6497`).
+- The response stayed neutral because no exact cited nutrition source was confirmed, but it completed normally instead of failing with the former unsupported 6-second Google deadline.
+- Railway runtime and HTTP logs contained no recurrence of `Manually set deadline 6s is too short`; the production request completed without an upstream error.
