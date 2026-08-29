@@ -150,6 +150,8 @@ Apply `supabase/migrations/202608290001_web_nutrition_cache.sql` before enabling
 
 Connected-retailer resolution runs before Open Food Facts and grounded web lookup. The Rimi matcher normalizes a small audited set of English package labels to their Latvian catalog identity while still requiring the same brand, pack size and an unambiguous top candidate. A translated identity that remains ambiguous is not accepted and may proceed to the bounded fallback chain.
 
+The managed `products` table is optional in this proof of concept. If it has not been migrated and seeded, or is empty, product recognition and barcode lookup continue from the checked-in scored catalog while `web_nutrition_cache` still uses Supabase independently.
+
 ## Railway release
 
 Normal releases are pushed once, after the requested batch is complete:

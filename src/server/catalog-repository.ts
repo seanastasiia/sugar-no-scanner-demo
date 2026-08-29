@@ -72,7 +72,13 @@ export async function listProducts(): Promise<ScoredProduct[]> {
   if (!supabase) return getCatalog();
   if (catalogCache && catalogCache.expiresAt > Date.now()) return catalogCache.products;
   const { data, error } = await supabase.from("products").select("*, product_sources(*)").order("name");
-  if (error) throw new Error(`Catalog query failed: ${error.message}`);
+  if (error || !data?.length) {
+    console.info(
+      "catalog_supabase_fallback",
+      JSON.stringify({ reason: error?.message || "empty_products_table" })
+    );
+    return getCatalog();
+  }
   const products = scoreCatalog((data as ProductRow[]).map(rowToProduct));
   catalogCache = { products, expiresAt: Date.now() + CATALOG_CACHE_TTL_MS };
   return products;

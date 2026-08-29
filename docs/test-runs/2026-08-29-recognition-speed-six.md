@@ -42,6 +42,14 @@ Implementation commit: `2fba4c60bdb5c456ffe168f2f1d98b82b46b1b35`.
 - `git diff --check`: passed.
 - `npm run catalog:preload:nutrition -- --input data/preload-identities.latvia-demo.json`: passed in dry-run mode for 10/10 identities.
 
+Final candidate after Supabase activation:
+
+- `npm run verify`: passed — lint, TypeScript, 40 test files / 208 tests, and the production build.
+- Supabase catalog fallback focus: 3 files / 10 tests passed; a missing or empty optional `products` table keeps the checked-in catalog available.
+- `npm run test:e2e:smoke`: passed — 3/3 Mobile Safari smoke scenarios.
+- `npm run test:e2e`: passed — 28/28 Mobile Safari scenarios on the complete six-feature package.
+- `git diff --check`: passed.
+
 ## Supabase activation
 
 - Project: `sugar-no-scanner-demo` (`gkivwusbobnwzrisbkle`), Central EU (Frankfurt).
@@ -51,6 +59,8 @@ Implementation commit: `2fba4c60bdb5c456ffe168f2f1d98b82b46b1b35`.
 - Immediate repeat completed in 2.23 seconds including Railway CLI startup, returned the same ten cached outcomes and emitted no nutrition-provider fallback log.
 
 GitHub push, Railway deployment and production health evidence are recorded below only after the complete release succeeds.
+
+The first Supabase-enabled production barcode smoke exposed an unseeded optional `products` table and returned HTTP 500. The release candidate now fails open to the checked-in catalog while keeping the independent persistent nutrition cache enabled; this regression is covered by two repository tests and must pass the final production barcode smoke before release is considered complete.
 
 ## Product checks after deployment
 
