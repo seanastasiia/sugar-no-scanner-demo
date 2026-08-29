@@ -6,12 +6,18 @@ import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
 import { normalizeRetailText, type BarboraLookupInput } from "./barbora-catalog";
 
 const DEFAULT_MODEL = "gemini-3.7-flash";
-// Grounded search is the last fallback, not the primary catalog path. Keep it
-// bounded so one obscure SKU cannot hold a result card for ~18 seconds.
-const WEB_NUTRITION_TIMEOUT_MS = 6_000;
+const MIN_GOOGLE_HTTP_TIMEOUT_MS = 10_000;
+const DEFAULT_WEB_NUTRITION_TIMEOUT_MS = 12_000;
+const MAX_WEB_NUTRITION_TIMEOUT_MS = 30_000;
 const SUCCESS_CACHE_TTL_MS = 24 * 60 * 60_000;
 const MISS_CACHE_TTL_MS = 30 * 60_000;
 const responseCache = new Map<string, { expiresAt: number; result: WebNutritionResolution | null }>();
+
+export function webNutritionTimeoutMs(raw = process.env.GEMINI_WEB_NUTRITION_TIMEOUT_MS): number {
+  const parsed = Number.parseInt(raw || "", 10);
+  if (!Number.isFinite(parsed)) return DEFAULT_WEB_NUTRITION_TIMEOUT_MS;
+  return Math.min(MAX_WEB_NUTRITION_TIMEOUT_MS, Math.max(MIN_GOOGLE_HTTP_TIMEOUT_MS, parsed));
+}
 
 const groundedNutritionSchema = z.object({
   exactProductMatch: z.boolean(),
@@ -184,7 +190,7 @@ export async function resolveWebNutritionProduct(
         `The object must contain exactProductMatch, matchedBrand, matchedProductName, nutritionBasis as 100g/100ml/unknown, ` +
         `numeric energyKcal, proteinG, totalSugarG and confidence from 0 to 1, plus a short evidence string.`,
       config: {
-        httpOptions: { timeout: WEB_NUTRITION_TIMEOUT_MS },
+        httpOptions: { timeout: webNutritionTimeoutMs() },
         thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
         temperature: 0,
         tools: [{ googleSearch: {} }]
