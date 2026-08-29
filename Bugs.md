@@ -16,6 +16,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-29: the Supabase Barbora registry stored 18,559 discovery identities although only 7,433 had enough source-backed nutrition for Sugar.no fit.** The operational import now keeps exactly those 7,433 exact SKUs with both protein and total sugar, removes discovery-only Barbora rows, and fails closed if the curated count drifts.
+- **2026-08-29: the 30-day web-nutrition TTL acted as a hard expiry and forced a previously verified SKU through the slow internet search again.** Verified exact-SKU results now remain permanently available, become due for a non-blocking recheck after their source-specific freshness window, keep append-only versions, and cannot be overwritten by a transient miss or provider failure.
 - **2026-08-29: camera result boxes remained over a newer live scene after the phone moved or the shelf was closed.** Recognition now displays the exact submitted camera snapshot behind its boxes and keeps it until `Scan again`, so spatial overlays cannot drift onto unrelated live video.
 - **2026-08-29: Better alternatives showed exact offers without a direct purchase action.** Every strict Great-fit substitute with a current exact retailer offer now includes its own price-labelled online link; the section remains hidden when no true substitute qualifies.
 - **2026-08-29: enabling the nutrition cache made barcode and recognition routes query an unseeded Supabase `products` table.** Managed catalog reads now fail open to the checked-in scored catalog when the optional table is missing or empty; the independent Supabase nutrition cache remains active.

@@ -34,7 +34,9 @@
     "benchmark:recognition": "node --import tsx scripts/benchmark-recognition.ts",
     "benchmark:models": "tsx scripts/benchmark-recognition-models.ts",
     "supabase:seed": "tsx scripts/seed-supabase.ts",
-    "supabase:seed:external": "tsx scripts/seed-external-catalog.ts"
+    "supabase:seed:external": "tsx scripts/seed-external-catalog.ts",
+    "supabase:seed:external:dry-run": "tsx scripts/seed-external-catalog.ts --dry-run",
+    "supabase:verify:external": "tsx scripts/verify-external-catalog.ts"
   },
   "dependencies": {
     "@google/genai": "^2.18.0",

@@ -1,9 +1,9 @@
-export type ExternalCatalogSource = "rimi_lv" | "livin_lv" | "open_food_facts";
+export type ExternalCatalogSource = "barbora_lv" | "rimi_lv" | "livin_lv" | "open_food_facts";
 
 export interface ExternalCatalogProduct {
   source: ExternalCatalogSource;
   sourceProductId: string;
-  retailer: "Rimi" | "Livin" | null;
+  retailer: "Barbora" | "Rimi" | "Livin" | null;
   url: string;
   title: string;
   brand: string;

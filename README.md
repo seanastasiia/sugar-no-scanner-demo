@@ -28,7 +28,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Rimi/Livin snapshot, isolated Open Food Facts bulk/API match, then exact Google Search-grounded web nutrition.
 - Internet enrichment runs after the first identity result and never receives or stores the camera image. Known barcode/catalog identities are enriched first, with up to five independent requests, so one slow unknown product does not hold the rest. Products without a readable pack size or barcode fail fast instead of starting an unverifiable network search; the final grounded-search fallback for a complete identity defaults to 12 seconds and is never configured below Google's 10-second minimum.
-- Exact cited nutrition uses an immediate process cache plus the server-only Supabase `web_nutrition_cache`. Successful results live for 30 days; misses are retried after six hours. A versioned preload list can warm recurring Latvia SKUs before a store session.
+- Exact cited nutrition uses an immediate process cache plus the server-only Supabase `web_nutrition_cache`. A verified exact-SKU result is retained permanently and returned immediately; after 30 days it becomes due for a silent background recheck, not deletion. A failed recheck never replaces the last verified result. Unverified misses are retried after six hours, and immutable verified versions preserve the audit trail.
 - The retired nutrition-label follow-up is removed from the UI and API; automatic exact-source enrichment is the only nutrition path.
 - A product remains visible while exact nutrition is being checked, then stays in the result only when source-backed protein and total sugar produce a Sugar.no fit. A shelf price by itself never creates a result card.
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
@@ -126,7 +126,7 @@ Use the project change lanes in `AGENTS.md`:
 
 - `POST /api/recognize`: image data URL plus source type, returns bounded detections.
 - `POST /api/barcode`: exact EAN/UPC without an image, resolved against local retailer/OFF layers.
-- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products. An incomplete identity never starts the slow network fallbacks; exact web results use the process cache immediately and, when configured, the shared Supabase cache for 30 days (six hours for misses).
+- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products. An incomplete identity never starts the slow network fallbacks; exact verified web results persist in Supabase and are served immediately while due rechecks run without blocking (six hours for unverified misses).
 - `POST /api/offers`: up to ten known exact Barbora slugs, returns current per-card offers without blocking recognition.
 - `POST /api/events`: metadata-only product events with image-like values rejected.
 - `GET /api/health`: service, catalog and deployed commit status.
@@ -136,9 +136,9 @@ Use the project change lanes in `AGENTS.md`:
 Checked-in generated snapshots make the investor demo reproducible and fast:
 
 - `data/catalog.generated.json`: curated comparison catalog.
-- `data/barbora-product-index.generated.json`: retailer identity index.
-- `data/barbora-food-product-index.generated.json`: active food subset.
-- `data/barbora-nutrition-index.generated.json`: source-backed nutrition snapshot.
+- `data/barbora-product-index.generated.json`: broad checked-in retailer identity index used for recognition lookup only; it is not imported into the operational Supabase catalog.
+- `data/barbora-food-product-index.generated.json`: checked-in food discovery subset used for local matching only; it is not imported into the operational Supabase catalog.
+- `data/barbora-nutrition-index.generated.json`: the operational source-backed Barbora nutrition snapshot with exactly 7,433 exact SKUs containing both protein and total sugar.
 - `data/rimi-catalog.generated.json`: exact Rimi product-page bootstrap snapshot.
 - `data/livin-catalog.generated.json`: exact Livin product-page bootstrap snapshot.
 - `data/rimi-catalog-sync-report.generated.json` and `data/livin-catalog-sync-report.generated.json`: complete configured-scope accounting.
@@ -147,7 +147,11 @@ Checked-in generated snapshots make the investor demo reproducible and fast:
 
 Regeneration and validation scripts live in `scripts/`. Supabase migrations and seed tooling live in `supabase/`. Do not hand-edit generated JSON. Rimi/Livin snapshots are for the private proof of concept; production reuse and recurring ingestion require retailer permission. Open Food Facts rows stay logically and physically separate because of ODbL obligations. See [catalog sources](docs/catalog-sources.md).
 
-Apply `supabase/migrations/202608290001_web_nutrition_cache.sql` before enabling persistent web-nutrition caching. The RLS-protected table stores normalized identity, source-backed nutrition JSON, model and expiry; it never stores camera images. The migration grants table access only to the server-side Supabase service role, not to browser roles. Run `npm run catalog:preload:nutrition` to inspect the Latvia demo list, then `npm run catalog:preload:nutrition -- --apply` with server credentials to warm it. A preload may intentionally cache an exact-source miss for six hours when nutrition cannot be verified; this avoids repeated searches without inventing values.
+Apply all migrations through `supabase/migrations/202608290003_permanent_verified_catalog.sql` before seeding. The RLS-protected current tables retain verified exact-SKU nutrition permanently; `revalidate_after` is a freshness deadline, never a deletion date. Web sources are due after 30 days, retailer nutrition after 90 days, manufacturer or label evidence after 180 days, and prices after 24 hours. Append-only version tables preserve verified history, and a failed refresh cannot overwrite a previous success. The operational Barbora table is pruned to exactly the 7,433 nutrition-complete SKUs during `npm run supabase:seed:external`; wider discovery-only indexes remain checked in for recognition but are not copied to Supabase. No table stores camera images.
+
+Use `npm run supabase:seed:external:dry-run` to verify the checked-in Barbora snapshot without writing data, `npm run supabase:seed:external` to reproduce the managed import, and `npm run supabase:verify:external` to assert that Supabase contains exactly 7,433 current and nutrition-complete Barbora rows plus their immutable versions.
+
+Run `npm run catalog:preload:nutrition` to inspect the Latvia demo list, then add `-- --apply` with server credentials to warm exact web results. An unverified miss is cached for six hours only; this avoids repeated searches without inventing values.
 
 Connected-retailer resolution runs before Open Food Facts and grounded web lookup. The Rimi matcher normalizes a small audited set of English package labels to their Latvian catalog identity while still requiring the same brand, pack size and an unambiguous top candidate. A translated identity that remains ambiguous is not accepted and may proceed to the bounded fallback chain.
 
@@ -189,6 +193,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 16. Scan several packages whose size is not readable and confirm `Checking online…` clears quickly instead of waiting for an unverifiable web search; a complete unfamiliar SKU may still use the bounded fallback.
 17. Upload one landscape and one tall portrait shelf photo; confirm the rounded camera card follows each photo's proportions without stretching or leaving the frame outside the viewport.
 18. Confirm each rated package outline has a light green, yellow or red transparent fill matching its fit icon; the packaging must remain readable through the tint.
+19. Scan an exact SKU that previously resolved through cited web nutrition twice. Confirm the repeat result appears immediately. A result older than its freshness window must remain visible while its recheck happens silently, and an unsuccessful recheck must not remove its fit.
 
 ## Known limits
 

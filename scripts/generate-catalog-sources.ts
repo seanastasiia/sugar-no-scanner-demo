@@ -3,6 +3,16 @@ import type { CatalogSourceManifest } from "../src/server/external-catalog-types
 
 const manifests: CatalogSourceManifest[] = [
   {
+    id: "barbora_lv",
+    displayName: "Barbora Latvia",
+    layer: "retailer_snapshot",
+    license: "Retailer public product-page snapshot; production reuse requires retailer permission",
+    attribution: "Product identity, nutrition, availability and price from Barbora Latvia product pages",
+    termsUrl: "https://barbora.lv/info/pirkuma-noteikumi",
+    dataUrl: "https://barbora.lv/sitemap.xml",
+    redistributable: false
+  },
+  {
     id: "rimi_lv",
     displayName: "Rimi Latvia e-store",
     layer: "retailer_snapshot",

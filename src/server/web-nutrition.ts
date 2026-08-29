@@ -4,17 +4,17 @@ import { z } from "zod";
 import { scoreReferenceProduct } from "@/lib/scoring";
 import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
 import { normalizeRetailText, type BarboraLookupInput } from "./barbora-catalog";
+import { nutritionRevalidateAfter } from "./data-freshness";
 import { readPersistentWebNutrition, writePersistentWebNutrition } from "./web-nutrition-cache";
 
 const DEFAULT_MODEL = "gemini-3.7-flash";
 const MIN_GOOGLE_HTTP_TIMEOUT_MS = 10_000;
 const DEFAULT_WEB_NUTRITION_TIMEOUT_MS = 12_000;
 const MAX_WEB_NUTRITION_TIMEOUT_MS = 30_000;
-// Nutrition for an exact packaged SKU is stable. Keep verified results long
-// enough to make repeat investor/store scans local, while retrying misses soon.
-const SUCCESS_CACHE_TTL_MS = 30 * 24 * 60 * 60_000;
 const MISS_CACHE_TTL_MS = 6 * 60 * 60_000;
+const STALE_MEMORY_TTL_MS = 5 * 60_000;
 const responseCache = new Map<string, { expiresAt: number; result: WebNutritionResolution | null }>();
+const revalidationInFlight = new Set<string>();
 
 export function webNutritionTimeoutMs(raw = process.env.GEMINI_WEB_NUTRITION_TIMEOUT_MS): number {
   const parsed = Number.parseInt(raw || "", 10);
@@ -160,33 +160,24 @@ export function buildGroundedWebNutritionProduct(
   };
 }
 
-export async function resolveWebNutritionProduct(
-  input: BarboraLookupInput,
-  recognitionConfidence: number
-): Promise<WebNutritionResolution | null> {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey || recognitionConfidence < 0.78 || !input.brand.trim() || !input.name.trim()) return null;
-  const cacheKey = normalizeRetailText([input.brand, input.name, input.variant, input.packSize].filter(Boolean).join(" "));
-  const cached = responseCache.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) return cached.result;
-
-  const persistent = await readPersistentWebNutrition(cacheKey);
-  if (persistent) {
-    responseCache.set(cacheKey, persistent);
-    return persistent.result;
-  }
-
+async function lookupWebNutritionRemotely(input: {
+  lookup: BarboraLookupInput;
+  recognitionConfidence: number;
+  cacheKey: string;
+  apiKey: string;
+  fallbackResult?: WebNutritionResolution;
+}): Promise<WebNutritionResolution | null> {
+  const model = process.env.GEMINI_WEB_NUTRITION_MODEL || process.env.GEMINI_MODEL || DEFAULT_MODEL;
   try {
-    const ai = new GoogleGenAI({ apiKey });
-    const normalizedName = normalizeRetailText(input.name);
+    const ai = new GoogleGenAI({ apiKey: input.apiKey });
+    const normalizedName = normalizeRetailText(input.lookup.name);
     const exactProductQuery = [
-      input.brand,
-      input.name,
-      ...[input.variant, input.packSize].filter(
+      input.lookup.brand,
+      input.lookup.name,
+      ...[input.lookup.variant, input.lookup.packSize].filter(
         (part): part is string => Boolean(part && !normalizedName.includes(normalizeRetailText(part)))
       )
     ].join(" ");
-    const model = process.env.GEMINI_WEB_NUTRITION_MODEL || process.env.GEMINI_MODEL || DEFAULT_MODEL;
     const response = await ai.models.generateContent({
       model,
       contents:
@@ -210,31 +201,124 @@ export async function resolveWebNutritionProduct(
     const sources = (response.candidates?.[0]?.groundingMetadata?.groundingChunks || []).flatMap((chunk) =>
       chunk.web?.uri ? [{ title: chunk.web.title || "Web source", url: chunk.web.uri }] : []
     );
-    const result = candidate ? buildGroundedWebNutritionProduct(input, candidate, sources) : null;
-    const expiresAt = Date.now() + (result ? SUCCESS_CACHE_TTL_MS : MISS_CACHE_TTL_MS);
-    responseCache.set(cacheKey, { result, expiresAt });
-    // Await the write so one-off preload jobs cannot exit before Supabase has
-    // persisted the result. For interactive scans this happens only after the
-    // slower remote lookup and adds a small, bounded cache-write round trip.
-    await writePersistentWebNutrition({ ...input, cacheKey, result, model, expiresAt });
-    return result;
+    const result = candidate ? buildGroundedWebNutritionProduct(input.lookup, candidate, sources) : null;
+    if (result) {
+      const revalidateAfter = Date.parse(nutritionRevalidateAfter(Date.now(), "web"));
+      responseCache.set(input.cacheKey, { result, expiresAt: revalidateAfter });
+      await writePersistentWebNutrition({
+        ...input.lookup,
+        cacheKey: input.cacheKey,
+        result,
+        model,
+        revalidateAfter
+      });
+      return result;
+    }
+    if (input.fallbackResult) {
+      responseCache.set(input.cacheKey, {
+        result: input.fallbackResult,
+        expiresAt: Date.now() + STALE_MEMORY_TTL_MS
+      });
+      await writePersistentWebNutrition({
+        ...input.lookup,
+        cacheKey: input.cacheKey,
+        result: null,
+        model,
+        revalidateAfter: Date.now() + MISS_CACHE_TTL_MS,
+        preserveVerifiedSuccess: true
+      });
+      return input.fallbackResult;
+    }
+    const revalidateAfter = Date.now() + MISS_CACHE_TTL_MS;
+    responseCache.set(input.cacheKey, { result: null, expiresAt: revalidateAfter });
+    await writePersistentWebNutrition({
+      ...input.lookup,
+      cacheKey: input.cacheKey,
+      result: null,
+      model,
+      revalidateAfter
+    });
+    return null;
   } catch (error) {
     console.info(
       JSON.stringify({
         event: "web_nutrition_not_resolved",
-        product: `${input.brand} ${input.name}`.slice(0, 240),
+        product: `${input.lookup.brand} ${input.lookup.name}`.slice(0, 240),
         error: error instanceof Error ? error.message : "unknown"
       })
     );
-    const expiresAt = Date.now() + MISS_CACHE_TTL_MS;
-    responseCache.set(cacheKey, { result: null, expiresAt });
+    if (input.fallbackResult) {
+      responseCache.set(input.cacheKey, {
+        result: input.fallbackResult,
+        expiresAt: Date.now() + STALE_MEMORY_TTL_MS
+      });
+      await writePersistentWebNutrition({
+        ...input.lookup,
+        cacheKey: input.cacheKey,
+        result: null,
+        model,
+        revalidateAfter: Date.now() + MISS_CACHE_TTL_MS,
+        preserveVerifiedSuccess: true
+      });
+      return input.fallbackResult;
+    }
+    const revalidateAfter = Date.now() + MISS_CACHE_TTL_MS;
+    responseCache.set(input.cacheKey, { result: null, expiresAt: revalidateAfter });
     await writePersistentWebNutrition({
-      ...input,
-      cacheKey,
+      ...input.lookup,
+      cacheKey: input.cacheKey,
       result: null,
-      model: process.env.GEMINI_WEB_NUTRITION_MODEL || process.env.GEMINI_MODEL || DEFAULT_MODEL,
-      expiresAt
+      model,
+      revalidateAfter
     });
     return null;
   }
+}
+
+function revalidateWebNutritionInBackground(input: {
+  lookup: BarboraLookupInput;
+  recognitionConfidence: number;
+  cacheKey: string;
+  apiKey: string;
+  fallbackResult: WebNutritionResolution;
+}): void {
+  if (revalidationInFlight.has(input.cacheKey)) return;
+  revalidationInFlight.add(input.cacheKey);
+  void lookupWebNutritionRemotely(input).finally(() => revalidationInFlight.delete(input.cacheKey));
+}
+
+export async function resolveWebNutritionProduct(
+  input: BarboraLookupInput,
+  recognitionConfidence: number
+): Promise<WebNutritionResolution | null> {
+  if (recognitionConfidence < 0.78 || !input.brand.trim() || !input.name.trim()) return null;
+  const cacheKey = normalizeRetailText([input.brand, input.name, input.variant, input.packSize].filter(Boolean).join(" "));
+  const cached = responseCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.result;
+
+  const persistent = await readPersistentWebNutrition(cacheKey);
+  if (persistent) {
+    if (!persistent.stale) {
+      responseCache.set(cacheKey, { result: persistent.result, expiresAt: persistent.revalidateAfter });
+      return persistent.result;
+    }
+    if (persistent.result) {
+      responseCache.set(cacheKey, { result: persistent.result, expiresAt: Date.now() + STALE_MEMORY_TTL_MS });
+      const apiKey = process.env.GEMINI_API_KEY?.trim();
+      if (apiKey) {
+        revalidateWebNutritionInBackground({
+          lookup: input,
+          recognitionConfidence,
+          cacheKey,
+          apiKey,
+          fallbackResult: persistent.result
+        });
+      }
+      return persistent.result;
+    }
+    return persistent.result;
+  }
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (!apiKey) return null;
+  return lookupWebNutritionRemotely({ lookup: input, recognitionConfidence, cacheKey, apiKey });
 }
