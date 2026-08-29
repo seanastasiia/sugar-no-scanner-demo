@@ -163,25 +163,23 @@ export function ProductResult({
                       <MatchPill product={alternative} />
                     </span>
                   </button>
-                  {cheaperOnline && shelfPrice ? (
-                    <a
-                      className={styles.alternativeBuy}
-                      href={offer.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => onRetailer(alternative.id)}
-                      aria-label={`Buy cheaper online ${alternative.name} for €${offer.price.toFixed(2)}`}
-                    >
-                      <span>
-                        <strong>Cheaper online</strong>
-                        <s>€{shelfPrice.amount.toFixed(2)} shelf</s>
-                      </span>
-                      <span className={styles.alternativeBuyPrice}>
-                        €{offer.price.toFixed(2)}
-                        <ArrowUpRight aria-hidden="true" size={16} />
-                      </span>
-                    </a>
-                  ) : null}
+                  <a
+                    className={styles.alternativeBuy}
+                    href={offer.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => onRetailer(alternative.id)}
+                    aria-label={`${cheaperOnline ? "Buy cheaper online" : "Buy online"} ${alternative.name} for €${offer.price.toFixed(2)}`}
+                  >
+                    <span>
+                      <strong>{cheaperOnline ? "Cheaper online" : "Buy online"}</strong>
+                      {cheaperOnline && shelfPrice ? <s>€{shelfPrice.amount.toFixed(2)} shelf</s> : null}
+                    </span>
+                    <span className={styles.alternativeBuyPrice}>
+                      €{offer.price.toFixed(2)}
+                      <ArrowUpRight aria-hidden="true" size={16} />
+                    </span>
+                  </a>
                 </article>
               );
             })}

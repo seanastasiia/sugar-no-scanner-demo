@@ -1116,6 +1116,10 @@ export function ScannerApp() {
         : source === "upload"
           ? previewUrl
           : scanFrameUrl;
+  const showCapturedCameraFrame =
+    source === "camera" &&
+    Boolean(scanFrameUrl) &&
+    (recognitionState === "scanning" || recognitionState === "matched" || recognitionState === "retained" || resultLocked);
   const firstRankedId = rankedRatedIds[0] || rankedTrayIds[0];
   const effectiveSelectedId = selectedId && visibleTrayIdSet.has(selectedId)
     ? selectedId
@@ -1258,6 +1262,19 @@ export function ScannerApp() {
                 onResize={(event) =>
                   setMediaDimensions({ width: event.currentTarget.videoWidth, height: event.currentTarget.videoHeight })
                 }
+              />
+            ) : null}
+
+            {showCapturedCameraFrame && scanFrameUrl ? (
+              <Image
+                className={styles.capturedCameraFrame}
+                src={scanFrameUrl}
+                alt="Captured camera frame"
+                data-testid="captured-camera-frame"
+                fill
+                sizes="100vw"
+                unoptimized
+                priority
               />
             ) : null}
 

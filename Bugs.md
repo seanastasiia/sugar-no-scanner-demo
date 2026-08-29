@@ -16,6 +16,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-29: camera result boxes remained over a newer live scene after the phone moved or the shelf was closed.** Recognition now displays the exact submitted camera snapshot behind its boxes and keeps it until `Scan again`, so spatial overlays cannot drift onto unrelated live video.
+- **2026-08-29: Better alternatives showed exact offers without a direct purchase action.** Every strict Great-fit substitute with a current exact retailer offer now includes its own price-labelled online link; the section remains hidden when no true substitute qualifies.
 - **2026-08-29: enabling the nutrition cache made barcode and recognition routes query an unseeded Supabase `products` table.** Managed catalog reads now fail open to the checked-in scored catalog when the optional table is missing or empty; the independent Supabase nutrition cache remains active.
 - **2026-08-29: Supabase caching appeared configured while preload jobs wrote zero rows.** The cache migration now grants table access to the server-only service role, and exact-search resolution awaits the persistent write so one-off preload processes cannot exit before Supabase stores either the grounded result or the honest miss.
 - **2026-08-29: the first camera result and unknown-product enrichment repeated avoidable remote work.** Sharp/stable-frame sampling now submits a smaller frame sooner; native EAN/UPC takes a local fast path where supported; catalog/barcode identities enrich before unknowns; exact grounded results persist in a server-only Supabase cache and can be preloaded before a demo.

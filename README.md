@@ -10,6 +10,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 - The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
 - The live feed spans the full phone width, with the Sugar.no brand, `Show demo` and recognition status layered over the camera. The stream keeps its native aspect ratio and `object-fit: contain`, so the app does not add digital zoom or stretch the image. Saved photos and deterministic demo scenes retain a proportional rounded viewport.
+- Once a camera frame is submitted, recognition and result overlays stay on that exact captured frame. The live stream continues privately behind it for the next scan, and `Scan again` clears the snapshot and markers before returning to live video.
 - Camera starts after permission without requiring a shutter action. Mobile Safari requests the rear 1920x1080 feed at up to 30 fps, asks for continuous focus when the device exposes it, and waits for two stable post-focus frames before sending the first image so a soft startup frame is not analyzed.
 - Live capture begins stability sampling after 550 ms, checks every 350 ms and sends a compact 1152 px JPEG as soon as two sharp, steady frames are available. The video keeps playing while results are shown.
 - When the browser exposes native `BarcodeDetector`, EAN/UPC is resolved locally before Gemini. On Safari, Gemini can still return a visible barcode for the same exact local lookup.
@@ -35,7 +36,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - A high-confidence Latvian comma-decimal shelf label can be accepted even when the printed `€` symbol is not readable; numbers printed on a package remain excluded.
 - A crossed-out shelf price and full-width green `Buy cheaper online` action appear only when the exact connected-retailer SKU is currently cheaper. The compact price row and its accessibility copy stay retailer-neutral; the exact destination remains in the purchase link and its accessible label.
 - Exact online offers stay inside the matching product card: the camera-read shelf price is crossed out beside the lower online price, while a full-width action repeats the destination price for a clear one-tap purchase.
-- `Better alternatives` are fail-closed: they must share the same exact product type, full retailer subcategory/form and nutrition basis, have `Great fit` that is no worse than the scanned product, and resolve to a current exact Barbora offer. Equal-fit candidates are ordered by lower live price and then the closest pack size. `Moderate fit`, `Low fit` and unrated products are excluded; if no qualifying substitute is available, the section is hidden.
+- `Better alternatives` are fail-closed: they must share the same exact product type, full retailer subcategory/form and nutrition basis, have `Great fit` that is no worse than the scanned product, and resolve to a current exact Barbora offer. Each qualifying alternative includes its own exact-price online link. Equal-fit candidates are ordered by lower live price and then the closest pack size. `Moderate fit`, `Low fit` and unrated products are excluded; if no qualifying substitute is available, the section is hidden.
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
 - The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
 
@@ -178,7 +179,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 6. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
 7. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
 8. Confirm each overlay tightly follows its package rather than a nearby shelf label.
-9. Move the camera after a result and confirm it remains held until `Scan again`.
+9. Move the camera or close the shelf/fridge after a result. Confirm the recognized snapshot and its boxes remain aligned; `Scan again` must clear both and return to the current live view.
 10. Open a rated product and confirm `Better alternatives` contains only the same product type with `Great fit` no worse than the source and a live price; `Moderate fit`, `Low fit`, unrated products, and products without a valid substitute should show no alternatives block.
 11. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
 12. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
@@ -198,7 +199,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
 - Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable pack size or barcode and defaults to a 12-second deadline. Persistent reuse requires the checked-in Supabase migration plus server-only `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; without them the app fails open to its process cache and recognition still works.
 - Browser-native barcode detection depends on platform support. Safari currently relies on Gemini reading the visible code; no extra WASM bundle is shipped because it would increase camera startup cost.
-- Live results are automatic overlays rather than device-side object tracking. Moving the phone after a result is held can make boxes stop following physical packages until the next scan.
+- Live results are automatic overlays on a captured snapshot rather than device-side object tracking. The frozen frame prevents boxes from drifting over a new scene; use `Scan again` to analyze the current camera view.
 - The investor URL has no viewer access gate. The silent same-site cookie, origin checks and process-local limiters harden API use but do not make the link private. Production scale-out needs explicit authentication plus a shared counter or edge gateway quota in addition to Gemini project budgets.
 - The five-shelf model screen measures unique returned identities, not labeled ground-truth recall. Gemini 3.5 Flash returned 38 identities at 7.1 s mean; a lean schema was faster (4.2 s) but returned fewer and unstable results (30, then 24), so it was rejected. Gemini 3.6 returned 32 at 7.8 s. True precision/recall still requires a labeled physical-store dataset.
 
@@ -222,4 +223,5 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - [Final release audit and production evidence](docs/test-runs/2026-08-29-final-release-audit.md)
 - [Public entry and full-width live camera release evidence](docs/test-runs/2026-08-29-public-entry-full-width-camera.md)
 - [Recognition speed, cache and barcode release evidence](docs/test-runs/2026-08-29-recognition-speed-six.md)
+- [Captured-frame and alternative-link release evidence](docs/test-runs/2026-08-29-captured-frame-alternative-links.md)
 - [Open and recent bugs](Bugs.md)

@@ -496,7 +496,9 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(resultsDialog.getByLabel("Sugar.no badge")).toHaveCount(0);
   await expect(resultsDialog.getByText("Better alternatives", { exact: true })).toBeVisible();
   const betterAlternatives = resultsDialog.getByRole("region", { name: "Same product type · Great fit only" });
-  await expect(betterAlternatives.getByRole("link", { name: /Buy online .* for €1\.49/ })).toHaveCount(0);
+  const alternativeBuyLinks = betterAlternatives.getByRole("link", { name: /Buy online .* for €1\.49/ });
+  await expect(alternativeBuyLinks).toHaveCount(2);
+  await expect(alternativeBuyLinks.first()).toHaveAttribute("href", /https:\/\/barbora\.lv\/produkti\//);
   await expect(betterAlternatives.getByText("Great fit", { exact: true })).toHaveCount(2);
   await expect(betterAlternatives.getByText("Moderate fit", { exact: true })).toHaveCount(0);
   await expect(betterAlternatives.getByText("Low fit", { exact: true })).toHaveCount(0);
@@ -1705,6 +1707,9 @@ test("live camera groups repeated packs, holds the result and replaces it only a
   await unlock(page);
 
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
+  const capturedCameraFrame = page.getByTestId("captured-camera-frame");
+  await expect(capturedCameraFrame).toBeVisible();
+  await expect(capturedCameraFrame).toHaveAttribute("src", /^data:image\/jpeg/);
   await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toBeVisible();
@@ -1719,6 +1724,7 @@ test("live camera groups repeated packs, holds the result and replaces it only a
 
   currentProduct = "activia";
   await page.getByRole("button", { name: "Scan again" }).click();
+  await expect(capturedCameraFrame).toHaveCount(0);
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Activia Forest Berries Yogurt/ })).toBeVisible({ timeout: 10_000 });

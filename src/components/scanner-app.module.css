@@ -266,7 +266,8 @@
 }
 
 .video,
-.uploadPreview {
+.uploadPreview,
+.capturedCameraFrame {
   position: absolute;
   z-index: 0;
   width: 100%;
@@ -276,6 +277,10 @@
 }
 
 .video {
+  pointer-events: none;
+}
+
+.capturedCameraFrame {
   pointer-events: none;
 }
 
