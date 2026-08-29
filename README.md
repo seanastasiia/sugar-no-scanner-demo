@@ -32,12 +32,135 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - A high-confidence Latvian comma-decimal shelf label can be accepted even when the printed `â‚¬` symbol is not readable; numbers printed on a package remain excluded.
 - A crossed-out shelf price and full-width green `Buy cheaper online` action appear only when the exact connected-retailer SKU is currently cheaper. The compact price row and its accessibility copy stay retailer-neutral; the exact destination remains in the purchase link and its accessible label.
 - Exact online offers stay inside the matching product card: the camera-read shelf price is crossed out beside the lower online price, while a full-width action repeats the destination price for a clear one-tap purchase.
-- `Better alternatives` are fail-closed: they must share the same exact product type, full retailer subcategory/form and nutrition basis, have `Great™¥Ñ€Ñ¡…Ğ¥Ì¹¼İ½ÉÍ”Ñ¡…¸Ñ¡”Í…¹¹•ÁÉ½‘ÕĞ°…¹É•Í½±Ù”Ñ¼„ÕÉÉ•¹Ğ•á…Ğ	…É‰½É„½™™•È¸ÅÕ…°µ™¥Ğ…¹‘¥‘…Ñ•Ì…É”½É‘•É•‰ä±½İ•È±¥Ù”ÁÉ¥”…¹Ñ¡•¸Ñ¡”±½Í•ÍĞÁ…¬Í¥é”¸5½‘•É…Ñ”™¥Ñ€°1½Ü™¥Ñ€…¹Õ¹É…Ñ•ÁÉ½‘ÕÑÌ…É”•á±Õ‘•ì¥˜¹¼ÅÕ…±¥™å¥¹œÍÕ‰ÍÑ¥ÑÕÑ”¥Ì…Ù…¥±…‰±”°Ñ¡”Í•Ñ¥½¸¥Ì¡¥‘‘•¸¸(´•Ñ•Éµ¥¹¥ÍÑ¥ŒM¡•±˜…¹¡•­½ÕĞ‘•µ¼Í•¹•Ìİ½É¬İ¥Ñ¡½ÕĞ•µ¥¹¤É•‘•¹Ñ¥…±Ì¸(´Q¡”‘•µ¼¡½½Í•È½•Ì‘¥É•Ñ±äÑ¼M¡•±˜‘•µ¼°¡•­½ÕĞ‘•µ¼…¹Í…Ù•µÁ¡½Ñ¼…Ñ¥½¹Ìİ¥Ñ¡½ÕĞ„Í•Á…É…Ñ”¥¹Ù•ÍÑ½Èµ½Ù•É…”…É¸((ŒŒQÉÕÍĞÉÕ±•Ì((´I•½¹¥Ñ¥½¸½¹™¥‘•¹”…¹¹ÕÑÉ¥Ñ¥½¸½¹™¥‘•¹”…É”Í•Á…É…Ñ”¸(´Q¡”…ÁÀ¹•Ù•È•ÍÑ¥µ…Ñ•Ìµ¥ÍÍ¥¹œ¹ÕÑÉ¥Ñ¥½¸°½¹Ù•ÉÑÌ„Í•ÉÙ¥¹œ¥¹Ñ¼Á•È´ÄÀÀÙ…±Õ•Ì°½È‰½ÉÉ½İÌ‘…Ñ„™É½´…¹½Ñ¡•È™±…Ù½È½ÈÁ…¬Í¥é”¸(´Á½ÍÍ¥‰±”É•Ñ…¥±•Èµ…Ñ …¹¹½Ğ‘É¥Ù”„ÁÉ¥”°ÁÕÉ¡…Í”±¥¹¬°½È™¥Ğ¸(´…µ•É„™É…µ•Ì…É”Í•¹ĞÑ¼½½±”•µ¥¹¤™½ÈÉ•½¹¥Ñ¥½¸¸MÕ…È¹¹¼‘½•Ì¹½ĞİÉ¥Ñ”Ñ¡•´Ñ¼…¹…±åÑ¥Ì°±½Ì½ÈMÕÁ…‰…Í”¸Q¡¥ÌÁÉ½•ÍÍ¥¹œ‰½Õ¹‘…Éä¥Ì‘½Õµ•¹Ñ•¡•É”…¹¥¸Ñ¡”ÁÉ¥Ù…ä½¹ÑÉ…ĞÉ…Ñ¡•ÈÑ¡…¸É•Á•…Ñ•…ÌÁ•ÉÍ¥ÍÑ•¹Ğ…µ•É„¡É½µ”¸(´Q¡”¥¹Ù•ÍÑ½È±¥¹¬½Á•¹ÌÑ¡”Í…¹¹•È‘¥É•Ñ±ä¸%ÑÌ™¥ÉÍĞÍ…µ”µ½É¥¥¸Á…”É•ÅÕ•ÍĞÉ••¥Ù•Ì„€ÄÈµ¡½ÕÈ!QQ@µ½¹±ä°Í…µ”µÍ¥Ñ”Í•ÍÍ¥½¸½½­¥”Í¼ÁÉ½Ñ•Ñ•A%ÌÉ•µ…¥¸Õ¹…Ù…¥±…‰±”Ñ¼‰…É”É½ÍÌµ½É¥¥¸…±±Ì¸I•½¹¥Ñ¥½¸°•¹É¥¡µ•¹Ğ°½™™•È…¹…¹…±åÑ¥ÌA=MP•¹‘Á½¥¹ÑÌ…±Í¼É•©•ĞÉ½ÍÌµ½É¥¥¸‰É½İÍ•ÈÉ•ÅÕ•ÍÑÌ°‰½Õ¹É•ÅÕ•ÍĞ‰½‘¥•Ì…¹…ÁÁ±äÉ…Ñ”±¥µ¥ÑÌ¸Q¡¥Ì¥ÌÉ•ÅÕ•ÍĞ¡…É‘•¹¥¹œ°¹½ĞÙ¥•İ•È…•ÍÌ½¹ÑÉ½°¸Q¡”±¥µ¥Ñ•È­•ä¥Ì„½¹”µİ…ä¡…Í ½˜Ñ¡”±¥•¹Ğ…‘‘É•ÍÌ…¹‘½•Ì¹½ĞÉ•Ñ…¥¸Ñ¡”…‘‘É•ÍÌ¥ÑÍ•±˜¸(´½µµ•É¥…°…Ù…¥±…‰¥±¥Ñä¹•Ù•È¡…¹•ÌMÕ…È¹¹¼É…¹­¥¹œ¸((ŒŒMÑ…¬((´9•áĞ¹©Ì€ÄØ°I•…Ğ€Ää°QåÁ•MÉ¥ÁĞ(´•µ¥¹¤™½ÈÙ¥ÍÕ…°¥‘•¹Ñ¥Ñä…¹½ÁÑ¥½¹…°½½±”M•…É µÉ½Õ¹‘••á…Ğ¹ÕÑÉ¥Ñ¥½¸(´Y•ÉÍ¥½¹•ÕÉ…Ñ•°	…É‰½É„°I¥µ¤…¹1¥Ù¥¸Í¹…ÁÍ¡½ÑÌ¥¸‘…Ñ„½€(´¸¥Í½±…Ñ•=Á•¸½½…ÑÌ=‰0±…å•Èİ¥Ñ •áÁ±¥¥Ğ…ÑÑÉ¥‰ÕÑ¥½¸…¹Í•Á…É…Ñ”MÕÁ…‰…Í”ÍÑ½É…”(´MÕÁ…‰…Í”Í¡•µ„™½Èµ…¹…•…Ñ…±½œ…¹µ•Ñ…‘…Ñ„µ½¹±ä…¹…±åÑ¥Ì(´Y¥Ñ•ÍĞ…¹A±…åİÉ¥¡Ğ]•‰-¥Ğ(´I…¥±İ…äÁÉ½‘ÕÑ¥½¸‘•Á±½åµ•¹Ğ™É½´¥Ñ!Õˆµ…¥¹€((ŒŒ1½…°Í•ÑÕÀ()I•ÅÕ¥É•µ•¹ÑÌè9½‘”¹©Ì€ÈÈ¬°¹Á´°…¹!QQAL½È±½…±¡½ÍĞ™½È…µ•É„…•ÍÌ¸()‰…Í )¹Á´¤)À€¹•¹Ø¹•á…µÁ±”€¹•¹Ø¹±½…°)¹Á´ÉÕ¸‘•Ø)€()=Á•¸¡ÑÑÀè¼½±½…±¡½ÍĞèÌÀÀÁ€¸()AÉ½‘ÕÑ¥½¸µÍÑå±”±½…°ÉÕ¸è()‰…Í )¹Á´ÉÕ¸‰Õ¥±)¹Á´ÉÕ¸ÍÑ…ÉĞ)€((ŒŒ¹Ù¥É½¹µ•¹Ğ()M•”€¹•¹Ø¹•á…µÁ±•€™½ÈÑ¡”½µÁ±•Ñ”±¥ÍĞ¸()½É”ÉÕ¹Ñ¥µ”Ù…±Õ•Ìè((´5%9%}A%}-e€è•¹…‰±•Ì±¥Ù”Ù¥ÍÕ…°É•½¹¥Ñ¥½¸…¹É½Õ¹‘•¹ÕÑÉ¥Ñ¥½¸™…±±‰…¬¸(´5%9%}5=1€è•¹•É…°•µ¥¹¤™…±±‰…¬ÕÍ•½ÕÑÍ¥‘”Ñ¡”‘•‘¥…Ñ•±¥Ù”µÉ•½¹¥Ñ¥½¸Á…Ñ ¸(´5%9%}I=9%Q%=9}5=1€è½ÁÑ¥½¹…°±¥Ù”µÉ•½¹¥Ñ¥½¸½Ù•ÉÉ¥‘”ì‘•™…Õ±ÑÌÑ¼•µ¥¹¤´Ì¸Ôµ™±…Í¡€™½ÈÑ¡”µ•…ÍÕÉ•Í¡•±˜ÍÁ••½É•…±°‰…±…¹”¸(´5%9%}I=9%Q%=9}Q%5=UQ}5M€è½ÁÑ¥½¹…°‰½Õ¹‘••µ¥¹¤É•ÅÕ•ÍĞÑ¥µ•½ÕĞ€ Ä°ÀÀÃŠLØÀ°ÀÀÀµÌ¤ì‘•™…Õ±ÑÌÑ¼€ÄÔ°ÀÀÀµÌÍ¼„ÍÑ…±±•ÁÉ½Ù¥‘•È…±°…¹¹½Ğ¡½±Ñ¡”…µ•É„¥¹‘•™¥¹¥Ñ•±ä¸(´5%9%}]	}9UQI%Q%=9}5=1€è½ÁÑ¥½¹…°É½Õ¹‘•µÍ•…É µ½‘•°½Ù•ÉÉ¥‘”¸(´MUA	M}UI1€…¹MUA	M}MIY%}I=1}-e€è½ÁÑ¥½¹…°Í•ÉÙ•Èµ½¹±ä…Ñ…±½œ…¹µ•Ñ…‘…Ñ„…¹…±åÑ¥Ì½¹™¥ÕÉ…Ñ¥½¸¸Q¡”Í•ÉÙ¥”É½±”­•äµÕÍĞ¹•Ù•È‰”•áÁ½Í•Ñ¡É½Õ „9aQ}AU	1%}€Ù…É¥…‰±”¸(´5=}MM}=€…¹M=}MMM%=9}MIQ€èÍ•ÉÙ•Èµ½¹±äÍ¥¹¥¹œ¥¹ÁÕÑÌ™½ÈÑ¡”Í¥±•¹Ğ€ÄÈµ¡½ÕÈÍ…µ”µÍ¥Ñ”Í•ÍÍ¥½¸¸Q¡•¥ÈÁÉ•Í•¹”‘½•Ì¹½ĞÉ•…Ñ”„ÕÍ•Èµ™…¥¹œ…•ÍÌ…Ñ”¸(´=55%Q}M!€è™…±±‰…¬¡•…±Ñ µ•Ñ…‘…Ñ„™½È‘¥É•ĞI…¥±İ…äÕÁ±½…‘Ì¸()9•Ù•È½µµ¥ĞÉ•…°Í•É•ÑÌ¸I…¥±İ…äÍÑ½É•ÌÁÉ½‘ÕÑ¥½¸Ù…±Õ•Ì¸((ŒŒ½µµ…¹‘Ì()‰…Í )¹Á´ÉÕ¸‘•Ø€€€€€€€€€€€€€€€€€Œ±½…°‘•Ù•±½Áµ•¹Ğ)¹Á´ÉÕ¸¡•¬é™…ÍĞ€€€€€€€€€€Œ±¥¹Ğ€¬ÑåÁ•¡•¬€¬Õ¹¥Ğ½¥¹Ñ•É…Ñ¥½¸Ñ•ÍÑÌ)¹Á´ÉÕ¸Ñ•ÍĞé”É”éÍµ½­”€€€€€€Œ™½ÕÈÉ¥Ñ¥…°5½‰¥±”M…™…É¤™±½İÌ)¹Á´ÉÕ¸Ù•É¥™ä€€€€€€€€€€€€€€€Œ±¥¹Ğ€¬ÑåÁ•¡•¬€¬…±°Õ¹¥Ğ½¥¹Ñ•É…Ñ¥½¸Ñ•ÍÑÌ€¬‰Õ¥±)$ôÄ¹Á´ÉÕ¸Ñ•ÍĞé”É”€€€€€€€Œ½µÁ±•Ñ”5½‰¥±”M…™…É¤…•ÁÑ…¹”ÍÕ¥Ñ”)¹Á´ÉÕ¸…Ñ…±½œéÙ…±¥‘…Ñ”€€€€ŒÕÉ…Ñ•…Ñ…±½œÙ…±¥‘…Ñ¥½¸)¹Á´ÉÕ¸…Ñ…±½œéÍå¹ŒéÉ¥µ¤€€Œ±½ÜµÉ…Ñ”I¥µ¤Á…”Í¹…ÁÍ¡½Ğ)¹Á´ÉÕ¸…Ñ…±½œéÍå¹Œé±¥Ù¥¸€Œ±½ÜµÉ…Ñ”1¥Ù¥¸Á…”Í¹…ÁÍ¡½Ğ)¹Á´ÉÕ¸…Ñ…±½œéÍå¹Œé½™˜µ±…ÑÙ¥„€ŒÉ•™É•Í „‰½Õ¹‘•1…ÑÙ¥„=A$Í¹…ÁÍ¡½Ğ)¹Á´ÉÕ¸…Ñ…±½œé¥µÁ½ÉĞé½™˜€Œ¥µÁ½ÉĞ½™™¥¥…°=)M=90½)M=90¹h¥¹Ñ¼¥ÑÌ¥Í½±…Ñ•±…å•È)¹Á´ÉÕ¸ÍÕÁ…‰…Í”éÍ••é•áÑ•É¹…°€ŒÍ••É•Ñ…¥±•È…¹=‰0±…å•ÉÌ…™Ñ•Èµ¥É…Ñ¥½¹Ì)¹Á´ÉÕ¸‰•¹¡µ…É¬éÉ•½¹¥Ñ¥½¸€´´€½…‰Í½±ÕÑ”½Á…Ñ ½Á¡½Ñ¼¹©Áœ)€()UÍ”Ñ¡”ÁÉ½©•Ğ¡…¹”±…¹•Ì¥¸9QL¹µ‘€è((´‘½Ì½½Áäè‘¥™˜…¹±¥¹¬¡•¬½¹±äì(´Íµ…±°U$èÍ½Á•¡•­ÌÁ±ÕÌÍµ½­”‰É½İÍ•ÈÍÕ¥Ñ”ì(´±½…°±½¥ŒèÉ•±…Ñ•Ñ•ÍÑÌÁ±ÕÌ¡•¬é™…ÍÑ€ì(´É•½¹¥Ñ¥½¸½Í½É¥¹œ½ÁÉ¥Ù…ä½…ÕÑ ½Í¡•µ„½‘•Á•¹‘•¹ä½É•±•…Í”èÙ•É¥™å€°™Õ±°‰É½İÍ•ÈÍÕ¥Ñ”°I…¥±İ…ä‘•Á±½ä…¹ÁÉ½‘ÕÑ¥½¸Íµ½­”¸((ŒŒA$((´A=MP€½…Á¤½É•½¹¥é•€è¥µ…”‘…Ñ„UI0Á±ÕÌÍ½ÕÉ”ÑåÁ”°É•ÑÕÉ¹Ì‰½Õ¹‘•‘•Ñ•Ñ¥½¹Ì¸(´A=MP€½…Á¤½É•Í½±Ù”µÁÉ½‘ÕÑÍ€èÕÀÑ¼Ñ•¸¥µ…”µ™É•”¥‘•¹Ñ¥Ñ¥•Ì°É•ÑÕÉ¹Ì½ÁÑ¥½¹…°•á…ĞÉ•Ñ…¥±•È½¹ÕÑÉ¥Ñ¥½¸•¹É¥¡µ•¹Ğ¸Q¡”±¥•¹ĞÉ•Í½±Ù•ÌÕÀÑ¼™¥Ù”¥‘•¹Ñ¥Ñ¥•Ì½¹ÕÉÉ•¹Ñ±ä…¹…ÁÁ±¥•Ì•… É•ÍÁ½¹Í”¥¹‘•Á•¹‘•¹Ñ±ä°Í¼½¹”Í±½Ü±½½­ÕÀ‘½•Ì¹½Ğ¡½±…±É•…‘äÙ•É¥™¥•ÁÉ½‘ÕÑÌ¸¸¥¹½µÁ±•Ñ”¥‘•¹Ñ¥Ñä¹•Ù•ÈÍÑ…ÉÑÌÑ¡”Í±½Ü¹•Ñİ½É¬™…±±‰…­ÌìÍÕ•ÍÍ™Õ°•á…Ğİ•ˆ±½½­ÕÁÌÉ•µ…¥¸…¡•™½È€ÈĞ¡½ÕÉÌ¥¸Ñ¡”ÉÕ¹¹¥¹œÍ•ÉÙ¥”¸(´A=MP€½…Á¤½½™™•ÉÍ€èÕÀÑ¼Ñ•¸­¹½İ¸•á…Ğ	…É‰½É„Í±ÕÌ°É•ÑÕÉ¹ÌÕÉÉ•¹ĞÁ•Èµ…É½™™•ÉÌİ¥Ñ¡½ÕĞ‰±½­¥¹œÉ•½¹¥Ñ¥½¸¸(´A=MP€½…Á¤½•Ù•¹ÑÍ€èµ•Ñ…‘…Ñ„µ½¹±äÁÉ½‘ÕĞ•Ù•¹ÑÌİ¥Ñ ¥µ…”µ±¥­”Ù…±Õ•ÌÉ•©•Ñ•¸(´P€½…Á¤½¡•…±Ñ¡€èÍ•ÉÙ¥”°…Ñ…±½œ…¹‘•Á±½å•½µµ¥ĞÍÑ…ÑÕÌ¸((ŒŒ…Ñ„…¹MÕÁ…‰…Í”()¡•­•µ¥¸•¹•É…Ñ•Í¹…ÁÍ¡½ÑÌµ…­”Ñ¡”¥¹Ù•ÍÑ½È‘•µ¼É•ÁÉ½‘Õ¥‰±”…¹™…ÍĞè((´‘…Ñ„½…Ñ…±½œ¹•¹•É…Ñ•¹©Í½¹€èÕÉ…Ñ•½µÁ…É¥Í½¸…Ñ…±½œ¸(´‘…Ñ„½‰…É‰½É„µÁÉ½‘ÕĞµ¥¹‘•à¹•¹•É…Ñ•¹©Í½¹€èÉ•Ñ…¥±•È¥‘•¹Ñ¥Ñä¥¹‘•à¸(´‘…Ñ„½‰…É‰½É„µ™½½µÁÉ½‘ÕĞµ¥¹‘•à¹•¹•É…Ñ•¹©Í½¹€è…Ñ¥Ù”™½½ÍÕ‰Í•Ğ¸(´‘…Ñ„½‰…É‰½É„µ¹ÕÑÉ¥Ñ¥½¸µ¥¹‘•à¹•¹•É…Ñ•¹©Í½¹€èÍ½ÕÉ”µ‰…­•¹ÕÑÉ¥Ñ¥½¸Í¹…ÁÍ¡½Ğ¸(´‘…Ñ„½É¥µ¤µ…Ñ…±½œ¹•¹•É…Ñ•¹©Í½¹€è•á…ĞI¥µ¤ÁÉ½‘ÕĞµÁ…”‰½½ÑÍÑÉ…ÀÍ¹…ÁÍ¡½Ğ¸(´‘…Ñ„½±¥Ù¥¸µ…Ñ…±½œ¹•¹•É…Ñ•¹©Í½¹€è•á…Ğ1¥Ù¥¸ÁÉ½‘ÕĞµÁ…”‰½½ÑÍÑÉ…ÀÍ¹…ÁÍ¡½Ğ¸(´‘…Ñ„½É¥µ¤µ…Ñ…±½œµÍå¹ŒµÉ•Á½ÉĞ¹•¹•É…Ñ•¹©Í½¹€…¹‘…Ñ„½±¥Ù¥¸µ…Ñ…±½œµÍå¹ŒµÉ•Á½ÉĞ¹•¹•É…Ñ•¹©Í½¹€è½µÁ±•Ñ”½¹™¥ÕÉ•µÍ½Á”…½Õ¹Ñ¥¹œ¸(´‘…Ñ„½½Á•¸µ™½½µ™…ÑÌµ±Ø¹•¹•É…Ñ•¹©Í½¹€è…ÑÑÉ¥‰ÕÑ•1…ÑÙ¥„ÍÕ‰Í•Ğ¥µÁ½ÉÑ•Ñ¡É½Õ Ñ¡”=‰0‰Õ±¬Á¥Á•±¥¹”¸(´‘…Ñ„½…Ñ…±½œµÍ½ÕÉ•Ì¹•¹•É…Ñ•¹©Í½¹€èÍ½ÕÉ”°±¥•¹Í”…¹É•‘¥ÍÑÉ¥‰ÕÑ¥½¸µ…¹¥™•ÍĞ¸()I••¹•É…Ñ¥½¸…¹Ù…±¥‘…Ñ¥½¸ÍÉ¥ÁÑÌ±¥Ù”¥¸ÍÉ¥ÁÑÌ½€¸MÕÁ…‰…Í”µ¥É…Ñ¥½¹Ì…¹Í••Ñ½½±¥¹œ±¥Ù”¥¸ÍÕÁ…‰…Í”½€¸¼¹½Ğ¡…¹µ•‘¥Ğ•¹•É…Ñ•)M=8¸I¥µ¤½1¥Ù¥¸Í¹…ÁÍ¡½ÑÌ…É”™½ÈÑ¡”ÁÉ¥Ù…Ñ”ÁÉ½½˜½˜½¹•ÁĞìÁÉ½‘ÕÑ¥½¸É•ÕÍ”…¹É•ÕÉÉ¥¹œ¥¹•ÍÑ¥½¸É•ÅÕ¥É”É•Ñ…¥±•ÈÁ•Éµ¥ÍÍ¥½¸¸=Á•¸½½…ÑÌÉ½İÌÍÑ…ä±½¥…±±ä…¹Á¡åÍ¥…±±äÍ•Á…É…Ñ”‰•…ÕÍ”½˜=‰0½‰±¥…Ñ¥½¹Ì¸M•”m…Ñ…±½œÍ½ÕÉ•Ít¡‘½Ì½…Ñ…±½œµÍ½ÕÉ•Ì¹µ¤¸()½¹¹•Ñ•µÉ•Ñ…¥±•ÈÉ•Í½±ÕÑ¥½¸ÉÕ¹Ì‰•™½É”=Á•¸½½…ÑÌ…¹É½Õ¹‘•İ•ˆ±½½­ÕÀ¸Q¡”I¥µ¤µ…Ñ¡•È¹½Éµ…±¥é•Ì„Íµ…±°…Õ‘¥Ñ•Í•Ğ½˜¹±¥Í Á…­…”±…‰•±ÌÑ¼Ñ¡•¥È1…ÑÙ¥…¸…Ñ…±½œ¥‘•¹Ñ¥Ñäİ¡¥±”ÍÑ¥±°É•ÅÕ¥É¥¹œÑ¡”Í…µ”‰É…¹°Á…¬Í¥é”…¹…¸Õ¹…µ‰¥Õ½ÕÌÑ½À…¹‘¥‘…Ñ”¸ÑÉ…¹Í±…Ñ•¥‘•¹Ñ¥ÑäÑ¡…ĞÉ•µ…¥¹Ì…µ‰¥Õ½ÕÌ¥Ì¹½Ğ…•ÁÑ•…¹µ…äÁÉ½••Ñ¼Ñ¡”‰½Õ¹‘•™…±±‰…¬¡…¥¸¸((ŒŒI…¥±İ…äÉ•±•…Í”()9½Éµ…°É•±•…Í•Ì…É”ÁÕÍ¡•½¹”°…™Ñ•ÈÑ¡”É•ÅÕ•ÍÑ•‰…Ñ ¥Ì½µÁ±•Ñ”è()‰…Í )¥ĞÁÕÍ ½É¥¥¸!éµ…¥¸)¹ÁàÉ…¥±İ…ä½±¤Ù…É¥…‰±”Í•Ğ=55%Q}M!ô¡¥ĞÉ•ØµÁ…ÉÍ”!¤€´µÍ­¥Àµ‘•Á±½åÌp(€€´µÁÉ½©•Ğ€å”É„ĞààÜ´Á”Ää´Ñ„Üµ…”ääµØààÄØÔĞÈÔÔàp(€€´µÍ•ÉÙ¥”ÍÕ…Èµ¹¼µÍ…¹¹•Èµ‘•µ¼€´µ•¹Ù¥É½¹µ•¹ĞÁÉ½‘ÕÑ¥½¸)¹ÁàÉ…¥±İ…ä½±¤ÕÀ€´µ‘•Ñ… p(€€´µÁÉ½©•Ğ€å”É„ĞààÜ´Á”Ää´Ñ„Üµ…”ääµØààÄØÔĞÈÔÔàp(€€´µÍ•ÉÙ¥”ÍÕ…Èµ¹¼µÍ…¹¹•Èµ‘•µ¼€´µ•¹Ù¥É½¹µ•¹ĞÁÉ½‘ÕÑ¥½¸)€()Q¡•¸Ù•É¥™ä€½…Á¤½¡•…±Ñ¡€°‘¥É•ĞÉ½½Ğ•¹ÑÉäÁ±Ó its silent session cookie, rejection of a bare unauthenticated API request, one critical recognition path and the no-image-storage contract. Docs-only changes do not require a Railway release unless explicitly requested.
+- `Better alternatives` are fail-closed: they must share the same exact product type, full retailer subcategory/form and nutrition basis, have `Great fit` that is no worse than the scanned product, and resolve to a current exact Barbora offer. Equal-fit candidates are ordered by lower live price and then the closest pack size. `Moderate fit`, `Low fit` and unrated products are excluded; if no qualifying substitute is available, the section is hidden.
+- Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
+- The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
 
-## Product checks
+## Trust rules
+
+- Recognition confidence and nutrition confidence are separate.
+- The app never estimates missing nutrition, converts a serving into per-100 values, or borrows data from another flavor or pack size.
+- A possible retailer match cannot drive a price, purchase link, or fit.
+- Camera frames are sent to Google Gemini for recognition. Sugar.no does not write them to analytics, logs or Supabase. This processing boundary is documented here and in the privacy contract rather than repeated as persistent camera chrome.
+- The investor link opens the scanner directly. Its first same-origin page request receives a 12-hour HTTP-only, same-site session cookie so protected APIs remain unavailable to bare cross-origin calls. Recognition, enrichment, offer and analytics POST endpoints also reject cross-origin browser requests, bound request bodies and apply rate limits. This is request hardening, not viewer access control. The limiter key is a one-way hash of the client address and does not retain the address itself.
+- Commercial availability never changes Sugar.no ranking.
+
+## Stack
+
+- Next.js 16, React 19, TypeScript
+- Gemini for visual identity and optional Google Search-grounded exact nutrition
+- Versioned curated, Barbora, Rimi and Livin snapshots in `data/`
+- An isolated Open Food Facts ODbL layer with explicit attribution and separate Supabase storage
+- Supabase schema for managed catalog and metadata-only analytics
+- Vitest and Playwright WebKit
+- Railway production deployment from GitHub `main`
+
+## Local setup
+
+Requirements: Node.js 22+, npm, and HTTPS or localhost for camera access.
+
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+Production-style local run:
+
+```bash
+npm run build
+npm run start
+```
+
+## Environment
+
+See `.env.example` for the complete list.
+
+Core runtime values:
+
+- `GEMINI_API_KEY`: enables live visual recognition and grounded nutrition fallback.
+- `GEMINI_MODEL`: general Gemini fallback used outside the dedicated live-recognition path.
+- `GEMINI_RECOGNITION_MODEL`: optional live-recognition override; defaults to `gemini-3.5-flash` for the measured shelf speed/recall balance.
+- `GEMINI_RECOGNITION_TIMEOUT_MS`: optional bounded Gemini request timeout (1,000â€“60,000 ms); defaults to 15,000 ms so a stalled provider call cannot hold the camera indefinitely.
+- `GEMINI_WEB_NUTRITION_MODEL`: optional grounded-search model override.
+- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: optional server-only catalog and metadata analytics configuration. The service role key must never be exposed through a `NEXT_PUBLIC_` variable.
+- `DEMO_ACCESS_CODE` and `DEMO_SESSION_SECRET`: server-only signing inputs for the silent 12-hour same-site session. Their presence does not create a user-facing access gate.
+- `COMMIT_SHA`: fallback health metadata for direct Railway uploads.
+
+Never commit real secrets. Railway stores production values.
+
+## Commands
+
+```bash
+npm run dev                 # local development
+npm run check:fast          # lint + typecheck + unit/integration tests
+npm run test:e2e:smoke      # four critical Mobile Safari flows
+npm run verify              # lint + typecheck + all unit/integration tests + build
+CI=1 npm run test:e2e       # complete Mobile Safari acceptance suite
+npm run catalog:validate    # curated catalog validation
+npm run catalog:sync:rimi  # low-rate Rimi page snapshot
+npm run catalog:sync:livin # low-rate Livin page snapshot
+npm run catalog:sync:off-latvia # refresh a bounded Latvia OFF API snapshot
+npm run catalog:import:off # import official OFF JSONL/JSONL.GZ into its isolated layer
+npm run supabase:seed:external # seed retailer and ODbL layers after migrations
+npm run benchmark:recognition -- /absolute/path/photo.jpg
+```
+
+Use the project change lanes in `AGENTS.md`:
+
+- docs/copy: diff and link check only;
+- small UI: scoped checks plus smoke browser suite;
+- local logic: related tests plus `check:fast`;
+- recognition/scoring/privacy/auth/schema/dependency/release: `verify`, full browser suite, Railway deploy and production smoke.
+
+## API
+
+- `POST /api/recognize`: image data URL plus source type, returns bounded detections.
+- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products. An incomplete identity never starts the slow network fallbacks; successful exact web lookups remain cached for 24 hours in the running service.
+- `POST /api/offers`: up to ten known exact Barbora slugs, returns current per-card offers without blocking recognition.
+- `POST /api/events`: metadata-only product events with image-like values rejected.
+- `GET /api/health`: service, catalog and deployed commit status.
+
+## Data and Supabase
+
+Checked-in generated snapshots make the investor demo reproducible and fast:
+
+- `data/catalog.generated.json`: curated comparison catalog.
+- `data/barbora-product-index.generated.json`: retailer identity index.
+- `data/barbora-food-product-index.generated.json`: active food subset.
+- `data/barbora-nutrition-index.generated.json`: source-backed nutrition snapshot.
+- `data/rimi-catalog.generated.json`: exact Rimi product-page bootstrap snapshot.
+- `data/livin-catalog.generated.json`: exact Livin product-page bootstrap snapshot.
+- `data/rimi-catalog-sync-report.generated.json` and `data/livin-catalog-sync-report.generated.json`: complete configured-scope accounting.
+- `data/open-food-facts-lv.generated.json`: attributed Latvia subset imported through the ODbL bulk pipeline.
+- `data/catalog-sources.generated.json`: source, license and redistribution manifest.
+
+Regeneration and validation scripts live in `scripts/`. Supabase migrations and seed tooling live in `supabase/`. Do not hand-edit generated JSON. Rimi/Livin snapshots are for the private proof of concept; production reuse and recurring ingestion require retailer permission. Open Food Facts rows stay logically and physically separate because of ODbL obligations. See [catalog sources](docs/catalog-sources.md).
+
+Connected-retailer resolution runs before Open Food Facts and grounded web lookup. The Rimi matcher normalizes a small audited set of English package labels to their Latvian catalog identity while still requiring the same brand, pack size and an unambiguous top candidate. A translated identity that remains ambiguous is not accepted and may proceed to the bounded fallback chain.
+
+## Railway release
+
+Normal releases are pushed once, after the requested batch is complete:
+
+```bash
+git push origin HEAD:main
+npx @railway/cli variable set COMMIT_SHA=$(git rev-parse HEAD) --skip-deploys \
+  --project 9e2a4887-0e19-4ca7-ae99-d68816542558 \
+  --service sugar-no-scanner-demo --environment production
+npx @railway/cli up --detach \
+  --project 9e2a4887-0e19-4ca7-ae99-d68816542558 \
+  --service sugar-no-scanner-demo --environment production
+```
+
+Then verify `/api/health`, direct root entry plus its silent session cookie, rejection of a bare unauthenticated API request, one critical recognition path and the no-image-storage contract. Docs-only changes do not require a Railway release unless explicitly requested.
+
+## Product check
 
 1. Open production in iPhone Safari. Confirm it opens the scanner directly with no code page, then allow camera access.
-2. Confirm the live camera spans the full screen width. The Sugar.no logo, `Show demo` and recognition state must sit over the feed; `Live camera` and the persistent `Sent to Google Geminiâ€¦` line must be absent. The image must not look digitally zoomed or stretched.
+2. Confirm the live camera spans the full screen width. The Sugar.no logo, `Show demo` and recognition status must sit over the feed; `Live camera` and the persistent `Sent to Google Geminiâ€¦` line must be absent. The image must not look digitally zoomed or stretched.
 3. Scan a shelf with more than ten visible products and confirm no more than ten distinct results appear.
 4. Confirm verified results gain fit labels and every confidently named product remains in the list after lookup. An unresolved product must stay neutral with no invented fit; an anonymous price-only finding must stay hidden.
 5. Open Shelf and Checkout demos and expand `View all`.
@@ -48,4 +171,41 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 10. Open a rated product and confirm `Better alternatives` contains only the same product type with `Great fit` no worse than the source and a live price; `Moderate fit`, `Low fit`, unrated products, and products without a valid substitute should show no alternatives block.
 11. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
 12. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
-13. Scan a product without an exact packshot and confirm its preview thumbnail keeps the package proportions ; a little neighboring shelf context is acceptable, but the package must not look stretched.
+13. Scan a product without an exact packshot and confirm its preview thumbnail keeps the package proportions; a little neighboring shelf context is acceptable, but the package must not look stretched.
+14. Confirm a purchase button is absent when the exact online offer is not cheaper than the visible shelf price; when it is cheaper, confirm the card shows one full-width green `Buy cheaper online` action.
+15. Scan exact Rimi and Livin products and confirm their retailer packshots load instead of a broken-image icon.
+16. Scan several packages whose size is not readable and confirm `Checking onlineâ€¦` clears quickly instead of waiting for an unverifiable web search; a complete unfamiliar SKU may still use the bounded fallback.
+17. Upload one landscape and one tall portrait shelf photo; confirm the rounded camera card follows each photo's proportions without stretching or leaving the frame outside the viewport.
+18. Confirm each rated package outline has a light green, yellow or red transparent fill matching its fit icon; the packaging must remain readable through the tint.
+
+## Known limits
+
+- Latvia-wide nutrition coverage is not guaranteed. Private labels, unreadable variants and products without an exact public per-100 table can remain as clearly unrated visual identities in the comparison. They never receive an invented fit or retailer claim; anonymous price-only findings stay hidden.
+- Real shelf, glare, low-light, moving-belt and price-label accuracy still require a physical store benchmark.
+- Barbora, Rimi and Livin can produce exact offers for their own matched SKUs. The checked-in Rimi layer contains 6,822 complete products after checking all 7,617 pages in the seven approved food and drink categories. Livin contributes 6 complete rows after checking its full 169-URL Latvia sitemap. These snapshots are not a market-wide real-time price engine.
+- The release contains 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
+- FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
+- Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable pack size or barcode and is capped at 6 seconds; production should persist human-reviewed successful results in Supabase.
+- The investor URL has no viewer access gate. The silent same-site cookie, origin checks and process-local limiters harden API use but do not make the link private. Production scale-out needs explicit authentication plus a shared counter or edge gateway quota in addition to Gemini project budgets.
+- The five-shelf model screen measures unique returned identities, not labeled ground-truth recall. Gemini 3.5 Flash returned 38 identities at 7.1 s mean; a lean schema was faster (4.2 s) but returned fewer and unstable results (30, then 24), so it was rejected. Gemini 3.6 returned 32 at 7.8 s. True precision/recall still requires a labeled physical-store dataset.
+
+## Supporting docs
+
+- [Acceptance criteria](docs/acceptance.md)
+- [Architecture and file map](docs/architecture.md)
+- [Product QA](docs/product-qa.md)
+- [Team handoff](docs/team-handoff.md)
+- [Latvia coverage plan](docs/latvia-coverage-plan.md)
+- [Catalog sources, licensing and refresh](docs/catalog-sources.md)
+- [Partner data request drafts](docs/partner-data-requests.md)
+- [Week-one lessons](docs/week-one-lessons.md)
+- [Latest release evidence](docs/test-runs/2026-08-27-scanner-ui-catalog-completion.md)
+- [Rounded camera viewport release evidence](docs/test-runs/2026-08-28-rounded-camera-viewport.md)
+- [Aspect-correct thumbnail release evidence](docs/test-runs/2026-08-28-thumbnail-context-crop.md)
+- [Great-fit-only alternatives release evidence](docs/test-runs/2026-08-28-great-fit-alternatives.md)
+- [Final accumulated UI publish evidence](docs/test-runs/2026-08-28-accumulated-ui-publish.md)
+- [Camera framing and fit-overlay release evidence](docs/test-runs/2026-08-28-camera-framing-fit-overlays.md)
+- [Physical shelf autofocus and recognition release evidence](docs/test-runs/2026-08-28-physical-shelf-autofocus-recognition.md)
+- [Final release audit and production evidence](docs/test-runs/2026-08-29-final-release-audit.md)
+- [Public entry and full-width live camera release evidence](docs/test-runs/2026-08-29-public-entry-full-width-camera.md)
+- [Open and recent bugs](Bugs.md)
