@@ -33,4 +33,10 @@ The E2E harness now waits for camera hydration instead of waiting for network id
 4. Keep the original scene stable after a result. The same scene must not trigger repeated paid Gemini calls.
 5. Scan an unsupported item. The app must remain honest rather than assigning a fit without exact, source-backed protein and sugar.
 
-GitHub, Railway and production smoke evidence are appended only after the release succeeds.
+## Production release evidence
+
+- Application commit `2525e9d` and verification commit `9e13d9c` were pushed to GitHub `main`.
+- Direct Railway deployment `c8246980-4a31-48b8-ba01-4c9c2443c3f3` completed with status `SUCCESS`.
+- `GET /api/health`: HTTP 200 with `status: ok`, 9,707 active food products and 7,433 automatic fits.
+- Public root: HTTP 200. A production Mobile Safari-sized smoke opened `Show demo`, rendered the guided dialog, and confirmed the 393 px document fits the 393 px viewport without horizontal overflow.
+- The direct CLI deployment keeps Railway's prior `RAILWAY_GIT_COMMIT_SHA` metadata even though it uploads the current worktree. This evidence-only successor commit is therefore allowed to complete via the GitHub-connected deployment; its health metadata is checked after the push.
