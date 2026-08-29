@@ -1,0 +1,52 @@
+[
+  {
+    "brand": "Turtle",
+    "name": "Low Sugar Pillows Peanut Butter",
+    "packSize": "300 g"
+  },
+  {
+    "brand": "Turtle",
+    "name": "Cocoa Pillows Hazelnut Filling",
+    "packSize": "300 g"
+  },
+  {
+    "brand": "Turtle",
+    "name": "Bran Flakes Organic",
+    "packSize": "375 g"
+  },
+  {
+    "brand": "Turtle",
+    "name": "Cinnamon Crunch",
+    "packSize": "300 g"
+  },
+  {
+    "brand": "Turtle",
+    "name": "Color Loops",
+    "packSize": "300 g"
+  },
+  {
+    "brand": "Maggi",
+    "name": "Satigais Vistas Buljons",
+    "packSize": "120 g"
+  },
+  {
+    "brand": "Oyakata",
+    "name": "Japanese Chicken Teriyaki Noodles",
+    "packSize": "96 g"
+  },
+  {
+    "brand": "Oyakata",
+    "name": "Japanese Soy Sauce Noodles",
+    "packSize": "89 g"
+  },
+  {
+    "brand": "Oyakata",
+    "name": "Japanese Beef Wasabi Noodles",
+    "packSize": "93 g"
+  },
+  {
+    "brand": "Maggi",
+    "name": "Saucy Noodles Teriyaki",
+    "packSize": "75 g"
+  }
+]

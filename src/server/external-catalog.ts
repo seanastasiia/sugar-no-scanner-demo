@@ -251,6 +251,16 @@ export function resolveExternalCatalogProduct(
   };
 }
 
+export function getExternalCatalogProductByBarcode(
+  barcode: string
+): { product: ScoredProduct; confidence: 1; offer: RetailerOffer | null } | null {
+  if (!/^\d{8,14}$/.test(barcode)) return null;
+  const exact = products.find((product) => product.gtin === barcode);
+  return exact
+    ? { product: externalCatalogToScoredProduct(exact), confidence: 1, offer: offerFor(exact, 1) }
+    : null;
+}
+
 export function externalCatalogCounts() {
   return products.reduce(
     (counts, product) => {

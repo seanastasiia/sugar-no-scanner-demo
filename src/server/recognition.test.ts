@@ -104,6 +104,19 @@ describe("recognizeProducts", () => {
     expect(result.imageStored).toBe(false);
     expect(result.model).toBe(DEFAULT_GEMINI_MODEL);
   });
+
+  it("allows the benchmark script to compare models without changing the public API", async () => {
+    delete process.env.GEMINI_API_KEY;
+    const result = await recognizeProducts({
+      source: "upload",
+      imageDataUrl: "data:image/jpeg;base64,YWJj",
+      catalog: getCatalog(),
+      requestId: "request-benchmark",
+      modelOverride: "gemini-3.7-flash"
+    });
+    expect(result.status).toBe("provider_unavailable");
+    expect(result.model).toBe("gemini-3.7-flash");
+  });
 });
 
 describe("recognitionModel", () => {

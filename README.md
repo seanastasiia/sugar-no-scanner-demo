@@ -11,6 +11,8 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
 - The live feed spans the full phone width, with the Sugar.no brand, `Show demo` and recognition status layered over the camera. The stream keeps its native aspect ratio and `object-fit: contain`, so the app does not add digital zoom or stretch the image. Saved photos and deterministic demo scenes retain a proportional rounded viewport.
 - Camera starts after permission without requiring a shutter action. Mobile Safari requests the rear 1920x1080 feed at up to 30 fps, asks for continuous focus when the device exposes it, and waits for two stable post-focus frames before sending the first image so a soft startup frame is not analyzed.
+- Live capture begins stability sampling after 550 ms, checks every 350 ms and sends a compact 1152 px JPEG as soon as two sharp, steady frames are available. The video keeps playing while results are shown.
+- When the browser exposes native `BarcodeDetector`, EAN/UPC is resolved locally before Gemini. On Safari, Gemini can still return a visible barcode for the same exact local lookup.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
 - Live and saved-photo views omit the redundant source badge. The camera keeps only `Show demo` over the feed; saved photos keep only `Back to live` over their proportional media frame.
 - A scan keeps at most ten distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
@@ -24,7 +26,8 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Rimi/Livin snapshot, isolated Open Food Facts bulk/API match, then exact Google Search-grounded web nutrition.
-- Internet enrichment runs after the first identity result and never receives or stores the camera image. Products without a readable pack size or barcode fail fast instead of starting an unverifiable network search; the final grounded-search fallback for a complete identity defaults to 12 seconds and is never configured below Google's 10-second minimum.
+- Internet enrichment runs after the first identity result and never receives or stores the camera image. Known barcode/catalog identities are enriched first, with up to five independent requests, so one slow unknown product does not hold the rest. Products without a readable pack size or barcode fail fast instead of starting an unverifiable network search; the final grounded-search fallback for a complete identity defaults to 12 seconds and is never configured below Google's 10-second minimum.
+- Exact cited nutrition uses an immediate process cache plus the server-only Supabase `web_nutrition_cache`. Successful results live for 30 days; misses are retried after six hours. A versioned preload list can warm recurring Latvia SKUs before a store session.
 - The retired nutrition-label follow-up is removed from the UI and API; automatic exact-source enrichment is the only nutrition path.
 - A product remains visible while exact nutrition is being checked, then stays in the result only when source-backed protein and total sugar produce a Sugar.no fit. A shelf price by itself never creates a result card.
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
@@ -105,8 +108,10 @@ npm run catalog:sync:rimi  # low-rate Rimi page snapshot
 npm run catalog:sync:livin # low-rate Livin page snapshot
 npm run catalog:sync:off-latvia # refresh a bounded Latvia OFF API snapshot
 npm run catalog:import:off # import official OFF JSONL/JSONL.GZ into its isolated layer
+npm run catalog:preload:nutrition # dry-run the Latvia preload; add -- --apply to warm Supabase
 npm run supabase:seed:external # seed retailer and ODbL layers after migrations
 npm run benchmark:recognition -- /absolute/path/photo.jpg
+npm run benchmark:models -- /absolute/path/shelf.jpg /absolute/path/checkout.jpg
 ```
 
 Use the project change lanes in `AGENTS.md`:
@@ -119,7 +124,8 @@ Use the project change lanes in `AGENTS.md`:
 ## API
 
 - `POST /api/recognize`: image data URL plus source type, returns bounded detections.
-- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products. An incomplete identity never starts the slow network fallbacks; successful exact web lookups remain cached for 24 hours in the running service.
+- `POST /api/barcode`: exact EAN/UPC without an image, resolved against local retailer/OFF layers.
+- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products. An incomplete identity never starts the slow network fallbacks; exact web results use the process cache immediately and, when configured, the shared Supabase cache for 30 days (six hours for misses).
 - `POST /api/offers`: up to ten known exact Barbora slugs, returns current per-card offers without blocking recognition.
 - `POST /api/events`: metadata-only product events with image-like values rejected.
 - `GET /api/health`: service, catalog and deployed commit status.
@@ -139,6 +145,8 @@ Checked-in generated snapshots make the investor demo reproducible and fast:
 - `data/catalog-sources.generated.json`: source, license and redistribution manifest.
 
 Regeneration and validation scripts live in `scripts/`. Supabase migrations and seed tooling live in `supabase/`. Do not hand-edit generated JSON. Rimi/Livin snapshots are for the private proof of concept; production reuse and recurring ingestion require retailer permission. Open Food Facts rows stay logically and physically separate because of ODbL obligations. See [catalog sources](docs/catalog-sources.md).
+
+Apply `supabase/migrations/202608290001_web_nutrition_cache.sql` before enabling persistent web-nutrition caching. The RLS-protected table stores normalized identity, source-backed nutrition JSON, model and expiry; it never stores camera images. Run `npm run catalog:preload:nutrition` to inspect the Latvia demo list, then `npm run catalog:preload:nutrition -- --apply` with server credentials to warm it.
 
 Connected-retailer resolution runs before Open Food Facts and grounded web lookup. The Rimi matcher normalizes a small audited set of English package labels to their Latvian catalog identity while still requiring the same brand, pack size and an unambiguous top candidate. A translated identity that remains ambiguous is not accepted and may proceed to the bounded fallback chain.
 
@@ -186,7 +194,9 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - Barbora, Rimi and Livin can produce exact offers for their own matched SKUs. The checked-in Rimi layer contains 6,822 complete products after checking all 7,617 pages in the seven approved food and drink categories. Livin contributes 6 complete rows after checking its full 169-URL Latvia sitemap. These snapshots are not a market-wide real-time price engine.
 - The release contains 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
 - FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
-- Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable pack size or barcode and defaults to a 12-second deadline; production should persist human-reviewed successful results in Supabase.
+- Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable pack size or barcode and defaults to a 12-second deadline. Persistent reuse requires the checked-in Supabase migration plus server-only `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; without them the app fails open to its process cache and recognition still works.
+- Browser-native barcode detection depends on platform support. Safari currently relies on Gemini reading the visible code; no extra WASM bundle is shipped because it would increase camera startup cost.
+- Live results are automatic overlays rather than device-side object tracking. Moving the phone after a result is held can make boxes stop following physical packages until the next scan.
 - The investor URL has no viewer access gate. The silent same-site cookie, origin checks and process-local limiters harden API use but do not make the link private. Production scale-out needs explicit authentication plus a shared counter or edge gateway quota in addition to Gemini project budgets.
 - The five-shelf model screen measures unique returned identities, not labeled ground-truth recall. Gemini 3.5 Flash returned 38 identities at 7.1 s mean; a lean schema was faster (4.2 s) but returned fewer and unstable results (30, then 24), so it was rejected. Gemini 3.6 returned 32 at 7.8 s. True precision/recall still requires a labeled physical-store dataset.
 
@@ -209,4 +219,5 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - [Physical shelf autofocus and recognition release evidence](docs/test-runs/2026-08-28-physical-shelf-autofocus-recognition.md)
 - [Final release audit and production evidence](docs/test-runs/2026-08-29-final-release-audit.md)
 - [Public entry and full-width live camera release evidence](docs/test-runs/2026-08-29-public-entry-full-width-camera.md)
+- [Recognition speed, cache and barcode release evidence](docs/test-runs/2026-08-29-recognition-speed-six.md)
 - [Open and recent bugs](Bugs.md)

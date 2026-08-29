@@ -294,6 +294,7 @@ async function mockLiveCamera(page: Page) {
     const context = canvas.getContext("2d");
     context?.fillRect(0, 0, canvas.width, canvas.height);
     const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
+    const originalGetImageData = CanvasRenderingContext2D.prototype.getImageData;
     CanvasRenderingContext2D.prototype.drawImage = function (
       this: CanvasRenderingContext2D,
       ...args: Parameters<typeof originalDrawImage>
@@ -301,6 +302,31 @@ async function mockLiveCamera(page: Page) {
       if (args[0] instanceof HTMLVideoElement) return;
       return originalDrawImage.apply(this, args);
     } as typeof originalDrawImage;
+    CanvasRenderingContext2D.prototype.getImageData = function (
+      this: CanvasRenderingContext2D,
+      sx: number,
+      sy: number,
+      sw: number,
+      sh: number,
+      settings?: ImageDataSettings
+    ) {
+      if (sw === 64 && sh === 48) {
+        const imageData = originalGetImageData.call(this, sx, sy, sw, sh, settings);
+        const { data } = imageData;
+        for (let y = 0; y < sh; y += 1) {
+          for (let x = 0; x < sw; x += 1) {
+            const offset = (y * sw + x) * 4;
+            const value = (x + y) % 2 === 0 ? 32 : 224;
+            data[offset] = value;
+            data[offset + 1] = value;
+            data[offset + 2] = value;
+            data[offset + 3] = 255;
+          }
+        }
+        return imageData;
+      }
+      return originalGetImageData.call(this, sx, sy, sw, sh, settings);
+    };
     HTMLMediaElement.prototype.play = async function (this: HTMLMediaElement) {
       if (this instanceof HTMLVideoElement) {
         Object.defineProperties(this, {

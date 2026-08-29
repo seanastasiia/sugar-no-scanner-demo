@@ -4,13 +4,16 @@ import { z } from "zod";
 import { scoreReferenceProduct } from "@/lib/scoring";
 import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
 import { normalizeRetailText, type BarboraLookupInput } from "./barbora-catalog";
+import { readPersistentWebNutrition, writePersistentWebNutrition } from "./web-nutrition-cache";
 
 const DEFAULT_MODEL = "gemini-3.7-flash";
 const MIN_GOOGLE_HTTP_TIMEOUT_MS = 10_000;
 const DEFAULT_WEB_NUTRITION_TIMEOUT_MS = 12_000;
 const MAX_WEB_NUTRITION_TIMEOUT_MS = 30_000;
-const SUCCESS_CACHE_TTL_MS = 24 * 60 * 60_000;
-const MISS_CACHE_TTL_MS = 30 * 60_000;
+// Nutrition for an exact packaged SKU is stable. Keep verified results long
+// enough to make repeat investor/store scans local, while retrying misses soon.
+const SUCCESS_CACHE_TTL_MS = 30 * 24 * 60 * 60_000;
+const MISS_CACHE_TTL_MS = 6 * 60 * 60_000;
 const responseCache = new Map<string, { expiresAt: number; result: WebNutritionResolution | null }>();
 
 export function webNutritionTimeoutMs(raw = process.env.GEMINI_WEB_NUTRITION_TIMEOUT_MS): number {
@@ -36,7 +39,7 @@ interface WebNutritionSource {
   url: string;
 }
 
-interface WebNutritionResolution {
+export interface WebNutritionResolution {
   product: ScoredProduct;
   confidence: number;
 }
@@ -167,6 +170,12 @@ export async function resolveWebNutritionProduct(
   const cached = responseCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.result;
 
+  const persistent = await readPersistentWebNutrition(cacheKey);
+  if (persistent) {
+    responseCache.set(cacheKey, persistent);
+    return persistent.result;
+  }
+
   try {
     const ai = new GoogleGenAI({ apiKey });
     const normalizedName = normalizeRetailText(input.name);
@@ -177,8 +186,9 @@ export async function resolveWebNutritionProduct(
         (part): part is string => Boolean(part && !normalizedName.includes(normalizeRetailText(part)))
       )
     ].join(" ");
+    const model = process.env.GEMINI_WEB_NUTRITION_MODEL || process.env.GEMINI_MODEL || DEFAULT_MODEL;
     const response = await ai.models.generateContent({
-      model: process.env.GEMINI_WEB_NUTRITION_MODEL || process.env.GEMINI_MODEL || DEFAULT_MODEL,
+      model,
       contents:
         `Use Google Search now. Find the exact packaged food "${exactProductQuery}". ` +
         `Search manufacturer, retailer or exact product-database pages for its nutrition table. ` +
@@ -201,10 +211,9 @@ export async function resolveWebNutritionProduct(
       chunk.web?.uri ? [{ title: chunk.web.title || "Web source", url: chunk.web.uri }] : []
     );
     const result = candidate ? buildGroundedWebNutritionProduct(input, candidate, sources) : null;
-    responseCache.set(cacheKey, {
-      result,
-      expiresAt: Date.now() + (result ? SUCCESS_CACHE_TTL_MS : MISS_CACHE_TTL_MS)
-    });
+    const expiresAt = Date.now() + (result ? SUCCESS_CACHE_TTL_MS : MISS_CACHE_TTL_MS);
+    responseCache.set(cacheKey, { result, expiresAt });
+    void writePersistentWebNutrition({ ...input, cacheKey, result, model, expiresAt });
     return result;
   } catch (error) {
     console.info(
@@ -214,7 +223,15 @@ export async function resolveWebNutritionProduct(
         error: error instanceof Error ? error.message : "unknown"
       })
     );
-    responseCache.set(cacheKey, { result: null, expiresAt: Date.now() + MISS_CACHE_TTL_MS });
+    const expiresAt = Date.now() + MISS_CACHE_TTL_MS;
+    responseCache.set(cacheKey, { result: null, expiresAt });
+    void writePersistentWebNutrition({
+      ...input,
+      cacheKey,
+      result: null,
+      model: process.env.GEMINI_WEB_NUTRITION_MODEL || process.env.GEMINI_MODEL || DEFAULT_MODEL,
+      expiresAt
+    });
     return null;
   }
 }

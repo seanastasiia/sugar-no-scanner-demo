@@ -29,8 +29,10 @@
     "catalog:generate:sources": "tsx scripts/generate-catalog-sources.ts",
     "catalog:validate": "tsx scripts/validate-catalog.ts",
     "catalog:validate:barbora-coverage": "tsx scripts/validate-barbora-coverage.ts",
+    "catalog:preload:nutrition": "tsx scripts/preload-web-nutrition.ts",
     "benchmark:focus": "tsx scripts/benchmark-focus.ts",
     "benchmark:recognition": "node --import tsx scripts/benchmark-recognition.ts",
+    "benchmark:models": "tsx scripts/benchmark-recognition-models.ts",
     "supabase:seed": "tsx scripts/seed-supabase.ts",
     "supabase:seed:external": "tsx scripts/seed-external-catalog.ts"
   },

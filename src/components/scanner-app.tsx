@@ -37,6 +37,8 @@ import {
 } from "@/lib/match-presentation";
 import { imageFileToScanFrames, type PreparedUploadFrame } from "@/lib/client-image";
 import { mergeEnrichedDetections } from "@/lib/detection-merge";
+import { prioritizeDetectionsForEnrichment } from "@/lib/enrichment-priority";
+import { luminanceEdgeScore } from "@/lib/frame-quality";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
 import { barboraProductSlug } from "@/lib/online-offer";
@@ -68,9 +70,17 @@ import styles from "./scanner-app.module.css";
 type CameraState = "idle" | "requesting" | "live" | "denied" | "error";
 type RecognitionState = "idle" | "scanning" | "matched" | "retained" | "not_sure" | "unavailable" | "rate_limited" | "error";
 
-const CAMERA_AUTOFOCUS_SETTLE_MS = 850;
+const CAMERA_AUTOFOCUS_SETTLE_MS = 550;
 const CAMERA_SCAN_INTERVAL_MS = 350;
-const CAMERA_SCAN_KICKOFF_MS = 900;
+const CAMERA_SCAN_KICKOFF_MS = 600;
+const CAMERA_MIN_CAPTURE_INTERVAL_MS = 1_600;
+const CAMERA_MIN_EDGE_SCORE = 5.5;
+
+interface NativeBarcodeDetector {
+  detect(source: ImageBitmapSource): Promise<Array<{ rawValue?: string }>>;
+}
+
+type NativeBarcodeDetectorConstructor = new (options: { formats: string[] }) => NativeBarcodeDetector;
 
 const shelfIds = [
   "prot-bat-sal-riekst-saldin-barebells-55-g",
@@ -217,6 +227,7 @@ export function ScannerApp() {
   const manualSelectionRef = useRef(false);
   const cameraRequestRef = useRef(0);
   const productFetchesRef = useRef(new Set<string>());
+  const barcodeDetectorRef = useRef<NativeBarcodeDetector | null | undefined>(undefined);
 
   const [source, setSource] = useState<ScanSource>("camera");
   const [cameraState, setCameraState] = useState<CameraState>("idle");
@@ -303,7 +314,8 @@ export function ScannerApp() {
       enrichmentAbortRef.current = controller;
       setEnrichingProductIds(initialDetections.map((detection) => detection.productId));
       try {
-        await mapWithConcurrency(initialDetections, 5, async (initialDetection) => {
+        const prioritized = prioritizeDetectionsForEnrichment(initialDetections);
+        await mapWithConcurrency(prioritized, 5, async (initialDetection) => {
           try {
             const response = await fetch("/api/resolve-products", {
               method: "POST",
@@ -371,7 +383,6 @@ export function ScannerApp() {
     scanKickoffRef.current = null;
     if (scanTimerRef.current) clearInterval(scanTimerRef.current);
     scanTimerRef.current = null;
-    videoRef.current?.pause();
   }, []);
 
   const applyRecognition = useCallback(
@@ -478,7 +489,6 @@ export function ScannerApp() {
       if (eventSource === "camera") {
         if (scanTimerRef.current) clearInterval(scanTimerRef.current);
         scanTimerRef.current = null;
-        videoRef.current?.pause();
         setResultLocked(true);
       }
       setResultsExpanded(eventSource === "upload" && ids.length > 1);
@@ -662,6 +672,61 @@ export function ScannerApp() {
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
+  const recognizeCameraFrame = useCallback(
+    async (canvas: HTMLCanvasElement, imageDataUrl: string, focusMode: boolean) => {
+      if (inFlightRef.current) return;
+      if (barcodeDetectorRef.current === undefined) {
+        const constructor = (window as unknown as { BarcodeDetector?: NativeBarcodeDetectorConstructor }).BarcodeDetector;
+        barcodeDetectorRef.current = constructor
+          ? new constructor({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"] })
+          : null;
+      }
+      const detector = barcodeDetectorRef.current;
+      if (detector) {
+        inFlightRef.current = true;
+        try {
+          const barcode = (await detector.detect(canvas))
+            .map((candidate) => candidate.rawValue?.replace(/\D/g, "") || "")
+            .find((value) => /^\d{8,14}$/.test(value));
+          if (barcode) {
+            const response = await fetch("/api/barcode", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ barcode })
+            });
+            if (response.ok) {
+              const result = (await response.json()) as {
+                status: "matched" | "not_found";
+                detection?: ProductDetection;
+              };
+              if (result.status === "matched" && result.detection) {
+                applyRecognition(
+                  {
+                    requestId: crypto.randomUUID(),
+                    status: "matched",
+                    detections: [result.detection],
+                    latencyMs: 0,
+                    model: "local-barcode-catalog-v1",
+                    imageStored: false
+                  },
+                  "camera",
+                  true
+                );
+                return;
+              }
+            }
+          }
+        } catch {
+          barcodeDetectorRef.current = null;
+        } finally {
+          inFlightRef.current = false;
+        }
+      }
+      await recognize({ source: "camera", imageDataUrl, focusMode });
+    },
+    [applyRecognition, recognize]
+  );
+
   const captureStableFrame = useCallback(() => {
     const video = videoRef.current;
     if (!video || video.readyState < 2 || inFlightRef.current) return;
@@ -674,6 +739,10 @@ export function ScannerApp() {
     if (!lowContext) return;
     lowContext.drawImage(video, 0, 0, 64, 48);
     const current = lowContext.getImageData(0, 0, 64, 48).data;
+    if (luminanceEdgeScore(current, 64, 48) < CAMERA_MIN_EDGE_SCORE) {
+      stableFrameCountRef.current = 0;
+      return;
+    }
     const previous = lowResFrameRef.current;
     lowResFrameRef.current = new Uint8ClampedArray(current);
     if (!previous) {
@@ -690,8 +759,8 @@ export function ScannerApp() {
       return;
     }
     stableFrameCountRef.current += 1;
-    if (stableFrameCountRef.current < 2) return;
-    if (now - lastCaptureRef.current < 2_100) return;
+    if (stableFrameCountRef.current < 1) return;
+    if (now - lastCaptureRef.current < CAMERA_MIN_CAPTURE_INTERVAL_MS) return;
     stableFrameCountRef.current = 0;
     lastCaptureRef.current = now;
 
@@ -700,7 +769,7 @@ export function ScannerApp() {
     const sourceHeight = video.videoHeight || 1280;
     const focusMode = focusRetryRef.current;
     const crop = focusMode ? CAMERA_FOCUS_CROP : { x: 0, y: 0, width: 1, height: 1 };
-    const targetWidth = Math.min(sourceWidth * crop.width, 1280);
+    const targetWidth = Math.min(sourceWidth * crop.width, 1152);
     canvas.width = targetWidth;
     canvas.height = Math.round(targetWidth * ((sourceHeight * crop.height) / (sourceWidth * crop.width)));
     const context = canvas.getContext("2d");
@@ -716,14 +785,10 @@ export function ScannerApp() {
       canvas.width,
       canvas.height
     );
-    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.76);
+    const imageDataUrl = canvas.toDataURL("image/jpeg", 0.74);
     if (!focusMode) setScanFrameUrl(imageDataUrl);
-    void recognize({
-      source: "camera",
-      imageDataUrl,
-      focusMode
-    });
-  }, [recognize]);
+    void recognizeCameraFrame(canvas, imageDataUrl, focusMode);
+  }, [recognizeCameraFrame]);
 
   const requestCamera = useCallback(async () => {
     sessionIdRef.current = makeSessionId();

@@ -55,6 +55,29 @@ const CACHE_TTL_MS = 30 * 60_000;
 const responseCache = new Map<string, { expiresAt: number; product: ScoredProduct | null; confidence: number }>();
 const bulkProducts = bulkSnapshot as ExternalCatalogProduct[];
 
+export function getOpenFoodFactsBulkProductByBarcode(barcode: string): ScoredProduct | null {
+  if (!/^\d{8,14}$/.test(barcode)) return null;
+  const source = bulkProducts.find((product) => (product.gtin || product.sourceProductId) === barcode);
+  if (!source) return null;
+  return openFoodFactsToScoredProduct(
+    {
+      code: source.gtin || source.sourceProductId,
+      product_name: source.title,
+      brands: source.brand,
+      quantity: source.packSize,
+      nutrition_data_per: source.nutritionBasis,
+      nutriments: {
+        "energy-kcal_100g": source.energyKcal,
+        proteins_100g: source.proteinG,
+        sugars_100g: source.totalSugarG
+      },
+      image_front_url: source.imageUrl,
+      categories: source.category
+    },
+    source.checkedAt
+  );
+}
+
 const stopWords = new Set([
   "and",
   "ar",

@@ -600,12 +600,14 @@ export async function recognizeProducts(input: {
   catalog: ScoredProduct[];
   requestId: string;
   deferExternalResolution?: boolean;
+  /** Internal benchmark hook. Public API requests always use the configured model. */
+  modelOverride?: string;
 }): Promise<RecognitionResponse> {
   const startedAt = performance.now();
   const sample = sampleResponse(input.source);
   // Keep visual extraction independent from the slower model used by grounded
   // web nutrition. Dense shelf recognition is latency-sensitive and bounded.
-  const model = recognitionModel();
+  const model = input.modelOverride?.trim() || recognitionModel();
   if (sample) {
     return {
       requestId: input.requestId,
