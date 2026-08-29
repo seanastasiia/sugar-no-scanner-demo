@@ -322,7 +322,7 @@ async function mockLiveCamera(page: Page) {
   });
 }
 
-test("private entry opens into the camera-first experience without an in-scanner badge", async ({ page }) => {
+test("entry opens directly into the camera-first experience without an access page", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
@@ -330,12 +330,8 @@ test("private entry opens into the camera-first experience without an in-scanner
     });
   });
   await page.goto("/");
-  const accessCode = page.getByLabel("Demo access code");
-  await expect(accessCode).toBeVisible();
-  await accessCode.fill("e2e-demo-code");
-  const authResponse = page.waitForResponse((response) => response.url().endsWith("/api/auth"));
-  await page.getByRole("button", { name: "Open scanner" }).click();
-  expect((await authResponse).status()).toBe(200);
+  await expect(page.getByLabel("Demo access code")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Open scanner" })).toHaveCount(0);
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expectOfficialSugarNoLogo(page);
   await expect(page.getByText("Live camera", { exact: true })).toHaveCount(0);
@@ -344,8 +340,14 @@ test("private entry opens into the camera-first experience without an in-scanner
   await expect(page.getByTestId("scan-guide")).toHaveCount(0);
   const demoButtonBox = await page.getByRole("button", { name: "Show demo" }).boundingBox();
   const cameraViewportBox = await page.getByTestId("camera-viewport").boundingBox();
-  expect((cameraViewportBox?.y ?? 0) - ((demoButtonBox?.y ?? 0) + (demoButtonBox?.height ?? 0))).toBeGreaterThanOrEqual(20);
+  expect(cameraViewportBox?.x).toBeLessThanOrEqual(1);
+  expect(Math.abs((cameraViewportBox?.width ?? 0) - (await page.evaluate(() => window.innerWidth)))).toBeLessThanOrEqual(1);
+  expect(demoButtonBox?.y).toBeGreaterThanOrEqual(cameraViewportBox?.y ?? 0);
+  expect((demoButtonBox?.y ?? 0) + (demoButtonBox?.height ?? 0)).toBeLessThanOrEqual(
+    (cameraViewportBox?.y ?? 0) + (cameraViewportBox?.height ?? 0)
+  );
   await expect(page.getByText("Private demo", { exact: true })).toHaveCount(0);
+  await expect(page.getByText(/Sent to Google Gemini/i)).toHaveCount(0);
 });
 
 test("scanner follows the current Sugar.no app surface language without changing fit semantics", async ({ page }) => {
@@ -784,7 +786,9 @@ test("live camera preserves full-resolution capture geometry and a stable untapp
   let capturedFrame: string | null = null;
   await page.route("**/api/recognize", async (route) => {
     const body = route.request().postDataJSON() as { source?: string; imageDataUrl?: string } | null;
-    if (body?.source === "camera" && body.imageDataUrl) capturedFrame = body.imageDataUrl;
+    if (body?.source === "camera" && body.imageDataUrl && !capturedFrame) {
+      capturedFrame = body.imageDataUrl;
+    }
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
@@ -826,6 +830,8 @@ test("live camera preserves full-resolution capture geometry and a stable untapp
     const frame = page.getByTestId("camera-viewport");
     await expectInsideViewport(page, frame);
     const initialBox = await frame.boundingBox();
+    expect(initialBox?.x).toBeLessThanOrEqual(1);
+    expect(Math.abs((initialBox?.width ?? 0) - viewport.width)).toBeLessThanOrEqual(1);
     await page.waitForTimeout(100);
     const stableBox = await frame.boundingBox();
     expect(Math.abs((initialBox?.width ?? 0) - (stableBox?.width ?? 0))).toBeLessThanOrEqual(1);
@@ -844,7 +850,9 @@ test("live camera preserves full-resolution capture geometry and a stable untapp
         filter: style.filter
       };
     });
-    expect(geometry.frameRatio).toBeCloseTo(geometry.mediaRatio, 2);
+    if (viewport.width / geometry.mediaRatio <= viewport.height + 1) {
+      expect(geometry.frameRatio).toBeCloseTo(geometry.mediaRatio, 2);
+    }
     expect(geometry.objectFit).toBe("contain");
     expect(geometry.pointerEvents).toBe("none");
     expect(geometry.filter).toBe("none");
@@ -1440,7 +1448,7 @@ test("live camera applies each online result without waiting for the slowest pro
   expect(previewGeometry.viewportRatio).toBeCloseTo(previewGeometry.mediaRatio, 2);
   expect(previewGeometry.objectFit).toBe("contain");
   expect(previewGeometry.pointerEvents).toBe("none");
-  expect(previewGeometry.borderRadius).toBeGreaterThanOrEqual(26);
+  expect(previewGeometry.borderRadius).toBe(0);
   const cameraConstraints = await page.evaluate(
     () => (window as Window & { __cameraConstraints?: MediaStreamConstraints }).__cameraConstraints
   );

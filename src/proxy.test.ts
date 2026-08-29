@@ -25,12 +25,14 @@ describe("private scanner proxy", () => {
     }
   );
 
-  it("redirects an unauthenticated page to access", () => {
+  it("opens the scanner directly and issues a silent session cookie", () => {
     const response = proxy(new NextRequest("https://scanner.example/?scene=shelf"));
-    expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe(
-      "https://scanner.example/access?next=%2F%3Fscene%3Dshelf"
-    );
+    const token = createHash("sha256")
+      .update("sugar-scanner:test-code:test-secret")
+      .digest("hex");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(response.cookies.get("sugar_scanner_access")?.value).toBe(token);
   });
 
   it("rejects an unauthenticated API request without caching", async () => {

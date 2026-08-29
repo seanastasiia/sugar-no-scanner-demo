@@ -251,6 +251,20 @@
   aspect-ratio: var(--camera-media-aspect, 3 / 4);
 }
 
+.cameraViewport.cameraViewportLive {
+  top: 0;
+  right: 0;
+  bottom: auto;
+  left: 0;
+  width: 100%;
+  height: min(100%, var(--camera-media-height, 133.333vw));
+  max-height: none;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .video,
 .uploadPreview {
   position: absolute;
@@ -570,19 +584,6 @@
   background: rgb(255 255 255 / 12%);
   color: #ffffff;
   font-weight: 700;
-}
-
-.privacyNoteStage {
-  position: absolute;
-  z-index: 9;
-  right: max(16px, env(safe-area-inset-right));
-  bottom: 12px;
-  left: max(16px, env(safe-area-inset-left));
-  margin: 0;
-  color: rgb(255 255 255 / 68%);
-  font-size: 10px;
-  font-weight: 650;
-  text-align: center;
 }
 
 .resultsSheet {
@@ -1802,10 +1803,6 @@
     top: max(12px, env(safe-area-inset-top));
     right: max(84px, env(safe-area-inset-right));
     left: max(84px, env(safe-area-inset-left));
-  }
-
-  .privacyNoteStage {
-    display: none;
   }
 
   .resultsCollapsed {

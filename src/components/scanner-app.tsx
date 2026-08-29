@@ -1166,13 +1166,16 @@ export function ScannerApp() {
 
             <div
               ref={stageRef}
-              className={`${styles.cameraViewport} ${source === "camera" || source === "upload" ? styles.cameraViewportMediaRatio : ""}`}
+              className={`${styles.cameraViewport} ${source === "camera" || source === "upload" ? styles.cameraViewportMediaRatio : ""} ${source === "camera" ? styles.cameraViewportLive : ""}`}
               data-testid="camera-viewport"
               style={source === "camera" || source === "upload"
                 ? ({
                     "--camera-media-aspect": mediaDimensions
                       ? `${mediaDimensions.width} / ${mediaDimensions.height}`
-                      : "3 / 4"
+                      : "3 / 4",
+                    "--camera-media-height": mediaDimensions
+                      ? `${(mediaDimensions.height / mediaDimensions.width) * 100}vw`
+                      : "133.333vw"
                   } as CSSProperties)
                 : undefined}
             >
@@ -1282,9 +1285,6 @@ export function ScannerApp() {
               ) : null}
             </div>
             </div>
-            <p className={styles.privacyNoteStage}>
-              Sent to Google Gemini for recognition. Not stored by Sugar.no.
-            </p>
           </div>
 
           {visibleTrayIds.length ? (

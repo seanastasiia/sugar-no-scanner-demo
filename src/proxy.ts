@@ -30,14 +30,22 @@ export function proxy(request: NextRequest) {
     );
   }
 
-  const accessUrl = request.nextUrl.clone();
-  accessUrl.pathname = "/access";
-  accessUrl.search = "";
-  accessUrl.searchParams.set(
-    "next",
-    `${request.nextUrl.pathname}${request.nextUrl.search}`
-  );
-  return NextResponse.redirect(accessUrl);
+  if (!token) {
+    return NextResponse.json(
+      { error: "Demo access is not configured." },
+      { status: 503, headers: { "cache-control": "no-store" } }
+    );
+  }
+
+  const response = NextResponse.next();
+  response.cookies.set(ACCESS_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: 60 * 60 * 12
+  });
+  return response;
 }
 
 export const config = {

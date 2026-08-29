@@ -4,15 +4,15 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 - Production: [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
 - Repository: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
-- Status: access-code protected investor demo, not a medical device or production-wide grocery catalog.
+- Status: public investor concept with same-origin API safeguards, not a medical device or production-wide grocery catalog.
 
 ## Current product behavior
 
 - The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
-- The live feed and saved/demo scenes sit inside a large rounded camera viewport on a black scanner canvas. Live and uploaded media use their native aspect ratio, so portrait and landscape images reach the rounded edges without stretching or artificial black bands.
+- The live feed spans the full phone width, with the Sugar.no brand, `Show demo` and recognition status layered over the camera. The stream keeps its native aspect ratio and `object-fit: contain`, so the app does not add digital zoom or stretch the image. Saved photos and deterministic demo scenes retain a proportional rounded viewport.
 - Camera starts after permission without requiring a shutter action. Mobile Safari requests the rear 1920x1080 feed at up to 30 fps, asks for continuous focus when the device exposes it, and waits for two stable post-focus frames before sending the first image so a soft startup frame is not analyzed.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
-- Live and saved-photo views omit the redundant source badge. The camera keeps only `Show demo`, saved photos keep only `Back to live`, and the camera card begins at least 20 px below that control row on phone layouts.
+- Live and saved-photo views omit the redundant source badge. The camera keeps only `Show demo` over the feed; saved photos keep only `Back to live` over their proportional media frame.
 - A scan keeps at most ten distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
 - Rated products are ordered best fit first and use `Great fit`, `Moderate fit`, or `Low fit`.
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.
@@ -41,8 +41,8 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Recognition confidence and nutrition confidence are separate.
 - The app never estimates missing nutrition, converts a serving into per-100 values, or borrows data from another flavor or pack size.
 - A possible retailer match cannot drive a price, purchase link, or fit.
-- Camera frames are sent to Google Gemini for recognition. Sugar.no does not write them to analytics, logs or Supabase; the UI names this third-party processing explicitly.
-- The investor build is protected by a 12-hour HTTP-only access session. Recognition, enrichment, offer and analytics POST endpoints also reject cross-origin browser requests, bound request bodies and apply rate limits. The limiter key is a one-way hash of the client address and does not retain the address itself.
+- Camera frames are sent to Google Gemini for recognition. Sugar.no does not write them to analytics, logs or Supabase. This processing boundary is documented here and in the privacy contract rather than repeated as persistent camera chrome.
+- The investor link opens the scanner directly. Its first same-origin page request receives a 12-hour HTTP-only, same-site session cookie so protected APIs remain unavailable to bare cross-origin calls. Recognition, enrichment, offer and analytics POST endpoints also reject cross-origin browser requests, bound request bodies and apply rate limits. This is request hardening, not viewer access control. The limiter key is a one-way hash of the client address and does not retain the address itself.
 - Commercial availability never changes Sugar.no ranking.
 
 ## Stack
@@ -86,7 +86,7 @@ Core runtime values:
 - `GEMINI_RECOGNITION_TIMEOUT_MS`: optional bounded Gemini request timeout (1,000–60,000 ms); defaults to 15,000 ms so a stalled provider call cannot hold the camera indefinitely.
 - `GEMINI_WEB_NUTRITION_MODEL`: optional grounded-search model override.
 - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: optional server-only catalog and metadata analytics configuration. The service role key must never be exposed through a `NEXT_PUBLIC_` variable.
-- `DEMO_ACCESS_CODE` and `DEMO_SESSION_SECRET`: server-only values that protect the investor build and sign its 12-hour access session.
+- `DEMO_ACCESS_CODE` and `DEMO_SESSION_SECRET`: server-only signing inputs for the silent 12-hour same-site session. Their presence does not create a user-facing access gate.
 - `COMMIT_SHA`: fallback health metadata for direct Railway uploads.
 
 Never commit real secrets. Railway stores production values.
@@ -155,12 +155,12 @@ npx @railway/cli up --detach \
   --service sugar-no-scanner-demo --environment production
 ```
 
-Then verify `/api/health`, the unauthenticated access redirect, a valid access session, one critical recognition path and the no-image-storage contract. Docs-only changes do not require a Railway release unless explicitly requested.
+Then verify `/api/health`, direct root entry plus its silent session cookie, rejection of a bare unauthenticated API request, one critical recognition path and the no-image-storage contract. Docs-only changes do not require a Railway release unless explicitly requested.
 
 ## Product check
 
-1. Open production in iPhone Safari, enter the separately provided demo code and allow camera access. The scanner itself must not show a redundant `Private demo` badge.
-2. Confirm the camera is a large rounded card whose live image reaches the rounded top and bottom edges without black bands; `Live camera` is not repeated as a badge, `Show demo` remains outside the card with at least 20 px clearance, and recognition status stays inside it.
+1. Open production in iPhone Safari. Confirm it opens the scanner directly with no code page, then allow camera access.
+2. Confirm the live camera spans the full screen width. The Sugar.no logo, `Show demo` and recognition status must sit over the feed; `Live camera` and the persistent `Sent to Google Gemini…` line must be absent. The image must not look digitally zoomed or stretched.
 3. Scan a shelf with more than ten visible products and confirm no more than ten distinct results appear.
 4. Confirm verified results gain fit labels and every confidently named product remains in the list after lookup. An unresolved product must stay neutral with no invented fit; an anonymous price-only finding must stay hidden.
 5. Open Shelf and Checkout demos and expand `View all`.
@@ -186,7 +186,7 @@ Then verify `/api/health`, the unauthenticated access redirect, a valid access s
 - The release contains 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
 - FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
 - Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable pack size or barcode and is capped at 6 seconds; production should persist human-reviewed successful results in Supabase.
-- The access gate limits this release to invited demo viewers, but API limiters are still process-local. Production scale-out needs a shared counter or edge gateway quota in addition to Gemini project budgets.
+- The investor URL has no viewer access gate. The silent same-site cookie, origin checks and process-local limiters harden API use but do not make the link private. Production scale-out needs explicit authentication plus a shared counter or edge gateway quota in addition to Gemini project budgets.
 - The five-shelf model screen measures unique returned identities, not labeled ground-truth recall. Gemini 3.5 Flash returned 38 identities at 7.1 s mean; a lean schema was faster (4.2 s) but returned fewer and unstable results (30, then 24), so it was rejected. Gemini 3.6 returned 32 at 7.8 s. True precision/recall still requires a labeled physical-store dataset.
 
 ## Supporting docs
