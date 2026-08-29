@@ -62,6 +62,15 @@ GitHub push, Railway deployment and production health evidence are recorded belo
 
 The first Supabase-enabled production barcode smoke exposed an unseeded optional `products` table and returned HTTP 500. The release candidate now fails open to the checked-in catalog while keeping the independent persistent nutrition cache enabled; this regression is covered by two repository tests and must pass the final production barcode smoke before release is considered complete.
 
+## Production release evidence
+
+- Tested code commit: `dd0feaf8e4f56a62c7f48e60951c547d407db5d1`, pushed to GitHub `main`.
+- Direct Railway deployment: `8e6a13f0-e63b-43a6-b09a-2dea326422b6`, status `SUCCESS`.
+- `GET /api/health`: HTTP 200, `status: ok`, reported commit `dd0feaf8e4f56a62c7f48e60951c547d407db5d1` and 9,707 active food products / 7,433 automatic fits.
+- Public root: HTTP 200 and the scanner shell rendered.
+- Authenticated same-origin barcode smoke for `2000199317215`: HTTP 200, exact `open_food_facts` match, verified protein and total sugar, and `imageStored: false`.
+- Final deployment logs contain the expected checked-in-catalog fallback and no request exception. Railway's config-as-code deprecation warning remains an explicitly tracked open migration before 1 December 2026.
+
 ## Product checks after deployment
 
 1. Scan a known barcode on a supported browser; the exact product should appear without waiting for visual identity search.
@@ -70,4 +79,4 @@ The first Supabase-enabled production barcode smoke exposed an unseeded optional
 4. Open live camera and hold steady; sampling should start in under one second, the stream should remain moving, and a soft startup frame should not be submitted.
 5. Move after a result: understand that this prototype holds the overlay until the next scan and does not claim native AR tracking.
 
-Final commit, full verification, Supabase migration/preload, GitHub push, Railway deployment and production health evidence are appended only after the complete six-part package is released.
+The complete six-part package is released only after the documentation-only successor commit also reaches a healthy Railway deployment.
