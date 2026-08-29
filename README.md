@@ -231,4 +231,5 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - [Public entry and full-width live camera release evidence](docs/test-runs/2026-08-29-public-entry-full-width-camera.md)
 - [Recognition speed, cache and barcode release evidence](docs/test-runs/2026-08-29-recognition-speed-six.md)
 - [Captured-frame and alternative-link release evidence](docs/test-runs/2026-08-29-captured-frame-alternative-links.md)
+- [Live camera tracking release evidence](docs/test-runs/2026-08-29-live-camera-tracking.md)
 - [Open and recent bugs](Bugs.md)
