@@ -24,7 +24,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Rimi/Livin snapshot, isolated Open Food Facts bulk/API match, then exact Google Search-grounded web nutrition.
-- Internet enrichment runs after the first identity result and never receives or stores the camera image. Products without a readable pack size or barcode fail fast instead of starting an unverifiable network search; the final grounded-search fallback for a complete identity is bounded to 6 seconds.
+- Internet enrichment runs after the first identity result and never receives or stores the camera image. Products without a readable pack size or barcode fail fast instead of starting an unverifiable network search; the final grounded-search fallback for a complete identity defaults to 12 seconds and is never configured below Google's 10-second minimum.
 - The retired nutrition-label follow-up is removed from the UI and API; automatic exact-source enrichment is the only nutrition path.
 - A product remains visible while exact nutrition is being checked, then stays in the result only when source-backed protein and total sugar produce a Sugar.no fit. A shelf price by itself never creates a result card.
 - Physical shelf price appears only from a clearly associated high-confidence EUR label.
@@ -85,6 +85,7 @@ Core runtime values:
 - `GEMINI_RECOGNITION_MODEL`: optional live-recognition override; defaults to `gemini-3.5-flash` for the measured shelf speed/recall balance.
 - `GEMINI_RECOGNITION_TIMEOUT_MS`: optional bounded Gemini request timeout (1,000–60,000 ms); defaults to 15,000 ms so a stalled provider call cannot hold the camera indefinitely.
 - `GEMINI_WEB_NUTRITION_MODEL`: optional grounded-search model override.
+- `GEMINI_WEB_NUTRITION_TIMEOUT_MS`: optional grounded-search deadline in milliseconds; defaults to `12000` and is clamped to Google's supported `10000` to `30000` range.
 - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: optional server-only catalog and metadata analytics configuration. The service role key must never be exposed through a `NEXT_PUBLIC_` variable.
 - `DEMO_ACCESS_CODE` and `DEMO_SESSION_SECRET`: server-only signing inputs for the silent 12-hour same-site session. Their presence does not create a user-facing access gate.
 - `COMMIT_SHA`: fallback health metadata for direct Railway uploads.
@@ -185,7 +186,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - Barbora, Rimi and Livin can produce exact offers for their own matched SKUs. The checked-in Rimi layer contains 6,822 complete products after checking all 7,617 pages in the seven approved food and drink categories. Livin contributes 6 complete rows after checking its full 169-URL Latvia sitemap. These snapshots are not a market-wide real-time price engine.
 - The release contains 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
 - FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
-- Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable pack size or barcode and is capped at 6 seconds; production should persist human-reviewed successful results in Supabase.
+- Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable pack size or barcode and defaults to a 12-second deadline; production should persist human-reviewed successful results in Supabase.
 - The investor URL has no viewer access gate. The silent same-site cookie, origin checks and process-local limiters harden API use but do not make the link private. Production scale-out needs explicit authentication plus a shared counter or edge gateway quota in addition to Gemini project budgets.
 - The five-shelf model screen measures unique returned identities, not labeled ground-truth recall. Gemini 3.5 Flash returned 38 identities at 7.1 s mean; a lean schema was faster (4.2 s) but returned fewer and unstable results (30, then 24), so it was rejected. Gemini 3.6 returned 32 at 7.8 s. True precision/recall still requires a labeled physical-store dataset.
 
