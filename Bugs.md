@@ -16,6 +16,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-29: Supabase caching appeared configured while preload jobs wrote zero rows.** The cache migration now grants table access to the server-only service role, and exact-search resolution awaits the persistent write so one-off preload processes cannot exit before Supabase stores either the grounded result or the honest miss.
 - **2026-08-29: the first camera result and unknown-product enrichment repeated avoidable remote work.** Sharp/stable-frame sampling now submits a smaller frame sooner; native EAN/UPC takes a local fast path where supported; catalog/barcode identities enrich before unknowns; exact grounded results persist in a server-only Supabase cache and can be preloaded before a demo.
 - **2026-08-29: switching the live recognizer to a newer Flash model was assumed to be faster.** A direct two-scene benchmark found no recall gain and worse combined latency for Gemini 3.7 Flash, so the measured 3.5 Flash camera default remains separate from the cited-search model.
 - **2026-08-29: complete unfamiliar products immediately became `Nutrition not verified online`.** A 6-second Google Search grounding deadline was below the provider's supported 10-second minimum, so every fallback request failed with HTTP 400 before searching. The deadline now defaults to 12 seconds and is clamped to the supported 10-to-30-second range; deployment clears the process-local miss cache.

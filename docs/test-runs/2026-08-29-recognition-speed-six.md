@@ -32,6 +32,26 @@ Decision: keep `gemini-3.5-flash` as the dedicated recognition default. The newe
 - Recognition tests: explicit benchmark model override reaches the provider request path.
 - Latvia preload dry-run: ten audited candidates parsed without network writes.
 
+## Full local verification
+
+Implementation commit: `2fba4c60bdb5c456ffe168f2f1d98b82b46b1b35`.
+
+- `npm run verify`: passed — lint, TypeScript, 39 test files / 206 tests, and the production build.
+- `npm run test:e2e:smoke`: passed — 3/3 Mobile Safari smoke scenarios.
+- `npm run test:e2e`: passed — 28/28 Mobile Safari scenarios.
+- `git diff --check`: passed.
+- `npm run catalog:preload:nutrition -- --input data/preload-identities.latvia-demo.json`: passed in dry-run mode for 10/10 identities.
+
+## Supabase activation
+
+- Project: `sugar-no-scanner-demo` (`gkivwusbobnwzrisbkle`), Central EU (Frankfurt).
+- `web_nutrition_cache` migration applied; RLS is enabled and table privileges are restricted to the server-side service role.
+- Applied Latvia preload: ten exact identities persisted as six cited successes and four honest misses.
+- Cached misses: Turtle Bran Flakes Organic 375 g, Turtle Cocoa Pillows Hazelnut Filling 300 g, Maggi Sātīgais vistas buljons 120 g and Oyakata Japanese Soy Sauce Noodles 89 g. No nutrition was guessed for them.
+- Immediate repeat completed in 2.23 seconds including Railway CLI startup, returned the same ten cached outcomes and emitted no nutrition-provider fallback log.
+
+GitHub push, Railway deployment and production health evidence are recorded below only after the complete release succeeds.
+
 ## Product checks after deployment
 
 1. Scan a known barcode on a supported browser; the exact product should appear without waiting for visual identity search.

@@ -22,5 +22,8 @@ create index if not exists web_nutrition_cache_expires_at_idx
 
 alter table public.web_nutrition_cache enable row level security;
 
+revoke all on table public.web_nutrition_cache from anon, authenticated;
+grant select, insert, update, delete on table public.web_nutrition_cache to service_role;
+
 comment on table public.web_nutrition_cache is
   'Server-only exact-SKU nutrition cache. Access is restricted to the Supabase service role.';

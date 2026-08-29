@@ -213,7 +213,10 @@ export async function resolveWebNutritionProduct(
     const result = candidate ? buildGroundedWebNutritionProduct(input, candidate, sources) : null;
     const expiresAt = Date.now() + (result ? SUCCESS_CACHE_TTL_MS : MISS_CACHE_TTL_MS);
     responseCache.set(cacheKey, { result, expiresAt });
-    void writePersistentWebNutrition({ ...input, cacheKey, result, model, expiresAt });
+    // Await the write so one-off preload jobs cannot exit before Supabase has
+    // persisted the result. For interactive scans this happens only after the
+    // slower remote lookup and adds a small, bounded cache-write round trip.
+    await writePersistentWebNutrition({ ...input, cacheKey, result, model, expiresAt });
     return result;
   } catch (error) {
     console.info(
@@ -225,7 +228,7 @@ export async function resolveWebNutritionProduct(
     );
     const expiresAt = Date.now() + MISS_CACHE_TTL_MS;
     responseCache.set(cacheKey, { result: null, expiresAt });
-    void writePersistentWebNutrition({
+    await writePersistentWebNutrition({
       ...input,
       cacheKey,
       result: null,
