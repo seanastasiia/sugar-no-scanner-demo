@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildGroundedWebNutritionProduct,
   extractGroundedNutritionCandidate,
+  webNutritionTimeoutMs,
   type GroundedNutritionCandidate
 } from "./web-nutrition";
 
@@ -27,6 +28,14 @@ const candidate: GroundedNutritionCandidate = {
 };
 
 describe("grounded web nutrition", () => {
+  it("never configures a deadline below Google's 10-second minimum", () => {
+    expect(webNutritionTimeoutMs()).toBe(12_000);
+    expect(webNutritionTimeoutMs("6000")).toBe(10_000);
+    expect(webNutritionTimeoutMs("15000")).toBe(15_000);
+    expect(webNutritionTimeoutMs("not-a-number")).toBe(12_000);
+    expect(webNutritionTimeoutMs("60000")).toBe(30_000);
+  });
+
   it("extracts the cited-search JSON marker without parsing surrounding prose", () => {
     expect(extractGroundedNutritionCandidate(`Source-backed answer.\nNUTRITION_JSON: ${JSON.stringify(candidate)}`)).toEqual(candidate);
     expect(extractGroundedNutritionCandidate("NUTRITION_JSON: {not-json}")).toBeNull();
