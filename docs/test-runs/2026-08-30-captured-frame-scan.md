@@ -12,7 +12,10 @@
 - `npm run verify` — passed: ESLint clean, TypeScript clean, 43 Vitest files / 218 tests passed, Next.js production build passed and standalone assets were prepared.
 - `npm run test:e2e` — passed: 28/28 Mobile Safari scenarios, including visual-only snapshot hold, repeated-facing de-duplication and explicit `Scan again` scene replacement.
 - `git diff --check` — passed before commit.
-- Release commit, Railway deployment and production health evidence are recorded after the immutable release SHA exists.
+- Release implementation commit: `a5efb1d7b21caa72a865b5787caf184e7e60116f`.
+- Railway production deployment: `18a51543-ea9b-417c-98fe-7409a97d01bd` — `SUCCESS`.
+- Production checks passed on `https://sugar-no-scanner-demo-production.up.railway.app`: `/` returned HTTP 200, `/api/health` returned `status: ok` with commit `a5efb1d7b21caa72a865b5787caf184e7e60116f`, and an unauthenticated recognition request remained protected with HTTP 401.
+- Production UI smoke passed: the guided shelf scene rendered 4 ranked products, all 4 had Sugar.no fit, and the cheaper-online CTA appeared only for the product with a lower verified Barbora price.
 
 ## Product checks
 
