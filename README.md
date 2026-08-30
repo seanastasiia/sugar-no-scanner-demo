@@ -103,7 +103,8 @@ Never commit real secrets. Railway stores production values.
 npm run dev                 # local development
 npm run check:fast          # lint + typecheck + unit/integration tests
 npm run test:e2e:smoke      # four critical Mobile Safari flows
-npm run verify              # lint + typecheck + all unit/integration tests + build
+npm run verify:catalog      # validate generated catalogs and Barbora fit coverage
+npm run verify              # lint + typecheck + tests + catalog checks + production build
 CI=1 npm run test:e2e       # complete Mobile Safari acceptance suite
 npm run catalog:validate    # curated catalog validation
 npm run catalog:sync:rimi  # low-rate Rimi page snapshot
@@ -222,6 +223,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - [Partner data request drafts](docs/partner-data-requests.md)
 - [Week-one lessons](docs/week-one-lessons.md)
 - [Latest release evidence](docs/test-runs/2026-08-27-scanner-ui-catalog-completion.md)
+- [Production cleanup and golden-release verification](docs/test-runs/2026-08-30-production-cleanup.md)
 - [Rounded camera viewport release evidence](docs/test-runs/2026-08-28-rounded-camera-viewport.md)
 - [Aspect-correct thumbnail release evidence](docs/test-runs/2026-08-28-thumbnail-context-crop.md)
 - [Great-fit-only alternatives release evidence](docs/test-runs/2026-08-28-great-fit-alternatives.md)

@@ -55,7 +55,7 @@ const externalProductSchema = z.object({
 });
 
 const catalogSourceManifestSchema = z.object({
-  id: z.enum(["rimi_lv", "livin_lv", "open_food_facts"]),
+  id: z.enum(["barbora_lv", "rimi_lv", "livin_lv", "open_food_facts"]),
   displayName: z.string().min(1),
   layer: z.enum(["retailer_snapshot", "odbl_bulk"]),
   license: z.string().min(1),
@@ -127,16 +127,17 @@ async function main() {
     externalSnapshot("data/livin-catalog.generated.json", "livin_lv", 6),
     externalSnapshot("data/open-food-facts-lv.generated.json", "open_food_facts", 500)
   ]);
-  const sourceManifests = z.array(catalogSourceManifestSchema).length(3).parse(
+  const sourceManifests = z.array(catalogSourceManifestSchema).length(4).parse(
     JSON.parse(await readFile("data/catalog-sources.generated.json", "utf8"))
   );
   if (new Set(sourceManifests.map((source) => source.id)).size !== sourceManifests.length) {
     throw new Error("Catalog source manifests must have unique IDs");
   }
+  const barboraSource = sourceManifests.find((source) => source.id === "barbora_lv")!;
   const rimiSource = sourceManifests.find((source) => source.id === "rimi_lv")!;
   const livinSource = sourceManifests.find((source) => source.id === "livin_lv")!;
   const offSource = sourceManifests.find((source) => source.id === "open_food_facts")!;
-  if (rimiSource.redistributable || livinSource.redistributable) {
+  if (barboraSource.redistributable || rimiSource.redistributable || livinSource.redistributable) {
     throw new Error("Retailer snapshots must remain non-redistributable without permission");
   }
   if (!offSource.redistributable || !/ODbL|Open Database License/i.test(offSource.license) || !/CC BY-SA/i.test(offSource.license)) {

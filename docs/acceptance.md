@@ -53,7 +53,7 @@ Status reflects reproducible evidence in this repository, not the intended final
 | Unsupported false-positive rate ≤ 5% | Closed-catalog fail-closed behavior exists; real negative set absent | Not measured |
 | Cached result < 1 s | Deterministic/API flow observed in WebKit | Pass locally |
 | New AI p95 < 4 s | Live camera no longer waits for packshot confirmation, live retailer pages or Open Food Facts before showing the first result; server timing logs split Gemini provider time from total time. One browser regression exposes two identities while enrichment remains pending, but a physical-device production p95 sample has not been collected | Not measured |
-| Supabase migration, seed and writes | Migration and seed are reproducible | Prepared, not applied |
+| Supabase schema and operational data | Required tables, cache freshness columns and source rows exist in hosted Supabase | Functionally verified: 4 catalog sources; 14,261 retailer rows (7,433 Barbora, 6,822 Rimi, 6 Livin); 500 Open Food Facts rows; 14,261 immutable retailer versions; 99 web cache rows and 27 cache versions. The project has no migration-ledger table, so verification uses the live schema and row state rather than migration IDs. |
 | Railway HTTPS and live health check | Railway deployment `3290d309-d48e-496f-a62e-92c4287a5590` succeeded for commit `4d9a0ef79df7542ce1bc93c56d7bb4395d8eb1a1`; `/api/health` reported the same commit, `/` returned HTTP 200, Shelf returned four products and Checkout returned three products | Pass in production |
 | Physical iPhone Safari shelf test | Requires deployed HTTPS and physical products | Not run |
 
