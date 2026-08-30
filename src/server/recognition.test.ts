@@ -547,11 +547,76 @@ describe("resolveVisibleDetections", () => {
     });
   });
 
-  it("skips slow network nutrition fallbacks when the package size and barcode are both missing", async () => {
+  it("uses searchQuery details for an exact Open Food Facts lookup when the UI label is brand-only", async () => {
+    const resolveOpenFoodFacts = vi.fn(async () => ({
+      product: {
+        ...getCatalog()[0],
+        id: "off:20059750",
+        brand: "Pilos",
+        name: "Milk",
+        shortName: "Milk",
+        nutrientsPer100g: { proteinG: 3.2, fiberG: null, totalSugarG: 4.7 }
+      },
+      confidence: 1
+    }));
+    const resolveWebNutrition = vi.fn(async () => null);
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, {
+        brand: "Pilos",
+        productName: "Pilos",
+        searchQuery: "Pilos Milk 3.2% 1L"
+      })],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveExternalCatalog: () => null,
+        resolveOpenFoodFacts,
+        resolveIndexedCandidate: () => null,
+        resolveWebNutrition
+      }
+    );
+
+    expect(resolveOpenFoodFacts).toHaveBeenCalledWith(
+      expect.objectContaining({ brand: "Pilos", name: "Pilos", packSize: "1L" }),
+      ""
+    );
+    expect(resolveWebNutrition).not.toHaveBeenCalled();
+    expect(detections[0]).toMatchObject({
+      productId: "off:20059750",
+      identity: { matchKind: "open_food_facts", packSize: "1L" }
+    });
+  });
+
+  it("searches online for a distinctive product even when its pack size is unreadable", async () => {
+    const resolveOpenFoodFacts = vi.fn(async () => null);
+    const resolveWebNutrition = vi.fn(async () => null);
+    await resolveVisibleDetections(
+      [providerDetection(1, {
+        brand: "Pringles",
+        productName: "Pringles Sour Cream & Onion",
+        searchQuery: "Pringles Sour Cream and Onion"
+      })],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveExternalCatalog: () => null,
+        resolveOpenFoodFacts,
+        resolveIndexedCandidate: () => null,
+        resolveWebNutrition
+      }
+    );
+
+    expect(resolveOpenFoodFacts).toHaveBeenCalledOnce();
+    expect(resolveWebNutrition).toHaveBeenCalledOnce();
+  });
+
+  it("skips slow network nutrition fallbacks for a truly brand-only identity", async () => {
     const resolveOpenFoodFacts = vi.fn(async () => null);
     const resolveWebNutrition = vi.fn(async () => null);
     const detections = await resolveVisibleDetections(
-      [providerDetection(1, { brand: "Pringles", productName: "Pringles Sour Cream & Onion" })],
+      [providerDetection(1, { brand: "Pilos", productName: "Pilos", searchQuery: "Pilos" })],
       [],
       {
         getOfferBySlug: async () => null,
@@ -566,7 +631,7 @@ describe("resolveVisibleDetections", () => {
     expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
     expect(resolveWebNutrition).not.toHaveBeenCalled();
     expect(detections[0]).toMatchObject({
-      productId: "visual:pringles-pringles-sour-cream-onion",
+      productId: "visual:pilos-pilos",
       inlineProduct: null,
       identity: { matchKind: "visual_only", packSize: null }
     });

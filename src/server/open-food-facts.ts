@@ -151,6 +151,20 @@ function quantityMatches(observed: string, candidate: string | null | undefined)
   return Math.abs(left.amount - right.amount) / Math.max(left.amount, right.amount) <= 0.04;
 }
 
+function statedPercentage(value: string): number | null {
+  const match = value.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\s*%/i);
+  if (!match) return null;
+  const percentage = Number.parseFloat(match[1].replace(",", "."));
+  return Number.isFinite(percentage) ? percentage : null;
+}
+
+function percentageMatches(observed: string, candidate: string): boolean | null {
+  const left = statedPercentage(observed);
+  const right = statedPercentage(candidate);
+  if (left === null || right === null) return null;
+  return Math.abs(left - right) <= 0.05;
+}
+
 function tokenCoverage(query: string[], candidate: string[]): number {
   if (!query.length || !candidate.length) return 0;
   return query.filter((token) =>
@@ -162,9 +176,10 @@ export function rankOpenFoodFactsCandidates(
   input: BarboraLookupInput,
   candidates: OpenFoodFactsProduct[]
 ): RankedOpenFoodFactsCandidate[] {
+  const observedIdentity = [input.name, input.variant, ...input.searchTerms].filter(Boolean).join(" ");
   const observedBrandTokens = new Set(meaningfulTokens(input.brand));
   const observedNameTokens = meaningfulTokens(
-    [input.name, input.variant, ...input.searchTerms].filter(Boolean).join(" "),
+    observedIdentity,
     observedBrandTokens
   );
 
@@ -180,6 +195,11 @@ export function rankOpenFoodFactsCandidates(
         : 0;
       const packMatch = input.packSize ? quantityMatches(input.packSize, product.quantity) : null;
       if (packMatch === false) return [];
+      // Fat percentage is part of a dairy SKU. A visible 3.2% pack must not
+      // borrow nutrition from a 2% sibling even when translated names such as
+      // Milk and Piens correctly match as synonyms.
+      const percentageMatch = percentageMatches(observedIdentity, product.product_name || "");
+      if (percentageMatch === false) return [];
       const hasNutrition =
         finite(product.nutriments?.proteins_100g) !== null &&
         finite(product.nutriments?.sugars_100g) !== null &&

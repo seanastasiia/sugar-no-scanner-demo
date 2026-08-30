@@ -23,12 +23,12 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Expanded multi-product results show only the collapse control, `Best fit first` and the ranked product cards; duplicate summaries, counters and scan-again controls are omitted.
 - The compact camera preview mirrors that ranking with `#1`, `#2`, `#3…` badges and shows total sugar per 100 g or 100 ml beneath each rated fit.
 - Product thumbnails preserve the source photo proportions. When no exact retailer packshot exists, the fallback crop keeps a little neighboring shelf context instead of stretching a tight detection box.
-- The compact sheet keeps `View all` as its only action; returning to live camera starts a new scan.
+- The compact sheet keeps `Scan again` beside `View all`. `Scan again` clears the captured result and starts a fresh live read; expanded comparison does not duplicate that control.
 - `Great fit`, `Moderate fit` and `Low fit` camera markers use the same compact 24 px visual disc with thumbs-up, raised-hand and thumbs-down icons; the full detected-product outline remains the larger touch target. The outlined package also receives a transparent semantic tint (20% green/red, 22% yellow and 28% for the selected result), keeping the product visible while making the marker easier to read.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Fiber is not required or displayed.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Rimi/Livin snapshot, isolated Open Food Facts bulk/API match, then exact Google Search-grounded web nutrition.
-- Internet enrichment runs after the first identity result and never receives or stores the camera image. Known barcode/catalog identities are enriched first, with up to five independent requests, so one slow unknown product does not hold the rest. Products without a readable pack size or barcode fail fast instead of starting an unverifiable network search; the final grounded-search fallback for a complete identity defaults to 12 seconds and is never configured below Google's 10-second minimum.
+- Internet enrichment runs after the first identity result and never receives or stores the camera image. Known barcode/catalog identities are enriched first, with up to five independent requests, so one slow unknown product does not hold the rest. A readable barcode or pack size is preferred, but a distinctive brand + product/variant identity may also use the exact fallback when Gemini preserves those details in its search query. Truly brand-only identities still fail fast. The final grounded-search fallback defaults to 12 seconds and is never configured below Google's 10-second minimum.
 - Exact cited nutrition uses an immediate process cache plus the server-only Supabase `web_nutrition_cache`. A verified exact-SKU result is retained permanently and returned immediately; after 30 days it becomes due for a silent background recheck, not deletion. A failed recheck never replaces the last verified result. Unverified misses are retried after six hours, and immutable verified versions preserve the audit trail.
 - The retired nutrition-label follow-up is removed from the UI and API; automatic exact-source enrichment is the only nutrition path.
 - A product remains visible while exact nutrition is being checked, then stays in the result only when source-backed protein and total sugar produce a Sugar.no fit. A shelf price by itself never creates a result card.
@@ -127,7 +127,7 @@ Use the project change lanes in `AGENTS.md`:
 
 - `POST /api/recognize`: image data URL plus source type, returns bounded detections.
 - `POST /api/barcode`: exact EAN/UPC without an image, resolved against local retailer/OFF layers.
-- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products. An incomplete identity never starts the slow network fallbacks; exact verified web results persist in Supabase and are served immediately while due rechecks run without blocking (six hours for unverified misses).
+- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products. Brand-only identities never start the slow network fallbacks; a distinctive product/variant query can be resolved even when the concise UI label omits its pack details. Exact verified web results persist in Supabase and are served immediately while due rechecks run without blocking (six hours for unverified misses).
 - `POST /api/offers`: up to ten known exact Barbora slugs, returns current per-card offers without blocking recognition.
 - `POST /api/events`: metadata-only product events with image-like values rejected.
 - `GET /api/health`: service, catalog and deployed commit status.
@@ -180,22 +180,23 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 2. Confirm the live camera spans the full screen width. The Sugar.no logo, `Show demo` and recognition status must sit over the feed; `Live camera` and the persistent `Sent to Google Gemini…` line must be absent. The image must not look digitally zoomed or stretched.
 3. Scan a shelf with more than ten visible products and confirm no more than ten distinct results appear.
 4. Confirm verified results gain fit labels and every confidently named product remains in the list after lookup. An unresolved product must stay neutral with no invented fit; an anonymous price-only finding must stay hidden.
-5. Open Shelf and Checkout demos and expand `View all`.
-6. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
-7. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
-8. Confirm each overlay tightly follows its package rather than a nearby shelf label.
-9. Wait until `Reading visible products…` appears, then move the phone or close the shelf/fridge. Confirm the submitted frame remains frozen and every box stays attached to the product that was analyzed. Confirm no new scene is read until the explicit retry/new-scan action is used.
-10. Open a rated product and confirm `Better alternatives` contains only the same product type with `Great fit` no worse than the source and a live price; `Moderate fit`, `Low fit`, unrated products, and products without a valid substitute should show no alternatives block.
-11. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
-12. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
-13. Scan a product without an exact packshot and confirm its preview thumbnail keeps the package proportions; a little neighboring shelf context is acceptable, but the package must not look stretched.
-14. Confirm a purchase button is absent when the exact online offer is not cheaper than the visible shelf price; when it is cheaper, confirm the card shows one full-width green `Buy cheaper online` action.
-15. Scan exact Rimi and Livin products and confirm their retailer packshots load instead of a broken-image icon.
-16. Scan several packages whose size is not readable and confirm `Checking online…` clears quickly instead of waiting for an unverifiable web search; a complete unfamiliar SKU may still use the bounded fallback.
-17. Upload one landscape and one tall portrait shelf photo; confirm both use the same rounded 3:4 preview, fill it with an undistorted center crop and remain inside the viewport.
-18. Confirm each rated package outline has a light green, yellow or red transparent fill matching its fit icon; the packaging must remain readable through the tint.
-19. Scan an exact SKU that previously resolved through cited web nutrition twice. Confirm the repeat result appears immediately. A result older than its freshness window must remain visible while its recheck happens silently, and an unsuccessful recheck must not remove its fit.
-20. Before the first AI result, confirm any locally proposed regions are neutral dashed outlines only. Green, yellow or red styling may appear only after an exact recognized product has verified nutrition.
+5. In the collapsed result sheet, tap `Scan again`. Confirm the captured result clears and the live camera starts a fresh scan; `View all` must still open the ranked comparison.
+6. Open Shelf and Checkout demos and expand `View all`.
+7. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
+8. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
+9. Confirm each overlay tightly follows its package rather than a nearby shelf label.
+10. Wait until `Reading visible products…` appears, then move the phone or close the shelf/fridge. Confirm the submitted frame remains frozen and every box stays attached to the product that was analyzed. Confirm no new scene is read until the explicit retry/new-scan action is used.
+11. Open a rated product and confirm `Better alternatives` contains only the same product type with `Great fit` no worse than the source and a live price; `Moderate fit`, `Low fit`, unrated products, and products without a valid substitute should show no alternatives block.
+12. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
+13. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
+14. Scan a product without an exact packshot and confirm its preview thumbnail keeps the package proportions; a little neighboring shelf context is acceptable, but the package must not look stretched.
+15. Confirm a purchase button is absent when the exact online offer is not cheaper than the visible shelf price; when it is cheaper, confirm the card shows one full-width green `Buy cheaper online` action.
+16. Scan exact Rimi and Livin products and confirm their retailer packshots load instead of a broken-image icon.
+17. Scan a brand-only package and confirm it fails fast; then scan a distinctive variant whose concise title omits the size but whose package text is readable, and confirm the exact fallback may still resolve it without borrowing nutrition from a sibling SKU.
+18. Upload one landscape and one tall portrait shelf photo; confirm both use the same rounded 3:4 preview, fill it with an undistorted center crop and remain inside the viewport.
+19. Confirm each rated package outline has a light green, yellow or red transparent fill matching its fit icon; the packaging must remain readable through the tint.
+20. Scan an exact SKU that previously resolved through cited web nutrition twice. Confirm the repeat result appears immediately. A result older than its freshness window must remain visible while its recheck happens silently, and an unsuccessful recheck must not remove its fit.
+21. Before the first AI result, confirm any locally proposed regions are neutral dashed outlines only. Green, yellow or red styling may appear only after an exact recognized product has verified nutrition.
 
 ## Known limits
 
@@ -204,7 +205,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - Barbora, Rimi and Livin can produce exact offers for their own matched SKUs. The checked-in Rimi layer contains 6,822 complete products after checking all 7,617 pages in the seven approved food and drink categories. Livin contributes 6 complete rows after checking its full 169-URL Latvia sitemap. These snapshots are not a market-wide real-time price engine.
 - The release contains 500 complete Latvia-tagged Open Food Facts records in the isolated ODbL layer. The full official daily JSONL export is larger than 5 GB and belongs in a scheduled data job, not the web process.
 - FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
-- Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable pack size or barcode and defaults to a 12-second deadline. Persistent reuse requires the checked-in Supabase migration plus server-only `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; without them the app fails open to its process cache and recognition still works.
+- Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable barcode/pack size or sufficiently distinctive brand + product/variant evidence, and defaults to a 12-second deadline. Persistent reuse requires the checked-in Supabase migration plus server-only `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; without them the app fails open to its process cache and recognition still works.
 - Browser-native barcode detection depends on platform support. Safari currently relies on Gemini reading the visible code; no extra WASM bundle is shipped because it would increase camera startup cost.
 - Live overlays are drawn over one captured recognition frame, not native AR object tracking. They do not follow a moving package or changing scene. Exact identity comes from the submitted Gemini frame, and the user explicitly starts a new scan for a new shelf view.
 - The investor URL has no viewer access gate. The silent same-site cookie, origin checks and process-local limiters harden API use but do not make the link private. Production scale-out needs explicit authentication plus a shared counter or edge gateway quota in addition to Gemini project budgets.
@@ -233,4 +234,5 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - [Captured-frame and alternative-link release evidence](docs/test-runs/2026-08-29-captured-frame-alternative-links.md)
 - [Superseded live camera tracking experiment](docs/test-runs/2026-08-29-live-camera-tracking.md)
 - [Captured-frame scan release evidence](docs/test-runs/2026-08-30-captured-frame-scan.md)
+- [Scan again and exact web-fallback release evidence](docs/test-runs/2026-08-30-scan-again-web-fallback.md)
 - [Open and recent bugs](Bugs.md)

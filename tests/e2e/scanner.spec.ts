@@ -483,7 +483,7 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   expect(selectedChrome.boxShadow).not.toContain("rgb(255, 255, 255)");
   await firstMarker.click();
   await waitForAlternativeImages(page);
-  await expect(page.getByRole("button", { name: "Scan again" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Scan again" })).toBeVisible();
   await page.screenshot({ path: "test-results/shelf-mobile.png", fullPage: true });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
@@ -720,7 +720,7 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
   await expectInsideViewport(page, status);
   await expectInsideViewport(page, viewAll);
   expect((await viewAll.boundingBox())?.height).toBeGreaterThanOrEqual(44);
-  await expect(page.getByRole("button", { name: "Scan again" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Scan again" })).toBeVisible();
   await expectNoDocumentOverflow(page);
   await page.screenshot({ path: "test-results/iphone-17-pro-camera.png" });
 
@@ -747,7 +747,7 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
     await expectInsideViewport(page, sheet);
     await expectInsideViewport(page, status);
     await expectInsideViewport(page, page.getByRole("button", { name: "View all", exact: true }));
-    await expect(page.getByRole("button", { name: "Scan again" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Scan again" })).toBeVisible();
     await expectNoDocumentOverflow(page);
     if (viewport.label === "iPhone 17 Pro landscape") {
       await page.screenshot({ path: "test-results/iphone-17-pro-landscape.png" });

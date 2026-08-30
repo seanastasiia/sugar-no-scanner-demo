@@ -226,6 +226,21 @@ function extractPackSize(value: string): string {
   );
 }
 
+const genericIdentityTokens = new Set(["food", "product", "snack", "drink"]);
+
+function detectionIdentityText(detection: ProviderDetection): string {
+  return [detection.brand, detection.productName, detection.searchQuery].filter(Boolean).join(" ");
+}
+
+function hasSearchableIdentityEvidence(detection: ProviderDetection, packSize: string): boolean {
+  if (packSize || /^\d{8,14}$/.test(detection.barcode)) return true;
+  const brandTokens = identityTokens(detection.brand);
+  const distinguishingTokens = [...identityTokens(detectionIdentityText(detection))].filter(
+    (token) => !brandTokens.has(token) && !genericIdentityTokens.has(token)
+  );
+  return distinguishingTokens.length >= 2;
+}
+
 type RecognitionScene = "live-camera" | "saved-image";
 
 export function recognitionInstruction(
@@ -272,7 +287,7 @@ export function recognitionInstruction(
 }
 
 function lookupInputForDetection(detection: ProviderDetection): BarboraLookupInput {
-  const packSize = extractPackSize(detection.productName);
+  const packSize = extractPackSize(detectionIdentityText(detection));
   const categoryHint: InvestorCategory | null =
     detection.retailCategory === "snack"
       ? "snacks"
@@ -483,13 +498,14 @@ export async function resolveVisibleDetections(
   mode: DetectionResolutionMode = "complete"
 ): Promise<ProductDetection[]> {
   const resolved = await mapWithConcurrency(visible.slice(0, MAX_SCAN_PRODUCTS), concurrency, async (detection): Promise<ProductDetection> => {
-    const packSize = extractPackSize(detection.productName);
+    const identityText = detectionIdentityText(detection);
+    const packSize = extractPackSize(identityText);
     const observedIdentity = {
       brand: detection.brand,
       name: detection.productName,
       variant: "",
       packSize,
-      observedText: detection.productName
+      observedText: identityText
     };
     const initialCatalogMatch = matchCatalogProductWithConfidence(observedIdentity, catalog);
     const lookupInput = lookupInputForDetection(detection);
@@ -513,19 +529,20 @@ export async function resolveVisibleDetections(
       ? dependencies.getIndexedProduct?.(exactRetailerOffer.slug)?.product || null
       : null;
     const knownProduct = initialCatalogMatch?.product || indexedProduct || exactOfferProduct || null;
-    // A missing pack size (and no readable barcode) cannot support an exact-SKU
-    // nutrition link. Do not spend several seconds searching the web for a
-    // result that our strict verifier must reject anyway.
-    const hasExactIdentityEvidence = Boolean(packSize || /^\d{8,14}$/.test(detection.barcode));
+    // The vision response may keep the concise UI label in productName while
+    // preserving the readable variant and size in searchQuery. Use both before
+    // deciding that an exact lookup is impossible. Brand-only results remain
+    // fail-closed so nutrition from a random SKU is never attached.
+    const canSearchExactIdentity = hasSearchableIdentityEvidence(detection, packSize);
     // Open Food Facts is the first internet fallback. A visual Barbora slug is
     // not enough to skip it when that exact SKU has no local nutrition record.
     const externalCatalogCandidate = mode === "fast" || knownProduct
       ? null
       : dependencies.resolveExternalCatalog?.(lookupInput, detection.barcode) || null;
-    const openFoodFactsCandidate = mode === "fast" || knownProduct || externalCatalogCandidate || !hasExactIdentityEvidence
+    const openFoodFactsCandidate = mode === "fast" || knownProduct || externalCatalogCandidate || !canSearchExactIdentity
       ? null
       : await dependencies.resolveOpenFoodFacts(lookupInput, detection.barcode).catch(() => null);
-    const webNutrition = mode === "fast" || knownProduct || externalCatalogCandidate || openFoodFactsCandidate || !hasExactIdentityEvidence
+    const webNutrition = mode === "fast" || knownProduct || externalCatalogCandidate || openFoodFactsCandidate || !canSearchExactIdentity
       ? null
       : await dependencies.resolveWebNutrition?.(lookupInput, detection.confidence).catch(() => null) || null;
     const resolvedProduct = knownProduct || externalCatalogCandidate?.product || openFoodFactsCandidate?.product || webNutrition?.product || null;

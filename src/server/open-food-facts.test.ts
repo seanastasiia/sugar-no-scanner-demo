@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   openFoodFactsToScoredProduct,
   rankOpenFoodFactsCandidates,
+  resolveOpenFoodFactsProduct,
   type OpenFoodFactsProduct
 } from "./open-food-facts";
 
@@ -30,6 +31,25 @@ function product(overrides: Partial<OpenFoodFactsProduct> = {}): OpenFoodFactsPr
 }
 
 describe("Open Food Facts matching", () => {
+  it("resolves the bundled Pilos milk record from the detailed visual search query", async () => {
+    const resolved = await resolveOpenFoodFactsProduct({
+      brand: "Pilos",
+      name: "Pilos",
+      variant: "",
+      packSize: "1L",
+      searchTerms: ["Pilos Milk 3.2% 1L"]
+    });
+
+    expect(resolved).toMatchObject({
+      confidence: 1,
+      product: {
+        id: "off:20059750",
+        brand: "Pilos",
+        nutrientsPer100g: { proteinG: 3.2, totalSugarG: 4.7 }
+      }
+    });
+  });
+
   it("accepts a matching brand, variant and pack size with complete nutrition", () => {
     const ranked = rankOpenFoodFactsCandidates(input, [product()]);
     expect(ranked).toHaveLength(1);
@@ -53,6 +73,21 @@ describe("Open Food Facts matching", () => {
 
   it("rejects a pack-size mismatch instead of borrowing another SKU's nutrition", () => {
     expect(rankOpenFoodFactsCandidates(input, [product({ quantity: "200 g" })])).toEqual([]);
+  });
+
+  it("rejects a different stated dairy percentage even when translated product names match", () => {
+    const ranked = rankOpenFoodFactsCandidates(
+      {
+        brand: "Pilos",
+        name: "Pilos",
+        variant: "",
+        packSize: "1L",
+        searchTerms: ["Pilos Milk 3.2% 1L"]
+      },
+      [product({ code: "4056489660453", product_name: "Piens 2%", brands: ["Pilos"], quantity: "1L" })]
+    );
+
+    expect(ranked).toEqual([]);
   });
 
   it("matches decimal and Russian pack units without changing the SKU quantity", () => {
