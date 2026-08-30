@@ -4,6 +4,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Open
 
+- **Historical catalog snapshots do not yet contain carbohydrates.** The app now supports exact source-backed carbohydrates per 100 g or 100 ml, but existing checked-in rows omit the field until their next retailer, Open Food Facts or grounded-source refresh. Sugar.no fit remains available from protein and total sugar and is not recalculated.
 - **Latvia coverage is not universal.** Private labels, unreadable variants and products without an exact cited per-100 table can remain unresolved. They must not receive a guessed fit.
 - **Physical-store accuracy is not validated.** Packaging glare, low light, distance and a moving checkout belt need a real-store benchmark.
 - **Shelf-price association needs a benchmark.** Ambiguous labels stay hidden; a package number, deposit or unrelated nearby tag must not become the product price.
@@ -16,6 +17,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-30: product cards had no place for source-backed total carbohydrates.** Retailer, Open Food Facts and exact grounded-web pipelines now carry an optional per-100 carbohydrate value through Supabase and show it in compact and expanded cards when present. Missing values remain hidden, and the established protein-plus-total-sugar fit formula and rankings are unchanged.
 - **2026-08-30: the general catalog validator rejected the intentional Barbora source and the release command did not validate generated catalog coverage.** The validator now treats Barbora as the fourth licensed retailer snapshot, and `npm run verify` includes both catalog integrity and the 7,433-SKU Barbora fit-coverage guard without changing the scanner product behavior.
 - **2026-08-30: a detailed Gemini identity could remain unrated when its concise UI label contained only the brand.** Exact fallback eligibility now uses the full visual search query as well as the short label, so a distinctive SKU such as `Pilos Milk 3.2% 1L` can resolve while truly brand-only findings still fail fast. Explicit dairy percentages remain part of the exact SKU and a 3.2% pack cannot borrow nutrition from a 2% sibling.
 - **2026-08-30: the captured result sheet had no direct way to start the next scan.** A compact `Scan again` action now sits beside `View all`, clears the held result and restarts live recognition without adding a duplicate action to the expanded comparison.

@@ -5,7 +5,7 @@ const sourceSchema = z.object({
   label: z.string().min(1),
   url: z.url(),
   checkedAt: z.iso.date(),
-  fields: z.array(z.enum(["identity", "protein", "fiber", "totalSugar", "claim", "retailerUrl"])),
+  fields: z.array(z.enum(["identity", "protein", "fiber", "carbohydrate", "totalSugar", "claim", "retailerUrl"])),
   status: z.enum(["verified", "secondary", "pending"])
 });
 
@@ -22,6 +22,7 @@ const productSchema = z.object({
   nutrientsPer100g: z.object({
     proteinG: z.number().nonnegative().nullable(),
     fiberG: z.number().nonnegative().nullable(),
+    carbohydrateG: z.number().nonnegative().nullable().optional(),
     totalSugarG: z.number().nonnegative().nullable()
   }),
   noAddedSugarClaim: z.boolean(),
@@ -46,6 +47,7 @@ const externalProductSchema = z.object({
   nutritionBasis: z.enum(["100g", "100ml"]),
   energyKcal: z.number().nonnegative(),
   proteinG: z.number().nonnegative(),
+  carbohydrateG: z.number().nonnegative().nullable().optional(),
   totalSugarG: z.number().nonnegative(),
   imageUrl: z.url().nullable(),
   price: z.number().nonnegative().nullable(),
@@ -176,9 +178,11 @@ async function main() {
     (product) => Number.isFinite(product.nutrientsPer100g.proteinG) && Number.isFinite(product.nutrientsPer100g.totalSugarG)
   );
   const withFiber = products.filter((product) => Number.isFinite(product.nutrientsPer100g.fiberG));
+  const withCarbohydrates = products.filter((product) => Number.isFinite(product.nutrientsPer100g.carbohydrateG));
   console.log(`Catalog rows: ${products.length}`);
   console.log(`Complete two-factor fit nutrition: ${complete.length}`);
   console.log(`Optional raw fiber data: ${withFiber.length}`);
+  console.log(`Optional source-backed carbohydrate data: ${withCarbohydrates.length}`);
   console.log(`Barbora product index: ${barboraIndex.length}`);
   console.log(`Rimi verified snapshot: ${rimi.length} from ${rimiReport.processedUrls} sitemap pages`);
   console.log(`Livin verified snapshot: ${livin.length} from ${livinReport.processedUrls} sitemap pages`);

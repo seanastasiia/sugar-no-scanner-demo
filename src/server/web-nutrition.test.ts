@@ -23,6 +23,7 @@ const candidate: GroundedNutritionCandidate = {
   energyKcal: 440,
   proteinG: 7.2,
   totalSugarG: 24,
+  carbohydrateG: 61,
   confidence: 0.96,
   evidence: "Exact product nutrition table"
 };
@@ -54,11 +55,12 @@ describe("grounded web nutrition", () => {
       ratingBasis: "web_search_reference",
       ratingStatus: "complete",
       ratingSignalCount: 2,
-      nutrientsPer100g: { proteinG: 7.2, totalSugarG: 24 }
+      nutrientsPer100g: { proteinG: 7.2, totalSugarG: 24, carbohydrateG: 61 }
     });
     expect(result?.product.sources[0]).toMatchObject({
       url: "https://example.com/selga-classic",
-      status: "secondary"
+      status: "secondary",
+      fields: ["identity", "protein", "totalSugar", "carbohydrate"]
     });
   });
 

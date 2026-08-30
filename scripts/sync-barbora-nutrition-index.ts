@@ -57,6 +57,7 @@ function packSize(product: BarboraPageProduct): string {
 function toIndexProduct(product: BarboraPageProduct): BarboraNutritionIndexProduct | null {
   const energy = energyKcal(product.nutrients);
   const protein = nutrientAmount(product.nutrients, "olbaltumvielas", "g");
+  const carbohydrate = nutrientAmount(product.nutrients, "oglhidrati", "g");
   const sugar = nutrientAmount(product.nutrients, "cukuri", "g");
   if (energy === null || protein === null || sugar === null || energy <= 0 || product.status === "inactive") return null;
   return {
@@ -68,6 +69,7 @@ function toIndexProduct(product: BarboraPageProduct): BarboraNutritionIndexProdu
     nutritionBasis: product.comparative_unit?.toLowerCase() === "l" ? "100ml" : "100g",
     energyKcal: energy,
     proteinG: protein,
+    carbohydrateG: carbohydrate,
     totalSugarG: sugar,
     imageUrl: product.image || null,
     isAdult: Boolean(product.is_adult),

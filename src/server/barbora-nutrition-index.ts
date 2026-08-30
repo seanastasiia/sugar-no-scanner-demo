@@ -14,6 +14,7 @@ export interface BarboraNutritionIndexProduct {
   energyKcal: number;
   proteinG: number;
   totalSugarG: number;
+  carbohydrateG?: number | null;
   imageUrl: string | null;
   isAdult: boolean;
   checkedAt: string;
@@ -63,7 +64,8 @@ export function indexedBarboraProductToScoredProduct(product: BarboraNutritionIn
     nutrientsPer100g: {
       proteinG: product.proteinG,
       fiberG: null,
-      totalSugarG: product.totalSugarG
+      totalSugarG: product.totalSugarG,
+      carbohydrateG: product.carbohydrateG ?? null
     },
     noAddedSugarClaim: false,
     imageUrl: product.imageUrl,
@@ -73,7 +75,15 @@ export function indexedBarboraProductToScoredProduct(product: BarboraNutritionIn
         label: "Barbora Latvia catalog snapshot",
         url: retailerUrl,
         checkedAt: product.checkedAt,
-        fields: ["identity", "protein", "totalSugar", "retailerUrl"],
+        fields: [
+          "identity",
+          "protein",
+          "totalSugar",
+          ...(product.carbohydrateG === null || product.carbohydrateG === undefined
+            ? []
+            : (["carbohydrate"] as const)),
+          "retailerUrl"
+        ],
         status: "secondary"
       }
     ],

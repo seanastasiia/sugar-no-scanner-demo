@@ -128,6 +128,7 @@ export function parseRimiProductPage(
   const energy = energyKcal(details);
   const protein = nutrient(details, [/olbaltumvielas/]);
   const sugar = nutrient(details, [/tostarp cukuri/, /t\.\s*sk\.\s*cukuri/]);
+  const carbohydrate = nutrient(details, [/ogļhidrāti/, /oglhidrati/, /carbohydrates?/]);
   if (energy === null || protein === null || sugar === null) return null;
   const price = finite(product.offers?.price);
   const title = plainText(product.name);
@@ -146,6 +147,7 @@ export function parseRimiProductPage(
     energyKcal: energy,
     proteinG: protein,
     totalSugarG: sugar,
+    carbohydrateG: carbohydrate,
     imageUrl: productImage(product),
     price,
     currency: product.offers?.priceCurrency === "EUR" && price !== null ? "EUR" : null,
@@ -167,6 +169,7 @@ export function parseLivinProductPage(
   const energy = energyKcal(nutrition);
   const protein = nutrient(nutrition, [/olbaltumvielas/]);
   const sugar = nutrient(nutrition, [/t\.\s*sk\.\s*cukuri/, /cukuri/]);
+  const carbohydrate = nutrient(nutrition, [/ogļhidrāti/, /oglhidrati/, /carbohydrates?/]);
   if (energy === null || protein === null || sugar === null) return null;
   const price = finite(product.offers?.price);
   const title = plainText(product.name);
@@ -186,6 +189,7 @@ export function parseLivinProductPage(
     energyKcal: energy,
     proteinG: protein,
     totalSugarG: sugar,
+    carbohydrateG: carbohydrate,
     imageUrl: productImage(product),
     price,
     currency: product.offers?.priceCurrency === "EUR" && price !== null ? "EUR" : null,

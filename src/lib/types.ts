@@ -28,13 +28,14 @@ export interface NutrientsPer100g {
   proteinG: number | null;
   fiberG: number | null;
   totalSugarG: number | null;
+  carbohydrateG?: number | null;
 }
 
 export interface ProductSource {
   label: string;
   url: string;
   checkedAt: string;
-  fields: Array<"identity" | "protein" | "fiber" | "totalSugar" | "claim" | "retailerUrl">;
+  fields: Array<"identity" | "protein" | "fiber" | "totalSugar" | "carbohydrate" | "claim" | "retailerUrl">;
   status: NutrientDataStatus;
 }
 

@@ -20,6 +20,7 @@ export interface BarboraManagedProductRow {
   energy_kcal_100: number;
   protein_g_100: number;
   total_sugar_g_100: number;
+  carbohydrate_g_100: number | null;
   image_url: string | null;
   price: null;
   currency: null;
@@ -46,6 +47,7 @@ export interface BarboraCatalogSnapshot {
     energy_kcal_100: number;
     protein_g_100: number;
     total_sugar_g_100: number;
+    carbohydrate_g_100: number | null;
     image_url: string | null;
     verified_at: string;
     revalidate_after: string;
@@ -95,6 +97,7 @@ export function buildBarboraCatalogSnapshot(input: {
       energy_kcal_100: product.energyKcal,
       protein_g_100: product.proteinG,
       total_sugar_g_100: product.totalSugarG,
+      carbohydrate_g_100: product.carbohydrateG ?? null,
       image_url: product.imageUrl,
       price: null,
       currency: null,
@@ -114,6 +117,7 @@ export function buildBarboraCatalogSnapshot(input: {
         row.source_product_id,
         row.protein_g_100,
         row.total_sugar_g_100,
+        row.carbohydrate_g_100,
         row.nutrition_verified_at
       ])
     }))
@@ -128,6 +132,7 @@ export function buildBarboraCatalogSnapshot(input: {
         row.energy_kcal_100,
         row.protein_g_100,
         row.total_sugar_g_100,
+        row.carbohydrate_g_100,
         row.nutrition_verified_at
       ]))
       .digest("hex"),
@@ -138,6 +143,7 @@ export function buildBarboraCatalogSnapshot(input: {
     energy_kcal_100: row.energy_kcal_100,
     protein_g_100: row.protein_g_100,
     total_sugar_g_100: row.total_sugar_g_100,
+    carbohydrate_g_100: row.carbohydrate_g_100,
     image_url: row.image_url,
     verified_at: row.nutrition_verified_at,
     revalidate_after: row.nutrition_revalidate_after

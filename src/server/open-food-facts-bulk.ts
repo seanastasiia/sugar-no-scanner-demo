@@ -16,6 +16,7 @@ export interface OpenFoodFactsBulkRecord {
     "energy-kj_100g"?: number;
     proteins_100g?: number;
     sugars_100g?: number;
+    carbohydrates_100g?: number;
   };
 }
 
@@ -55,6 +56,7 @@ export function openFoodFactsBulkRecordToProduct(
     energyKcal: energy,
     proteinG: protein,
     totalSugarG: sugar,
+    carbohydrateG: finite(record.nutriments?.carbohydrates_100g),
     imageUrl: record.image_front_url?.trim() || null,
     price: null,
     currency: null,

@@ -12,6 +12,7 @@ describe("retailer product page parsers", () => {
       <span>Ražotājs</span><div><p>Fazer</p></div>
       <p>Uzturvērtība 100 g</p><table>
       <tr><td>enerģētiskā vērtība</td><td>2302 kJ / 550 kcal</td></tr>
+      <tr><td>ogļhidrāti</td><td>54 g</td></tr>
       <tr><td>tostarp cukuri</td><td>49 g</td></tr>
       <tr><td>olbaltumvielas</td><td>8 g</td></tr></table>
     `);
@@ -33,6 +34,7 @@ describe("retailer product page parsers", () => {
       brand: "GEISHA",
       packSize: "150g",
       energyKcal: 550,
+      carbohydrateG: 54,
       proteinG: 8,
       totalSugarG: 49,
       price: 5.69,
@@ -51,6 +53,7 @@ describe("retailer product page parsers", () => {
     })}<div class="product__fixed-content"><span class="text--gray">60 g</span></div>
       <h3>Uzturvērtība</h3><table><tr><td>Uzturvērtība (100 g)</td></tr>
       <tr><td>Enerģētiskā vērtība</td><td>1297 kJ / 307 kcal</td></tr>
+      <tr><td>Ogļhidrāti</td><td>72 g</td></tr>
       <tr><td>t. sk. cukuri</td><td>59 g</td></tr>
       <tr><td>Olbaltumvielas</td><td>1,9 g</td></tr></table>`;
     expect(parseLivinProductPage(html, "https://www.livin.lv/p/example", "2026-08-26T00:00:00.000Z")).toMatchObject({
@@ -60,6 +63,7 @@ describe("retailer product page parsers", () => {
       gtin: "477904241037",
       packSize: "60 g",
       energyKcal: 307,
+      carbohydrateG: 72,
       proteinG: 1.9,
       totalSugarG: 59,
       price: 2.19,

@@ -24,7 +24,8 @@ function product(overrides: Partial<OpenFoodFactsProduct> = {}): OpenFoodFactsPr
     nutriments: {
       "energy-kcal_100g": 360,
       proteins_100g: 30,
-      sugars_100g: 3.2
+      sugars_100g: 3.2,
+      carbohydrates_100g: 18
     },
     ...overrides
   };
@@ -54,6 +55,41 @@ describe("Open Food Facts matching", () => {
     const ranked = rankOpenFoodFactsCandidates(input, [product()]);
     expect(ranked).toHaveLength(1);
     expect(ranked[0].confidence).toBeGreaterThanOrEqual(0.84);
+  });
+
+  it("accepts an exact OFF identity without package size for per-100 nutrition", () => {
+    const ranked = rankOpenFoodFactsCandidates(
+      {
+        brand: "NICK'S",
+        name: "Soft Toffee protein bar",
+        variant: "Soft Toffee",
+        packSize: "",
+        searchTerms: ["Nicks Soft Toffee protein bar"]
+      },
+      [product()]
+    );
+
+    expect(ranked).toHaveLength(1);
+    expect(ranked[0].confidence).toBeGreaterThanOrEqual(0.84);
+  });
+
+  it("keeps identical OFF products with different package sizes ambiguous when size is missing", () => {
+    const ranked = rankOpenFoodFactsCandidates(
+      {
+        brand: "NICK'S",
+        name: "Soft Toffee protein bar",
+        variant: "Soft Toffee",
+        packSize: "",
+        searchTerms: []
+      },
+      [
+        product({ code: "small", quantity: "50 g" }),
+        product({ code: "large", quantity: "75 g" })
+      ]
+    );
+
+    expect(ranked).toHaveLength(2);
+    expect(ranked[0].confidence - ranked[1].confidence).toBeLessThan(0.08);
   });
 
   it("rejects a different variant even when brand and pack size match", () => {
@@ -117,7 +153,8 @@ describe("Open Food Facts matching", () => {
     expect(scored?.id).toBe("off:7350104401012");
     expect(scored?.ratingBasis).toBe("open_food_facts_reference");
     expect(scored?.ratingSignalCount).toBe(2);
-    expect(scored?.nutrientsPer100g).toMatchObject({ proteinG: 30, totalSugarG: 3.2 });
+    expect(scored?.nutrientsPer100g).toMatchObject({ proteinG: 30, totalSugarG: 3.2, carbohydrateG: 18 });
+    expect(scored?.sources[0].fields).toContain("carbohydrate");
     expect(scored?.sources[0].label).toBe("Open Food Facts product record");
   });
 });

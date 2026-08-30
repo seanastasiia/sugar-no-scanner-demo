@@ -1487,6 +1487,7 @@ export function ScannerApp() {
                     const rank = isRated ? rankedRatedIds.indexOf(id) + 1 : null;
                     const previewPresentation = isRated ? overlayMatchPresentation(item) : null;
                     const sugar = item?.nutrientsPer100g.totalSugarG;
+                    const carbohydrate = item?.nutrientsPer100g.carbohydrateG;
                     const previewBasisLabel = item?.nutritionBasis === "100ml" ? "100 milliliters" : "100 grams";
                     const retailerOffer = detection?.retailerOffer?.exactSku
                       ? detection.retailerOffer
@@ -1507,7 +1508,7 @@ export function ScannerApp() {
                           type="button"
                           aria-label={
                             isRated && previewPresentation
-                              ? `Rank ${rank}, ${item.brand} ${item.shortName}, ${previewPresentation.label}, Sugar ${sugar} grams per ${previewBasisLabel}`
+                              ? `Rank ${rank}, ${item.brand} ${item.shortName}, ${previewPresentation.label}, Sugar ${sugar} grams${carbohydrate !== null && carbohydrate !== undefined ? `, carbohydrates ${carbohydrate} grams` : ""} per ${previewBasisLabel}`
                               : `${item?.brand || detection?.identity?.brand || "Product"} ${item?.shortName || detection?.identity?.name || "identified product"}, nutrition not verified online`
                           }
                           onClick={() => {
@@ -1538,7 +1539,10 @@ export function ScannerApp() {
                             {item && hasSugarNoRating(item) ? (
                               <>
                                 <MatchPill product={item} />
-                                <small className={styles.sheetPreviewSugar}>Sugar {sugar}g</small>
+                                <small className={styles.sheetPreviewSugar}>
+                                  Sugar {sugar}g
+                                  {carbohydrate !== null && carbohydrate !== undefined ? ` · Carbs ${carbohydrate}g` : ""}
+                                </small>
                               </>
                             ) : (
                               <small>{pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}</small>
@@ -1609,6 +1613,7 @@ export function ScannerApp() {
                           const onlineOffer = scanOfferForId(id);
                           const protein = item?.nutrientsPer100g.proteinG;
                           const sugar = item?.nutrientsPer100g.totalSugarG;
+                          const carbohydrate = item?.nutrientsPer100g.carbohydrateG;
                           return (
                             <li className={`${styles.rankedProductCard} ${effectiveSelectedId === id ? styles.activeRankedProductCard : ""}`} key={id}>
                               <button
@@ -1645,7 +1650,10 @@ export function ScannerApp() {
                                     {isRated ? (
                                       <>
                                         <MatchPill product={item} />
-                                        <small>Protein {protein}g · Sugar {sugar}g</small>
+                                        <small>
+                                          Protein {protein}g · Sugar {sugar}g
+                                          {carbohydrate !== null && carbohydrate !== undefined ? ` · Carbs ${carbohydrate}g` : ""}
+                                        </small>
                                       </>
                                     ) : (
                                       <small>{pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}</small>

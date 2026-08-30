@@ -10,14 +10,15 @@ describe("Open Food Facts bulk normalization", () => {
       quantity: "50 g",
       countries_tags: ["en:latvia"],
       nutrition_data_per: "100g",
-      nutriments: { "energy-kcal_100g": 360, proteins_100g: 30, sugars_100g: 3.2 }
+      nutriments: { "energy-kcal_100g": 360, proteins_100g: 30, sugars_100g: 3.2, carbohydrates_100g: 18 }
     };
     expect(isLatviaOpenFoodFactsRecord(record)).toBe(true);
     expect(openFoodFactsBulkRecordToProduct(record, "2026-08-26T00:00:00.000Z")).toMatchObject({
       source: "open_food_facts",
       gtin: "7350104401012",
       proteinG: 30,
-      totalSugarG: 3.2
+      totalSugarG: 3.2,
+      carbohydrateG: 18
     });
   });
 

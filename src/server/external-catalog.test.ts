@@ -21,6 +21,7 @@ const product: ExternalCatalogProduct = {
   energyKcal: 550,
   proteinG: 8,
   totalSugarG: 49,
+  carbohydrateG: 54,
   imageUrl: null,
   price: 5.69,
   currency: "EUR",
@@ -41,7 +42,7 @@ function rimiProduct(sourceProductId: string, title: string, packSize: string): 
 }
 
 describe("external retailer catalog", () => {
-  it("requires brand, product identity and pack size", () => {
+  it("uses pack size as supporting evidence and rejects an explicit conflict", () => {
     const input = {
       brand: "Geisha",
       name: "piena šokolādes konfektes 150g",
@@ -54,11 +55,47 @@ describe("external retailer catalog", () => {
     expect(rankExternalCatalogCandidates({ ...input, brand: "Fazer" }, [product])).toEqual([]);
   });
 
+  it("accepts an exact retailer identity without package size for per-100 nutrition", () => {
+    const ranked = rankExternalCatalogCandidates(
+      {
+        brand: "Geisha",
+        name: "piena šokolādes konfektes",
+        variant: "piena šokolādes",
+        packSize: "",
+        searchTerms: ["Geisha piena šokolādes konfektes"]
+      },
+      [product]
+    );
+
+    expect(ranked[0]?.product.sourceProductId).toBe(product.sourceProductId);
+    expect(ranked[0]?.confidence).toBeGreaterThanOrEqual(0.84);
+  });
+
+  it("keeps identical products with different package sizes ambiguous when no size is visible", () => {
+    const ranked = rankExternalCatalogCandidates(
+      {
+        brand: "Rimi",
+        name: "Sālsstandziņas Rimi",
+        variant: "",
+        packSize: "",
+        searchTerms: []
+      },
+      [
+        rimiProduct("small", "Sālsstandziņas Rimi 125g", "125g"),
+        rimiProduct("large", "Sālsstandziņas Rimi 250g", "250g")
+      ]
+    );
+
+    expect(ranked).toHaveLength(2);
+    expect(ranked[0]!.confidence - ranked[1]!.confidence).toBeLessThan(0.08);
+  });
+
   it("preserves retailer provenance in the scored product", () => {
     const scored = externalCatalogToScoredProduct(product);
     expect(scored.id).toBe("rimi_lv:100761");
     expect(scored.ratingBasis).toBe("retailer_catalog_reference");
-    expect(scored.nutrientsPer100g).toMatchObject({ proteinG: 8, totalSugarG: 49 });
+    expect(scored.nutrientsPer100g).toMatchObject({ proteinG: 8, totalSugarG: 49, carbohydrateG: 54 });
+    expect(scored.sources[0].fields).toContain("carbohydrate");
     expect(scored.sources[0].url).toBe(product.url);
   });
 

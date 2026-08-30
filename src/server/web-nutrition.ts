@@ -30,6 +30,7 @@ const groundedNutritionSchema = z.object({
   energyKcal: z.number().min(0).max(1_000),
   proteinG: z.number().min(0).max(100),
   totalSugarG: z.number().min(0).max(100),
+  carbohydrateG: z.number().min(0).max(100).nullable().optional(),
   confidence: z.number().min(0).max(1),
   evidence: z.string().max(500)
 });
@@ -52,6 +53,7 @@ export interface GroundedNutritionCandidate {
   energyKcal: number;
   proteinG: number;
   totalSugarG: number;
+  carbohydrateG?: number | null;
   confidence: number;
   evidence: string;
 }
@@ -94,12 +96,21 @@ function trustedSources(sources: WebNutritionSource[]): WebNutritionSource[] {
     .slice(0, 3);
 }
 
-function productSources(sources: WebNutritionSource[], checkedAt: string): ProductSource[] {
+function productSources(
+  sources: WebNutritionSource[],
+  checkedAt: string,
+  hasCarbohydrate: boolean
+): ProductSource[] {
   return sources.map((source) => ({
     label: `Web nutrition source · ${source.title || new URL(source.url).hostname}`.slice(0, 180),
     url: source.url,
     checkedAt,
-    fields: ["identity", "protein", "totalSugar"],
+    fields: [
+      "identity",
+      "protein",
+      "totalSugar",
+      ...(hasCarbohydrate ? (["carbohydrate"] as const) : [])
+    ],
     status: "secondary"
   }));
 }
@@ -145,12 +156,13 @@ export function buildGroundedWebNutritionProduct(
     nutrientsPer100g: {
       proteinG: candidate.proteinG,
       fiberG: null,
-      totalSugarG: candidate.totalSugarG
+      totalSugarG: candidate.totalSugarG,
+      carbohydrateG: candidate.carbohydrateG ?? null
     },
     noAddedSugarClaim: false,
     imageUrl: null,
     retailerUrl: sources[0].url,
-    sources: productSources(sources, checkedAt),
+    sources: productSources(sources, checkedAt, candidate.carbohydrateG !== null && candidate.carbohydrateG !== undefined),
     isGolden: false,
     accent: "coral"
   };
@@ -184,12 +196,12 @@ async function lookupWebNutritionRemotely(input: {
         `Use Google Search now. Find the exact packaged food "${exactProductQuery}". ` +
         `Search manufacturer, retailer or exact product-database pages for its nutrition table. ` +
         `Return exactProductMatch true only when brand, product, flavor/variant and visible pack identity refer to the same SKU. ` +
-        `Return energy kcal, protein and total sugars per 100 g or per 100 ml exactly as a source lists them. ` +
+        `Return energy kcal, protein, total sugars and carbohydrates per 100 g or per 100 ml exactly as a source lists them. ` +
         `Do not estimate, convert serving values, borrow a similar flavor, or average conflicting sources. ` +
         `If an exact per-100 table is not verifiable, return exactProductMatch false with zero nutrients and unknown basis. ` +
         `Cite the supporting page in the answer. End with exactly one single-line JSON object prefixed NUTRITION_JSON:. ` +
         `The object must contain exactProductMatch, matchedBrand, matchedProductName, nutritionBasis as 100g/100ml/unknown, ` +
-        `numeric energyKcal, proteinG, totalSugarG and confidence from 0 to 1, plus a short evidence string.`,
+        `numeric energyKcal, proteinG, totalSugarG, carbohydrateG (number or null when not listed) and confidence from 0 to 1, plus a short evidence string.`,
       config: {
         httpOptions: { timeout: webNutritionTimeoutMs() },
         thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },

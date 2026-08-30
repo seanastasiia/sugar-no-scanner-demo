@@ -15,6 +15,7 @@ interface OpenFoodFactsNutriments {
   "energy-kj_100g"?: number;
   proteins_100g?: number;
   sugars_100g?: number;
+  carbohydrates_100g?: number;
   fiber_100g?: number;
 }
 
@@ -69,7 +70,8 @@ export function getOpenFoodFactsBulkProductByBarcode(barcode: string): ScoredPro
       nutriments: {
         "energy-kcal_100g": source.energyKcal,
         proteins_100g: source.proteinG,
-        sugars_100g: source.totalSugarG
+        sugars_100g: source.totalSugarG,
+        carbohydrates_100g: source.carbohydrateG ?? undefined
       },
       image_front_url: source.imageUrl,
       categories: source.category
@@ -172,12 +174,23 @@ function tokenCoverage(query: string[], candidate: string[]): number {
   ).length / query.length;
 }
 
+function packEvidenceBonus(packMatch: boolean | null, nameScore: number): number {
+  if (packMatch === true) return 0.2;
+  // OFF nutrients are already expressed per 100 g / 100 ml. Missing package
+  // size is therefore acceptable only for a very strong identity match; an
+  // explicit size conflict and ambiguous sibling records still fail closed.
+  if (packMatch === null && nameScore >= 0.9) return 0.12;
+  return 0.04;
+}
+
 export function rankOpenFoodFactsCandidates(
   input: BarboraLookupInput,
   candidates: OpenFoodFactsProduct[]
 ): RankedOpenFoodFactsCandidate[] {
   const observedIdentity = [input.name, input.variant, ...input.searchTerms].filter(Boolean).join(" ");
   const observedBrandTokens = new Set(meaningfulTokens(input.brand));
+  const compactObservedBrand = normalizeRetailText(input.brand).replaceAll(" ", "");
+  if (compactObservedBrand.length >= 3) observedBrandTokens.add(compactObservedBrand);
   const observedNameTokens = meaningfulTokens(
     observedIdentity,
     observedBrandTokens
@@ -210,7 +223,7 @@ export function rankOpenFoodFactsCandidates(
       // blueberry SKU). Require candidate-side identity coverage as well as
       // the balanced score before an exact-SKU result can be considered.
       if (!hasNutrition || nameScore < 0.58 || reverseCoverage < 0.72) return [];
-      const confidence = Math.min(1, 0.28 + nameScore * 0.52 + (packMatch === true ? 0.2 : 0.04));
+      const confidence = Math.min(1, 0.28 + nameScore * 0.52 + packEvidenceBonus(packMatch, nameScore));
       return [{ product, confidence }];
     })
     .sort((left, right) => right.confidence - left.confidence || left.product.code.localeCompare(right.product.code));
@@ -220,6 +233,9 @@ function sourceFields(record: ProductRecord): ProductSource["fields"] {
   const fields: ProductSource["fields"] = ["identity"];
   if (record.nutrientsPer100g.proteinG !== null) fields.push("protein");
   if (record.nutrientsPer100g.totalSugarG !== null) fields.push("totalSugar");
+  if (record.nutrientsPer100g.carbohydrateG !== null && record.nutrientsPer100g.carbohydrateG !== undefined) {
+    fields.push("carbohydrate");
+  }
   return fields;
 }
 
@@ -252,7 +268,8 @@ export function openFoodFactsToScoredProduct(
     nutrientsPer100g: {
       proteinG: protein,
       fiberG: finite(product.nutriments?.fiber_100g),
-      totalSugarG: sugar
+      totalSugarG: sugar,
+      carbohydrateG: finite(product.nutriments?.carbohydrates_100g)
     },
     noAddedSugarClaim: false,
     imageUrl: product.image_front_url || null,
@@ -338,7 +355,8 @@ export async function resolveOpenFoodFactsProduct(
       nutriments: {
         "energy-kcal_100g": product.energyKcal,
         proteins_100g: product.proteinG,
-        sugars_100g: product.totalSugarG
+        sugars_100g: product.totalSugarG,
+        carbohydrates_100g: product.carbohydrateG ?? undefined
       },
       image_front_url: product.imageUrl,
       categories: product.category

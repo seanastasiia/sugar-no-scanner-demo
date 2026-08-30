@@ -154,6 +154,16 @@ function balancedCoverage(query: string[], candidate: string[]): number {
   return (2 * queryCoverage * candidateCoverage) / (queryCoverage + candidateCoverage);
 }
 
+function packEvidenceBonus(packMatches: boolean | null, nameScore: number): number {
+  if (packMatches === true) return 0.2;
+  // Protein and sugar are normalized per 100 g / 100 ml, so a missing pack
+  // size must not block an otherwise exact, unambiguous product identity.
+  // The resolver's candidate-margin check still rejects sibling pack sizes
+  // or variants when more than one catalog record is equally plausible.
+  if (packMatches === null && nameScore >= 0.9) return 0.12;
+  return 0.04;
+}
+
 export function rankExternalCatalogCandidates(
   input: BarboraLookupInput,
   candidates: ExternalCatalogProduct[] = products
@@ -172,7 +182,7 @@ export function rankExternalCatalogCandidates(
           Math.abs(observedPack.amount - candidatePack.amount) / Math.max(observedPack.amount, candidatePack.amount) <= 0.04
         : null;
       if (packMatches === false || nameScore < 0.6) return [];
-      const confidence = Math.min(1, 0.28 + nameScore * 0.52 + (packMatches ? 0.2 : 0.04));
+      const confidence = Math.min(1, 0.28 + nameScore * 0.52 + packEvidenceBonus(packMatches, nameScore));
       return [{ product, confidence }];
     })
     .sort((left, right) => right.confidence - left.confidence || left.product.sourceProductId.localeCompare(right.product.sourceProductId));
@@ -193,7 +203,12 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
     nutritionBasis: product.nutritionBasis,
     energyKcalPer100: product.energyKcal,
     gtin: product.gtin,
-    nutrientsPer100g: { proteinG: product.proteinG, fiberG: null, totalSugarG: product.totalSugarG },
+    nutrientsPer100g: {
+      proteinG: product.proteinG,
+      fiberG: null,
+      totalSugarG: product.totalSugarG,
+      carbohydrateG: product.carbohydrateG ?? null
+    },
     noAddedSugarClaim: false,
     imageUrl: product.imageUrl,
     retailerUrl: product.url,
@@ -202,7 +217,15 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
         label: `${product.retailer || product.source} Latvia product-page snapshot`,
         url: product.url,
         checkedAt: product.checkedAt,
-        fields: ["identity", "protein", "totalSugar", "retailerUrl"],
+        fields: [
+          "identity",
+          "protein",
+          "totalSugar",
+          ...(product.carbohydrateG === null || product.carbohydrateG === undefined
+            ? []
+            : (["carbohydrate"] as const)),
+          "retailerUrl"
+        ],
         status: "secondary"
       }
     ],

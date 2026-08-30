@@ -117,11 +117,19 @@ async function main() {
     const retailerUrl = `https://barbora.lv/produkti/${listed.Url}`;
     const product = extractJson<BarboraProduct>(await fetchText(retailerUrl), "product");
     const fiber = overrides[listed.Url];
+    const carbohydrate = grams(product, "Ogļhidrāti");
     const retailerSource: ProductSource = {
       label: "Barbora Latvia product page",
       url: retailerUrl,
       checkedAt,
-      fields: ["identity", "protein", "totalSugar", "retailerUrl", "claim"],
+      fields: [
+        "identity",
+        "protein",
+        "totalSugar",
+        ...(carbohydrate === null ? [] : (["carbohydrate"] as const)),
+        "retailerUrl",
+        "claim"
+      ],
       status: "verified"
     };
     const sources: ProductSource[] = [retailerSource];
@@ -148,6 +156,7 @@ async function main() {
       nutrientsPer100g: {
         proteinG: grams(product, "Olbaltumvielas"),
         fiberG: fiber?.fiberG ?? null,
+        carbohydrateG: carbohydrate,
         totalSugarG: grams(product, "Cukuri")
       },
       noAddedSugarClaim: noAddedSugarClaim(product),

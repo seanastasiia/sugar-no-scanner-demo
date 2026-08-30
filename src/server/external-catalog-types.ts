@@ -15,6 +15,7 @@ export interface ExternalCatalogProduct {
   energyKcal: number;
   proteinG: number;
   totalSugarG: number;
+  carbohydrateG?: number | null;
   imageUrl: string | null;
   price: number | null;
   currency: "EUR" | null;

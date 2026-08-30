@@ -20,6 +20,7 @@ async function main() {
     gtin: product.gtin,
     protein_g_100: product.nutrientsPer100g.proteinG,
     fiber_g_100: product.nutrientsPer100g.fiberG,
+    carbohydrate_g_100: product.nutrientsPer100g.carbohydrateG ?? null,
     total_sugar_g_100: product.nutrientsPer100g.totalSugarG,
     no_added_sugar_claim: product.noAddedSugarClaim,
     image_url: product.imageUrl,

@@ -19,6 +19,7 @@ interface ProductRow {
   protein_g_100: number | null;
   fiber_g_100: number | null;
   total_sugar_g_100: number | null;
+  carbohydrate_g_100: number | null;
   no_added_sugar_claim: boolean;
   image_url: string | null;
   retailer_url: string;
@@ -50,7 +51,8 @@ function rowToProduct(row: ProductRow): ProductRecord {
     nutrientsPer100g: {
       proteinG: row.protein_g_100,
       fiberG: row.fiber_g_100,
-      totalSugarG: row.total_sugar_g_100
+      totalSugarG: row.total_sugar_g_100,
+      carbohydrateG: row.carbohydrate_g_100 ?? null
     },
     noAddedSugarClaim: row.no_added_sugar_claim,
     imageUrl: row.image_url,

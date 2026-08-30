@@ -27,6 +27,7 @@ describe("broad Barbora nutrition snapshot", () => {
       energyKcal: 40,
       proteinG: 2.1,
       totalSugarG: 1.8,
+      carbohydrateG: 5.4,
       imageUrl: null,
       isAdult: false,
       checkedAt: "2026-08-25T00:00:00.000Z"
@@ -39,10 +40,11 @@ describe("broad Barbora nutrition snapshot", () => {
       ratingBasis: "barbora_reference",
       ratingStatus: "complete",
       ratingSignalCount: 2,
-      ratingSignalMask: ["protein", "inverseSugar"]
+      ratingSignalMask: ["protein", "inverseSugar"],
+      nutrientsPer100g: { proteinG: 2.1, totalSugarG: 1.8, carbohydrateG: 5.4 }
     });
     expect(product.matchScore).toBeTypeOf("number");
-    expect(product.sources[0]?.fields).toEqual(["identity", "protein", "totalSugar", "retailerUrl"]);
+    expect(product.sources[0]?.fields).toEqual(["identity", "protein", "totalSugar", "carbohydrate", "retailerUrl"]);
   });
 
   it("does not rate adult products even when the source exposes nutrition", () => {

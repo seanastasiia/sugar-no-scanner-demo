@@ -339,6 +339,9 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
     protein: product.nutrientsPer100g.proteinG,
     sugar: product.nutrientsPer100g.totalSugarG
   };
+  const carbohydrate = product.nutrientsPer100g.carbohydrateG;
+  const carbohydrateLabel =
+    carbohydrate !== null && carbohydrate !== undefined ? ` · Carbs ${carbohydrate}g` : "";
   return (
     <section className={styles.sugarBadge} aria-label="Sugar.no badge">
       <div className={styles.sugarBadgeHeading}>
@@ -362,8 +365,8 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
       </div>
       <p className={styles.perHundred}>
         {product.ratingBasis === "catalog_percentile" && product.ratingStatus === "complete"
-          ? "Values per 100 g · Compared with protein snacks in this demo"
-          : `Values per ${product.nutritionBasis === "100ml" ? "100 ml" : "100 g"} · ${product.ratingSignalCount} of 2 source-backed signals`}
+          ? `Values per 100 g${carbohydrateLabel} · Compared with protein snacks in this demo`
+          : `Values per ${product.nutritionBasis === "100ml" ? "100 ml" : "100 g"}${carbohydrateLabel} · ${product.ratingSignalCount} of 2 source-backed signals`}
       </p>
     </section>
   );
