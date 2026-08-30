@@ -9,14 +9,14 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 ## Current product behavior
 
 - The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
-- The live feed spans the full phone width, with the Sugar.no brand, `Show demo` and recognition status layered over the camera. The stream keeps its native aspect ratio and `object-fit: contain`, so the app does not add digital zoom or stretch the image. Saved photos and deterministic demo scenes retain a proportional rounded viewport.
-- The camera remains live after recognition. A lightweight 96×72 device-side luma tracker follows small camera pans and translates only already-confirmed product boxes; after two scene mismatches it clears stale boxes/results and automatically reads the new scene.
+- The live feed spans the full phone width, with the Sugar.no brand, `Show demo` and recognition status layered over the camera. The stream keeps its native aspect ratio and `object-fit: contain`, so the app does not add digital zoom or stretch the image. Saved photos use one predictable rounded 3:4 preview and `object-fit: cover`; deterministic demo scenes keep their own designed framing.
+- `Reading visible products…` means the browser has selected one stable frame. That captured frame is held on screen while recognition and nutrition enrichment finish, so camera movement cannot detach result boxes from the products that were actually analyzed. A new scene is read only after the user explicitly starts a new scan.
 - Before Gemini returns, the browser may show neutral dashed candidate regions derived locally from edge detail. They are only aiming feedback: they never carry a product name, fit color or nutrition claim.
 - Camera starts after permission without requiring a shutter action. Mobile Safari requests the rear 1920×1080 feed at up to 30 fps and continuous focus when the device exposes it.
-- Live sampling starts after 340 ms, checks every 240 ms and sends one compact JPEG up to 960 px wide as soon as the scene is usable. A 1.25-second hard capture ceiling prevents the sharpness/stability gate from stalling indefinitely. One Gemini request is used per scene; duplicate center/completion reads are not started.
+- Live sampling starts after 340 ms, checks every 240 ms and sends one compact JPEG up to 960 px wide as soon as the scene is usable. A 1.25-second hard capture ceiling prevents the sharpness/stability gate from stalling indefinitely. The automatic loop pauses as soon as the frame is submitted, so one Gemini request is used per explicit scan and duplicate center/completion reads are not started.
 - When the browser exposes native `BarcodeDetector`, EAN/UPC is resolved locally before Gemini. On Safari, Gemini can still return a visible barcode for the same exact local lookup.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
-- Live and saved-photo views omit the redundant source badge. The camera keeps only `Show demo` over the feed; saved photos keep only `Back to live` over their proportional media frame.
+- Live and saved-photo views omit the redundant source badge. The camera keeps only `Show demo` over the feed; saved photos keep only `Back to live` over their fixed rounded 3:4 media frame.
 - A scan keeps at most ten distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
 - Rated products are ordered best fit first and use `Great fit`, `Moderate fit`, or `Low fit`.
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.
@@ -184,7 +184,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 6. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
 7. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
 8. Confirm each overlay tightly follows its package rather than a nearby shelf label.
-9. Move the camera slightly after a result and confirm the confirmed boxes follow the packages. Then close the shelf/fridge or point at an unrelated scene: old boxes and cards must clear after two tracking samples and the current scene must be read automatically. No product box may remain over an unrelated view.
+9. Wait until `Reading visible products…` appears, then move the phone or close the shelf/fridge. Confirm the submitted frame remains frozen and every box stays attached to the product that was analyzed. Confirm no new scene is read until the explicit retry/new-scan action is used.
 10. Open a rated product and confirm `Better alternatives` contains only the same product type with `Great fit` no worse than the source and a live price; `Moderate fit`, `Low fit`, unrated products, and products without a valid substitute should show no alternatives block.
 11. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
 12. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
@@ -192,7 +192,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 14. Confirm a purchase button is absent when the exact online offer is not cheaper than the visible shelf price; when it is cheaper, confirm the card shows one full-width green `Buy cheaper online` action.
 15. Scan exact Rimi and Livin products and confirm their retailer packshots load instead of a broken-image icon.
 16. Scan several packages whose size is not readable and confirm `Checking online…` clears quickly instead of waiting for an unverifiable web search; a complete unfamiliar SKU may still use the bounded fallback.
-17. Upload one landscape and one tall portrait shelf photo; confirm the rounded camera card follows each photo's proportions without stretching or leaving the frame outside the viewport.
+17. Upload one landscape and one tall portrait shelf photo; confirm both use the same rounded 3:4 preview, fill it with an undistorted center crop and remain inside the viewport.
 18. Confirm each rated package outline has a light green, yellow or red transparent fill matching its fit icon; the packaging must remain readable through the tint.
 19. Scan an exact SKU that previously resolved through cited web nutrition twice. Confirm the repeat result appears immediately. A result older than its freshness window must remain visible while its recheck happens silently, and an unsuccessful recheck must not remove its fit.
 20. Before the first AI result, confirm any locally proposed regions are neutral dashed outlines only. Green, yellow or red styling may appear only after an exact recognized product has verified nutrition.
@@ -206,7 +206,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - FatSecret Premier, NIQ Brandbank and GS1 Latvia access are not active until the providers approve the prepared evaluation requests.
 - Grounded web nutrition has variable latency and cost. It runs only for an identity with a readable pack size or barcode and defaults to a 12-second deadline. Persistent reuse requires the checked-in Supabase migration plus server-only `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; without them the app fails open to its process cache and recognition still works.
 - Browser-native barcode detection depends on platform support. Safari currently relies on Gemini reading the visible code; no extra WASM bundle is shipped because it would increase camera startup cost.
-- Live overlays use hybrid browser tracking, not native AR object tracking. The device-side tracker follows small global translations and detects scene replacement, but it cannot independently identify a package or reliably follow strong scale, rotation, occlusion or fast movement. Exact identity still comes from one Gemini frame; a major scene change triggers a fresh read.
+- Live overlays are drawn over one captured recognition frame, not native AR object tracking. They do not follow a moving package or changing scene. Exact identity comes from the submitted Gemini frame, and the user explicitly starts a new scan for a new shelf view.
 - The investor URL has no viewer access gate. The silent same-site cookie, origin checks and process-local limiters harden API use but do not make the link private. Production scale-out needs explicit authentication plus a shared counter or edge gateway quota in addition to Gemini project budgets.
 - The five-shelf model screen measures unique returned identities, not labeled ground-truth recall. Gemini 3.5 Flash returned 38 identities at 7.1 s mean; a lean schema was faster (4.2 s) but returned fewer and unstable results (30, then 24), so it was rejected. Gemini 3.6 returned 32 at 7.8 s. True precision/recall still requires a labeled physical-store dataset.
 
@@ -231,5 +231,6 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - [Public entry and full-width live camera release evidence](docs/test-runs/2026-08-29-public-entry-full-width-camera.md)
 - [Recognition speed, cache and barcode release evidence](docs/test-runs/2026-08-29-recognition-speed-six.md)
 - [Captured-frame and alternative-link release evidence](docs/test-runs/2026-08-29-captured-frame-alternative-links.md)
-- [Live camera tracking release evidence](docs/test-runs/2026-08-29-live-camera-tracking.md)
+- [Superseded live camera tracking experiment](docs/test-runs/2026-08-29-live-camera-tracking.md)
+- [Captured-frame scan release evidence](docs/test-runs/2026-08-30-captured-frame-scan.md)
 - [Open and recent bugs](Bugs.md)

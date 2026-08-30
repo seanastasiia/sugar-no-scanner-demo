@@ -4,8 +4,8 @@ Use this page to locate a change without scanning the whole repository.
 
 ## Runtime flow
 
-1. `src/components/scanner-app.tsx` owns camera state, bounded frame selection, the native barcode fast path, request cancellation, automatic scene refresh and the compact/expanded sheet.
-2. `src/lib/live-camera-tracking.ts` turns tiny local luma samples into neutral pre-result candidates, estimates small global translations for confirmed boxes and rejects a replaced scene. It does not identify products.
+1. `src/components/scanner-app.tsx` owns camera state, bounded frame selection, the native barcode fast path, request cancellation, the captured-frame lock and the compact/expanded sheet.
+2. `src/lib/live-camera-tracking.ts` turns tiny local luma samples into neutral pre-result candidates and helps validate the submitted frame before the recognition loop pauses. It does not identify products or move results across a new live scene.
 3. `src/lib/client-image.ts` resizes and tiles saved images before upload. `src/lib/upload-scan.ts` remaps and merges tiled detections.
 4. `src/app/api/recognize/route.ts` validates and rate-limits image requests.
 5. `src/server/recognition.ts` asks Gemini for package identity and geometry, then resolves exact catalog records.

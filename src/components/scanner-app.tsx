@@ -84,7 +84,6 @@ const CAMERA_SCAN_INTERVAL_MS = 240;
 const CAMERA_SCAN_KICKOFF_MS = 340;
 const CAMERA_MIN_CAPTURE_INTERVAL_MS = 1_000;
 const CAMERA_FORCE_CAPTURE_MS = 1_250;
-const CAMERA_SCENE_RETRY_MS = 900;
 const CAMERA_MIN_EDGE_SCORE = 4.1;
 const CAMERA_SAMPLE_WIDTH = 96;
 const CAMERA_SAMPLE_HEIGHT = 72;
@@ -415,13 +414,10 @@ export function ScannerApp() {
       }
       if (result.status !== "matched" || result.detections.length === 0) {
         if (eventSource === "camera") {
-          trackingActiveRef.current = false;
-          recognitionFrameRef.current = null;
-          retryRecognitionAtRef.current = Date.now() + CAMERA_SCENE_RETRY_MS;
-          lastCaptureRef.current = 0;
-          setTrackingTranslation(null);
+          trackingActiveRef.current = true;
+          setResultLocked(true);
           setRecognitionState("not_sure");
-          setStatusMessage("Keep the shelf steady — scanning again…");
+          setStatusMessage("Not sure — scan a new view to try again");
         } else {
           setRecognitionState("not_sure");
           setStatusMessage("Not sure — use a clearer package photo");
@@ -745,6 +741,10 @@ export function ScannerApp() {
         if (trackingMismatchRef.current < 2) return;
         recognitionAbortRef.current?.abort();
         recognitionAbortRef.current = null;
+        enrichmentAbortRef.current?.abort();
+        enrichmentAbortRef.current = null;
+        cameraRequestRef.current += 1;
+        setEnrichingProductIds([]);
         inFlightRef.current = false;
         trackingActiveRef.current = false;
         recognitionFrameRef.current = null;
@@ -821,8 +821,9 @@ export function ScannerApp() {
     trackingMismatchRef.current = 0;
     setTrackingTranslation(trackingTranslationRef.current);
     setScanFrameUrl(imageDataUrl);
+    pauseRecognitionLoop();
     void recognizeCameraFrame(canvas, imageDataUrl, false);
-  }, [recognizeCameraFrame]);
+  }, [pauseRecognitionLoop, recognizeCameraFrame]);
 
   const requestCamera = useCallback(async () => {
     sessionIdRef.current = makeSessionId();
@@ -1278,11 +1279,8 @@ export function ScannerApp() {
               ref={stageRef}
               className={`${styles.cameraViewport} ${source === "camera" || source === "upload" ? styles.cameraViewportMediaRatio : ""} ${source === "camera" ? styles.cameraViewportLive : ""}`}
               data-testid="camera-viewport"
-              style={source === "camera" || source === "upload"
+              style={source === "camera"
                 ? ({
-                    "--camera-media-aspect": mediaDimensions
-                      ? `${mediaDimensions.width} / ${mediaDimensions.height}`
-                      : "3 / 4",
                     "--camera-media-height": mediaDimensions
                       ? `${(mediaDimensions.height / mediaDimensions.width) * 100}vw`
                       : "133.333vw"
@@ -1303,6 +1301,18 @@ export function ScannerApp() {
                 onResize={(event) =>
                   setMediaDimensions({ width: event.currentTarget.videoWidth, height: event.currentTarget.videoHeight })
                 }
+              />
+            ) : null}
+
+            {source === "camera" && scanFrameUrl ? (
+              <Image
+                className={styles.capturedCameraFrame}
+                data-testid="captured-camera-frame"
+                src={scanFrameUrl}
+                alt="Captured shelf being recognized"
+                fill
+                sizes="100vw"
+                unoptimized
               />
             ) : null}
 
@@ -1363,7 +1373,7 @@ export function ScannerApp() {
               const presentation = overlayMatchPresentation(product);
               const displayName = product?.name || detection.identity?.name || detection.observedText || "product";
               const mappedBox = mediaDimensions && stageDimensions
-                ? ["camera", "upload"].includes(source)
+                ? source === "camera"
                   ? mapBoxToObjectContain(detection.box, mediaDimensions, stageDimensions)
                   : mapBoxToObjectCover(detection.box, mediaDimensions, stageDimensions)
                 : detection.box;
@@ -1410,7 +1420,7 @@ export function ScannerApp() {
                 <ScanLine aria-hidden="true" size={17} />
               )}
               <span>{networkOnline ? displayedStatusMessage : "Offline — recognition paused"}</span>
-              {source === "camera" && (recognitionState === "unavailable" || recognitionState === "rate_limited" || scanHasNoRatedResults) ? (
+              {source === "camera" && (recognitionState === "not_sure" || recognitionState === "unavailable" || recognitionState === "rate_limited" || scanHasNoRatedResults) ? (
                 <button className={styles.recognitionRetry} type="button" onClick={scanAgain}>
                   <RefreshCw aria-hidden="true" size={15} /> Try again
                 </button>

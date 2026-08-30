@@ -248,7 +248,7 @@
 .cameraViewportMediaRatio {
   bottom: auto;
   max-height: calc(100% - 144px - var(--camera-bottom-offset) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  aspect-ratio: var(--camera-media-aspect, 3 / 4);
+  aspect-ratio: 3 / 4;
 }
 
 .cameraViewport.cameraViewportLive {
@@ -266,6 +266,7 @@
 }
 
 .video,
+.capturedCameraFrame,
 .uploadPreview {
   position: absolute;
   z-index: 0;
@@ -275,7 +276,16 @@
   background: #000000;
 }
 
+.uploadPreview {
+  object-fit: cover;
+}
+
 .video {
+  pointer-events: none;
+}
+
+.capturedCameraFrame {
+  object-fit: contain;
   pointer-events: none;
 }
 

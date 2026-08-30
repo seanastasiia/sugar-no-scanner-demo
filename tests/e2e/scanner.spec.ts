@@ -1016,7 +1016,7 @@ test("a landscape saved shelf is scanned as a full frame plus three row close-up
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
   expect(recognitionRequests).toBe(4);
   const uploadedViewport = await page.getByTestId("camera-viewport").boundingBox();
-  expect((uploadedViewport?.width ?? 0) / (uploadedViewport?.height ?? 1)).toBeCloseTo(4 / 3, 1);
+  expect((uploadedViewport?.width ?? 0) / (uploadedViewport?.height ?? 1)).toBeCloseTo(3 / 4, 1);
   await expectInsideViewport(page, page.getByTestId("camera-viewport"));
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /BAREBELLS/ })).toBeVisible();
@@ -1099,7 +1099,7 @@ test("a long online-store screenshot is scanned in four passes and opens one mer
   await expect(resultsDialog).toBeVisible({ timeout: 10_000 });
   const uploadedViewport = page.getByTestId("camera-viewport");
   const uploadedViewportBox = await uploadedViewport.boundingBox();
-  expect((uploadedViewportBox?.width ?? 0) / (uploadedViewportBox?.height ?? 1)).toBeCloseTo(900 / 2000, 1);
+  expect((uploadedViewportBox?.width ?? 0) / (uploadedViewportBox?.height ?? 1)).toBeCloseTo(3 / 4, 1);
   await expectInsideViewport(page, uploadedViewport);
   expect(recognitionRequests).toBe(4);
   const ranking = resultsDialog.getByLabel("Products ranked by Sugar.no fit");
@@ -1511,7 +1511,7 @@ test("live camera applies each online result without waiting for the slowest pro
   await expect(preview.getByText("Nutrition not verified online", { exact: true })).toBeVisible();
 });
 
-test("a visual-only live result is shown after one request without a completion retry", async ({ page }) => {
+test("a visual-only live result holds the captured frame without scanning a new scene", async ({ page }) => {
   await mockLiveCamera(page);
   let recognitionRequests = 0;
   const focusModes: boolean[] = [];
@@ -1542,7 +1542,8 @@ test("a visual-only live result is shown after one request without a completion 
             matchKind: "visual_only"
           },
           shelfPrice: null,
-          retailerOffer: null
+          retailerOffer: null,
+          inlineProduct: null
         }]
       })
     });
@@ -1557,10 +1558,12 @@ test("a visual-only live result is shown after one request without a completion 
   });
 
   await unlock(page);
-  await expect(page.getByRole("status")).toContainText("1 product · 0 with Sugar.no fit", { timeout: 10_000 });
-  await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open First Product"]')).toHaveCount(0);
-  await expect.poll(() => recognitionRequests, { timeout: 5_000 }).toBe(1);
+  await expect.poll(() => recognitionRequests, { timeout: 10_000 }).toBe(1);
+  await expect(page.getByLabel("Live camera scanner")).toBeVisible();
+  await expect(page.getByTestId("captured-camera-frame")).toBeVisible();
   expect(focusModes).toEqual([false]);
+  await page.waitForTimeout(2_000);
+  expect(recognitionRequests).toBe(1);
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: "First Product" })).toBeVisible();
   await expect(page.getByText("Nutrition not verified", { exact: true })).toBeVisible();
@@ -1617,7 +1620,7 @@ test("HTTP 429 pauses automatic recognition and offers manual recovery", async (
   expect(recognitionRequests).toBe(1);
 });
 
-test("live camera groups repeated packs, tracks a stable scene and automatically replaces a changed scene", async ({ page }) => {
+test("live camera groups repeated packs and holds the captured scene until Scan again", async ({ page }) => {
   await mockLiveCamera(page);
 
   let currentProduct: "coke" | "activia" = "coke";
@@ -1681,7 +1684,7 @@ test("live camera groups repeated packs, tracks a stable scene and automatically
   await unlock(page);
 
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
-  await expect(page.getByTestId("captured-camera-frame")).toHaveCount(0);
+  await expect(page.getByTestId("captured-camera-frame")).toBeVisible();
   await expect(page.getByLabel("Live camera preview")).toBeVisible();
   await expect(page.getByLabel("Live camera scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
   await page.getByRole("button", { name: "View all", exact: true }).click();
@@ -1699,6 +1702,10 @@ test("live camera groups repeated packs, tracks a stable scene and automatically
   await page.evaluate(() => {
     (window as Window & { __cameraScene?: number }).__cameraScene = 1;
   });
+  await page.waitForTimeout(2_500);
+  expect(recognitionRequests).toBe(1);
+  await expect(page.getByRole("heading", { name: /Coca-Cola Original Taste/ })).toBeVisible();
+  await scanAgainButton.click();
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Activia Forest Berries Yogurt/ })).toBeVisible({ timeout: 10_000 });
