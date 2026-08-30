@@ -38,4 +38,11 @@ Pre-publish verification on the feature working tree:
 - Authenticated Supabase migration: passed; `carbohydrate_g_100` is present on the three active catalog tables listed above.
 - The local `npm run supabase:verify:external` helper could not authenticate because the local shell intentionally has no Supabase service-role secret. Live schema and catalog counts were instead verified in the authenticated Supabase project session.
 
-The deployed feature commit and production health result are recorded in the publish completion entry after Railway finishes.
+Publish completion:
+
+- Feature commit: `e772bcf3ff37fac7c3512a641f937a0390a5d519`.
+- GitHub `main`: updated successfully.
+- Railway deployment: `e031d0b3-1d6b-40bf-8bbd-765d2a9980ad` (`SUCCESS`).
+- Production `/api/health`: HTTP 200 and reported `commit: e772bcf`.
+- Production root: HTTP 200 in 0.21 seconds during the release check.
+- Production health retained 7,433 nutrition-complete Barbora SKU records and continued to report `protein` and `totalSugar` as the two fit signals; carbohydrates are display-only.
