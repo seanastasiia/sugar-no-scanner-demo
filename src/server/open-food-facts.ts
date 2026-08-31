@@ -55,29 +55,31 @@ const USER_AGENT = "Sugar.no scanner demo/0.1 (https://sugar.no)";
 const CACHE_TTL_MS = 30 * 60_000;
 const responseCache = new Map<string, { expiresAt: number; product: ScoredProduct | null; confidence: number }>();
 const bulkProducts = bulkSnapshot as ExternalCatalogProduct[];
+let scoredBulkProducts: ScoredProduct[] | null = null;
+
+function bulkProductToOpenFoodFactsProduct(source: ExternalCatalogProduct): OpenFoodFactsProduct {
+  return {
+    code: source.gtin || source.sourceProductId,
+    product_name: source.title,
+    brands: source.brand,
+    quantity: source.packSize,
+    nutrition_data_per: source.nutritionBasis,
+    nutriments: {
+      "energy-kcal_100g": source.energyKcal,
+      proteins_100g: source.proteinG,
+      sugars_100g: source.totalSugarG,
+      carbohydrates_100g: source.carbohydrateG ?? undefined
+    },
+    image_front_url: source.imageUrl,
+    categories: source.category
+  };
+}
 
 export function getOpenFoodFactsBulkProductByBarcode(barcode: string): ScoredProduct | null {
   if (!/^\d{8,14}$/.test(barcode)) return null;
   const source = bulkProducts.find((product) => (product.gtin || product.sourceProductId) === barcode);
   if (!source) return null;
-  return openFoodFactsToScoredProduct(
-    {
-      code: source.gtin || source.sourceProductId,
-      product_name: source.title,
-      brands: source.brand,
-      quantity: source.packSize,
-      nutrition_data_per: source.nutritionBasis,
-      nutriments: {
-        "energy-kcal_100g": source.energyKcal,
-        proteins_100g: source.proteinG,
-        sugars_100g: source.totalSugarG,
-        carbohydrates_100g: source.carbohydrateG ?? undefined
-      },
-      image_front_url: source.imageUrl,
-      categories: source.category
-    },
-    source.checkedAt
-  );
+  return openFoodFactsToScoredProduct(bulkProductToOpenFoodFactsProduct(source), source.checkedAt);
 }
 
 const stopWords = new Set([
@@ -328,6 +330,8 @@ async function searchProducts(input: BarboraLookupInput): Promise<OpenFoodFactsP
 }
 
 export async function getOpenFoodFactsProductByBarcode(barcode: string): Promise<ScoredProduct | null> {
+  const bulkProduct = getOpenFoodFactsBulkProductByBarcode(barcode);
+  if (bulkProduct) return bulkProduct;
   const cacheKey = `barcode:${barcode}`;
   const cached = responseCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.product;
@@ -396,4 +400,14 @@ export async function resolveOpenFoodFactsProduct(
 
 export function openFoodFactsBulkCount(): number {
   return bulkProducts.length;
+}
+
+export function listOpenFoodFactsBulkProducts(): ScoredProduct[] {
+  if (!scoredBulkProducts) {
+    scoredBulkProducts = bulkProducts.flatMap((source) => {
+      const product = openFoodFactsToScoredProduct(bulkProductToOpenFoodFactsProduct(source), source.checkedAt);
+      return product ? [product] : [];
+    });
+  }
+  return scoredBulkProducts;
 }

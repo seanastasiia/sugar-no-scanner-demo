@@ -208,8 +208,7 @@ export function rankSimilarProducts(
         candidate.matchScore !== null &&
         hasGreatFit(candidate) &&
         candidate.matchScore >= currentMatchScore &&
-        areInterchangeable(current, candidate) &&
-        candidate.retailerUrl.startsWith("https://barbora.lv/produkti/")
+        areInterchangeable(current, candidate)
     )
     .sort((left, right) => {
       const scoreDifference = (right.matchScore ?? -1) - (left.matchScore ?? -1);

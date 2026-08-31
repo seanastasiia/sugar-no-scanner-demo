@@ -151,25 +151,40 @@ async function waitForAlternativeImages(page: Page) {
 
 async function mockAlternativeOffers(page: Page, price = 1.49) {
   await page.route("**/api/offers", async (route) => {
-    const { slugs } = route.request().postDataJSON() as { slugs: string[] };
+    const { keys } = route.request().postDataJSON() as { keys: string[] };
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
-        offers: Object.fromEntries(slugs.map((slug) => [slug, {
-          retailer: "Barbora",
-          slug,
-          title: slug,
-          brand: "Test brand",
-          url: `https://barbora.lv/produkti/${slug}`,
-          price,
-          currency: "EUR",
-          unitPrice: null,
-          unit: null,
-          imageUrl: null,
-          checkedAt: "2026-08-26T10:00:00.000Z",
-          matchConfidence: 1,
-          exactSku: true
-        }]))
+        offers: Object.fromEntries(keys.map((key) => {
+          const [source, ...idParts] = key.split(":");
+          const slug = idParts.join(":");
+          const retailer = source === "rimi_lv"
+            ? "Rimi"
+            : source === "livin_lv"
+              ? "Livin"
+              : "Barbora";
+          const url = retailer === "Barbora"
+            ? `https://barbora.lv/produkti/${slug}`
+            : retailer === "Rimi"
+              ? `https://www.rimi.lv/e-veikals/lv/produkti/${slug}`
+              : `https://www.livin.lv/products/${slug}`;
+
+          return [key, {
+            retailer,
+            slug,
+            title: slug,
+            brand: "Test brand",
+            url,
+            price,
+            currency: "EUR",
+            unitPrice: null,
+            unit: null,
+            imageUrl: null,
+            checkedAt: "2026-08-26T10:00:00.000Z",
+            matchConfidence: 1,
+            exactSku: true
+          }];
+        }))
       })
     });
   });
@@ -492,7 +507,14 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(ranking).toBeVisible();
   await expect(ranking.getByRole("button")).toHaveCount(4);
   await expect(ranking.getByRole("button").first()).toHaveAccessibleName(/^Rank 1,/);
-  await expect(resultsDialog.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+  const expandedTitle = resultsDialog.getByRole("heading", { name: "Best fit first" });
+  const collapseResults = resultsDialog.getByRole("button", { name: "Collapse product results" });
+  await expect(expandedTitle).toBeVisible();
+  const [titleBox, collapseBox] = await Promise.all([expandedTitle.boundingBox(), collapseResults.boundingBox()]);
+  expect(titleBox).not.toBeNull();
+  expect(collapseBox).not.toBeNull();
+  expect(Math.abs((titleBox?.y ?? 0) + (titleBox?.height ?? 0) / 2 - ((collapseBox?.y ?? 0) + (collapseBox?.height ?? 0) / 2))).toBeLessThan(12);
+  expect((titleBox?.x ?? 0) + (titleBox?.width ?? 0)).toBeLessThan(collapseBox?.x ?? 0);
   await expect(resultsDialog.getByText("Full comparison", { exact: true })).toHaveCount(0);
   await expect(resultsDialog.getByText("Sugar.no ranking", { exact: true })).toHaveCount(0);
   await expect(resultsDialog.getByText("Based on source-backed protein and total sugar", { exact: true })).toHaveCount(0);
@@ -507,19 +529,25 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(resultsDialog.getByText("Better alternatives", { exact: true })).toBeVisible();
   const betterAlternatives = resultsDialog.getByRole("region", { name: "Same product type · Great fit only" });
   const alternativeBuyLinks = betterAlternatives.getByRole("link", { name: /Buy online .* for €1\.49/ });
-  await expect(alternativeBuyLinks).toHaveCount(2);
-  await expect(alternativeBuyLinks.first()).toHaveAttribute("href", /https:\/\/barbora\.lv\/produkti\//);
-  await expect(betterAlternatives.getByText("Great fit", { exact: true })).toHaveCount(2);
+  await expect(alternativeBuyLinks).toHaveCount(4);
+  const alternativeHrefs = await alternativeBuyLinks.evaluateAll((links) =>
+    links.map((link) => (link as HTMLAnchorElement).href)
+  );
+  expect(alternativeHrefs.some((href) => href.startsWith("https://www.rimi.lv/"))).toBe(true);
+  expect(alternativeHrefs.some((href) => href.startsWith("https://barbora.lv/produkti/"))).toBe(true);
+  expect(alternativeHrefs.every((href) => /^https:\/\/(?:www\.rimi\.lv|barbora\.lv|www\.livin\.lv)\//.test(href))).toBe(true);
+  await expect(betterAlternatives.getByText("Great fit", { exact: true })).toHaveCount(4);
   await expect(betterAlternatives.getByText("Moderate fit", { exact: true })).toHaveCount(0);
   await expect(betterAlternatives.getByText("Low fit", { exact: true })).toHaveCount(0);
   await expect(page.getByText("View at Barbora · check current price", { exact: true })).toHaveCount(0);
   await ranking.getByRole("button", { name: /BAREBELLS.*Lemon Cheesecake/i }).click();
-  const cheaperAlternative = betterAlternatives.getByRole("link", { name: /Buy cheaper online .* for €1\.49/ });
-  await expect(cheaperAlternative).toBeVisible();
-  await expect(cheaperAlternative.getByText("€3.49 shelf", { exact: true })).toHaveCSS(
-    "text-decoration-line",
-    "line-through"
-  );
+  await expect(
+    betterAlternatives.getByRole("link", { name: /Buy cheaper online .* for €1\.49/ })
+  ).toHaveCount(0);
+  await expect(betterAlternatives.getByRole("link", { name: /Buy online .* for €1\.49/ })).toHaveCount(4);
+  await expect(betterAlternatives.getByText("€3.49", { exact: true })).toHaveCount(0);
+  await expect(shelfPreview.getByText("shelf", { exact: true })).toHaveCount(0);
+  await expect(ranking.getByText("shelf", { exact: true })).toHaveCount(0);
   await ranking.getByRole("button").first().click();
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
   const shelfOffer = ranking.getByRole("link", { name: /Buy cheaper online .* at Barbora for €2\.79/ });
@@ -538,7 +566,8 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(ranking.locator('[aria-label*="Barbora online"]')).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await expect(page.getByText("Outlines show products with both protein and total sugar available.", { exact: true })).toHaveCount(0);
-  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g/).first()).toBeVisible();
+  await expect(ranking.getByText(/^Sugar \d+(?:\.\d+)?g$/)).toHaveCount(4);
+  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g|Carbs \d+(?:\.\d+)?g/)).toHaveCount(0);
   await expect(page.getByText(/Sugar\.no Match \d+/)).toHaveCount(0);
   await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/\b(good|bad|unhealthy)\b/i)).toHaveCount(0);
@@ -588,7 +617,8 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await page.screenshot({ path: "test-results/checkout-results-mobile.png" });
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Sugar.no badge")).toHaveCount(0);
-  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g/)).toHaveCount(3);
+  await expect(ranking.getByText(/^Sugar \d+(?:\.\d+)?g$/)).toHaveCount(3);
+  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g|Carbs \d+(?:\.\d+)?g/)).toHaveCount(0);
   await expect(page.getByText("Needs nutrition label", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await ranking.getByRole("button", { name: /STOCKMANN Fresh chanterelles/ }).click();
@@ -671,6 +701,25 @@ test("comparison remains usable with reduced motion, dark mode and enlarged text
   await expect(page.getByLabel("Products ranked by Sugar.no fit")).toBeVisible();
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("saved-photo canvas follows day and night mode without a white surround", async ({ page }) => {
+  await page.route("**/api/recognize", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ detections: [], message: "Not sure — point closer" })
+    });
+  });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await unlock(page);
+  await chooseSavedPhoto(page, "dark-mode-shelf.png");
+
+  const stage = page.getByLabel("Saved shelf or checkout photo scanner").locator(":scope > div").first();
+  await expect(stage).toHaveCSS("background-color", "rgb(16, 17, 22)");
+
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(stage).toHaveCSS("background-color", "rgb(17, 19, 31)");
 });
 
 test("scanner remains operable at narrow portrait and phone landscape sizes", async ({ page }) => {

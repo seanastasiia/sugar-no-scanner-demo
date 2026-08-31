@@ -226,7 +226,7 @@
   height: 100%;
   isolation: isolate;
   overflow: hidden;
-  background: var(--ink-strong);
+  background: var(--scanner-canvas);
   color: #ffffff;
 }
 
@@ -616,7 +616,7 @@
   width: 100%;
   max-width: 100vw;
   min-width: 0;
-  border: 1px solid rgb(255 255 255 / 82%);
+  border: 1px solid var(--border);
   border-bottom: 0;
   border-radius: 30px 30px 0 0;
   background: var(--cream);
@@ -655,10 +655,22 @@
 
 .resultsExpanded .sheetChrome {
   min-height: calc(66px + env(safe-area-inset-top));
-  grid-template-columns: 44px;
-  justify-content: end;
+  grid-template-columns: minmax(0, 1fr) 44px;
   padding: calc(8px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left));
   border-bottom: 1px solid var(--border);
+}
+
+.expandedSheetTitle {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sheetIconButton,
@@ -943,17 +955,6 @@
   display: grid;
   gap: 10px;
   margin: 0 0 18px;
-}
-
-.rankingHeading {
-  padding: 2px;
-}
-
-.rankingHeading h2 {
-  margin: 0;
-  font-size: 18px;
-  letter-spacing: -0.035em;
-  line-height: 1.1;
 }
 
 .rankedList {

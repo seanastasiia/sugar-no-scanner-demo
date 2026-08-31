@@ -108,6 +108,10 @@ function listScoredProducts(): ScoredProduct[] {
   return scoredProducts;
 }
 
+export function listIndexedBarboraScoredProducts(): ScoredProduct[] {
+  return listScoredProducts();
+}
+
 export function rankIndexedBetterAlternatives(
   indexed: BarboraNutritionIndexProduct,
   candidates: BarboraNutritionIndexProduct[] = products,

@@ -5,7 +5,7 @@ import { ArrowUpRight, Check, Info, LoaderCircle, ScanLine } from "lucide-react"
 import { useEffect, useMemo, useState } from "react";
 import { rankAvailableBetterAlternatives } from "@/lib/better-alternatives";
 import { matchCriteria, overlayMatchPresentation, type MatchTone } from "@/lib/match-presentation";
-import { barboraProductSlug, isExactOnlineSaving } from "@/lib/online-offer";
+import { isExactOnlineSaving, retailerOfferKey } from "@/lib/online-offer";
 import type { ProductDetection, RetailerOffer, ScoredProduct } from "@/lib/types";
 import styles from "./scanner-app.module.css";
 
@@ -43,11 +43,11 @@ export function ProductResult({
   onRetailer: (id: string) => void;
 }) {
   const { product, alternatives } = payload;
-  const alternativeSlugs = useMemo(
-    () => alternatives.map((alternative) => barboraProductSlug(alternative.retailerUrl)).filter(Boolean) as string[],
+  const alternativeOfferKeys = useMemo(
+    () => alternatives.map((alternative) => retailerOfferKey(alternative)).filter(Boolean) as string[],
     [alternatives]
   );
-  const offerRequestKey = alternativeSlugs.join("|");
+  const offerRequestKey = alternativeOfferKeys.join("|");
   const [offerResult, setOfferResult] = useState<{
     key: string;
     offers: Record<string, RetailerOffer | null>;
@@ -59,7 +59,7 @@ export function ProductResult({
     void fetch("/api/offers", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ slugs: alternativeSlugs }),
+      body: JSON.stringify({ keys: alternativeOfferKeys }),
       signal: controller.signal
     })
       .then(async (response) => {
@@ -73,7 +73,7 @@ export function ProductResult({
         }
       });
     return () => controller.abort();
-  }, [alternativeSlugs, offerRequestKey]);
+  }, [alternativeOfferKeys, offerRequestKey]);
 
   const alternativeOffers = useMemo(
     () => (offerResult.key === offerRequestKey ? offerResult.offers : {}),
@@ -82,9 +82,7 @@ export function ProductResult({
   const availableAlternatives = useMemo(
     () =>
       offerResult.key === offerRequestKey
-        ? rankAvailableBetterAlternatives(product, alternatives, alternativeOffers, (candidate) =>
-            barboraProductSlug(candidate.retailerUrl)
-          )
+        ? rankAvailableBetterAlternatives(product, alternatives, alternativeOffers, retailerOfferKey)
         : [],
     [alternativeOffers, alternatives, offerRequestKey, offerResult.key, product]
   );
@@ -139,9 +137,9 @@ export function ProductResult({
           </div>
           <div className={styles.alternativeList}>
             {availableAlternatives.map((alternative) => {
-              const slug = barboraProductSlug(alternative.retailerUrl);
-              const offer = slug ? alternativeOffers[slug] : null;
-              if (!slug || !offer) return null;
+              const offerKey = retailerOfferKey(alternative);
+              const offer = offerKey ? alternativeOffers[offerKey] : null;
+              if (!offerKey || !offer) return null;
               const shelfPrice = scanDetections[alternative.id]?.shelfPrice;
               const cheaperOnline = isExactOnlineSaving(offer, shelfPrice);
               return (
@@ -173,7 +171,7 @@ export function ProductResult({
                   >
                     <span>
                       <strong>{cheaperOnline ? "Cheaper online" : "Buy online"}</strong>
-                      {cheaperOnline && shelfPrice ? <s>€{shelfPrice.amount.toFixed(2)} shelf</s> : null}
+                      {cheaperOnline && shelfPrice ? <s>€{shelfPrice.amount.toFixed(2)}</s> : null}
                     </span>
                     <span className={styles.alternativeBuyPrice}>
                       €{offer.price.toFixed(2)}
@@ -272,8 +270,6 @@ export function CompactProductPrice({
       ) : null}
       {cheaperOnline && offer ? (
         <strong>€{offer.price.toFixed(2)}</strong>
-      ) : shelfPrice ? (
-        <small>shelf</small>
       ) : offer ? (
         <strong>€{offer.price.toFixed(2)}</strong>
       ) : null}

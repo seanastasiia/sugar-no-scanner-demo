@@ -30,6 +30,14 @@ function titleType(title: string, leafCategory: string): string | null {
   if (/(granola)/.test(normalizedTitle)) return "granola";
   if (/(musli|muesli)/.test(normalizedTitle)) return "muesli";
   if (/(pudin|pudding)/.test(normalizedTitle)) return "pudding";
+  if (/(sinep|mustard)/.test(normalizedTitle)) return "mustard";
+  if (/(kecup|ketchup)/.test(normalizedTitle)) return "ketchup";
+  if (/(majonez|mayonnaise|mayo\b)/.test(normalizedTitle)) return "mayonnaise";
+  if (/(oliv|olive)/.test(normalizedTitle)) return "olives";
+  if (/(kartupelu cips|potato chip|\bchips?\b|\bcips)/.test(normalizedTitle)) return "potato-chips";
+  if (/(sokolad|chocolate)/.test(normalizedTitle)) return "chocolate";
+  if (/(brokastu parsl|breakfast cereal|cornflakes|corn flakes)/.test(normalizedTitle)) return "breakfast-cereal";
+  if (/(piens|milk)/.test(normalizedTitle)) return "milk";
 
   if (normalizedLeaf === "sinepes") return "mustard";
   if (normalizedLeaf === "kecupi") return "ketchup";
@@ -57,13 +65,16 @@ export function interchangeabilityKey(product: InterchangeableProduct): string |
   const explicitType = titleType(product.name, leafCategory);
   const basis = product.nutritionBasis || "100g";
 
+  // A concrete title/form discriminator is deliberately retailer-independent.
+  // Retailers use incompatible category trees for the same exact product type.
+  if (explicitType) return [explicitType, basis].join("|");
+
   if (fullCategory) {
     const normalizedLeaf = normalize(leafCategory);
     if (!explicitType && broadLeafCategories.has(normalizedLeaf)) return null;
-    return [fullCategory, explicitType || normalizedLeaf, basis].join("|");
+    return [fullCategory, normalizedLeaf, basis].join("|");
   }
 
-  if (explicitType) return [explicitType, basis].join("|");
   const format: ProductFormat = product.format;
   return format === "other" ? null : [format, basis].join("|");
 }
@@ -78,7 +89,7 @@ export function hasGreatFit(product: Pick<ScoredProduct, "matchScore">): boolean
 }
 
 /**
- * The UI only exposes alternatives whose exact Barbora offer resolved now.
+ * The UI only exposes alternatives whose exact connected-retailer offer resolved now.
  * Every alternative must be a Great fit and no worse than the current item.
  * Equal-fit products are ordered by lower current price and then the closest
  * pack size, keeping commercial data out of the fit itself.

@@ -1,9 +1,10 @@
 import { getCatalog, getProductWithAlternatives } from "@/lib/catalog";
-import { scoreCatalog } from "@/lib/scoring";
+import { rankSimilarProducts, scoreCatalog } from "@/lib/scoring";
 import type { ProductRecord, ScoredProduct } from "@/lib/types";
 import { getRatedBarboraProduct } from "./barbora-product-rating";
-import { getIndexedBarboraProductWithAlternatives } from "./barbora-nutrition-index";
-import { getOpenFoodFactsProductByBarcode } from "./open-food-facts";
+import { getIndexedBarboraNutrition, indexedBarboraProductToScoredProduct, listIndexedBarboraScoredProducts } from "./barbora-nutrition-index";
+import { getExternalCatalogProductById, listExternalCatalogScoredProducts } from "./external-catalog";
+import { getOpenFoodFactsProductByBarcode, listOpenFoodFactsBulkProducts } from "./open-food-facts";
 import { getSupabaseAdmin } from "./supabase";
 
 interface ProductRow {
@@ -36,6 +37,7 @@ interface ProductRow {
 
 const CATALOG_CACHE_TTL_MS = 60_000;
 let catalogCache: { expiresAt: number; products: ScoredProduct[] } | null = null;
+let alternativePoolCache: { expiresAt: number; products: ScoredProduct[] } | null = null;
 
 function rowToProduct(row: ProductRow): ProductRecord {
   return {
@@ -86,30 +88,55 @@ export async function listProducts(): Promise<ScoredProduct[]> {
   return products;
 }
 
-export async function productWithAlternatives(id: string) {
+function dedupeProducts(products: ScoredProduct[]): ScoredProduct[] {
+  const deduped = new Map<string, ScoredProduct>();
+  for (const product of products) {
+    const key = product.gtin ? `gtin:${product.gtin}` : product.id;
+    const current = deduped.get(key);
+    if (!current || (!current.imageUrl && product.imageUrl)) deduped.set(key, product);
+  }
+  return [...deduped.values()];
+}
+
+async function listVerifiedAlternativePool(): Promise<ScoredProduct[]> {
+  if (alternativePoolCache && alternativePoolCache.expiresAt > Date.now()) {
+    return alternativePoolCache.products;
+  }
+  const products = dedupeProducts([
+    ...(await listProducts()),
+    ...listIndexedBarboraScoredProducts(),
+    ...listExternalCatalogScoredProducts(),
+    ...listOpenFoodFactsBulkProducts()
+  ]).filter((product) => product.matchScore !== null && product.ratingStatus === "complete");
+  alternativePoolCache = { products, expiresAt: Date.now() + CATALOG_CACHE_TTL_MS };
+  return products;
+}
+
+async function resolveProduct(id: string): Promise<ScoredProduct | null> {
   if (id.startsWith("off:")) {
-    try {
-      const product = await getOpenFoodFactsProductByBarcode(id.slice("off:".length));
-      return product ? { product, alternatives: [] } : null;
-    } catch {
-      return null;
-    }
+    return getOpenFoodFactsProductByBarcode(id.slice("off:".length));
   }
   if (id.startsWith("barbora:")) {
-    try {
-      const indexed = getIndexedBarboraProductWithAlternatives(id.slice("barbora:".length));
-      if (indexed) return indexed;
-      const product = await getRatedBarboraProduct(id.slice("barbora:".length));
-      return product ? { product, alternatives: [] } : null;
-    } catch {
-      return null;
-    }
+    const slug = id.slice("barbora:".length);
+    const indexed = getIndexedBarboraNutrition(slug);
+    return indexed ? indexedBarboraProductToScoredProduct(indexed) : getRatedBarboraProduct(slug);
   }
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return getProductWithAlternatives(id);
-  const products = await listProducts();
-  const product = products.find((candidate) => candidate.id === id);
-  if (!product) return null;
-  const { rankSimilarProducts } = await import("@/lib/scoring");
-  return { product, alternatives: rankSimilarProducts(product, products) };
+  if (id.startsWith("rimi_lv:") || id.startsWith("livin_lv:")) {
+    return getExternalCatalogProductById(id);
+  }
+  return (await listProducts()).find((candidate) => candidate.id === id) || null;
+}
+
+export async function productWithAlternatives(id: string) {
+  try {
+    const product = await resolveProduct(id);
+    if (!product) return null;
+    return {
+      product,
+      alternatives: rankSimilarProducts(product, await listVerifiedAlternativePool(), 24)
+    };
+  } catch {
+    if (!id.includes(":")) return getProductWithAlternatives(id);
+    return null;
+  }
 }

@@ -3,8 +3,8 @@ import type { RetailerOffer } from "@/lib/types";
 
 const { getKnownOffer } = vi.hoisted(() => ({ getKnownOffer: vi.fn() }));
 
-vi.mock("@/server/barbora-catalog", () => ({
-  getKnownBarboraOfferBySlug: getKnownOffer
+vi.mock("@/server/retailer-offers", () => ({
+  getKnownRetailerOfferByKey: getKnownOffer
 }));
 
 import { POST } from "./route";
@@ -32,7 +32,7 @@ describe("POST /api/offers", () => {
     const response = await POST(new Request("http://localhost/api/offers", {
       method: "POST",
       headers: { origin: "https://attacker.example" },
-      body: JSON.stringify({ slugs: ["example-200-g"] })
+      body: JSON.stringify({ keys: ["barbora:example-200-g"] })
     }));
     expect(response.status).toBe(403);
     expect(getKnownOffer).not.toHaveBeenCalled();
@@ -41,33 +41,33 @@ describe("POST /api/offers", () => {
   it("rejects malformed requests", async () => {
     const response = await POST(new Request("http://localhost/api/offers", {
       method: "POST",
-      body: JSON.stringify({ slugs: ["https://unsafe.example/product"] })
+      body: JSON.stringify({ keys: ["https://unsafe.example/product"] })
     }));
     expect(response.status).toBe(400);
   });
 
-  it("deduplicates slugs and returns exact current offers", async () => {
+  it("deduplicates retailer keys and returns exact current offers", async () => {
     getKnownOffer.mockResolvedValue(offer);
     const response = await POST(new Request("http://localhost/api/offers", {
       method: "POST",
-      body: JSON.stringify({ slugs: ["example-200-g", "example-200-g"] })
+      body: JSON.stringify({ keys: ["barbora:example-200-g", "barbora:example-200-g"] })
     }));
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ offers: { "example-200-g": offer } });
+    await expect(response.json()).resolves.toEqual({ offers: { "barbora:example-200-g": offer } });
     expect(getKnownOffer).toHaveBeenCalledTimes(1);
   });
 
   it("accepts one offer candidate for every product in a ten-product scan", async () => {
-    getKnownOffer.mockImplementation(async (slug: string) => ({ ...offer, slug }));
-    const slugs = Array.from({ length: 10 }, (_, index) => `example-${index + 1}`);
+    getKnownOffer.mockResolvedValue(offer);
+    const keys = Array.from({ length: 10 }, (_, index) => `rimi_lv:example-${index + 1}`);
     const response = await POST(new Request("http://localhost/api/offers", {
       method: "POST",
-      body: JSON.stringify({ slugs })
+      body: JSON.stringify({ keys })
     }));
 
     expect(response.status).toBe(200);
-    expect(Object.keys((await response.json()).offers)).toEqual(slugs);
+    expect(Object.keys((await response.json()).offers)).toEqual(keys);
     expect(getKnownOffer).toHaveBeenCalledTimes(10);
   });
 });

@@ -4,6 +4,7 @@
   --surface: #ffffff;
   --surface-tinted: #f5f5f7;
   --surface-accent: #eceef3;
+  --scanner-canvas: #11131f;
   --ink: #11131f;
   --ink-strong: #14151e;
   --muted: #69696f;
@@ -202,6 +203,7 @@ a {
     --surface: #232429;
     --surface-tinted: #2b2c32;
     --surface-accent: #232429;
+    --scanner-canvas: #101116;
     --ink: #ffffff;
     --ink-strong: #ffffff;
     --muted: #b1b1b6;

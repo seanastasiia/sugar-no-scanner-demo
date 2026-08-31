@@ -221,13 +221,18 @@ describe("compareFairCohorts", () => {
 });
 
 describe("rankSimilarProducts", () => {
-  it("keeps only interchangeable Barbora products with Great fit no worse than the source", () => {
+  it("keeps interchangeable products across retailers with Great fit no worse than the source", () => {
     const scored = scoreCatalog([
       product("current", 20, null, 8, "bar"),
       product("better", 30, null, 2, "bar"),
       product("worse", 10, null, 30, "bar"),
       product("different", 40, null, 0, "cookie")
-    ]).map((item) => ({ ...item, retailerUrl: `https://barbora.lv/produkti/${item.id}` }));
+    ]).map((item, index) => ({
+      ...item,
+      retailerUrl: index % 2 === 0
+        ? `https://barbora.lv/produkti/${item.id}`
+        : `https://www.rimi.lv/e-veikals/lv/produkti/p/${item.id}`
+    }));
     expect(rankSimilarProducts(scored[0], scored).map((item) => item.id)).toEqual(["better"]);
   });
 });

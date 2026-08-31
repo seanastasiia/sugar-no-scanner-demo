@@ -119,6 +119,7 @@ export function dedupeExternalCatalogProducts(candidates: ExternalCatalogProduct
 }
 
 const products = dedupeExternalCatalogProducts(rawProducts);
+let scoredProducts: ScoredProduct[] | null = null;
 
 function tokens(value: string, excluded: Set<string> = new Set()): string[] {
   const normalized = identityPhraseAliases.reduce(
@@ -282,6 +283,29 @@ export function getExternalCatalogProductByBarcode(
   return exact
     ? { product: externalCatalogToScoredProduct(exact), confidence: 1, offer: offerFor(exact, 1) }
     : null;
+}
+
+export function listExternalCatalogScoredProducts(): ScoredProduct[] {
+  if (!scoredProducts) scoredProducts = products.map(externalCatalogToScoredProduct);
+  return scoredProducts;
+}
+
+export function getExternalCatalogProductById(id: string): ScoredProduct | null {
+  const [source, sourceProductId] = id.split(":", 2);
+  if ((source !== "rimi_lv" && source !== "livin_lv") || !sourceProductId) return null;
+  const product = products.find(
+    (candidate) => candidate.source === source && candidate.sourceProductId === sourceProductId
+  );
+  return product ? externalCatalogToScoredProduct(product) : null;
+}
+
+export function getExternalCatalogOfferByKey(key: string): RetailerOffer | null {
+  const [source, sourceProductId] = key.split(":", 2);
+  if ((source !== "rimi_lv" && source !== "livin_lv") || !sourceProductId) return null;
+  const product = products.find(
+    (candidate) => candidate.source === source && candidate.sourceProductId === sourceProductId
+  );
+  return product ? offerFor(product, 1) : null;
 }
 
 export function externalCatalogCounts() {

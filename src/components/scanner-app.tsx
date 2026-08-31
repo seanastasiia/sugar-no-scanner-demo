@@ -50,7 +50,8 @@ import {
 } from "@/lib/live-camera-tracking";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
-import { barboraProductSlug } from "@/lib/online-offer";
+import { compactNutritionLabel } from "@/lib/nutrition-display";
+import { retailerOfferKey } from "@/lib/online-offer";
 import { mapWithConcurrency, mergeProgressiveEnrichment } from "@/lib/product-enrichment";
 import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { compareFairCohorts } from "@/lib/scoring";
@@ -370,12 +371,11 @@ export function ScannerApp() {
             setSelectedId((current) =>
               current === initialDetection.productId ? enrichedDetection.productId : current
             );
-            const catalogId = enrichedDetection.inlineProduct
-              ? null
-              : enrichedDetection.catalogProductId ||
-                (["barbora", "retailer_catalog", "open_food_facts"].includes(enrichedDetection.identity?.matchKind || "")
-                  ? enrichedDetection.productId
-                  : null);
+            const catalogId =
+              enrichedDetection.catalogProductId ||
+              (["barbora", "retailer_catalog", "open_food_facts"].includes(enrichedDetection.identity?.matchKind || "")
+                ? enrichedDetection.productId
+                : null);
             if (catalogId) void hydrateProducts([catalogId]);
           } finally {
             setEnrichingProductIds((current) =>
@@ -448,7 +448,6 @@ export function ScannerApp() {
               : null) ||
             (detection.identity ? null : detection.productId)
         )
-        .filter((id) => !uniqueDetections.some((detection) => detection.productId === id && detection.inlineProduct))
         .filter((id): id is string => Boolean(id));
       if (eventSource === "camera") {
         trackingActiveRef.current = true;
@@ -1112,17 +1111,17 @@ export function ScannerApp() {
     () => rankedTrayIds.filter((id) => hasSugarNoRating(productById[id])),
     [productById, rankedTrayIds]
   );
-  const offerSlugsByProductId = useMemo(
+  const offerKeysByProductId = useMemo(
     () =>
       Object.fromEntries(
         rankedTrayIds.flatMap((id) => {
-          const slug = productById[id] ? barboraProductSlug(productById[id].retailerUrl) : null;
-          return slug ? [[id, slug] as const] : [];
+          const offerKey = productById[id] ? retailerOfferKey(productById[id]) : null;
+          return offerKey ? [[id, offerKey] as const] : [];
         })
       ),
     [productById, rankedTrayIds]
   );
-  const scanOfferKey = Object.values(offerSlugsByProductId).sort().join("|");
+  const scanOfferKey = Object.values(offerKeysByProductId).sort().join("|");
 
   useEffect(() => {
     if (!scanOfferKey) return;
@@ -1130,7 +1129,7 @@ export function ScannerApp() {
     void fetch("/api/offers", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ slugs: [...new Set(Object.values(offerSlugsByProductId))] }),
+      body: JSON.stringify({ keys: [...new Set(Object.values(offerKeysByProductId))] }),
       signal: controller.signal
     })
       .then(async (response) => {
@@ -1142,17 +1141,17 @@ export function ScannerApp() {
         if (!(error instanceof DOMException && error.name === "AbortError")) setScanOffers({});
       });
     return () => controller.abort();
-  }, [offerSlugsByProductId, scanOfferKey]);
+  }, [offerKeysByProductId, scanOfferKey]);
 
   const scanOfferForId = useCallback(
     (id: string): RetailerOffer | null => {
       const detected = detectionById[id]?.retailerOffer;
       if (detected && !detected.exactSku) return null;
       if (detected?.exactSku) return detected;
-      const slug = offerSlugsByProductId[id];
-      return slug ? scanOffers[slug] || null : null;
+      const offerKey = offerKeysByProductId[id];
+      return offerKey ? scanOffers[offerKey] || null : null;
     },
-    [detectionById, offerSlugsByProductId, scanOffers]
+    [detectionById, offerKeysByProductId, scanOffers]
   );
   const sceneImageUrl =
     source === "sample-shelf"
@@ -1440,14 +1439,23 @@ export function ScannerApp() {
             >
               <div className={styles.sheetChrome}>
                 {resultsAreExpanded ? (
-                  <button
-                    className={styles.sheetIconButton}
-                    type="button"
-                    onClick={closeResults}
-                    aria-label="Collapse product results"
-                  >
-                    <ChevronDown aria-hidden="true" size={20} />
-                  </button>
+                  <>
+                    {visibleTrayIds.length > 1 ? (
+                      <h2 className={styles.expandedSheetTitle} id="scan-ranking-title">
+                        {ratedCount > 0 ? "Best fit first" : pendingProductIds.size ? "Matching products" : "Products identified"}
+                      </h2>
+                    ) : (
+                      <span aria-hidden="true" />
+                    )}
+                    <button
+                      className={styles.sheetIconButton}
+                      type="button"
+                      onClick={closeResults}
+                      aria-label="Collapse product results"
+                    >
+                      <ChevronDown aria-hidden="true" size={20} />
+                    </button>
+                  </>
                 ) : (
                   <>
                     <div className={styles.sheetTitleStatic}>
@@ -1488,6 +1496,7 @@ export function ScannerApp() {
                     const previewPresentation = isRated ? overlayMatchPresentation(item) : null;
                     const sugar = item?.nutrientsPer100g.totalSugarG;
                     const carbohydrate = item?.nutrientsPer100g.carbohydrateG;
+                    const nutritionLabel = item ? compactNutritionLabel(item.nutrientsPer100g) : null;
                     const previewBasisLabel = item?.nutritionBasis === "100ml" ? "100 milliliters" : "100 grams";
                     const retailerOffer = detection?.retailerOffer?.exactSku
                       ? detection.retailerOffer
@@ -1508,7 +1517,7 @@ export function ScannerApp() {
                           type="button"
                           aria-label={
                             isRated && previewPresentation
-                              ? `Rank ${rank}, ${item.brand} ${item.shortName}, ${previewPresentation.label}, Sugar ${sugar} grams${carbohydrate !== null && carbohydrate !== undefined ? `, carbohydrates ${carbohydrate} grams` : ""} per ${previewBasisLabel}`
+                              ? `Rank ${rank}, ${item.brand} ${item.shortName}, ${previewPresentation.label}, Sugar ${sugar} grams${carbohydrate === null || carbohydrate === undefined ? "" : `, Carbs ${carbohydrate} grams`} per ${previewBasisLabel}`
                               : `${item?.brand || detection?.identity?.brand || "Product"} ${item?.shortName || detection?.identity?.name || "identified product"}, nutrition not verified online`
                           }
                           onClick={() => {
@@ -1540,8 +1549,7 @@ export function ScannerApp() {
                               <>
                                 <MatchPill product={item} />
                                 <small className={styles.sheetPreviewSugar}>
-                                  Sugar {sugar}g
-                                  {carbohydrate !== null && carbohydrate !== undefined ? ` · Carbs ${carbohydrate}g` : ""}
+                                  {nutritionLabel}
                                 </small>
                               </>
                             ) : (
@@ -1596,11 +1604,6 @@ export function ScannerApp() {
 
                   {visibleTrayIds.length > 1 ? (
                     <section className={styles.rankingSection} aria-labelledby="scan-ranking-title">
-                      <div className={styles.rankingHeading}>
-                        <h2 id="scan-ranking-title">
-                          {ratedCount > 0 ? "Best fit first" : pendingProductIds.size ? "Matching products" : "Products identified"}
-                        </h2>
-                      </div>
                       <ol className={styles.rankedList} aria-label="Products ranked by Sugar.no fit">
                         {rankedTrayIds.map((id) => {
                           const item = products[id]?.product;
@@ -1611,9 +1614,7 @@ export function ScannerApp() {
                           const rank = isRated ? rankedRatedIds.indexOf(id) + 1 : null;
                           const presentation = isRated ? overlayMatchPresentation(item) : null;
                           const onlineOffer = scanOfferForId(id);
-                          const protein = item?.nutrientsPer100g.proteinG;
-                          const sugar = item?.nutrientsPer100g.totalSugarG;
-                          const carbohydrate = item?.nutrientsPer100g.carbohydrateG;
+                          const nutritionLabel = item ? compactNutritionLabel(item.nutrientsPer100g) : null;
                           return (
                             <li className={`${styles.rankedProductCard} ${effectiveSelectedId === id ? styles.activeRankedProductCard : ""}`} key={id}>
                               <button
@@ -1650,10 +1651,7 @@ export function ScannerApp() {
                                     {isRated ? (
                                       <>
                                         <MatchPill product={item} />
-                                        <small>
-                                          Protein {protein}g · Sugar {sugar}g
-                                          {carbohydrate !== null && carbohydrate !== undefined ? ` · Carbs ${carbohydrate}g` : ""}
-                                        </small>
+                                        <small>{nutritionLabel}</small>
                                       </>
                                     ) : (
                                       <small>{pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}</small>

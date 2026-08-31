@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
-import { getKnownBarboraOfferBySlug } from "@/server/barbora-catalog";
 import { createRecognitionRateLimiter, recognitionClientKey } from "@/server/rate-limit";
+import { getKnownRetailerOfferByKey } from "@/server/retailer-offers";
 import { readBoundedJson } from "@/server/request-body";
 import { hasTrustedBrowserOrigin } from "@/server/request-origin";
 
 const requestSchema = z.object({
-  slugs: z.array(z.string().min(1).max(180).regex(/^[a-z0-9-]+$/)).min(1).max(MAX_SCAN_PRODUCTS)
+  keys: z
+    .array(
+      z
+        .string()
+        .min(1)
+        .max(220)
+        .regex(/^(?:barbora:[a-z0-9-]+|(?:rimi_lv|livin_lv):[A-Za-z0-9._~-]+)$/)
+    )
+    .min(1)
+    .max(MAX_SCAN_PRODUCTS * 3)
 });
 const offersRateLimiter = createRecognitionRateLimiter();
 
@@ -36,9 +45,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const slugs = [...new Set(parsed.data.slugs)];
+  const keys = [...new Set(parsed.data.keys)];
   const resolved = await Promise.all(
-    slugs.map(async (slug) => [slug, await getKnownBarboraOfferBySlug(slug).catch(() => null)] as const)
+    keys.map(async (key) => [key, await getKnownRetailerOfferByKey(key).catch(() => null)] as const)
   );
 
   return NextResponse.json(

@@ -61,6 +61,18 @@ describe("interchangeabilityKey", () => {
   it("fails closed for an untyped product in a broad retailer bucket", () => {
     expect(interchangeabilityKey(product({ id: "broad", name: "Unknown snack", category: "Bakaleja/Uzkodas/Citas uzkodas" }))).toBeNull();
   });
+
+  it("matches an explicit product type across different retailer taxonomies", () => {
+    const barboraMustard = product({ id: "barbora-mustard", name: "Dižonas sinepes 200g", category: "Bakaleja/Mērces/Sinepes" });
+    const rimiMustard = product({
+      id: "rimi_lv:mustard",
+      name: "Dižonas mustard 210g",
+      category: "Iepakota pārtika/Mērces un piedevas",
+      retailerUrl: "https://www.rimi.lv/e-veikals/lv/produkti/p/123"
+    });
+    expect(interchangeabilityKey(rimiMustard)).toBe(interchangeabilityKey(barboraMustard));
+    expect(areInterchangeable(rimiMustard, barboraMustard)).toBe(true);
+  });
 });
 
 describe("rankAvailableBetterAlternatives", () => {
