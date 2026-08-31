@@ -6,6 +6,7 @@ export interface ExternalCatalogProduct {
   retailer: "Barbora" | "Rimi" | "Livin" | null;
   url: string;
   title: string;
+  aliases?: string[];
   brand: string;
   gtin: string | null;
   sku: string | null;

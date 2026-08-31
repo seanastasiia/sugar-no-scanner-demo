@@ -1,6 +1,6 @@
 # Catalog sources, licensing and refresh
 
-Checked: 2026-08-27
+Checked: 2026-08-31
 
 This document separates product coverage from visual recognition. A catalog row can help only after the camera or barcode resolves the exact brand, variant and pack size. It is not evidence that every package on a shelf will be recognized.
 
@@ -12,7 +12,7 @@ This document separates product coverage from visual recognition. A catalog row 
 | 2 | Barbora Latvia | exact identity, nutrition and offer | broad checked-in food snapshot | private demo snapshot; obtain permission for production reuse |
 | 3 | Rimi Latvia | exact identity, nutrition and offer | 6,822 complete products from all 7,617 pages in seven approved categories | non-redistributable retailer snapshot; obtain permission before recurring production use |
 | 4 | Livin Latvia | exact identity, nutrition and offer | 6 complete food pages from the full 169-URL public sitemap | non-redistributable retailer snapshot; obtain permission before recurring production use |
-| 5 | Open Food Facts | exact GTIN/name nutrition fallback | 500 complete Latvia-tagged records | ODbL database; attribution required; images have separate CC BY-SA terms |
+| 5 | Open Food Facts | exact GTIN/multilingual-name nutrition fallback | 500 complete Latvia-tagged records; 119 have alternate source names | ODbL database; attribution required; images have separate CC BY-SA terms |
 | 6 | Cited web result | last-resort exact per-100 nutrition | runtime only | keep source URL and reject ambiguous variants |
 
 The Rimi/Livin counts are source-backed snapshot counts, not visual-recognition or market-coverage claims. Rimi covers meat/fish/prepared food, dairy/eggs, bakery, frozen food, packaged food, sweets/snacks and drinks. The Open Food Facts release file is a bounded Latvia subset; the same isolated schema also accepts the official daily bulk export.
@@ -20,7 +20,7 @@ The Rimi/Livin counts are source-backed snapshot counts, not visual-recognition 
 ## Data separation
 
 - `retailer_catalog_products` contains non-redistributable Rimi/Livin page snapshots.
-- `open_food_facts_products` contains the attributed ODbL-derived subset only.
+- `open_food_facts_products` contains the attributed ODbL-derived subset only. Its `aliases` array stores source-provided multilingual names for the same GTIN.
 - `catalog_sources` stores terms, attribution and redistribution metadata.
 - Never publish a mixed retailer/OFF derived dump. Do not copy retailer rows into the ODbL table.
 - Product images remain source URLs. Bulk image reuse needs a separate rights review.
@@ -53,15 +53,15 @@ Review the generated snapshot and `data/*-catalog-sync-report.generated.json` fo
 
 ## Open Food Facts bulk import
 
-The checked-in 500-row Latvia snapshot can be refreshed at a deliberately low request rate through the official structured search API:
+The checked-in 500-row Latvia snapshot can be refreshed at fewer than 10 requests per minute through the official structured search API:
 
 ```bash
 OFF_LATVIA_LIMIT=500 npm run catalog:sync:off-latvia
 ```
 
-This bounded bootstrap is for reproducible demo startup and exact local matching. It does not replace the bulk path for a production-scale refresh.
+This bounded bootstrap is for reproducible demo startup and exact local matching. The script refuses a limit above 500. It retains available `product_name_*` languages as aliases, but it does not replace the bulk path for a production-scale refresh.
 
-For more than a few hundred products, Open Food Facts asks reusers to use its daily CSV/JSONL exports rather than repeated API searches. The JSONL export is larger than 5 GB, so run this as a data job with durable scratch storage:
+For more than a few hundred products, Open Food Facts asks reusers to use its daily CSV/JSONL exports rather than repeated API searches. The compressed JSONL export was 12.8 GB on 31 August 2026, so run this as a scheduled data job with a stable long-lived connection and durable scratch storage, never inside the scanner web request or Railway build:
 
 ```bash
 OFF_BULK_INPUT=/data/openfoodfacts-products.jsonl.gz npm run catalog:import:off
@@ -69,7 +69,7 @@ OFF_BULK_INPUT=/data/openfoodfacts-products.jsonl.gz npm run catalog:import:off
 OFF_BULK_INPUT=https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz npm run catalog:import:off
 ```
 
-The importer streams the compressed file, keeps Latvia-tagged foods with a valid GTIN and complete per-100 energy/protein/total-sugar values, de-duplicates by GTIN and writes only the isolated OFF snapshot. It does not load the entire dump into memory.
+The importer streams the compressed file, keeps Latvia-tagged foods with a valid GTIN and complete per-100 energy/protein/total-sugar values, retains every available `product_name_*` alias, de-duplicates by GTIN and writes only the isolated OFF snapshot. It does not load the entire dump into memory. Review the resulting count and aliases, run `npm run verify`, apply the multilingual migration, and seed through `npm run supabase:seed:external` before release.
 
 Official references:
 

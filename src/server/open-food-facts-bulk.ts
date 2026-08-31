@@ -1,9 +1,14 @@
 import type { ExternalCatalogProduct } from "./external-catalog-types";
 
 export interface OpenFoodFactsBulkRecord {
+  [key: string]: unknown;
   code?: string;
   product_name?: string;
   product_name_lv?: string;
+  product_name_en?: string;
+  product_name_ru?: string;
+  product_name_lt?: string;
+  product_name_et?: string;
   brands?: string;
   quantity?: string;
   categories?: string;
@@ -24,6 +29,37 @@ function finite(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
 }
 
+const preferredProductNameFields = [
+  "product_name_lv",
+  "product_name_en",
+  "product_name_ru",
+  "product_name_lt",
+  "product_name_et",
+  "product_name"
+] as const;
+
+function normalizedNameKey(value: string): string {
+  return value.normalize("NFKC").trim().toLocaleLowerCase();
+}
+
+export function openFoodFactsProductNames(record: object): string[] {
+  const values = new Map<string, string>();
+  const add = (value: unknown) => {
+    if (typeof value !== "string") return;
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    const key = normalizedNameKey(trimmed);
+    if (!values.has(key)) values.set(key, trimmed);
+  };
+
+  const source = record as Record<string, unknown>;
+  for (const field of preferredProductNameFields) add(source[field]);
+  for (const [field, value] of Object.entries(source).sort(([left], [right]) => left.localeCompare(right))) {
+    if (/^product_name_[a-z]{2}$/i.test(field)) add(value);
+  }
+  return [...values.values()];
+}
+
 export function isLatviaOpenFoodFactsRecord(record: OpenFoodFactsBulkRecord): boolean {
   const tags = record.countries_tags || [];
   return tags.some((tag) => ["en:latvia", "lv:latvija"].includes(tag.toLowerCase())) || /\blatvia\b|\blatvija\b/i.test(record.countries || "");
@@ -34,7 +70,8 @@ export function openFoodFactsBulkRecordToProduct(
   checkedAt = new Date().toISOString()
 ): ExternalCatalogProduct | null {
   const code = record.code?.trim() || "";
-  const title = record.product_name_lv?.trim() || record.product_name?.trim() || "";
+  const names = openFoodFactsProductNames(record);
+  const title = names[0] || "";
   const protein = finite(record.nutriments?.proteins_100g);
   const sugar = finite(record.nutriments?.sugars_100g);
   const kcal = finite(record.nutriments?.["energy-kcal_100g"]);
@@ -47,6 +84,7 @@ export function openFoodFactsBulkRecordToProduct(
     retailer: null,
     url: `https://world.openfoodfacts.org/product/${code}`,
     title,
+    aliases: names.slice(1),
     brand: record.brands?.split(",")[0]?.trim() || "Open Food Facts",
     gtin: code,
     sku: null,
