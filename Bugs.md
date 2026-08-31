@@ -17,6 +17,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-08-31: first-time pilot users could receive a camera permission prompt before understanding the scanner, and there was no structured in-app feedback path.** The isolated Stage 1 branch now shows two English onboarding screens before requesting camera access, remembers completion locally with a forced-QA override, and stores bounded anonymous feedback in an RLS-protected staging-only table. Recognition, fit, catalog, prices, and nutrition are unchanged.
+
 - **2026-08-31: a failed external packshot URL left Safari's broken-image icon even though the scanned scene was available.** Product thumbnails now detect a failed packshot load and immediately replace it with the matching aspect-correct crop from the submitted scene; only when neither source exists does the neutral scan placeholder remain.
 - **2026-08-31: camera recovery split an uncertain-state explanation and a small retry control across one crowded status pill.** Uncertain, unavailable and rate-limited camera states now use one full-width `Not sure — try again` button with a single-line label and a 44 px touch target.
 - **2026-08-31: Better alternatives were assembled inside source silos and their offer lookup was Barbora-only.** Alternatives now come from the full verified Sugar.no, Barbora, Rimi, Livin and isolated Open Food Facts nutrition pool. A candidate remains hidden unless it is a strict same-type `Great fit` substitute with a current exact Barbora, Rimi or Livin offer. Exact offer prices are compared across those connected stores; a cheaper claim is still shown only when that exact online SKU is strictly below the observed shelf price.

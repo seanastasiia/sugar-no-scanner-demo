@@ -6,6 +6,19 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Repository: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
 - Status: public investor concept with same-origin API safeguards, not a medical device or production-wide grocery catalog.
 
+## Stage 1 staging pilot
+
+The isolated `stage/onboarding-feedback` branch adds a first-visit pilot layer without changing recognition, Sugar.no fit, catalog, prices, or nutrition logic:
+
+- two English onboarding screens explain comparison and image-processing limits;
+- camera permission is requested only after `Open camera` or `Skip`;
+- completion is stored locally under `sugar_scanner_onboarding_v1`; `?onboarding=1` forces onboarding for QA;
+- anonymous in-app feedback supports `Helpful` or `Needs work`, a bounded reason, and an optional 300-character comment;
+- onboarding, camera-permission, scan, and feedback events share one anonymous browser session;
+- `pilot_feedback` is metadata-only, protected by server validation, same-origin checks, rate limiting, RLS, and a staging-only migration.
+
+Production remains pinned to `d127ef8` until the explicit command `ПУБЛИКУЙ`. Rollback tags are `production-baseline-2026-08-31` and `scanner-golden-3c83a65`. Apply `supabase/migrations/202608310002_pilot_feedback.sql` only to the separate staging Supabase project during Stage 1 validation.
+
 ## Current product behavior
 
 - The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
@@ -133,6 +146,7 @@ Use the project change lanes in `AGENTS.md`:
 - `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products. Brand-only identities never start the slow network fallbacks; a distinctive product/variant query can be resolved even when the concise UI label omits its pack details. Exact verified web results persist in Supabase and are served immediately while due rechecks run without blocking (six hours for unverified misses).
 - `POST /api/offers`: bounded exact retailer keys for the displayed products and alternatives, returning current Barbora offers plus reproducible exact Rimi/Livin snapshot offers without blocking recognition.
 - `POST /api/events`: metadata-only product events with image-like values rejected.
+- `POST /api/feedback`: bounded anonymous pilot feedback; comments are optional, limited to 300 characters, and image-like content is rejected.
 - `GET /api/health`: service, catalog and deployed commit status.
 
 ## Data and Supabase
@@ -162,6 +176,8 @@ Connected-retailer resolution runs before Open Food Facts and grounded web looku
 The managed `products` table is optional in this proof of concept. If it has not been migrated and seeded, or is empty, product recognition and barcode lookup continue from the checked-in scored catalog while `web_nutrition_cache` still uses Supabase independently.
 
 ## Railway release
+
+Stage 1 uses the existing Railway project’s separate `staging` environment. Deploy the `stage/onboarding-feedback` worktree only with `--environment staging`, give it its own Railway domain, and set `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` from the separate staging Supabase project. Never copy production Supabase values into staging. Verify the deployed branch through `/api/health` before product QA.
 
 Normal releases are pushed once, after the requested batch is complete:
 

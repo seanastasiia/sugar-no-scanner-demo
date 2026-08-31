@@ -11,7 +11,11 @@ async function authenticate(page: Page) {
 
 async function unlock(page: Page) {
   await authenticate(page);
+  await page.addInitScript(() => localStorage.setItem("sugar_scanner_onboarding_v1", "completed"));
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  const skipOnboarding = page.getByRole("button", { name: "Skip" });
+  await expect(page.getByLabel("Live camera scanner").or(skipOnboarding)).toBeVisible();
+  if (await skipOnboarding.isVisible()) await skipOnboarding.click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
   await expect
@@ -373,16 +377,26 @@ async function mockLiveCamera(page: Page) {
   });
 }
 
-test("entry opens directly into the camera-first experience without an access page", async ({ page }) => {
+test("first visit explains the pilot before requesting camera permission", async ({ page }) => {
   await page.addInitScript(() => {
+    let cameraRequests = 0;
+    Object.defineProperty(window, "__cameraRequests", { configurable: true, get: () => cameraRequests });
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
-      value: { getUserMedia: () => Promise.reject(new DOMException("Denied in test", "NotAllowedError")) }
+      value: { getUserMedia: () => {
+        cameraRequests += 1;
+        return Promise.reject(new DOMException("Denied in test", "NotAllowedError"));
+      } }
     });
   });
   await page.goto("/");
   await expect(page.getByLabel("Demo access code")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Open scanner" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Compare similar products" })).toBeVisible();
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByRole("heading", { name: "Point, compare, decide" })).toBeVisible();
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
+  await page.getByRole("button", { name: "Open camera" }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expectOfficialSugarNoLogo(page);
   await expect(page.getByText("Live camera", { exact: true })).toHaveCount(0);
@@ -399,6 +413,40 @@ test("entry opens directly into the camera-first experience without an access pa
   );
   await expect(page.getByText("Private demo", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/Sent to Google Gemini/i)).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem("sugar_scanner_onboarding_v1"))).toBe("completed");
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(1);
+});
+
+test("completed onboarding stays hidden unless QA forces it", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("sugar_scanner_onboarding_v1", "skipped");
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: () => Promise.reject(new DOMException("Denied in test", "NotAllowedError")) }
+    });
+  });
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Compare similar products" })).toHaveCount(0);
+  await expect(page.getByLabel("Live camera scanner")).toBeVisible();
+  await page.goto("/?onboarding=1");
+  await expect(page.getByRole("heading", { name: "Compare similar products" })).toBeVisible();
+});
+
+test("anonymous feedback validates Needs work and shows success", async ({ page }) => {
+  await page.route("**/api/feedback", async (route) => {
+    const body = route.request().postDataJSON() as { helpful: boolean; reason: string; comment: string };
+    expect(body).toMatchObject({ helpful: false, reason: "unclear", comment: "Hard to understand" });
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, storage: "supabase" }) });
+  });
+  await unlock(page);
+  await page.getByRole("button", { name: "Give feedback" }).click();
+  const dialog = page.getByRole("dialog", { name: "Was this scan helpful?" });
+  await dialog.getByRole("button", { name: "Needs work" }).click();
+  await expect(dialog.getByRole("button", { name: "Send feedback" })).toBeDisabled();
+  await dialog.getByLabel("Result was unclear").check();
+  await dialog.getByPlaceholder("Tell us what you noticed").fill("Hard to understand");
+  await dialog.getByRole("button", { name: "Send feedback" }).click();
+  await expect(page.getByRole("heading", { name: "Thank you" })).toBeVisible();
 });
 
 test("scanner follows the current Sugar.no app surface language without changing fit semantics", async ({ page }) => {

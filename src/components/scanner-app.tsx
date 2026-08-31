@@ -13,6 +13,7 @@ import {
   Layers3,
   LoaderCircle,
   List,
+  MessageSquareText,
   RefreshCw,
   ScanLine,
   ShoppingBasket,
@@ -52,6 +53,12 @@ import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
 import { compactNutritionLabel } from "@/lib/nutrition-display";
 import { retailerOfferKey } from "@/lib/online-offer";
+import {
+  readOnboardingCompletion,
+  readPilotSession,
+  saveOnboardingCompletion,
+  savePilotSession
+} from "@/lib/pilot-session";
 import { mapWithConcurrency, mergeProgressiveEnrichment } from "@/lib/product-enrichment";
 import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { compareFairCohorts } from "@/lib/scoring";
@@ -75,10 +82,30 @@ import {
   type ProductPayload
 } from "./scanner-results";
 import { CheckoutScene, ShelfScene } from "./scanner-scenes";
+import { FeedbackDialog } from "./feedback-dialog";
+import { PilotOnboarding } from "./pilot-onboarding";
 import styles from "./scanner-app.module.css";
 
 type CameraState = "idle" | "requesting" | "live" | "denied" | "error";
 type RecognitionState = "idle" | "scanning" | "matched" | "retained" | "not_sure" | "unavailable" | "rate_limited" | "error";
+type OnboardingState = "loading" | "showing" | "complete";
+type PilotEventName =
+  | "app_opened"
+  | "onboarding_started"
+  | "onboarding_step_viewed"
+  | "onboarding_completed"
+  | "onboarding_skipped"
+  | "camera_permission_requested"
+  | "camera_permission_granted"
+  | "feedback_opened"
+  | "feedback_submitted"
+  | "scan_started"
+  | "scan_completed"
+  | "result_opened"
+  | "alternative_viewed"
+  | "retailer_link_clicked"
+  | "permission_denied"
+  | "recognition_failed";
 
 const CAMERA_AUTOFOCUS_SETTLE_MS = 320;
 const CAMERA_SCAN_INTERVAL_MS = 240;
@@ -280,22 +307,22 @@ export function ScannerApp() {
   const [networkOnline, setNetworkOnline] = useState(true);
   const [trackingTranslation, setTrackingTranslation] = useState<FrameTranslation | null>(null);
   const [candidateBoxes, setCandidateBoxes] = useState<CameraCandidateBox[]>([]);
+  const [onboardingState, setOnboardingState] = useState<OnboardingState>("loading");
+  const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [pilotSessionId, setPilotSessionId] = useState("");
 
   const ensureSession = useCallback(() => {
-    if (!sessionIdRef.current) sessionIdRef.current = makeSessionId();
+    if (!sessionIdRef.current) {
+      sessionIdRef.current = readPilotSession(window.sessionStorage) || makeSessionId();
+      savePilotSession(window.sessionStorage, sessionIdRef.current);
+    }
     return sessionIdRef.current;
   }, []);
 
   const track = useCallback(
     (
-      name:
-        | "scan_started"
-        | "scan_completed"
-        | "result_opened"
-        | "alternative_viewed"
-        | "retailer_link_clicked"
-        | "permission_denied"
-        | "recognition_failed",
+      name: PilotEventName,
       eventSource: ScanSource,
       productId?: string,
       metadata: Record<string, string | number | boolean | null> = {}
@@ -838,7 +865,7 @@ export function ScannerApp() {
   }, [pauseRecognitionLoop, recognizeCameraFrame]);
 
   const requestCamera = useCallback(async () => {
-    sessionIdRef.current = makeSessionId();
+    ensureSession();
     stopActiveCapture();
     const requestId = cameraRequestRef.current;
     setSource("camera");
@@ -854,6 +881,7 @@ export function ScannerApp() {
     setResultsExpanded(false);
     setMediaDimensions(null);
     setStatusMessage("Waiting for camera permission…");
+    track("camera_permission_requested", "camera");
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera API unavailable");
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -895,6 +923,7 @@ export function ScannerApp() {
       setCameraState("live");
       setRecognitionState("idle");
       setStatusMessage("Point at several products and hold steady");
+      track("camera_permission_granted", "camera");
       track("scan_started", "camera");
       lastCaptureRef.current = 0;
       cameraReadyAtRef.current = Date.now();
@@ -913,7 +942,7 @@ export function ScannerApp() {
       );
       if (denied) track("permission_denied", "camera");
     }
-  }, [captureStableFrame, stopActiveCapture, track]);
+  }, [captureStableFrame, ensureSession, stopActiveCapture, track]);
 
   const startCamera = useCallback(() => requestCamera(), [requestCamera]);
 
@@ -1061,12 +1090,29 @@ export function ScannerApp() {
   }, []);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setPilotSessionId(ensureSession());
+      track("app_opened", "camera", undefined, { onboardingVersion: 1 });
+      const forceOnboarding = new URLSearchParams(window.location.search).get("onboarding") === "1";
+      if (forceOnboarding || !readOnboardingCompletion(window.localStorage)) {
+        setOnboardingState("showing");
+        track("onboarding_started", "camera", undefined, { onboardingVersion: 1 });
+        track("onboarding_step_viewed", "camera", undefined, { onboardingVersion: 1, step: 1 });
+      } else {
+        setOnboardingState("complete");
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [ensureSession, track]);
+
+  useEffect(() => {
+    if (onboardingState !== "complete") return;
     const timer = window.setTimeout(() => void startCamera(), 0);
     return () => {
       window.clearTimeout(timer);
       stopActiveCapture();
     };
-  }, [startCamera, stopActiveCapture]);
+  }, [onboardingState, startCamera, stopActiveCapture]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -1230,6 +1276,28 @@ export function ScannerApp() {
     setDemoOpen(true);
   }, []);
 
+  const changeOnboardingStep = useCallback((step: 1 | 2) => {
+    setOnboardingStep(step);
+    track("onboarding_step_viewed", "camera", undefined, { onboardingVersion: 1, step });
+  }, [track]);
+
+  const finishOnboarding = useCallback((completion: "completed" | "skipped") => {
+    saveOnboardingCompletion(window.localStorage, completion);
+    track(completion === "completed" ? "onboarding_completed" : "onboarding_skipped", "camera", undefined, {
+      onboardingVersion: 1,
+      step: onboardingStep
+    });
+    setOnboardingState("complete");
+  }, [onboardingStep, track]);
+
+  const openFeedback = useCallback(() => {
+    setPilotSessionId(ensureSession());
+    setFeedbackOpen(true);
+    track("feedback_opened", source, undefined, { placement: "scanner_topbar" });
+  }, [ensureSession, source, track]);
+
+  const closeFeedback = useCallback(() => setFeedbackOpen(false), []);
+
   useEffect(() => {
     if (!resultsAreExpanded) return;
     const focusFrame = window.requestAnimationFrame(() => resultsSheetRef.current?.focus());
@@ -1258,6 +1326,21 @@ export function ScannerApp() {
     };
   }, [closeDemo, demoOpen]);
 
+  if (onboardingState === "loading") {
+    return <main className={styles.onboardingLoading} aria-label="Loading Sugar.no" />;
+  }
+
+  if (onboardingState === "showing") {
+    return (
+      <PilotOnboarding
+        step={onboardingStep}
+        onStepChange={changeOnboardingStep}
+        onComplete={() => finishOnboarding("completed")}
+        onSkip={() => finishOnboarding("skipped")}
+      />
+    );
+  }
+
   return (
     <main className={styles.app}>
       <header className={`${styles.header} ${styles.scannerHeader}`}>
@@ -1282,16 +1365,21 @@ export function ScannerApp() {
               className={`${styles.stageTopbar} ${source === "camera" || source === "upload" ? styles.stageTopbarEnd : ""}`}
             >
               {source === "sample-shelf" || source === "sample-conveyor" ? <span>{sourceLabel(source)}</span> : null}
-              <button
-                ref={source === "camera" ? demoTriggerRef : undefined}
-                className={styles.demoTrigger}
-                type="button"
-                onClick={source === "camera" ? openDemo : startCamera}
-                aria-label={source === "camera" ? "Show demo" : "Back to live camera"}
-              >
-                {source === "camera" ? <Layers3 aria-hidden="true" size={17} /> : <Camera aria-hidden="true" size={17} />}
-                {source === "camera" ? "Show demo" : "Back to live"}
-              </button>
+              <div className={styles.stageActions}>
+                <button type="button" onClick={openFeedback} aria-label="Give feedback">
+                  <MessageSquareText aria-hidden="true" size={18} />
+                </button>
+                <button
+                  ref={source === "camera" ? demoTriggerRef : undefined}
+                  className={styles.demoTrigger}
+                  type="button"
+                  onClick={source === "camera" ? openDemo : startCamera}
+                  aria-label={source === "camera" ? "Show demo" : "Back to live camera"}
+                >
+                  {source === "camera" ? <Layers3 aria-hidden="true" size={17} /> : <Camera aria-hidden="true" size={17} />}
+                  {source === "camera" ? "Show demo" : "Back to live"}
+                </button>
+              </div>
             </div>
 
             <div
@@ -1762,6 +1850,15 @@ export function ScannerApp() {
             </button>
           </div>
         </div>
+      ) : null}
+      {feedbackOpen ? (
+        <FeedbackDialog
+          open
+          sessionId={pilotSessionId}
+          source={source}
+          onClose={closeFeedback}
+          onSubmitted={(helpful) => track("feedback_submitted", source, undefined, { helpful })}
+        />
       ) : null}
     </main>
   );

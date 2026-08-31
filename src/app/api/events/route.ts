@@ -7,11 +7,20 @@ import { hasTrustedBrowserOrigin } from "@/server/request-origin";
 import { createRecognitionRateLimiter, recognitionClientKey } from "@/server/rate-limit";
 import { getSupabaseAdmin } from "@/server/supabase";
 
-const eventsRateLimiter = createRecognitionRateLimiter({ RECOGNITION_RATE_LIMIT: "120" });
+const eventsRateLimiter = createRecognitionRateLimiter({ RECOGNITION_RATE_LIMIT: "300" });
 
 const eventSchema = z.object({
   sessionId: z.uuid(),
   name: z.enum([
+    "app_opened",
+    "onboarding_started",
+    "onboarding_step_viewed",
+    "onboarding_completed",
+    "onboarding_skipped",
+    "camera_permission_requested",
+    "camera_permission_granted",
+    "feedback_opened",
+    "feedback_submitted",
     "scan_started",
     "scan_completed",
     "result_opened",
