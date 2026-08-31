@@ -1,6 +1,6 @@
 # Latvia product coverage plan
 
-Checked: 2026-08-27
+Checked: 2026-08-31
 
 ## Two different coverage metrics
 
@@ -15,7 +15,7 @@ Current proof-of-concept state:
 - 40 protein-snack records remain as the deterministic category-percentile benchmark, not the Latvia coverage ceiling.
 - exact products in the broad snapshot receive a runtime two-factor reference fit; fiber is not a rating input.
 - strict Rimi and Livin adapters now provide 6,822 and 6 complete product-page rows respectively. Rimi's count comes from checking all 7,617 pages in seven approved food and drink categories. Livin's count comes after checking the full 169-URL Latvia sitemap, which also contains cosmetics and localized duplicates; neither count is visual-recognition or full-retailer coverage.
-- Open Food Facts now has 500 complete Latvia-tagged records in a separate ODbL layer plus a streaming daily-JSONL importer. A scheduled full bulk import is still required for production-scale coverage.
+- Open Food Facts has 500 complete Latvia-tagged records in a separate ODbL layer plus a streaming daily-JSONL importer. The refreshed proof subset retains multilingual source names for 119 records, and the matcher uses them without weakening exact-SKU checks. A scheduled full bulk import is still required for production-scale coverage.
 - records without enough exact nutrition and non-food pages remain unrated; the current demo does not invent values or ask the user for a second label scan.
 
 The pre-expansion public smoke found 20 distinct package identities across five Latvia scenes but only 5 automatic ratings. On the two close mayonnaise shelves, 4 of 12 identities were rated. The other three scenes include alcohol, cleaning products and distant checkout views, so the 25% aggregate is a release smoke baseline rather than a grocery accuracy estimate.
@@ -26,9 +26,9 @@ Open Food Facts supports product lookup by barcode and normalized per-100-g nutr
 
 Live query used for this audit:
 
-`GET https://world.openfoodfacts.org/api/v2/search?countries_tags_en=latvia&page_size=100&fields=code,product_name,brands,categories_tags,nutriments`
+`GET https://world.openfoodfacts.org/api/v2/search?countries_tags_en=latvia&page_size=100&fields=code,product_name,product_name_en,product_name_lv,product_name_ru,lang,languages_codes,brands,quantity,nutrition_data_per,nutriments`
 
-The API reported 4,767 products tagged for Latvia. In the first returned page of 100 records, 91 had a product name, 80 had numeric protein and total sugar, and 26 had all three Sugar.no inputs including fiber. This page is not a random sample and must not be extrapolated into a national coverage percentage.
+The API reported 4,802 products tagged for Latvia on 31 August 2026. In the first popularity-sorted page of 100 records, 78 passed the scanner's strict completeness gate for GTIN, name, energy, protein and total sugar, and 24 had more than one distinct value across the Latvian, English and Russian name fields. This page is not a random sample and must not be extrapolated into a national coverage percentage. The exact complete Latvia count remains unknown until the full bulk job finishes.
 
 Official references:
 

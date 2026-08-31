@@ -39,6 +39,7 @@ const externalProductSchema = z.object({
   retailer: z.enum(["Rimi", "Livin"]).nullable(),
   url: z.url(),
   title: z.string().min(1),
+  aliases: z.array(z.string().min(1)).optional(),
   brand: z.string().min(1),
   gtin: z.string().regex(/^\d{8,14}$/).nullable(),
   sku: z.string().nullable(),
@@ -145,6 +146,17 @@ async function main() {
   if (!offSource.redistributable || !/ODbL|Open Database License/i.test(offSource.license) || !/CC BY-SA/i.test(offSource.license)) {
     throw new Error("Open Food Facts manifest must retain database and product-image license notices");
   }
+  const multilingualOpenFoodFacts = openFoodFacts.filter((product) => (product.aliases || []).length > 0);
+  if (multilingualOpenFoodFacts.length < Math.ceil(openFoodFacts.length * 0.1)) {
+    throw new Error("Open Food Facts snapshot lost multilingual product_name aliases");
+  }
+  for (const product of multilingualOpenFoodFacts) {
+    const normalizedNames = [product.title, ...(product.aliases || [])]
+      .map((name) => name.normalize("NFKC").trim().toLocaleLowerCase());
+    if (new Set(normalizedNames).size !== normalizedNames.length) {
+      throw new Error(`Open Food Facts ${product.sourceProductId} contains duplicate multilingual names`);
+    }
+  }
   for (const [file, snapshot] of [
     ["Rimi", rimi],
     ["Livin", livin],
@@ -187,6 +199,7 @@ async function main() {
   console.log(`Rimi verified snapshot: ${rimi.length} from ${rimiReport.processedUrls} sitemap pages`);
   console.log(`Livin verified snapshot: ${livin.length} from ${livinReport.processedUrls} sitemap pages`);
   console.log(`Open Food Facts Latvia ODbL layer: ${openFoodFacts.length}`);
+  console.log(`Open Food Facts rows with multilingual aliases: ${multilingualOpenFoodFacts.length}`);
   if (process.argv.includes("--require-complete") && complete.length !== products.length) {
     throw new Error("Catalog is not ready for public two-factor fit scores");
   }

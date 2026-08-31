@@ -175,6 +175,7 @@ async function main() {
       source_product_id: product.sourceProductId,
       url: product.url,
       title: product.title,
+      aliases: product.aliases || [],
       brand: product.brand,
       category: product.category,
       pack_size: product.packSize,

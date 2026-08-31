@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { isLatviaOpenFoodFactsRecord, openFoodFactsBulkRecordToProduct } from "./open-food-facts-bulk";
+import {
+  isLatviaOpenFoodFactsRecord,
+  openFoodFactsBulkRecordToProduct,
+  openFoodFactsProductNames
+} from "./open-food-facts-bulk";
 
 describe("Open Food Facts bulk normalization", () => {
   it("keeps a Latvia-tagged product with complete per-100 nutrition", () => {
@@ -31,5 +35,38 @@ describe("Open Food Facts bulk normalization", () => {
         nutriments: { "energy-kcal_100g": 100, proteins_100g: 1 }
       })
     ).toBeNull();
+  });
+
+  it("retains multilingual product names as exact-source aliases", () => {
+    const record = {
+      code: "4750050526000",
+      product_name: "kaus.siers Dzintars klasiskais",
+      product_name_lv: "Kausētais siers klasiskais",
+      product_name_en: "Processed Cheese Classic",
+      product_name_ru: "Сыр классический",
+      product_name_de: "Schmelzkäse klassisch",
+      brands: "Dzintars",
+      quantity: "200 g",
+      countries_tags: ["en:latvia"],
+      nutrition_data_per: "100g",
+      nutriments: { "energy-kcal_100g": 280, proteins_100g: 12, sugars_100g: 4 }
+    };
+
+    expect(openFoodFactsProductNames(record)).toEqual([
+      "Kausētais siers klasiskais",
+      "Processed Cheese Classic",
+      "Сыр классический",
+      "kaus.siers Dzintars klasiskais",
+      "Schmelzkäse klassisch"
+    ]);
+    expect(openFoodFactsBulkRecordToProduct(record)).toMatchObject({
+      title: "Kausētais siers klasiskais",
+      aliases: [
+        "Processed Cheese Classic",
+        "Сыр классический",
+        "kaus.siers Dzintars klasiskais",
+        "Schmelzkäse klassisch"
+      ]
+    });
   });
 });

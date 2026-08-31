@@ -16,12 +16,13 @@ if (!input) throw new Error("OFF_BULK_INPUT or an input argument is required (.j
 const outputPath = path.resolve(process.env.OFF_BULK_OUTPUT || "data/open-food-facts-lv.generated.json");
 const limit = Math.max(0, Number.parseInt(process.env.OFF_BULK_LIMIT || "0", 10));
 const checkedAt = process.env.CATALOG_CHECKED_AT || new Date().toISOString();
+const fetchTimeoutMs = Math.max(60_000, Number.parseInt(process.env.OFF_BULK_FETCH_TIMEOUT_MS || "1800000", 10));
 
 async function inputStream(): Promise<Readable> {
   if (!/^https?:\/\//i.test(input)) return createReadStream(path.resolve(input));
   const response = await fetch(input, {
     headers: { "user-agent": "Sugar.no OFF bulk importer/0.1 (https://sugar.no)" },
-    signal: AbortSignal.timeout(60_000)
+    signal: AbortSignal.timeout(fetchTimeoutMs)
   });
   if (!response.ok || !response.body) throw new Error(`${input}: HTTP ${response.status}`);
   return Readable.fromWeb(response.body as unknown as import("node:stream/web").ReadableStream);

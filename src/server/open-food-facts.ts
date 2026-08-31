@@ -2,6 +2,7 @@ import { scoreReferenceProduct } from "@/lib/scoring";
 import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
 import bulkSnapshot from "../../data/open-food-facts-lv.generated.json";
 import type { ExternalCatalogProduct } from "./external-catalog-types";
+import { openFoodFactsProductNames } from "./open-food-facts-bulk";
 import {
   normalizeRetailQuantityText,
   normalizeRetailText,
@@ -20,8 +21,13 @@ interface OpenFoodFactsNutriments {
 }
 
 export interface OpenFoodFactsProduct {
+  [key: string]: unknown;
   code: string;
   product_name?: string;
+  product_name_lv?: string;
+  product_name_en?: string;
+  product_name_ru?: string;
+  product_names?: string[];
   brands?: string | string[] | null;
   quantity?: string | null;
   nutriments?: OpenFoodFactsNutriments | null;
@@ -55,12 +61,54 @@ const USER_AGENT = "Sugar.no scanner demo/0.1 (https://sugar.no)";
 const CACHE_TTL_MS = 30 * 60_000;
 const responseCache = new Map<string, { expiresAt: number; product: ScoredProduct | null; confidence: number }>();
 const bulkProducts = bulkSnapshot as ExternalCatalogProduct[];
+const bulkProductsByBarcode = new Map(
+  bulkProducts.map((product) => [product.gtin || product.sourceProductId, product] as const)
+);
+const bulkProductsByBrand = new Map<string, ExternalCatalogProduct[]>();
+for (const product of bulkProducts) {
+  const key = normalizeRetailText(product.brand).replaceAll(" ", "");
+  const current = bulkProductsByBrand.get(key) || [];
+  current.push(product);
+  bulkProductsByBrand.set(key, current);
+}
 let scoredBulkProducts: ScoredProduct[] | null = null;
+
+const productNameFields = [
+  "product_name",
+  "product_name_lv",
+  "product_name_en",
+  "product_name_ru",
+  "product_name_lt",
+  "product_name_et",
+  "product_name_fr",
+  "product_name_de",
+  "product_name_pl",
+  "product_name_bg",
+  "product_name_ro",
+  "product_name_cs",
+  "product_name_es"
+] as const;
+
+function productNames(product: OpenFoodFactsProduct): string[] {
+  const names = openFoodFactsProductNames(product);
+  for (const name of product.product_names || []) {
+    const trimmed = name.trim();
+    if (trimmed && !names.some((candidate) => normalizeRetailText(candidate) === normalizeRetailText(trimmed))) {
+      names.push(trimmed);
+    }
+  }
+  return names;
+}
+
+function preferredProductName(product: OpenFoodFactsProduct): string {
+  return productNames(product)[0] || "";
+}
 
 function bulkProductToOpenFoodFactsProduct(source: ExternalCatalogProduct): OpenFoodFactsProduct {
   return {
     code: source.gtin || source.sourceProductId,
     product_name: source.title,
+    product_names: [source.title, ...(source.aliases || [])],
     brands: source.brand,
     quantity: source.packSize,
     nutrition_data_per: source.nutritionBasis,
@@ -77,7 +125,7 @@ function bulkProductToOpenFoodFactsProduct(source: ExternalCatalogProduct): Open
 
 export function getOpenFoodFactsBulkProductByBarcode(barcode: string): ScoredProduct | null {
   if (!/^\d{8,14}$/.test(barcode)) return null;
-  const source = bulkProducts.find((product) => (product.gtin || product.sourceProductId) === barcode);
+  const source = bulkProductsByBarcode.get(barcode);
   if (!source) return null;
   return openFoodFactsToScoredProduct(bulkProductToOpenFoodFactsProduct(source), source.checkedAt);
 }
@@ -202,19 +250,29 @@ export function rankOpenFoodFactsCandidates(
     .flatMap((product): RankedOpenFoodFactsCandidate[] => {
       const candidateBrand = brandText(product);
       if (!candidateBrand || !retailerBrandMatches(input.brand, candidateBrand)) return [];
-      const candidateNameTokens = meaningfulTokens(product.product_name || "", observedBrandTokens);
-      const nameCoverage = tokenCoverage(observedNameTokens, candidateNameTokens);
-      const reverseCoverage = tokenCoverage(candidateNameTokens, observedNameTokens);
-      const nameScore = nameCoverage && reverseCoverage
-        ? (2 * nameCoverage * reverseCoverage) / (nameCoverage + reverseCoverage)
-        : 0;
+      const names = productNames(product);
+      const nameMatch = names.reduce(
+        (best, name) => {
+          const candidateNameTokens = meaningfulTokens(name, observedBrandTokens);
+          const nameCoverage = tokenCoverage(observedNameTokens, candidateNameTokens);
+          const reverseCoverage = tokenCoverage(candidateNameTokens, observedNameTokens);
+          const nameScore = nameCoverage && reverseCoverage
+            ? (2 * nameCoverage * reverseCoverage) / (nameCoverage + reverseCoverage)
+            : 0;
+          return nameScore > best.nameScore ? { nameScore, reverseCoverage } : best;
+        },
+        { nameScore: 0, reverseCoverage: 0 }
+      );
+      const { nameScore, reverseCoverage } = nameMatch;
       const packMatch = input.packSize ? quantityMatches(input.packSize, product.quantity) : null;
       if (packMatch === false) return [];
       // Fat percentage is part of a dairy SKU. A visible 3.2% pack must not
       // borrow nutrition from a 2% sibling even when translated names such as
       // Milk and Piens correctly match as synonyms.
-      const percentageMatch = percentageMatches(observedIdentity, product.product_name || "");
-      if (percentageMatch === false) return [];
+      const percentageMatchesByName = names
+        .map((name) => percentageMatches(observedIdentity, name))
+        .filter((match): match is boolean => match !== null);
+      if (percentageMatchesByName.length && !percentageMatchesByName.includes(true)) return [];
       const hasNutrition =
         finite(product.nutriments?.proteins_100g) !== null &&
         finite(product.nutriments?.sugars_100g) !== null &&
@@ -250,16 +308,18 @@ export function openFoodFactsToScoredProduct(
   const kcal = finite(product.nutriments?.["energy-kcal_100g"]);
   const kilojoules = finite(product.nutriments?.["energy-kj_100g"]);
   const energyKcal = kcal ?? (kilojoules === null ? null : Math.round((kilojoules / 4.184) * 10) / 10);
-  if (!product.code || !product.product_name || protein === null || sugar === null || energyKcal === null) return null;
+  const names = productNames(product);
+  const name = preferredProductName(product);
+  if (!product.code || !name || protein === null || sugar === null || energyKcal === null) return null;
   const quantity = canonicalQuantity(product.quantity);
   const sourceUrl = `https://world.openfoodfacts.org/product/${product.code}`;
   const record: ProductRecord = {
     id: `off:${product.code}`,
     retailerProductId: product.code,
     brand: brandText(product) || "Open Food Facts",
-    name: product.product_name,
-    shortName: product.product_name,
-    aliases: [],
+    name,
+    shortName: name,
+    aliases: names.slice(1),
     format: "other",
     category: product.categories || null,
     packSizeG: quantity?.amount || 0,
@@ -294,7 +354,7 @@ export function openFoodFactsToScoredProduct(
 
 async function fetchByBarcode(barcode: string): Promise<OpenFoodFactsProduct | null> {
   if (!/^\d{8,14}$/.test(barcode)) return null;
-  const fields = "code,product_name,brands,quantity,nutriments,image_front_url,categories,nutrition_data_per";
+  const fields = ["code", ...productNameFields, "brands", "quantity", "nutriments", "image_front_url", "categories", "nutrition_data_per"].join(",");
   const response = await fetch(`${PRODUCT_URL}/${barcode}?fields=${fields}`, {
     headers: { "user-agent": USER_AGENT },
     signal: AbortSignal.timeout(4_000)
@@ -314,7 +374,7 @@ async function searchProducts(input: BarboraLookupInput): Promise<OpenFoodFactsP
       page_size: 30,
       fields: [
         "code",
-        "product_name",
+        ...productNameFields,
         "brands",
         "quantity",
         "nutriments",
@@ -345,14 +405,18 @@ export async function resolveOpenFoodFactsProduct(
   input: BarboraLookupInput,
   barcode = ""
 ): Promise<{ product: ScoredProduct; confidence: number } | null> {
+  const normalizedBrand = normalizeRetailText(input.brand).replaceAll(" ", "");
   const bulkCandidates = /^\d{8,14}$/.test(barcode)
-    ? bulkProducts.filter((product) => product.gtin === barcode)
-    : bulkProducts;
+    ? [bulkProductsByBarcode.get(barcode)].filter((product): product is ExternalCatalogProduct => Boolean(product))
+    : [...bulkProductsByBrand.entries()]
+        .filter(([brand]) => brand === normalizedBrand || retailerBrandMatches(input.brand, brand))
+        .flatMap(([, products]) => products);
   const rankedBulk = rankOpenFoodFactsCandidates(
     input,
     bulkCandidates.map((product) => ({
       code: product.gtin || product.sourceProductId,
       product_name: product.title,
+      product_names: [product.title, ...(product.aliases || [])],
       brands: product.brand,
       quantity: product.packSize,
       nutrition_data_per: product.nutritionBasis,

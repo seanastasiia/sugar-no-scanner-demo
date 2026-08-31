@@ -15,9 +15,9 @@ interface SearchResponse {
 }
 
 const outputPath = path.resolve(process.env.OFF_LATVIA_OUTPUT || "data/open-food-facts-lv.generated.json");
-const limit = Math.max(0, Number.parseInt(process.env.OFF_LATVIA_LIMIT || "0", 10));
+const limit = Math.max(1, Number.parseInt(process.env.OFF_LATVIA_LIMIT || "500", 10));
 const pageSize = Math.min(100, Math.max(10, Number.parseInt(process.env.OFF_LATVIA_PAGE_SIZE || "100", 10)));
-const spacingMs = Math.max(250, Number.parseInt(process.env.OFF_LATVIA_REQUEST_SPACING_MS || "500", 10));
+const spacingMs = Math.max(6_500, Number.parseInt(process.env.OFF_LATVIA_REQUEST_SPACING_MS || "6500", 10));
 const checkedAt = process.env.CATALOG_CHECKED_AT || new Date().toISOString();
 const apiBase = process.env.OFF_API_BASE_URL?.trim() || "https://world.openfoodfacts.org";
 const fallbackApiBase = process.env.OFF_API_FALLBACK_URL?.trim() || "https://world.openfoodfacts.net";
@@ -27,6 +27,17 @@ const fields = [
   "code",
   "product_name",
   "product_name_lv",
+  "product_name_en",
+  "product_name_ru",
+  "product_name_lt",
+  "product_name_et",
+  "product_name_fr",
+  "product_name_de",
+  "product_name_pl",
+  "product_name_bg",
+  "product_name_ro",
+  "product_name_cs",
+  "product_name_es",
   "brands",
   "quantity",
   "categories",
@@ -79,6 +90,9 @@ async function writeJsonAtomic(value: unknown) {
 }
 
 async function main() {
+  if (limit > 500) {
+    throw new Error("OFF_LATVIA_LIMIT above 500 is not allowed for API sync; use catalog:import:off with the official daily JSONL export");
+  }
   const products = new Map<string, ExternalCatalogProduct>();
   let page = 1;
   let expectedPages = 1;

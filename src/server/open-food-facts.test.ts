@@ -57,6 +57,31 @@ describe("Open Food Facts matching", () => {
     expect(ranked[0].confidence).toBeGreaterThanOrEqual(0.84);
   });
 
+  it("matches the English camera identity against a Latvian product with source aliases", () => {
+    const ranked = rankOpenFoodFactsCandidates(
+      {
+        brand: "Dzintars",
+        name: "Processed Cheese Classic 200 g",
+        variant: "Classic",
+        packSize: "200 g",
+        searchTerms: ["Dzintars Processed Cheese Classic"]
+      },
+      [
+        product({
+          code: "4750050526000",
+          product_name: "Kausētais siers klasiskais",
+          product_name_en: "Processed Cheese Classic",
+          product_name_ru: "Сыр классический",
+          brands: ["Dzintars"],
+          quantity: "200 g"
+        })
+      ]
+    );
+
+    expect(ranked).toHaveLength(1);
+    expect(ranked[0].confidence).toBeGreaterThanOrEqual(0.84);
+  });
+
   it("accepts an exact OFF identity without package size for per-100 nutrition", () => {
     const ranked = rankOpenFoodFactsCandidates(
       {
@@ -156,5 +181,19 @@ describe("Open Food Facts matching", () => {
     expect(scored?.nutrientsPer100g).toMatchObject({ proteinG: 30, totalSugarG: 3.2, carbohydrateG: 18 });
     expect(scored?.sources[0].fields).toContain("carbohydrate");
     expect(scored?.sources[0].label).toBe("Open Food Facts product record");
+  });
+
+  it("keeps multilingual Open Food Facts names on the scored product", () => {
+    const scored = openFoodFactsToScoredProduct(product({
+      product_name: "Kausētais siers klasiskais",
+      product_name_en: "Processed Cheese Classic",
+      product_name_ru: "Сыр классический"
+    }));
+
+    expect(scored?.name).toBe("Processed Cheese Classic");
+    expect(scored?.aliases).toEqual([
+      "Сыр классический",
+      "Kausētais siers klasiskais"
+    ]);
   });
 });
