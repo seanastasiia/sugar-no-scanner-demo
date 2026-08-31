@@ -239,4 +239,5 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - [Superseded live camera tracking experiment](docs/test-runs/2026-08-29-live-camera-tracking.md)
 - [Captured-frame scan release evidence](docs/test-runs/2026-08-30-captured-frame-scan.md)
 - [Scan again and exact web-fallback release evidence](docs/test-runs/2026-08-30-scan-again-web-fallback.md)
+- [Cross-retailer alternatives release evidence](docs/test-runs/2026-08-31-cross-retailer-alternatives.md)
 - [Open and recent bugs](Bugs.md)
