@@ -578,6 +578,28 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   expect(accessibility.violations).toEqual([]);
 });
 
+test("broken product packshot falls back to its crop from the scanned scene", async ({ page }) => {
+  await page.route("**/_next/image?*", async (route) => {
+    const source = new URL(route.request().url()).searchParams.get("url");
+    if (source?.includes("25f716c3-1604-41de-8679-7f4231725f41_s.png")) {
+      await route.fulfill({ status: 404, contentType: "image/png", body: "" });
+      return;
+    }
+    await route.continue();
+  });
+
+  await unlock(page);
+  await openDemoScene(page, "Shelf demo");
+
+  const firstProduct = page.getByLabel("Product result preview").getByRole("button").first();
+  await expect(firstProduct.getByTestId("product-packshot")).toHaveCount(0);
+  await expect(firstProduct.getByTestId("scene-product-crop")).toBeVisible();
+  await expect(firstProduct.getByTestId("scene-product-crop")).toHaveAttribute(
+    "data-thumbnail-mode",
+    "context-crop"
+  );
+});
+
 test("checkout photo recognizes and rates three products on the belt", async ({ page }) => {
   await unlock(page);
   await openDemoScene(page, "Checkout demo");
@@ -1638,8 +1660,14 @@ test("provider unavailability pauses live recognition and offers manual recovery
   });
 
   await unlock(page);
-  await expect(page.getByRole("status")).toContainText("Recognition is unavailable", { timeout: 6_000 });
-  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+  const retryButton = page.getByRole("button", { name: "Not sure — try again", exact: true });
+  await expect(retryButton).toBeVisible({ timeout: 6_000 });
+  await expect(retryButton).toHaveCSS("white-space", "nowrap");
+  const [retryBox, statusBox] = await Promise.all([
+    retryButton.boundingBox(),
+    page.getByRole("status").boundingBox()
+  ]);
+  expect(retryBox?.width ?? 0).toBeGreaterThanOrEqual((statusBox?.width ?? 0) - 4);
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
   await page.waitForTimeout(2_500);
   expect(recognitionRequests).toBe(1);
@@ -1659,11 +1687,7 @@ test("HTTP 429 pauses automatic recognition and offers manual recovery", async (
   });
 
   await unlock(page);
-  await expect(page.getByRole("status")).toContainText(
-    "Scanning paused. Try again in 7s or open the demo.",
-    { timeout: 10_000 }
-  );
-  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Not sure — try again", exact: true })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
   await page.waitForTimeout(2_500);
   expect(recognitionRequests).toBe(1);

@@ -181,7 +181,20 @@ function ProductThumbnail({
   sizes: string;
   targetAspect: number;
 }) {
-  if (imageUrl) return <Image src={imageUrl} alt="" fill sizes={sizes} />;
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+
+  if (imageUrl && imageUrl !== failedImageUrl) {
+    return (
+      <Image
+        src={imageUrl}
+        alt=""
+        data-testid="product-packshot"
+        fill
+        sizes={sizes}
+        onError={() => setFailedImageUrl(imageUrl)}
+      />
+    );
+  }
   if (sceneImageUrl && detection) {
     return (
       <span
@@ -1171,6 +1184,13 @@ export function ScannerApp() {
   const sheetPreviewIds = rankedTrayIds.slice(0, 4);
   const scanHasNoRatedResults =
     recognitionState === "matched" && tray.length > 0 && visibleTrayIds.length === 0 && pendingProductIds.size === 0;
+  const showRecognitionRetry =
+    networkOnline &&
+    source === "camera" &&
+    (recognitionState === "not_sure" ||
+      recognitionState === "unavailable" ||
+      recognitionState === "rate_limited" ||
+      scanHasNoRatedResults);
   const displayedStatusMessage =
     recognitionState === "matched" && visibleTrayIds.length > 0 && pendingProductIds.size === 0
       ? `${visibleTrayIds.length} ${visibleTrayIds.length === 1 ? "product" : "products"} · ${ratedCount} with Sugar.no fit`
@@ -1405,25 +1425,29 @@ export function ScannerApp() {
             })}
 
             <div
-              className={`${styles.stageStatus} ${visibleTrayIds.length > 0 && ["matched", "retained"].includes(recognitionState) ? styles.stageStatusResultHidden : ""}`}
+              className={`${styles.stageStatus} ${showRecognitionRetry ? styles.stageStatusRetry : ""} ${visibleTrayIds.length > 0 && ["matched", "retained"].includes(recognitionState) ? styles.stageStatusResultHidden : ""}`}
               role="status"
               aria-live="polite"
             >
-              {recognitionState === "scanning" ? (
-                <LoaderCircle className={styles.spin} aria-hidden="true" size={17} />
-              ) : recognitionState === "matched" || recognitionState === "retained" ? (
-                <Check aria-hidden="true" size={17} />
-              ) : recognitionState === "not_sure" || recognitionState === "error" || recognitionState === "unavailable" || recognitionState === "rate_limited" ? (
-                <Info aria-hidden="true" size={17} />
-              ) : (
-                <ScanLine aria-hidden="true" size={17} />
-              )}
-              <span>{networkOnline ? displayedStatusMessage : "Offline — recognition paused"}</span>
-              {source === "camera" && (recognitionState === "not_sure" || recognitionState === "unavailable" || recognitionState === "rate_limited" || scanHasNoRatedResults) ? (
+              {showRecognitionRetry ? (
                 <button className={styles.recognitionRetry} type="button" onClick={scanAgain}>
-                  <RefreshCw aria-hidden="true" size={15} /> Try again
+                  <RefreshCw aria-hidden="true" size={17} />
+                  <span>Not sure — try again</span>
                 </button>
-              ) : null}
+              ) : (
+                <>
+                  {recognitionState === "scanning" ? (
+                    <LoaderCircle className={styles.spin} aria-hidden="true" size={17} />
+                  ) : recognitionState === "matched" || recognitionState === "retained" ? (
+                    <Check aria-hidden="true" size={17} />
+                  ) : recognitionState === "not_sure" || recognitionState === "error" || recognitionState === "unavailable" || recognitionState === "rate_limited" ? (
+                    <Info aria-hidden="true" size={17} />
+                  ) : (
+                    <ScanLine aria-hidden="true" size={17} />
+                  )}
+                  <span>{networkOnline ? displayedStatusMessage : "Offline — recognition paused"}</span>
+                </>
+              )}
             </div>
             </div>
           </div>

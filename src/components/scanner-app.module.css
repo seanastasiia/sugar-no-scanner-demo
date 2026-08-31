@@ -413,6 +413,10 @@
   min-width: 0;
 }
 
+.stageStatusRetry {
+  padding-inline: 0;
+}
+
 .stageStatusResultHidden {
   width: 1px;
   height: 1px;
@@ -427,21 +431,20 @@
 
 .recognitionRetry {
   display: inline-flex;
-  min-width: 92px;
+  width: 100%;
   min-height: 44px;
-  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin: -8px -13px -8px 4px;
+  margin: -8px 0;
   padding: 8px 12px;
   cursor: pointer;
   border: 0;
-  border-left: 1px solid rgb(255 255 255 / 22%);
-  border-radius: 0 999px 999px 0;
-  background: rgb(255 255 255 / 13%);
+  border-radius: 999px;
+  background: transparent;
   color: #ffffff;
   font: inherit;
+  white-space: nowrap;
 }
 
 .stageWithResults .stageStatus {

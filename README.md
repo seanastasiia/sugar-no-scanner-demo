@@ -22,8 +22,9 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.
 - Expanded multi-product results show only the collapse control, `Best fit first` and the ranked product cards; duplicate summaries, counters and scan-again controls are omitted.
 - The compact camera preview mirrors that ranking with `#1`, `#2`, `#3…` badges and shows total sugar per 100 g or 100 ml beneath each rated fit. When an exact source also lists total carbohydrates, the same row adds `Carbs`; missing carbohydrate data is simply omitted.
-- Product thumbnails preserve the source photo proportions. When no exact retailer packshot exists, the fallback crop keeps a little neighboring shelf context instead of stretching a tight detection box.
+- Product thumbnails preserve the source photo proportions. When no exact retailer packshot exists, or a supplied packshot URL fails to load, the card falls back to the matching crop from the submitted scene. The crop keeps a little neighboring shelf context instead of stretching a tight detection box, and a broken-image icon is never left in the result.
 - The compact sheet keeps `Scan again` beside `View all`. `Scan again` clears the captured result and starts a fresh live read; expanded comparison does not duplicate that control.
+- When recognition cannot confidently return a result or the provider is temporarily unavailable, the camera shows one full-width `Not sure — try again` action in the status pill. The label stays on one line and starts a new explicit scan.
 - `Great fit`, `Moderate fit` and `Low fit` camera markers use the same compact 24 px visual disc with thumbs-up, raised-hand and thumbs-down icons; the full detected-product outline remains the larger touch target. The outlined package also receives a transparent semantic tint (20% green/red, 22% yellow and 28% for the selected result), keeping the product visible while making the marker easier to read.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Carbohydrates are an optional informational value and never enter the fit formula, thresholds or ranking. Fiber is not required or displayed.
@@ -191,7 +192,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 11. Open a rated product and confirm `Better alternatives` contains only the same product type with `Great fit` no worse than the source and a live price; `Moderate fit`, `Low fit`, unrated products, and products without a valid substitute should show no alternatives block.
 12. Scan the Rimi private-label examples `Pastry twists SALTY 125g`, `Pastry twists CHEESE 125g`, `multi fruit 200ml` and `strawberry banana 200ml`; confirm they resolve from the connected Rimi snapshot rather than waiting for cited web nutrition.
 13. Confirm camera markers use equally sized compact icons: thumbs-up for Great fit, raised hand for Moderate fit and thumbs-down for Low fit; tapping anywhere inside the outlined package still opens the product.
-14. Scan a product without an exact packshot and confirm its preview thumbnail keeps the package proportions; a little neighboring shelf context is acceptable, but the package must not look stretched.
+14. Scan a product without an exact packshot, or with a retailer image that cannot load. Confirm its preview uses the matching crop from the captured scene, keeps the package proportions and never shows a broken-image icon; a little neighboring shelf context is acceptable.
 15. Confirm a purchase button is absent when the exact online offer is not cheaper than the visible shelf price; when it is cheaper, confirm the card shows one full-width green `Buy cheaper online` action.
 16. Scan exact Rimi and Livin products and confirm their retailer packshots load instead of a broken-image icon.
 17. Scan a brand-only package and confirm it fails fast; then scan a distinctive variant whose concise title omits the size but whose package text is readable, and confirm the exact fallback may still resolve it without borrowing nutrition from a sibling SKU.
@@ -199,6 +200,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 19. Confirm each rated package outline has a light green, yellow or red transparent fill matching its fit icon; the packaging must remain readable through the tint.
 20. Scan an exact SKU that previously resolved through cited web nutrition twice. Confirm the repeat result appears immediately. A result older than its freshness window must remain visible while its recheck happens silently, and an unsuccessful recheck must not remove its fit.
 21. Before the first AI result, confirm any locally proposed regions are neutral dashed outlines only. Green, yellow or red styling may appear only after an exact recognized product has verified nutrition.
+22. Point the camera at a scene that cannot be confidently recognized, or temporarily interrupt recognition. Confirm the bottom status becomes one full-width `Not sure — try again` button on one line and tapping it starts a fresh scan.
 
 ## Known limits
 
@@ -240,4 +242,5 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - [Captured-frame scan release evidence](docs/test-runs/2026-08-30-captured-frame-scan.md)
 - [Scan again and exact web-fallback release evidence](docs/test-runs/2026-08-30-scan-again-web-fallback.md)
 - [Cross-retailer alternatives release evidence](docs/test-runs/2026-08-31-cross-retailer-alternatives.md)
+- [Thumbnail failure fallback and camera retry release evidence](docs/test-runs/2026-08-31-thumbnail-fallback-retry.md)
 - [Open and recent bugs](Bugs.md)
