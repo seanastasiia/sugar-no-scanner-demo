@@ -21,5 +21,15 @@ create index if not exists pilot_feedback_session_id_idx on public.pilot_feedbac
 
 alter table public.pilot_feedback enable row level security;
 
+-- The project is created with automatic Data API exposure disabled. Grant only
+-- the server role used by Railway; browser roles receive no table access.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on table public.scan_sessions to service_role;
+grant select, insert, update, delete on table public.scan_events to service_role;
+grant select, insert, update, delete on table public.pilot_feedback to service_role;
+revoke all on table public.scan_sessions from anon, authenticated;
+revoke all on table public.scan_events from anon, authenticated;
+revoke all on table public.pilot_feedback from anon, authenticated;
+
 comment on table public.pilot_feedback is
   'Anonymous pilot feedback only. Never store images, frames, OCR text, contact details, or other personal data.';

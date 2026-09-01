@@ -24,7 +24,19 @@ Production safety:
 - `npm run test:e2e:smoke`: passed; 3/3 matching critical Mobile Safari scenarios
 - targeted Mobile Safari onboarding/feedback/permission/accessibility run: passed; 5/5 scenarios
 
-The final commit SHA, full verification, staging migration, Railway deployment, health response, and live staging smoke results are appended after deployment.
+## Staging infrastructure verification — 2026-09-01
+
+- isolated Supabase project `sugar-no-scanner-staging` created in Central EU (Frankfurt)
+- all eight migrations through `202608310002_pilot_feedback.sql` applied successfully
+- Data API tables are unavailable to `anon` and `authenticated`; only the Railway server role can write analytics and feedback
+- Railway staging deployment `6bd5fd98-1619-4c23-9022-2f732d60c320`: `SUCCESS`
+- staging `/api/health`: `ok`, commit `c24065d`
+- authenticated live `POST /api/events`: `200`, `storage: supabase`
+- authenticated live `POST /api/feedback`: `200`, `storage: supabase`
+- both control rows were read back from `scan_events` and `pilot_feedback`
+- production `/api/health`: `ok`, commit `d127ef8275d81c3d8e725a70096a3956254315d5`
+
+The one-screen onboarding redesign requested on 2026-09-01 is not covered by the earlier UI checks below and requires a fresh full verification after implementation.
 
 ## Product QA after staging deploy
 
