@@ -44,7 +44,12 @@ Production safety:
 - iPhone 13 local screenshot inspected: one screen, no clipping, actions visible without scrolling
 - `npm run verify`: passed; lint, typecheck, 47 test files and 241 tests, catalog validation, production build
 - `CI=1 npm run test:e2e`: passed; 33/33 Mobile Safari scenarios, including the entry accessibility audit
-- live staging deployment and health checks are recorded after the final staging deployment below
+- implementation commit: `081718b521e464ff29dd1cd8e2a190921fe241fa`
+- Railway GitHub-source deployment `63702ec8-9139-41b5-83b6-3c7f2bc48d95`: `SUCCESS`
+- live staging DOM: new heading and both actions present; old two-screen copy absent
+- live Supabase readback: `app_opened`, `onboarding_started`, and `onboarding_step_viewed` stored with `onboardingVersion: 2`
+- staging `/api/health`: `ok`, implementation commit `081718b521e464ff29dd1cd8e2a190921fe241fa`
+- production `/api/health`: `ok`, unchanged commit `d127ef8275d81c3d8e725a70096a3956254315d5`
 
 ## Product QA after staging deploy
 
