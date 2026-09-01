@@ -36,12 +36,20 @@ Production safety:
 - both control rows were read back from `scan_events` and `pilot_feedback`
 - production `/api/health`: `ok`, commit `d127ef8275d81c3d8e725a70096a3956254315d5`
 
-The one-screen onboarding redesign requested on 2026-09-01 is not covered by the earlier UI checks below and requires a fresh full verification after implementation.
+## One-screen onboarding checks — 2026-09-01
+
+- design direction reviewed with Claude using only the public staging URL and non-sensitive UX requirements
+- `npm run check:fast`: passed; lint, typecheck, 47 test files and 241 tests
+- targeted Mobile Safari onboarding, forced-QA, Skip, and feedback run: passed; 4/4 scenarios
+- iPhone 13 local screenshot inspected: one screen, no clipping, actions visible without scrolling
+- `npm run verify`: passed; lint, typecheck, 47 test files and 241 tests, catalog validation, production build
+- `CI=1 npm run test:e2e`: passed; 33/33 Mobile Safari scenarios, including the entry accessibility audit
+- live staging deployment and health checks are recorded after the final staging deployment below
 
 ## Product QA after staging deploy
 
 1. Confirm the production URL still opens without Stage 1 changes.
-2. Open the staging URL in a fresh iPhone Safari session and confirm two onboarding screens appear.
+2. Open the staging URL in a fresh iPhone Safari session and confirm one onboarding screen appears with `Compare the whole shelf.`
 3. Confirm Safari does not ask for camera permission until `Open camera` or `Skip`.
 4. Allow camera access and scan real products.
 5. Submit `Helpful` and `Needs work` feedback and confirm the success state.

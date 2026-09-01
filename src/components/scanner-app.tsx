@@ -283,6 +283,7 @@ export function ScannerApp() {
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const manualSelectionRef = useRef(false);
   const cameraRequestRef = useRef(0);
+  const cameraStartedFromOnboardingRef = useRef(false);
   const productFetchesRef = useRef(new Set<string>());
   const barcodeDetectorRef = useRef<NativeBarcodeDetector | null | undefined>(undefined);
 
@@ -308,7 +309,6 @@ export function ScannerApp() {
   const [trackingTranslation, setTrackingTranslation] = useState<FrameTranslation | null>(null);
   const [candidateBoxes, setCandidateBoxes] = useState<CameraCandidateBox[]>([]);
   const [onboardingState, setOnboardingState] = useState<OnboardingState>("loading");
-  const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [pilotSessionId, setPilotSessionId] = useState("");
 
@@ -1092,12 +1092,12 @@ export function ScannerApp() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setPilotSessionId(ensureSession());
-      track("app_opened", "camera", undefined, { onboardingVersion: 1 });
+      track("app_opened", "camera", undefined, { onboardingVersion: 2 });
       const forceOnboarding = new URLSearchParams(window.location.search).get("onboarding") === "1";
       if (forceOnboarding || !readOnboardingCompletion(window.localStorage)) {
         setOnboardingState("showing");
-        track("onboarding_started", "camera", undefined, { onboardingVersion: 1 });
-        track("onboarding_step_viewed", "camera", undefined, { onboardingVersion: 1, step: 1 });
+        track("onboarding_started", "camera", undefined, { onboardingVersion: 2 });
+        track("onboarding_step_viewed", "camera", undefined, { onboardingVersion: 2, step: 1 });
       } else {
         setOnboardingState("complete");
       }
@@ -1107,6 +1107,10 @@ export function ScannerApp() {
 
   useEffect(() => {
     if (onboardingState !== "complete") return;
+    if (cameraStartedFromOnboardingRef.current) {
+      cameraStartedFromOnboardingRef.current = false;
+      return;
+    }
     const timer = window.setTimeout(() => void startCamera(), 0);
     return () => {
       window.clearTimeout(timer);
@@ -1276,19 +1280,16 @@ export function ScannerApp() {
     setDemoOpen(true);
   }, []);
 
-  const changeOnboardingStep = useCallback((step: 1 | 2) => {
-    setOnboardingStep(step);
-    track("onboarding_step_viewed", "camera", undefined, { onboardingVersion: 1, step });
-  }, [track]);
-
   const finishOnboarding = useCallback((completion: "completed" | "skipped") => {
     saveOnboardingCompletion(window.localStorage, completion);
     track(completion === "completed" ? "onboarding_completed" : "onboarding_skipped", "camera", undefined, {
-      onboardingVersion: 1,
-      step: onboardingStep
+      onboardingVersion: 2,
+      step: 1
     });
+    cameraStartedFromOnboardingRef.current = true;
     setOnboardingState("complete");
-  }, [onboardingStep, track]);
+    void startCamera();
+  }, [startCamera, track]);
 
   const openFeedback = useCallback(() => {
     setPilotSessionId(ensureSession());
@@ -1333,8 +1334,6 @@ export function ScannerApp() {
   if (onboardingState === "showing") {
     return (
       <PilotOnboarding
-        step={onboardingStep}
-        onStepChange={changeOnboardingStep}
         onComplete={() => finishOnboarding("completed")}
         onSkip={() => finishOnboarding("skipped")}
       />

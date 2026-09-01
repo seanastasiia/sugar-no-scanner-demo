@@ -10,11 +10,11 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 The isolated `stage/onboarding-feedback` branch adds a first-visit pilot layer without changing recognition, Sugar.no fit, catalog, prices, or nutrition logic:
 
-- two English onboarding screens explain comparison and image-processing limits;
+- one restrained English onboarding screen explains the shelf comparison and image-processing limits without cards, decorative icons, or promotional language;
 - camera permission is requested only after `Open camera` or `Skip`;
 - completion is stored locally under `sugar_scanner_onboarding_v1`; `?onboarding=1` forces onboarding for QA;
 - anonymous in-app feedback supports `Helpful` or `Needs work`, a bounded reason, and an optional 300-character comment;
-- onboarding, camera-permission, scan, and feedback events share one anonymous browser session;
+- onboarding version `2`, camera-permission, scan, and feedback events share one anonymous browser session;
 - `pilot_feedback` is metadata-only, protected by server validation, same-origin checks, rate limiting, RLS, and a staging-only migration.
 
 Production remains pinned to `d127ef8` until the explicit command `ПУБЛИКУЙ`. Rollback tags are `production-baseline-2026-08-31` and `scanner-golden-3c83a65`. Apply `supabase/migrations/202608310002_pilot_feedback.sql` only to the separate staging Supabase project during Stage 1 validation.

@@ -391,10 +391,8 @@ test("first visit explains the pilot before requesting camera permission", async
   });
   await page.goto("/");
   await expect(page.getByLabel("Demo access code")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Compare similar products" })).toBeVisible();
-  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
-  await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByRole("heading", { name: "Point, compare, decide" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Compare the whole shelf." })).toBeVisible();
+  await expect(page.getByText("Camera frames are processed to identify products and are not saved.")).toBeVisible();
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
   await page.getByRole("button", { name: "Open camera" }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
@@ -426,10 +424,31 @@ test("completed onboarding stays hidden unless QA forces it", async ({ page }) =
     });
   });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Compare similar products" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Compare the whole shelf." })).toHaveCount(0);
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await page.goto("/?onboarding=1");
-  await expect(page.getByRole("heading", { name: "Compare similar products" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Compare the whole shelf." })).toBeVisible();
+});
+
+test("Skip dismisses the one-screen onboarding and starts the scanner only after the tap", async ({ page }) => {
+  await page.addInitScript(() => {
+    let cameraRequests = 0;
+    Object.defineProperty(window, "__cameraRequests", { configurable: true, get: () => cameraRequests });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: () => {
+        cameraRequests += 1;
+        return Promise.reject(new DOMException("Denied in test", "NotAllowedError"));
+      } }
+    });
+  });
+  await page.goto("/?onboarding=1");
+  await expect(page.getByRole("heading", { name: "Compare the whole shelf." })).toBeVisible();
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
+  await page.getByRole("button", { name: "Skip" }).click();
+  await expect(page.getByLabel("Live camera scanner")).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("sugar_scanner_onboarding_v1"))).toBe("skipped");
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(1);
 });
 
 test("anonymous feedback validates Needs work and shows success", async ({ page }) => {

@@ -12,122 +12,136 @@
 }
 
 .onboarding {
-  display: grid;
+  display: flex;
+  min-height: 100vh;
   min-height: 100dvh;
-  grid-template-rows: auto 1fr;
-  padding: calc(24px + env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-  background:
-    radial-gradient(circle at 82% 10%, rgb(157 224 77 / 20%), transparent 34%),
-    linear-gradient(160deg, #171b2a 0%, #0e1018 70%);
+  flex-direction: column;
+  padding: calc(24px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
+  overflow-y: auto;
+  background: #16171c;
   color: #ffffff;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.onboardingHeader,
+.onboardingContent {
+  width: min(100%, 420px);
+  margin-inline: auto;
+}
+
+.onboardingHeader {
+  display: flex;
+  align-items: center;
 }
 
 .onboardingLogo {
-  width: 116px;
+  width: 95px;
   height: auto;
 }
 
-.onboardingCard {
-  width: min(100%, 520px);
-  margin: auto;
-  padding: clamp(24px, 7vw, 38px);
-  border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 30px;
-  background: rgb(255 255 255 / 7%);
-  box-shadow: 0 28px 80px rgb(0 0 0 / 28%);
-  backdrop-filter: blur(18px);
+.onboardingContent {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
-.onboardingProgress {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-bottom: clamp(34px, 9vw, 54px);
-}
-
-.onboardingProgress span {
-  height: 4px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 20%);
-}
-
-.onboardingProgress .onboardingProgressActive {
-  background: #9de04d;
-}
-
-.onboardingIcon {
-  display: grid;
-  width: 58px;
-  height: 58px;
-  place-items: center;
-  border-radius: 18px;
-  background: #9de04d;
-  color: #11151d;
-}
-
-.onboardingEyebrow {
-  margin: 25px 0 9px;
-  color: #b9f17b;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+.onboardingMain {
+  display: flex;
+  min-height: 32px;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
 .onboarding h1 {
-  margin: 0;
+  max-width: 11ch;
+  margin: 0 0 16px;
   outline: 0;
   font-family: var(--font-display);
-  font-size: clamp(38px, 11vw, 58px);
-  letter-spacing: -0.055em;
-  line-height: 0.98;
+  font-size: clamp(30px, 8.5vw, 38px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.06;
 }
 
 .onboardingCopy {
-  margin: 20px 0 0;
-  color: rgb(255 255 255 / 76%);
-  font-size: 17px;
-  line-height: 1.55;
+  max-width: 34ch;
+  margin: 0;
+  color: #c7c9cf;
+  font-size: 16px;
+  line-height: 1.5;
 }
 
-.onboardingTrust {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  margin: 18px 0 0;
-  color: rgb(255 255 255 / 64%);
+.onboardingNote {
+  display: grid;
+  gap: 6px;
+  margin: 28px 0 24px;
+  padding-top: 14px;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  color: #9a9da6;
   font-size: 13px;
   line-height: 1.45;
 }
 
-.onboardingTrust svg {
-  flex: 0 0 auto;
-  color: #9de04d;
+.onboardingNote p {
+  margin: 0;
 }
 
 .onboardingActions {
   display: grid;
-  gap: 10px;
-  margin-top: clamp(34px, 9vw, 54px);
+  gap: 8px;
 }
 
-.onboarding .primaryButton {
-  background: #9de04d;
-  color: #11151d;
-  box-shadow: none;
+.onboardingPrimary,
+.secondaryButton {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 0;
+  border-radius: 12px;
+  font-family: var(--font-sans);
+  touch-action: manipulation;
+}
+
+.onboardingPrimary {
+  min-height: 54px;
+  background: #0a84ff;
+  color: #0b0d11;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.onboardingPrimary:active {
+  background: #0075e6;
 }
 
 .secondaryButton {
-  display: inline-flex;
   min-height: 48px;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  border: 0;
   background: transparent;
-  color: rgb(255 255 255 / 72%);
-  font-weight: 750;
+  color: #c7c9cf;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.onboardingPrimary:focus-visible,
+.secondaryButton:focus-visible {
+  outline: 2px solid #e9f4fe;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .onboardingContent {
+    animation: onboarding-in 160ms ease-out both;
+  }
+}
+
+@keyframes onboarding-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
 }
 
 .header {
