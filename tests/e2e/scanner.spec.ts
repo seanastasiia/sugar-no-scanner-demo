@@ -473,7 +473,7 @@ test("onboarding motion is one-time and respects reduced motion", async ({ page 
   await expect(preview).toBeVisible();
   expect(await preview.evaluate((element) => getComputedStyle(element).animationName)).toContain("onboarding-reveal-card");
   expect(await preview.evaluate((element) => getComputedStyle(element, "::before").animationIterationCount)).toBe("1");
-  expect(await preview.evaluate((element) => getComputedStyle(element, "::before").animationDuration)).toBe("1.4s");
+  expect(await preview.evaluate((element) => getComputedStyle(element, "::before").animationDuration)).toBe("3.2s");
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.reload();
@@ -1777,6 +1777,8 @@ test("provider unavailability pauses live recognition and offers manual recovery
   const retryButton = page.getByRole("button", { name: "Not sure — try again", exact: true });
   await expect(retryButton).toBeVisible({ timeout: 6_000 });
   await expect(retryButton).toHaveCSS("white-space", "nowrap");
+  await expect(retryButton).toHaveCSS("background-color", "rgb(198, 63, 69)");
+  await expect(page.getByRole("status")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   const [retryBox, statusBox] = await Promise.all([
     retryButton.boundingBox(),
     page.getByRole("status").boundingBox()

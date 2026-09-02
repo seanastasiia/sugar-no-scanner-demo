@@ -370,7 +370,7 @@
   }
 
   .onboardingPreview::before {
-    animation: onboarding-scan-pass 1400ms var(--onboarding-ease-out) 430ms both;
+    animation: onboarding-scan-pass 3200ms var(--onboarding-ease-out) 350ms both;
   }
 
   .onboardingResult {
@@ -793,7 +793,7 @@
   min-width: 148px;
   padding: 0 13px;
   gap: 7px;
-  background: rgb(198 63 69 / 94%);
+  background: rgb(20 21 30 / 82%);
   font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
@@ -1047,7 +1047,10 @@
 }
 
 .stageStatusRetry {
-  padding-inline: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .stageStatusResultHidden {
@@ -1069,14 +1072,17 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin: -8px 0;
-  padding: 8px 12px;
+  margin: 0;
+  padding: 10px 16px;
   cursor: pointer;
-  border: 0;
+  border: 1px solid rgb(255 255 255 / 24%);
   border-radius: 999px;
-  background: transparent;
+  background: #c63f45;
   color: #ffffff;
   font: inherit;
+  font-weight: 800;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 24%);
+  transition: background-color 180ms ease, opacity 180ms ease, box-shadow 180ms ease;
   white-space: nowrap;
 }
 
@@ -2373,8 +2379,15 @@
     background: rgb(32 34 46 / 92%);
   }
 
-  .stageActions > .feedbackTrigger:hover,
   .backToLive:hover {
+    background: #b7373e;
+  }
+
+  .stageActions > .feedbackTrigger:hover {
+    background: rgb(32 34 46 / 92%);
+  }
+
+  .recognitionRetry:hover {
     background: #b7373e;
   }
 
@@ -2606,6 +2619,7 @@
   .resultsSheet,
   .stageStatus,
   .stageActions > button,
+  .recognitionRetry,
   .demoChoices button,
   .demoUpload,
   .backToLive {

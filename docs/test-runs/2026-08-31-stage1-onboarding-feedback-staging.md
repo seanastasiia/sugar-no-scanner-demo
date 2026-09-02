@@ -96,3 +96,12 @@ Production safety:
 - live `Try a sample shelf`: deterministic shelf opened with no camera-denied path
 - direct Railway source upload returned HTTP 404 before creating a deployment; the pushed staging branch triggered the verified GitHub-source deployment instead
 - production `/api/health` was `ok` at pre-existing commit `cc80a339fd5643aa3dbd80be808bbeecc24e6c83`; this task did not deploy or modify production
+
+## Secondary-action hierarchy and slower scan pass — 2026-09-02
+
+- scope: staging only; production and product logic unchanged
+- visual hierarchy: `Leave feedback` uses the restrained dark secondary pill; `Not sure — try again` is a separate coral retry button on a transparent status container
+- onboarding motion: the single non-looping scan pass is slowed from 1.4 to 3.2 seconds; `prefers-reduced-motion` still removes it
+- `npm run check:fast`: passed; lint, typecheck, 48 test files and 247 tests
+- targeted Mobile Safari onboarding-motion and provider-recovery run: passed; 2/2 scenarios
+- `npm run test:e2e:smoke`: passed; 3/3 critical Mobile Safari scenarios

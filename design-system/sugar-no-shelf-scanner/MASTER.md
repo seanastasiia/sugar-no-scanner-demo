@@ -38,7 +38,7 @@ The scanner's fit colors retain their existing semantic meaning. Price does not 
 - Follow a 4/8 px rhythm. Standard gaps are 8, 12, 16, 20, and 24 px.
 - Primary actions are pill-shaped. Cards and bottom sheets use 18 to 30 px radii.
 - Every interactive target is at least 44 by 44 px. Adjacent targets have at least 8 px between them.
-- Camera overlays are dark translucent pills. Feedback is a labeled coral pill, never an icon-only action.
+- Camera overlays are dark translucent pills. Feedback is a labelled secondary pill, never an icon-only action. Coral is reserved for the primary action in each context.
 - Modal scrims use 52 to 56 percent black plus restrained blur. Modal content must not compete with the camera behind it.
 
 ## Components
@@ -46,7 +46,8 @@ The scanner's fit colors retain their existing semantic meaning. Price does not 
 ### Camera header
 
 - Official white logo at the top left.
-- `Leave feedback` and `Show demo` or `Back to live` are labeled pills over the media.
+- `Leave feedback` and `Show demo` or `Back to live` are labelled secondary pills over the media.
+- `Not sure, try again` is a distinct coral retry button, not notification chrome.
 - The camera image remains primary. Controls must not obscure recognized packages or change capture geometry.
 
 ### Demo chooser
@@ -72,7 +73,7 @@ The scanner's fit colors retain their existing semantic meaning. Price does not 
 
 - Use motion only to explain state or hierarchy.
 - Standard UI feedback is 150 to 300 ms with ease-out entry and ease-in exit.
-- The onboarding scan line makes one 1400 ms pass. It never loops.
+- The onboarding scan line makes one deliberately visible 3200 ms pass. It never loops.
 - Preserve `prefers-reduced-motion`: remove decorative motion and keep the product usable.
 - Loading spinners may loop only while work is actually in progress.
 
