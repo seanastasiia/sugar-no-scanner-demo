@@ -65,13 +65,19 @@ export async function POST(request: Request) {
       { status: 400, headers: { "cache-control": "no-store" } }
     );
   }
+  const eventMetadata = parsed.data.productId
+    ? { ...parsed.data.metadata, observedProductId: parsed.data.productId }
+    : parsed.data.metadata;
   const row = {
     id: randomUUID(),
     session_id: parsed.data.sessionId,
     event_name: parsed.data.name,
     source: parsed.data.source,
-    product_id: parsed.data.productId || null,
-    metadata: parsed.data.metadata
+    // This column references the managed products table. Visual, retailer and
+    // deterministic demo identities are valid analytics context but are not
+    // guaranteed to be managed-product IDs, so keep them in bounded metadata.
+    product_id: null,
+    metadata: eventMetadata
   };
   const supabase = getSupabaseAdmin();
   if (supabase) {

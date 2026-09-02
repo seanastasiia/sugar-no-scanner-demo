@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { sendAmplitudeEvent } = vi.hoisted(() => ({ sendAmplitudeEvent: vi.fn() }));
+const { getSupabaseAdmin, sendAmplitudeEvent } = vi.hoisted(() => ({
+  getSupabaseAdmin: vi.fn(),
+  sendAmplitudeEvent: vi.fn()
+}));
 
 vi.mock("@/server/amplitude", () => ({ sendAmplitudeEvent }));
-vi.mock("@/server/supabase", () => ({ getSupabaseAdmin: vi.fn(() => null) }));
+vi.mock("@/server/supabase", () => ({ getSupabaseAdmin }));
 
 import { POST } from "./route";
 
@@ -11,6 +14,8 @@ describe("POST /api/events", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     sendAmplitudeEvent.mockReset();
+    getSupabaseAdmin.mockReset();
+    getSupabaseAdmin.mockReturnValue(null);
   });
 
   it("rejects a cross-origin browser request before analytics storage", async () => {
@@ -60,6 +65,59 @@ describe("POST /api/events", () => {
         name: "feedback_submitted",
         source: "camera",
         metadata: { helpful: true }
+      })
+    );
+  });
+
+  it("stores external identities without violating the managed-product foreign key", async () => {
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    const eq = vi.fn().mockResolvedValue({ error: null });
+    const update = vi.fn(() => ({ eq }));
+    const from = vi.fn((table: string) => {
+      if (table === "scan_sessions") return { upsert, update };
+      if (table === "scan_events") return { insert };
+      throw new Error(`Unexpected table ${table}`);
+    });
+    getSupabaseAdmin.mockReturnValue({ from });
+    sendAmplitudeEvent.mockResolvedValue("sent");
+
+    const response = await POST(
+      new Request("https://scanner.example/api/events", {
+        method: "POST",
+        headers: {
+          origin: "https://scanner.example",
+          "content-type": "application/json",
+          "x-forwarded-for": crypto.randomUUID()
+        },
+        body: JSON.stringify({
+          sessionId: "c6a590da-e68d-4f83-a725-c9e06b8d4bfa",
+          name: "scan_completed",
+          source: "sample-shelf",
+          productId: "external:demo-product",
+          metadata: { count: 4, latencyMs: 120 }
+        })
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        product_id: null,
+        metadata: {
+          count: 4,
+          latencyMs: 120,
+          observedProductId: "external:demo-product"
+        }
+      })
+    );
+    expect(sendAmplitudeEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: {
+          count: 4,
+          latencyMs: 120,
+          observedProductId: "external:demo-product"
+        }
       })
     );
   });

@@ -29,6 +29,17 @@ Production safety:
 - live Amplitude readback: `app_opened`, `onboarding_started`, and `onboarding_step_viewed` received as anonymous Web events
 - production `/api/health`: `ok`, unchanged commit `d127ef8275d81c3d8e725a70096a3956254315d5`
 
+## Completed-scan delivery regression — 2026-09-02
+
+- While constructing the activation funnel, the live demo produced `scan_started` but not `scan_completed`.
+- Railway HTTP evidence showed one `/api/events` request returning `503` while adjacent event requests returned `200`.
+- Root cause: `scan_events.product_id` references the managed `products` table, but the demo and external retailer layers use valid identities that are not guaranteed to exist there.
+- Fix: store the bounded observed identity in Supabase JSON metadata, keep the relational foreign-key field null, and continue excluding all product identities from Amplitude.
+- targeted Amplitude and route regression: passed; 2 files, 7 tests
+- `npm run verify`: passed; lint, typecheck, 48 test files and 247 tests, catalog validation, production build
+- `CI=1 npm run test:e2e`: passed; 33/33 Mobile Safari scenarios
+- deployment and live `scan_completed` readback: pending
+
 ## Product QA
 
 1. Open staging with `?onboarding=1` and complete or skip onboarding.
