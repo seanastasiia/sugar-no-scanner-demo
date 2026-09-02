@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { sendAmplitudeEvent } from "@/server/amplitude";
 import { classifyUserAgent, metadataIsSafe } from "@/server/event-privacy";
 import { readBoundedJson } from "@/server/request-body";
 import { hasTrustedBrowserOrigin } from "@/server/request-origin";
@@ -101,11 +102,34 @@ export async function POST(request: Request) {
         .update({ completed_at: new Date().toISOString() })
         .eq("id", parsed.data.sessionId);
     }
-    return NextResponse.json({ ok: true, storage: "supabase" }, { headers: { "cache-control": "no-store" } });
+    const amplitude = await sendAmplitudeEvent({
+      id: row.id,
+      sessionId: row.session_id,
+      name: row.event_name,
+      source: row.source,
+      metadata: row.metadata
+    });
+    if (amplitude === "failed") {
+      console.warn(JSON.stringify({ event: "amplitude_delivery_failed", eventName: row.event_name }));
+    }
+    return NextResponse.json(
+      { ok: true, storage: "supabase", analytics: amplitude },
+      { headers: { "cache-control": "no-store" } }
+    );
   }
   console.info(JSON.stringify({ event: "scan_event", ...row }));
+  const amplitude = await sendAmplitudeEvent({
+    id: row.id,
+    sessionId: row.session_id,
+    name: row.event_name,
+    source: row.source,
+    metadata: row.metadata
+  });
+  if (amplitude === "failed") {
+    console.warn(JSON.stringify({ event: "amplitude_delivery_failed", eventName: row.event_name }));
+  }
   return NextResponse.json(
-    { ok: true, storage: "structured_log" },
+    { ok: true, storage: "structured_log", analytics: amplitude },
     { headers: { "cache-control": "no-store" } }
   );
 }

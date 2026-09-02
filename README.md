@@ -15,6 +15,7 @@ The isolated `stage/onboarding-feedback` branch adds a first-visit pilot layer w
 - completion is stored locally under `sugar_scanner_onboarding_v1`; `?onboarding=1` forces onboarding for QA;
 - anonymous in-app feedback supports `Helpful` or `Needs work`, a bounded reason, and an optional 300-character comment;
 - onboarding version `2`, camera-permission, scan, and feedback events share one anonymous browser session;
+- the same privacy-safe product events are sent server-side to the separate EU Amplitude project `Shelf Scanner - Staging` for funnel analysis; Supabase remains the auditable event store;
 - `pilot_feedback` is metadata-only, protected by server validation, same-origin checks, rate limiting, RLS, and a staging-only migration.
 
 Production remains pinned to `d127ef8` until the explicit command `ПУБЛИКУЙ`. Rollback tags are `production-baseline-2026-08-31` and `scanner-golden-3c83a65`. Apply `supabase/migrations/202608310002_pilot_feedback.sql` only to the separate staging Supabase project during Stage 1 validation.
@@ -107,6 +108,8 @@ Core runtime values:
 - `GEMINI_WEB_NUTRITION_MODEL`: optional grounded-search model override.
 - `GEMINI_WEB_NUTRITION_TIMEOUT_MS`: optional grounded-search deadline in milliseconds; defaults to `12000` and is clamped to Google's supported `10000` to `30000` range.
 - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: optional server-only catalog and metadata analytics configuration. The service role key must never be exposed through a `NEXT_PUBLIC_` variable.
+- `AMPLITUDE_API_KEY`: optional server-only Amplitude project key. When present, `/api/events` mirrors approved anonymous properties to the EU ingestion endpoint after storing the complete event in Supabase. Amplitude failure is non-blocking.
+- `AMPLITUDE_ENVIRONMENT`: environment label attached to Amplitude events; use `staging` for the pilot.
 - `DEMO_ACCESS_CODE` and `DEMO_SESSION_SECRET`: server-only signing inputs for the silent 12-hour same-site session. Their presence does not create a user-facing access gate.
 - `COMMIT_SHA`: fallback health metadata for direct Railway uploads.
 
@@ -177,7 +180,9 @@ The managed `products` table is optional in this proof of concept. If it has not
 
 ## Railway release
 
-Stage 1 uses the existing Railway project’s separate `staging` environment. Deploy the `stage/onboarding-feedback` worktree only with `--environment staging`, give it its own Railway domain, and set `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` from the separate staging Supabase project. Never copy production Supabase values into staging. Verify the deployed branch through `/api/health` before product QA.
+Stage 1 uses the existing Railway project’s separate `staging` environment. Deploy the `stage/onboarding-feedback` worktree only with `--environment staging`, give it its own Railway domain, and set `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` from the separate staging Supabase project. Store the `Shelf Scanner - Staging` EU project key as the server-only `AMPLITUDE_API_KEY` and set `AMPLITUDE_ENVIRONMENT=staging`. Never copy production Supabase or Amplitude values into staging, and never use a `NEXT_PUBLIC_` analytics key. Verify the deployed branch through `/api/health` before product QA.
+
+Supabase and Amplitude have different jobs. Supabase retains the complete accepted event, including an optional exact product ID for debugging. Amplitude receives only the event name, anonymous session UUID as `device_id`, source, environment, and a strict allowlist of funnel properties such as onboarding step, recognized count, latency bucket, confidence, feedback helpfulness, and error category. It never receives photos, OCR, feedback comments, email, raw user-agent strings, or exact product IDs. The event UUID becomes Amplitude `insert_id` so retries are deduplicated.
 
 Normal releases are pushed once, after the requested batch is complete:
 
