@@ -24,7 +24,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - The compact camera preview mirrors that ranking with `#1`, `#2`, `#3…` badges and shows total sugar per 100 g or 100 ml beneath each rated fit. When an exact source also lists total carbohydrates, the same row adds `Carbs`; missing carbohydrate data is simply omitted.
 - Product thumbnails preserve the source photo proportions. When no exact retailer packshot exists, or a supplied packshot URL fails to load, the card falls back to the matching crop from the submitted scene. The crop keeps a little neighboring shelf context instead of stretching a tight detection box, and a broken-image icon is never left in the result.
 - The compact sheet keeps `Scan again` beside `View all`. `Scan again` clears the captured result and starts a fresh live read; expanded comparison does not duplicate that control.
-- When recognition cannot confidently return a result or the provider is temporarily unavailable, the camera shows one full-width `Not sure — try again` action in the status pill. The label stays on one line and starts a new explicit scan.
+- When recognition cannot confidently return a result or the provider is temporarily unavailable, the camera shows one full-width blue `Not sure — try again` action instead of reusing the dark status-pill surface. White text, a visible border and pressed/focus feedback make it read as a button; the label stays on one line and starts a new explicit scan.
 - `Great fit`, `Moderate fit` and `Low fit` camera markers use the same compact 24 px visual disc with thumbs-up, raised-hand and thumbs-down icons; the full detected-product outline remains the larger touch target. The outlined package also receives a transparent semantic tint (20% green/red, 22% yellow and 28% for the selected result), keeping the product visible while making the marker easier to read.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
 - Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Carbohydrates are an optional informational value and never enter the fit formula, thresholds or ranking. Fiber is not required or displayed.
@@ -200,7 +200,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 19. Confirm each rated package outline has a light green, yellow or red transparent fill matching its fit icon; the packaging must remain readable through the tint.
 20. Scan an exact SKU that previously resolved through cited web nutrition twice. Confirm the repeat result appears immediately. A result older than its freshness window must remain visible while its recheck happens silently, and an unsuccessful recheck must not remove its fit.
 21. Before the first AI result, confirm any locally proposed regions are neutral dashed outlines only. Green, yellow or red styling may appear only after an exact recognized product has verified nutrition.
-22. Point the camera at a scene that cannot be confidently recognized, or temporarily interrupt recognition. Confirm the bottom status becomes one full-width `Not sure — try again` button on one line and tapping it starts a fresh scan.
+22. Point the camera at a scene that cannot be confidently recognized, or temporarily interrupt recognition. Confirm the bottom status becomes one full-width blue `Not sure — try again` button with white text on one line, then confirm tapping it starts a fresh scan.
 23. Reload production and allow the camera. Confirm the first automatic read waits about 1.5 seconds after the live video appears, leaving enough time to aim at the shelf; then confirm `Scan again` still begins the next read promptly.
 
 ## Known limits
@@ -245,4 +245,5 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - [Cross-retailer alternatives release evidence](docs/test-runs/2026-08-31-cross-retailer-alternatives.md)
 - [Thumbnail failure fallback and camera retry release evidence](docs/test-runs/2026-08-31-thumbnail-fallback-retry.md)
 - [Initial camera positioning delay release evidence](docs/test-runs/2026-09-02-camera-initial-focus-delay.md)
+- [Camera retry button color release evidence](docs/test-runs/2026-09-02-camera-retry-button-color.md)
 - [Open and recent bugs](Bugs.md)

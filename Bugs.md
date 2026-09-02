@@ -17,6 +17,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-02: the full-width camera retry action looked like another dark status box instead of a button.** `Not sure — try again` now uses the product's darker action-blue surface with white text, a visible border and stable pressed/focus feedback. The 5.57:1 text contrast and 44 px touch target preserve mobile accessibility.
 - **2026-09-02: the first automatic camera read could start before the user had aimed the phone at the shelf.** The initial live-camera capture now waits at least 1.5 seconds after the video starts while keeping the existing focus and stable-frame checks; `Scan again` retains its faster restart behavior.
 - **2026-08-31: a failed external packshot URL left Safari's broken-image icon even though the scanned scene was available.** Product thumbnails now detect a failed packshot load and immediately replace it with the matching aspect-correct crop from the submitted scene; only when neither source exists does the neutral scan placeholder remain.
 - **2026-08-31: camera recovery split an uncertain-state explanation and a small retry control across one crowded status pill.** Uncertain, unavailable and rate-limited camera states now use one full-width `Not sure — try again` button with a single-line label and a 44 px touch target.
