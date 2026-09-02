@@ -1,6 +1,6 @@
 # Latvia product coverage plan
 
-Checked: 2026-08-31
+Checked: 2026-09-02
 
 ## Two different coverage metrics
 
@@ -15,7 +15,9 @@ Current proof-of-concept state:
 - 40 protein-snack records remain as the deterministic category-percentile benchmark, not the Latvia coverage ceiling.
 - exact products in the broad snapshot receive a runtime two-factor reference fit; fiber is not a rating input.
 - strict Rimi and Livin adapters now provide 6,822 and 6 complete product-page rows respectively. Rimi's count comes from checking all 7,617 pages in seven approved food and drink categories. Livin's count comes after checking the full 169-URL Latvia sitemap, which also contains cosmetics and localized duplicates; neither count is visual-recognition or full-retailer coverage.
+- the Livinn Lithuania adapter accounts for all 5,926 canonical product-page URLs: 2,489 are source-classified `Maistas` identities, 1,855 of those have complete Fit nutrition and 634 stay explicitly unrated. Source-provided Lithuanian, Latvian, Russian and Estonian URL names remain aliases of one SKU/GTIN.
 - Open Food Facts has 500 complete Latvia-tagged records in a separate ODbL layer plus a streaming daily-JSONL importer. The refreshed proof subset retains multilingual source names for 119 records, and the matcher uses them without weakening exact-SKU checks. A scheduled full bulk import is still required for production-scale coverage.
+- the OFF bulk importer can now isolate Lithuania- and Belarus-tagged products into a separate regional ODbL snapshot. The large official dump has not been downloaded into the laptop or Railway build; that data job requires explicit storage approval.
 - records without enough exact nutrition and non-food pages remain unrated; the current demo does not invent values or ask the user for a second label scan.
 
 The pre-expansion public smoke found 20 distinct package identities across five Latvia scenes but only 5 automatic ratings. On the two close mayonnaise shelves, 4 of 12 identities were rated. The other three scenes include alcohol, cleaning products and distant checkout views, so the 25% aggregate is a release smoke baseline rather than a grocery accuracy estimate.
@@ -42,9 +44,9 @@ Official references:
 ## Recommended coverage pipeline
 
 1. **Run barcode and visual recognition together.** EAN-13/EAN-8 gives the strongest exact-SKU key when a barcode is visible. Native `BarcodeDetector` cannot be the only web implementation because browser support is limited; use a tested EAN-capable WebAssembly/JavaScript fallback on iPhone Safari.
-2. **Resolve the SKU through a source ladder.** Query a reviewed Sugar.no/Supabase record first, then the local broad Barbora nutrition snapshot, strict Rimi/Livin snapshots, the isolated Open Food Facts layer and finally a Google Search-grounded exact product page. Matchers require brand, variant tokens and exact pack size where available. The grounded fallback requires the same exact variant, an HTTPS citation, per-100 protein and total sugars and confidence at least 0.90. If no source resolves, keep the visual identity only as internal scan evidence and hide it from the final comparison. Never let Gemini estimate missing nutrition.
+2. **Resolve the SKU through a source ladder.** Query a reviewed Sugar.no/Supabase record first, then the local broad Barbora nutrition snapshot, strict Rimi/Livin snapshots, the multilingual Livinn edible-identity and nutrition layers, the isolated Open Food Facts layer and finally a Google Search-grounded exact product page. Matchers require brand, variant tokens and exact pack size where available. The grounded fallback requires the same exact variant, an HTTPS citation, per-100 protein and total sugars and confidence at least 0.90. If only an exact identity resolves, keep it visibly neutral and unrated. Never let Gemini estimate missing nutrition.
 3. **Read sourced nutrition automatically.** Exact Barbora, Open Food Facts and cited exact web records can produce the two-factor reference view from energy, protein and total sugars. The user-facing nutrition-label scan is disabled. Fiber may remain in a raw record when a source supplies it, but it does not affect the fit.
-4. **Add a label fallback.** If the SKU is known but a required nutrient is missing, ask the user to show the nutrition table. AI may transcribe the label into a review screen, but the rating becomes verified only after source validation. Raw images remain unsaved.
+4. **Queue missing nutrition for source review.** If the SKU is known but a required nutrient is missing, keep the identity unrated and refresh it from a licensed catalog, manufacturer page or exact attributed source. The live product flow does not ask for or store a second nutrition-label image.
 5. **Compare inside a category.** A yogurt, cola and protein bar must not share one percentile population. Store a reviewed category and calculate protein and inverse total sugar against that category's current sourced distribution.
 6. **Build shelf recognition from exact SKU assets.** Store approved front-pack images or embeddings linked to GTINs. Visual matching proposes candidates; barcode, label text and brand/pack-size checks decide the exact SKU.
 7. **Cache by GTIN in Supabase with provenance.** Keep every nutrient field's source, checked date and status. Open Food Facts-derived data should remain attributable and logically separated until ODbL obligations are reviewed.

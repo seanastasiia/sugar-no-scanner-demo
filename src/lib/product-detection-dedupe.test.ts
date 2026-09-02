@@ -65,4 +65,46 @@ describe("dedupeProductDetections", () => {
     }
     expect(dedupeProductDetections([first, second])).toHaveLength(1);
   });
+
+  it("collapses overlapping detections of the same package read in different languages", () => {
+    const russian = coke("Сухарики с оливковым маслом 100 г", 0.1, 0.9);
+    russian.identity!.brand = "Valledoro";
+    russian.identity!.packSize = "100 g";
+    russian.box = { x: 0.1, y: 0.2, width: 0.25, height: 0.5 };
+    const italian = coke("Crostini Classici all'olio d'oliva", 0.12, 0.94);
+    italian.identity!.brand = "VALLEDORO";
+    italian.identity!.packSize = null;
+    italian.box = { x: 0.12, y: 0.23, width: 0.2, height: 0.42 };
+    italian.productId = "web:valledoro-crostini";
+    italian.identity!.matchKind = "web_search";
+
+    const result = dedupeProductDetections([russian, italian]);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ productId: "web:valledoro-crostini" });
+  });
+
+  it("collapses separate language readings after both resolve to the same exact SKU", () => {
+    const italian = coke("Crostini Classici all'olio d'oliva", 0.05);
+    italian.productId = "livinn_lt:1AM092401277";
+    italian.identity!.brand = "Valledoro";
+    italian.identity!.matchKind = "retailer_catalog";
+    italian.identity!.packSize = "100 g";
+    const russian = coke("Кростини с оливковым маслом", 0.7);
+    russian.productId = "livinn_lt:1AM092401277";
+    russian.identity!.brand = "Valledoro";
+    russian.identity!.matchKind = "retailer_catalog";
+    russian.identity!.packSize = "100 г";
+
+    expect(dedupeProductDetections([italian, russian])).toHaveLength(1);
+  });
+
+  it("keeps separate packages apart when only brand and pack match", () => {
+    const olive = coke("Crostini olive oil", 0.05);
+    olive.identity!.brand = "Valledoro";
+    olive.identity!.packSize = "100 g";
+    const rosemary = coke("Tarallini rosemary", 0.7);
+    rosemary.identity!.brand = "Valledoro";
+    rosemary.identity!.packSize = "100 g";
+    expect(dedupeProductDetections([olive, rosemary])).toHaveLength(2);
+  });
 });

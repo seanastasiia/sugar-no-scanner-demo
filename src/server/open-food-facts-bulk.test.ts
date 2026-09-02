@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   isLatviaOpenFoodFactsRecord,
+  isOpenFoodFactsMarketRecord,
   openFoodFactsBulkRecordToProduct,
   openFoodFactsProductNames
 } from "./open-food-facts-bulk";
@@ -24,6 +25,18 @@ describe("Open Food Facts bulk normalization", () => {
       totalSugarG: 3.2,
       carbohydrateG: 18
     });
+  });
+
+  it("supports the licensed Baltic and Belarus bulk scope without language assumptions", () => {
+    expect(
+      isOpenFoodFactsMarketRecord({ countries_tags: ["en:lithuania"] }, ["latvia", "lithuania", "belarus"])
+    ).toBe(true);
+    expect(
+      isOpenFoodFactsMarketRecord({ countries: "Беларусь" }, ["latvia", "lithuania", "belarus"])
+    ).toBe(true);
+    expect(
+      isOpenFoodFactsMarketRecord({ countries_tags: ["en:estonia"] }, ["latvia", "lithuania", "belarus"])
+    ).toBe(false);
   });
 
   it("rejects missing sugar and invalid barcodes", () => {

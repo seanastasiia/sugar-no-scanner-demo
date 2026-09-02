@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   dedupeExternalCatalogProducts,
+  externalCatalogIdentityToScoredProduct,
   externalCatalogToScoredProduct,
-  rankExternalCatalogCandidates
+  rankExternalCatalogCandidates,
+  rankExternalCatalogIdentities,
+  resolveExternalCatalogProduct
 } from "./external-catalog";
-import type { ExternalCatalogProduct } from "./external-catalog-types";
+import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "./external-catalog-types";
 
 const product: ExternalCatalogProduct = {
   source: "rimi_lv",
@@ -149,6 +152,88 @@ describe("external retailer catalog", () => {
     expect(ranked[0]?.confidence).toBeGreaterThanOrEqual(0.84);
   });
 
+  it("matches a Livinn SKU through its source-provided Russian language alias", () => {
+    const livinn: ExternalCatalogProduct = {
+      ...product,
+      source: "livinn_lt",
+      sourceProductId: "1G1701009280",
+      retailer: "Livin",
+      url: "https://www.livinn.lt/p/eko-ryziu-trap-su-him-druska-bettr-120g-1g1701009280-lt",
+      title: "Ryžių trapučiai su Himalajų druska, ekologiški",
+      aliases: ["bett r risovye krekery s gimalaiskoi soliu organicheskie"],
+      brand: "Bett'r",
+      gtin: "380023368242",
+      sku: "1G1701009280",
+      category: "Maistas > Duona, bandelės, trapučiai",
+      packSize: "120g",
+      proteinG: 8.1,
+      totalSugarG: 1.8,
+      carbohydrateG: 75
+    };
+    const ranked = rankExternalCatalogCandidates(
+      {
+        brand: "BETT'R",
+        name: "Рисовые крекеры с гималайской солью",
+        variant: "",
+        packSize: "120 г",
+        searchTerms: []
+      },
+      [livinn]
+    );
+    expect(ranked[0]?.product.sourceProductId).toBe("1G1701009280");
+    expect(ranked[0]?.confidence).toBeGreaterThanOrEqual(0.84);
+    expect(externalCatalogToScoredProduct(livinn).aliases).toContain(
+      "bett r risovye krekery s gimalaiskoi soliu organicheskie"
+    );
+  });
+
+  it("matches an English Livinn label to the same Baltic SKU without translated nutrition guesses", () => {
+    const livinn: ExternalCatalogIdentity = {
+      source: "livinn_lt",
+      sourceProductId: "1G1701009280",
+      retailer: "Livin",
+      url: "https://www.livinn.lt/p/eko-ryziu-trap-su-him-druska-bettr-120g-1g1701009280-lt",
+      title: "Ryžių trapučiai su Himalajų druska, ekologiški",
+      aliases: [
+        "bett r risu galetes ar himalaju sali ekologiskas",
+        "bett r risovye krekery s gimalaiskoi soliu organicheskie"
+      ],
+      brand: "Bett'r",
+      gtin: "380023368242",
+      sku: "1G1701009280",
+      category: "Maistas > Duona, bandelės, trapučiai",
+      packSize: "120g",
+      imageUrl: null,
+      price: 2.49,
+      currency: "EUR",
+      available: true,
+      checkedAt: "2026-09-02T00:00:00.000Z"
+    };
+    const ranked = rankExternalCatalogIdentities(
+      {
+        brand: "BETT'R",
+        name: "Brown Rice Cakes Himalayan Salt",
+        variant: "",
+        packSize: "120 g",
+        searchTerms: []
+      },
+      [livinn]
+    );
+    const scored = externalCatalogIdentityToScoredProduct(livinn);
+
+    expect(ranked[0]?.product.sourceProductId).toBe("1G1701009280");
+    expect(ranked[0]?.confidence).toBeGreaterThanOrEqual(0.84);
+    expect(scored.id).toBe("livinn_lt:1G1701009280");
+    expect(scored.ratingStatus).toBe("identity_only");
+    expect(scored.matchScore).toBeNull();
+    expect(scored.nutrientsPer100g).toEqual({
+      proteinG: null,
+      fiberG: null,
+      totalSugarG: null,
+      carbohydrateG: null
+    });
+  });
+
   it("preserves decimal packs instead of treating 0,33 l as 33 litres", () => {
     const candidate = rimiProduct("330", "Dzēriens Rimi apelsīnu 330ml", "330ml");
     const ranked = rankExternalCatalogCandidates(
@@ -156,6 +241,23 @@ describe("external retailer catalog", () => {
       [candidate]
     );
     expect(ranked[0]?.product.sourceProductId).toBe("330");
+  });
+
+  it.each([
+    ["BETT'R", "Brown Rice Cakes Himalayan Salt", "120 g", "1G1701009280", 8.1, 1.8],
+    ["Valledoro", "Сухарики с оливковым маслом", "100 г", "1AM092401277", 12, 2],
+    ["Sottolestelle", "Gluten Free Tarallini Rosemary", "150 g", "SOTT0299", 3.4, 1.5]
+  ])("resolves the generated multilingual Livinn snapshot for %s", (brand, name, packSize, id, protein, sugar) => {
+    const resolved = resolveExternalCatalogProduct(
+      { brand, name, variant: "", packSize, searchTerms: [name] },
+      ""
+    );
+    expect(resolved).toMatchObject({
+      product: {
+        id: `livinn_lt:${id}`,
+        nutrientsPer100g: { proteinG: protein, totalSugarG: sugar }
+      }
+    });
   });
 
   it("deduplicates identical retailer identities and prefers an available record", () => {

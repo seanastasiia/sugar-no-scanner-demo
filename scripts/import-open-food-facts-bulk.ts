@@ -6,14 +6,27 @@ import { createInterface } from "node:readline";
 import path from "node:path";
 import type { ExternalCatalogProduct } from "../src/server/external-catalog-types";
 import {
-  isLatviaOpenFoodFactsRecord,
+  isOpenFoodFactsMarketRecord,
   openFoodFactsBulkRecordToProduct,
-  type OpenFoodFactsBulkRecord
+  type OpenFoodFactsBulkRecord,
+  type OpenFoodFactsMarket
 } from "../src/server/open-food-facts-bulk";
 
 const input = process.env.OFF_BULK_INPUT?.trim() || process.argv[2]?.trim();
 if (!input) throw new Error("OFF_BULK_INPUT or an input argument is required (.jsonl or .jsonl.gz path/URL)");
-const outputPath = path.resolve(process.env.OFF_BULK_OUTPUT || "data/open-food-facts-lv.generated.json");
+const supportedMarkets = new Set<OpenFoodFactsMarket>(["latvia", "lithuania", "belarus"]);
+const markets = (process.env.OFF_BULK_MARKETS || "latvia")
+  .split(",")
+  .map((value) => value.trim().toLowerCase())
+  .filter(Boolean) as OpenFoodFactsMarket[];
+if (!markets.length || markets.some((market) => !supportedMarkets.has(market))) {
+  throw new Error("OFF_BULK_MARKETS must contain only: latvia,lithuania,belarus");
+}
+const onlyLatvia = markets.length === 1 && markets[0] === "latvia";
+const outputPath = path.resolve(
+  process.env.OFF_BULK_OUTPUT ||
+  (onlyLatvia ? "data/open-food-facts-lv.generated.json" : "data/open-food-facts-regional.generated.json")
+);
 const limit = Math.max(0, Number.parseInt(process.env.OFF_BULK_LIMIT || "0", 10));
 const checkedAt = process.env.CATALOG_CHECKED_AT || new Date().toISOString();
 const fetchTimeoutMs = Math.max(60_000, Number.parseInt(process.env.OFF_BULK_FETCH_TIMEOUT_MS || "1800000", 10));
@@ -49,15 +62,15 @@ async function main() {
     } catch {
       continue;
     }
-    if (!isLatviaOpenFoodFactsRecord(record)) continue;
+    if (!isOpenFoodFactsMarketRecord(record, markets)) continue;
     const product = openFoodFactsBulkRecordToProduct(record, checkedAt);
     if (product) products.set(product.sourceProductId, product);
     if (limit > 0 && products.size >= limit) break;
-    if (processed % 500_000 === 0) console.log(`Read ${processed} rows; kept ${products.size} Latvia products`);
+    if (processed % 500_000 === 0) console.log(`Read ${processed} rows; kept ${products.size} products for ${markets.join(", ")}`);
   }
   const sorted = [...products.values()].sort((left, right) => left.sourceProductId.localeCompare(right.sourceProductId));
   await writeJsonAtomic(sorted);
-  console.log(`Wrote ${sorted.length} ODbL products to the isolated OFF layer at ${outputPath}`);
+  console.log(`Wrote ${sorted.length} ODbL products for ${markets.join(", ")} to the isolated OFF layer at ${outputPath}`);
 }
 
 main().catch((error) => {

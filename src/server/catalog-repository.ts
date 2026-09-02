@@ -121,7 +121,7 @@ async function resolveProduct(id: string): Promise<ScoredProduct | null> {
     const indexed = getIndexedBarboraNutrition(slug);
     return indexed ? indexedBarboraProductToScoredProduct(indexed) : getRatedBarboraProduct(slug);
   }
-  if (id.startsWith("rimi_lv:") || id.startsWith("livin_lv:")) {
+  if (id.startsWith("rimi_lv:") || id.startsWith("livin_lv:") || id.startsWith("livinn_lt:")) {
     return getExternalCatalogProductById(id);
   }
   return (await listProducts()).find((candidate) => candidate.id === id) || null;

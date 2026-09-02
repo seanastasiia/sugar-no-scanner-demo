@@ -19,7 +19,8 @@ import {
   resolveVisibleDetections,
   type ProviderDetection
 } from "./recognition";
-import { resolveExternalCatalogProduct } from "./external-catalog";
+import { externalCatalogIdentityToScoredProduct, resolveExternalCatalogProduct } from "./external-catalog";
+import type { ExternalCatalogIdentity } from "./external-catalog-types";
 
 const originalKey = process.env.GEMINI_API_KEY;
 
@@ -202,6 +203,7 @@ describe("recognitionInstruction", () => {
     expect(instruction).toContain("online grocery or catalog page");
     expect(instruction).toContain("every visible product card as a candidate SKU");
     expect(instruction).toContain("adjacent title, brand, variant and pack size");
+    expect(instruction).toContain("never combine a brand, title, pack size or image from neighboring cards");
     expect(instruction).toContain("not a physical shelf price label");
   });
 });
@@ -489,6 +491,72 @@ describe("resolveVisibleDetections", () => {
     });
     expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
     expect(resolveWebNutrition).not.toHaveBeenCalled();
+  });
+
+  it("uses a multilingual Livinn identity to make the nutrition lookup exact", async () => {
+    const identity: ExternalCatalogIdentity = {
+      source: "livinn_lt",
+      sourceProductId: "1G1701009280",
+      retailer: "Livin",
+      url: "https://www.livinn.lt/p/eko-ryziu-trap-su-him-druska-bettr-120g-1g1701009280-lt",
+      title: "Ryžių trapučiai su Himalajų druska, ekologiški",
+      aliases: ["bett r risu galetes ar himalaju sali ekologiskas"],
+      brand: "Bett'r",
+      gtin: "380023368242",
+      sku: "1G1701009280",
+      category: "Maistas > Duona, bandelės, trapučiai",
+      packSize: "120g",
+      imageUrl: null,
+      price: 2.49,
+      currency: "EUR",
+      available: true,
+      checkedAt: "2026-09-02T00:00:00.000Z"
+    };
+    const resolveOpenFoodFacts = vi.fn(async () => null);
+    const resolveWebNutrition = vi.fn(async () => null);
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, {
+        brand: "BETT'R",
+        productName: "Brown Rice Cakes Himalayan Salt 120 g",
+        searchQuery: "BETT'R Brown Rice Cakes Himalayan Salt 120 g"
+      })],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveExternalCatalog: () => null,
+        resolveExternalCatalogIdentity: () => ({
+          identity,
+          product: externalCatalogIdentityToScoredProduct(identity),
+          confidence: 0.96
+        }),
+        resolveOpenFoodFacts,
+        resolveIndexedCandidate: () => null,
+        resolveWebNutrition
+      }
+    );
+
+    expect(resolveOpenFoodFacts).toHaveBeenCalledWith(
+      expect.objectContaining({
+        brand: "Bett'r",
+        name: identity.title,
+        packSize: "120g",
+        searchTerms: expect.arrayContaining(identity.aliases)
+      }),
+      "380023368242"
+    );
+    expect(resolveWebNutrition).toHaveBeenCalledOnce();
+    expect(detections[0]).toMatchObject({
+      productId: "livinn_lt:1G1701009280",
+      nutritionLinkConfidence: 0.96,
+      identity: { matchKind: "retailer_catalog" },
+      inlineProduct: {
+        id: "livinn_lt:1G1701009280",
+        ratingStatus: "identity_only",
+        matchScore: null,
+        nutrientsPer100g: { proteinG: null, totalSugarG: null }
+      }
+    });
   });
 
   it("resolves an English Rimi pack label from the Latvian snapshot without web search", async () => {

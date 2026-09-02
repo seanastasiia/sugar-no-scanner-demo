@@ -21,9 +21,13 @@ The exact-match ladder is:
 
 1. curated Sugar.no catalog;
 2. Barbora product and nutrition snapshots;
-3. strict Rimi or Livin page snapshots;
-4. isolated Open Food Facts records;
-5. exact cited web nutrition.
+3. strict Rimi or Livin Latvia nutrition snapshots;
+4. the Livinn Lithuania edible-identity index, which canonicalizes the exact SKU across Lithuanian, Latvian, Russian and Estonian source aliases before looking for nutrition;
+5. the nutrition-complete Livinn Lithuania snapshot;
+6. isolated Open Food Facts records;
+7. exact cited web nutrition.
+
+An identity-only Livinn record can name and de-duplicate a product, provide its exact GTIN to later sources and remain visible as unrated. It cannot produce a Sugar.no fit. Only a record with source-backed energy, protein and total sugar enters scoring or the alternative pool.
 
 Shared types are in `src/lib/types.ts`. Scoring is in `src/lib/scoring.ts`. Retailer matching is in `src/server/barbora-catalog.ts` and `src/server/external-catalog.ts`. Better-alternative eligibility is isolated in `src/lib/better-alternatives.ts`.
 
@@ -38,6 +42,8 @@ Do not open the full files during ordinary code work:
 - `data/barbora-food-product-index.generated.json`
 - `data/rimi-catalog.generated.json`
 - `data/livin-catalog.generated.json`
+- `data/livinn-food-index.generated.json`
+- `data/livinn-catalog.generated.json`
 
 Use a narrow `jq` query or the validators in `scripts/`. Generated snapshots are reproducible inputs, not hand-edited source.
 

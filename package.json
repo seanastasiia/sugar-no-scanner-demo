@@ -25,6 +25,7 @@
     "catalog:sync:barbora-nutrition": "tsx scripts/sync-barbora-nutrition-index.ts",
     "catalog:sync:rimi": "RETAILER_SYNC_SOURCE=rimi tsx scripts/sync-retailer-catalog.ts",
     "catalog:sync:livin": "RETAILER_SYNC_SOURCE=livin tsx scripts/sync-retailer-catalog.ts",
+    "catalog:sync:livinn": "RETAILER_SYNC_SOURCE=livinn tsx scripts/sync-retailer-catalog.ts",
     "catalog:sync:off-latvia": "tsx scripts/sync-open-food-facts-latvia.ts",
     "catalog:import:off": "tsx scripts/import-open-food-facts-bulk.ts",
     "catalog:generate:sources": "tsx scripts/generate-catalog-sources.ts",

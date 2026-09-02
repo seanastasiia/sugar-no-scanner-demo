@@ -25,6 +25,23 @@ export interface OpenFoodFactsBulkRecord {
   };
 }
 
+export type OpenFoodFactsMarket = "latvia" | "lithuania" | "belarus";
+
+const marketEvidence: Record<OpenFoodFactsMarket, { tags: string[]; countryText: RegExp }> = {
+  latvia: {
+    tags: ["en:latvia", "lv:latvija"],
+    countryText: /\blatvia\b|\blatvija\b/i
+  },
+  lithuania: {
+    tags: ["en:lithuania", "lt:lietuva"],
+    countryText: /\blithuania\b|\blietuva\b/i
+  },
+  belarus: {
+    tags: ["en:belarus", "ru:belarus", "be:belarus"],
+    countryText: /\bbelarus\b|беларусь|белоруссия/i
+  }
+};
+
 function finite(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
 }
@@ -61,8 +78,19 @@ export function openFoodFactsProductNames(record: object): string[] {
 }
 
 export function isLatviaOpenFoodFactsRecord(record: OpenFoodFactsBulkRecord): boolean {
-  const tags = record.countries_tags || [];
-  return tags.some((tag) => ["en:latvia", "lv:latvija"].includes(tag.toLowerCase())) || /\blatvia\b|\blatvija\b/i.test(record.countries || "");
+  return isOpenFoodFactsMarketRecord(record, ["latvia"]);
+}
+
+export function isOpenFoodFactsMarketRecord(
+  record: OpenFoodFactsBulkRecord,
+  markets: OpenFoodFactsMarket[]
+): boolean {
+  const tags = new Set((record.countries_tags || []).map((tag) => tag.toLowerCase()));
+  const countryText = record.countries || "";
+  return markets.some((market) => {
+    const evidence = marketEvidence[market];
+    return evidence.tags.some((tag) => tags.has(tag)) || evidence.countryText.test(countryText);
+  });
 }
 
 export function openFoodFactsBulkRecordToProduct(

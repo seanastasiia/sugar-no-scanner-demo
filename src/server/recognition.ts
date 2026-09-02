@@ -26,7 +26,7 @@ import {
 } from "./barbora-catalog";
 import { getIndexedBarboraProductWithAlternatives } from "./barbora-nutrition-index";
 import { resolveOpenFoodFactsProduct } from "./open-food-facts";
-import { resolveExternalCatalogProduct } from "./external-catalog";
+import { resolveExternalCatalogIdentity, resolveExternalCatalogProduct } from "./external-catalog";
 import { resolveWebNutritionProduct } from "./web-nutrition";
 import { sampleResponse } from "./demo-scenes";
 
@@ -259,6 +259,7 @@ export function recognitionInstruction(
       ? `This saved image may be a supermarket shelf, a checkout photo, a long screenshot, or an online grocery or catalog page. ` +
         `On an online-store page, treat every visible product card as a candidate SKU. Read each product image together with its ` +
         `adjacent title, brand, variant and pack size, and return one detection for every distinct readable product card. ` +
+        `Keep each card's text inside that card: never combine a brand, title, pack size or image from neighboring cards. ` +
         `Merge repeated copies of the same card or SKU rather than counting them twice. A price shown on an online-store page is not ` +
         `a physical shelf price label and must never be returned as shelfPrice. `
       : "";
@@ -449,6 +450,7 @@ export interface DetectionResolutionDependencies {
   resolveOffer: typeof resolveBarboraOffer;
   resolveOpenFoodFacts: typeof resolveOpenFoodFactsProduct;
   resolveExternalCatalog?: typeof resolveExternalCatalogProduct;
+  resolveExternalCatalogIdentity?: typeof resolveExternalCatalogIdentity;
   resolveIndexedCandidate?: typeof resolveIndexedBarboraCandidate;
   getIndexedProduct?: typeof getIndexedBarboraProductWithAlternatives;
   resolveWebNutrition?: typeof resolveWebNutritionProduct;
@@ -461,6 +463,7 @@ const defaultResolutionDependencies: DetectionResolutionDependencies = {
   resolveOffer: resolveBarboraOffer,
   resolveOpenFoodFacts: resolveOpenFoodFactsProduct,
   resolveExternalCatalog: resolveExternalCatalogProduct,
+  resolveExternalCatalogIdentity,
   resolveIndexedCandidate: resolveIndexedBarboraCandidate,
   getIndexedProduct: getIndexedBarboraProductWithAlternatives,
   resolveWebNutrition: resolveWebNutritionProduct
@@ -539,19 +542,36 @@ export async function resolveVisibleDetections(
     const externalCatalogCandidate = mode === "fast" || knownProduct
       ? null
       : dependencies.resolveExternalCatalog?.(lookupInput, detection.barcode) || null;
-    const openFoodFactsCandidate = mode === "fast" || knownProduct || externalCatalogCandidate || !canSearchExactIdentity
+    const externalCatalogIdentity = mode === "fast" || knownProduct || externalCatalogCandidate
       ? null
-      : await dependencies.resolveOpenFoodFacts(lookupInput, detection.barcode).catch(() => null);
-    const webNutrition = mode === "fast" || knownProduct || externalCatalogCandidate || openFoodFactsCandidate || !canSearchExactIdentity
+      : dependencies.resolveExternalCatalogIdentity?.(lookupInput, detection.barcode) || null;
+    const canonicalLookupInput = externalCatalogIdentity
+      ? {
+          ...lookupInput,
+          brand: externalCatalogIdentity.identity.brand,
+          name: externalCatalogIdentity.identity.title,
+          packSize: externalCatalogIdentity.identity.packSize,
+          searchTerms: [
+            ...externalCatalogIdentity.identity.aliases,
+            detection.searchQuery
+          ].filter(Boolean)
+        }
+      : lookupInput;
+    const canonicalBarcode = detection.barcode || externalCatalogIdentity?.identity.gtin || "";
+    const openFoodFactsCandidate = mode === "fast" || knownProduct || externalCatalogCandidate || (!canSearchExactIdentity && !externalCatalogIdentity)
       ? null
-      : await dependencies.resolveWebNutrition?.(lookupInput, detection.confidence).catch(() => null) || null;
-    const resolvedProduct = knownProduct || externalCatalogCandidate?.product || openFoodFactsCandidate?.product || webNutrition?.product || null;
+      : await dependencies.resolveOpenFoodFacts(canonicalLookupInput, canonicalBarcode).catch(() => null);
+    const webNutrition = mode === "fast" || knownProduct || externalCatalogCandidate || openFoodFactsCandidate || (!canSearchExactIdentity && !externalCatalogIdentity)
+      ? null
+      : await dependencies.resolveWebNutrition?.(canonicalLookupInput, detection.confidence).catch(() => null) || null;
+    const resolvedProduct = knownProduct || externalCatalogCandidate?.product || openFoodFactsCandidate?.product || webNutrition?.product || externalCatalogIdentity?.product || null;
     const resolvedRetailerOffer = exactRetailerOffer || externalCatalogCandidate?.offer || retailerOffer;
     const nutritionLinkConfidence =
       initialCatalogMatch?.confidence ??
       externalCatalogCandidate?.confidence ??
       openFoodFactsCandidate?.confidence ??
       webNutrition?.confidence ??
+      externalCatalogIdentity?.confidence ??
       indexedBarboraMatch?.score ??
       exactRetailerOffer?.matchConfidence ??
       null;
@@ -583,7 +603,7 @@ export async function resolveVisibleDetections(
           ? "verified_catalog"
           : indexedProduct || exactOfferProduct
             ? "barbora"
-            : externalCatalogCandidate
+            : externalCatalogCandidate || externalCatalogIdentity
               ? "retailer_catalog"
             : openFoodFactsCandidate
               ? "open_food_facts"
@@ -603,7 +623,7 @@ export async function resolveVisibleDetections(
         : null,
       retailerOffer: resolvedRetailerOffer,
       nutritionLinkConfidence,
-      inlineProduct: externalCatalogCandidate?.product || webNutrition?.product || null
+      inlineProduct: externalCatalogCandidate?.product || webNutrition?.product || externalCatalogIdentity?.product || null
     };
   });
   return dedupeProductDetections(resolved);

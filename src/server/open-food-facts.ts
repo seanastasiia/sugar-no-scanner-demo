@@ -1,6 +1,7 @@
 import { scoreReferenceProduct } from "@/lib/scoring";
 import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
 import bulkSnapshot from "../../data/open-food-facts-lv.generated.json";
+import regionalBulkSnapshot from "../../data/open-food-facts-regional.generated.json";
 import type { ExternalCatalogProduct } from "./external-catalog-types";
 import { openFoodFactsProductNames } from "./open-food-facts-bulk";
 import {
@@ -60,7 +61,12 @@ const PRODUCT_URL = "https://world.openfoodfacts.org/api/v3/product";
 const USER_AGENT = "Sugar.no scanner demo/0.1 (https://sugar.no)";
 const CACHE_TTL_MS = 30 * 60_000;
 const responseCache = new Map<string, { expiresAt: number; product: ScoredProduct | null; confidence: number }>();
-const bulkProducts = bulkSnapshot as ExternalCatalogProduct[];
+const bulkProducts = [
+  ...new Map(
+    [...(bulkSnapshot as ExternalCatalogProduct[]), ...(regionalBulkSnapshot as ExternalCatalogProduct[])]
+      .map((product) => [product.gtin || product.sourceProductId, product] as const)
+  ).values()
+];
 const bulkProductsByBarcode = new Map(
   bulkProducts.map((product) => [product.gtin || product.sourceProductId, product] as const)
 );

@@ -1,4 +1,4 @@
-import type { ExternalCatalogProduct } from "./external-catalog-types";
+import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "./external-catalog-types";
 
 interface JsonLdProduct {
   "@type"?: string;
@@ -16,6 +16,11 @@ interface JsonLdProduct {
     availability?: string;
     url?: string;
   };
+}
+
+interface JsonLdBreadcrumbList {
+  "@type"?: string;
+  itemListElement?: Array<{ name?: string; item?: string }>;
 }
 
 function decodeHtml(value: string): string {
@@ -38,17 +43,20 @@ function finite(value: unknown): number | null {
   return Number.isFinite(numeric) && numeric >= 0 ? numeric : null;
 }
 
-function jsonLdProducts(html: string): JsonLdProduct[] {
+function jsonLdValues(html: string): Array<JsonLdProduct | JsonLdBreadcrumbList> {
   return [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)]
-    .flatMap((match): JsonLdProduct[] => {
+    .flatMap((match): Array<JsonLdProduct | JsonLdBreadcrumbList> => {
       try {
-        const value = JSON.parse(match[1]) as JsonLdProduct | JsonLdProduct[];
+        const value = JSON.parse(match[1]) as JsonLdProduct | JsonLdBreadcrumbList | Array<JsonLdProduct | JsonLdBreadcrumbList>;
         return Array.isArray(value) ? value : [value];
       } catch {
         return [];
       }
-    })
-    .filter((value) => value["@type"] === "Product");
+    });
+}
+
+function jsonLdProducts(html: string): JsonLdProduct[] {
+  return jsonLdValues(html).filter((value): value is JsonLdProduct => value["@type"] === "Product");
 }
 
 function productImage(product: JsonLdProduct): string | null {
@@ -81,8 +89,9 @@ function nutrient(text: string, labels: RegExp[]): number | null {
 }
 
 function energyKcal(text: string): number | null {
-  const direct = text.match(/(?:enerģētiskā vērtība|energy)[\s\S]{0,120}?(\d+(?:[.,]\d+)?)\s*kcal/i);
-  return finite(direct?.[1]);
+  const labelled = text.match(/(?:enerģētiskā vērtība|energy|maistinė vertė|пищевая ценность)[\s\S]{0,160}?(\d+(?:[.,]\d+)?)\s*kcal/i);
+  if (labelled) return finite(labelled[1]);
+  return finite(text.match(/(?:\d+(?:[.,]\d+)?\s*k[jd]\s*[/·-]\s*)?(\d+(?:[.,]\d+)?)\s*kcal/i)?.[1]);
 }
 
 function packFromTitle(title: string): string {
@@ -190,6 +199,104 @@ export function parseLivinProductPage(
     proteinG: protein,
     totalSugarG: sugar,
     carbohydrateG: carbohydrate,
+    imageUrl: productImage(product),
+    price,
+    currency: product.offers?.priceCurrency === "EUR" && price !== null ? "EUR" : null,
+    available: availability(product.offers?.availability),
+    checkedAt
+  };
+}
+
+function livinnCategory(html: string): string | null {
+  const breadcrumbs = jsonLdValues(html).find(
+    (value): value is JsonLdBreadcrumbList => value["@type"] === "BreadcrumbList"
+  );
+  const names = (breadcrumbs?.itemListElement || [])
+    .slice(1, -1)
+    .map((item) => plainText(item.name || ""))
+    .filter(Boolean);
+  return names.length ? names.join(" > ") : null;
+}
+
+function alternateSlugAliases(html: string, currentUrl: string, sku: string): string[] {
+  const current = new URL(currentUrl);
+  const normalizedSku = sku.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const aliases = new Map<string, string>();
+  for (const match of html.matchAll(/<link[^>]+rel=["']alternate["'][^>]+href=["']([^"']+)["'][^>]*>/gi)) {
+    try {
+      const alternate = new URL(decodeHtml(match[1]));
+      if (alternate.href === current.href) continue;
+      let slug = decodeURIComponent(alternate.pathname.split("/p/")[1] || "")
+        .replace(/-lt$/i, "")
+        .replace(/-/g, " ")
+        .trim();
+      if (!slug) continue;
+      const words = slug.split(/\s+/);
+      while (words.length) {
+        const compact = words.at(-1)!.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (compact === normalizedSku || compact === "lt") words.pop();
+        else break;
+      }
+      slug = words.join(" ").trim();
+      const key = slug.toLocaleLowerCase();
+      if (slug && !aliases.has(key)) aliases.set(key, slug);
+    } catch {
+      // Ignore malformed alternate metadata without discarding the verified product page.
+    }
+  }
+  return [...aliases.values()];
+}
+
+export function parseLivinnProductPage(
+  html: string,
+  url: string,
+  checkedAt = new Date().toISOString()
+): ExternalCatalogProduct | null {
+  const identity = parseLivinnProductIdentity(html, url, checkedAt);
+  if (!identity) return null;
+  const text = plainText(html);
+  const nutritionStart = text.search(/maistinė vertė|uzturvērtība|пищевая ценность/i);
+  const nutrition = nutritionStart >= 0 ? text.slice(nutritionStart, nutritionStart + 1_800) : text;
+  const energy = energyKcal(nutrition);
+  const protein = nutrient(nutrition, [/baltym(?:ai|ų)/, /olbaltumvielas/, /белк/]);
+  const sugar = nutrient(nutrition, [/iš kurių cukrų/, /cukrų/, /t\.\s*sk\.\s*cukuri/, /сахар/]);
+  const carbohydrate = nutrient(nutrition, [/angliavanden(?:iai|ių)/, /ogļhidrāti/, /oglhidrati/, /углевод/, /carbohydrates?/]);
+  if (energy === null || protein === null || sugar === null) return null;
+  return {
+    ...identity,
+    nutritionBasis: nutritionBasis(nutrition),
+    energyKcal: energy,
+    proteinG: protein,
+    totalSugarG: sugar,
+    carbohydrateG: carbohydrate,
+    checkedAt: identity.checkedAt
+  };
+}
+
+export function parseLivinnProductIdentity(
+  html: string,
+  url: string,
+  checkedAt = new Date().toISOString()
+): ExternalCatalogIdentity | null {
+  const product = jsonLdProducts(html)[0];
+  if (!product?.name || !product.sku) return null;
+  const category = livinnCategory(html);
+  if (!category || !category.toLocaleLowerCase("lt").startsWith("maistas")) return null;
+  const price = finite(product.offers?.price);
+  const title = plainText(product.name);
+  const fixedPack = html.match(/product__fixed-content[\s\S]{0,2400}?text--gray[^>]*>([^<]+)</i)?.[1]?.trim();
+  return {
+    source: "livinn_lt",
+    sourceProductId: product.sku,
+    retailer: "Livin",
+    url,
+    title,
+    aliases: alternateSlugAliases(html, url, product.sku),
+    brand: plainText(productBrand(product)) || "Livinn",
+    gtin: productGtin(product),
+    sku: product.sku,
+    category,
+    packSize: plainText(fixedPack || "") || packFromTitle(`${title} ${url}`),
     imageUrl: productImage(product),
     price,
     currency: product.offers?.priceCurrency === "EUR" && price !== null ? "EUR" : null,

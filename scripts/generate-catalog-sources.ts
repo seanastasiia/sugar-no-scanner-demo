@@ -33,6 +33,16 @@ const manifests: CatalogSourceManifest[] = [
     redistributable: false
   },
   {
+    id: "livinn_lt",
+    displayName: "LIVIN Lithuania",
+    layer: "retailer_snapshot",
+    license: "Retailer public product-page snapshot; production reuse requires retailer permission",
+    attribution: "Product identity, multilingual aliases and nutrition from LIVIN Lithuania product pages",
+    termsUrl: "https://www.livinn.lt/pirkimo-taisykles",
+    dataUrl: "https://www.livinn.lt/sitemap/products.xml",
+    redistributable: false
+  },
+  {
     id: "open_food_facts",
     displayName: "Open Food Facts",
     layer: "odbl_bulk",

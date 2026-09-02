@@ -1530,6 +1530,7 @@ export function ScannerApp() {
                     const isRated = hasSugarNoRating(item);
                     const rank = isRated ? rankedRatedIds.indexOf(id) + 1 : null;
                     const previewPresentation = isRated ? overlayMatchPresentation(item) : null;
+                    const protein = item?.nutrientsPer100g.proteinG;
                     const sugar = item?.nutrientsPer100g.totalSugarG;
                     const carbohydrate = item?.nutrientsPer100g.carbohydrateG;
                     const nutritionLabel = item ? compactNutritionLabel(item.nutrientsPer100g) : null;
@@ -1553,7 +1554,7 @@ export function ScannerApp() {
                           type="button"
                           aria-label={
                             isRated && previewPresentation
-                              ? `Rank ${rank}, ${item.brand} ${item.shortName}, ${previewPresentation.label}, Sugar ${sugar} grams${carbohydrate === null || carbohydrate === undefined ? "" : `, Carbs ${carbohydrate} grams`} per ${previewBasisLabel}`
+                              ? `Rank ${rank}, ${item.brand} ${item.shortName}, ${previewPresentation.label}, Protein ${protein} grams, Sugar ${sugar} grams${carbohydrate === null || carbohydrate === undefined ? "" : `, Carbs ${carbohydrate} grams`} per ${previewBasisLabel}`
                               : `${item?.brand || detection?.identity?.brand || "Product"} ${item?.shortName || detection?.identity?.name || "identified product"}, nutrition not verified online`
                           }
                           onClick={() => {
@@ -1657,7 +1658,7 @@ export function ScannerApp() {
                                 type="button"
                                 aria-label={
                                   isRated && presentation
-                                    ? `Rank ${rank}, ${itemBrand} ${itemName}, ${presentation.label}`
+                                    ? `Rank ${rank}, ${itemBrand} ${itemName}, ${presentation.label}, ${nutritionLabel} per ${item.nutritionBasis === "100ml" ? "100 milliliters" : "100 grams"}`
                                     : `${itemBrand} ${itemName}, nutrition not verified online`
                                 }
                                 className={`${styles.rankedProduct} ${effectiveSelectedId === id ? styles.activeRankedProduct : ""}`}

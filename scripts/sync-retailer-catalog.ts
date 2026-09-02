@@ -1,9 +1,14 @@
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { ExternalCatalogProduct } from "../src/server/external-catalog-types";
-import { parseLivinProductPage, parseRimiProductPage } from "../src/server/retailer-page-parser";
+import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "../src/server/external-catalog-types";
+import {
+  parseLivinProductPage,
+  parseLivinnProductIdentity,
+  parseLivinnProductPage,
+  parseRimiProductPage
+} from "../src/server/retailer-page-parser";
 
-type Source = "rimi" | "livin";
+type Source = "rimi" | "livin" | "livinn";
 
 interface SyncProgress {
   source: Source;
@@ -15,6 +20,7 @@ interface SyncProgress {
   notFoundUrls: string[];
   failedUrls: string[];
   products: ExternalCatalogProduct[];
+  identities?: ExternalCatalogIdentity[];
 }
 
 interface SyncReport {
@@ -26,6 +32,8 @@ interface SyncReport {
   discoveredUrls: number;
   processedUrls: number;
   completeProducts: number;
+  foodProducts?: number;
+  nonFoodOrUnclassifiedPages?: number;
   skippedWithoutCompleteNutrition: number;
   notFoundUrls: number;
   failedUrls: number;
@@ -40,8 +48,8 @@ class FetchError extends Error {
 }
 
 const source = (process.env.RETAILER_SYNC_SOURCE || process.argv[2]) as Source;
-if (!("rimi livin".split(" ") as string[]).includes(source)) {
-  throw new Error("Set RETAILER_SYNC_SOURCE=rimi|livin or pass rimi|livin as the first argument");
+if (!("rimi livin livinn".split(" ") as string[]).includes(source)) {
+  throw new Error("Set RETAILER_SYNC_SOURCE=rimi|livin|livinn or pass one as the first argument");
 }
 
 const limit = positiveInteger(process.env.RETAILER_SYNC_LIMIT, 0);
@@ -54,6 +62,9 @@ const checkedAt = process.env.CATALOG_CHECKED_AT || new Date().toISOString();
 const outputPath = path.resolve(process.env.RETAILER_SYNC_OUTPUT || `data/${source}-catalog.generated.json`);
 const reportPath = path.resolve(process.env.RETAILER_SYNC_REPORT || `data/${source}-catalog-sync-report.generated.json`);
 const progressPath = path.resolve(process.env.RETAILER_SYNC_PROGRESS || `.catalog-sync/${source}.progress.json`);
+const identityOutputPath = path.resolve(
+  process.env.RETAILER_SYNC_IDENTITY_OUTPUT || "data/livinn-food-index.generated.json"
+);
 const userAgent = "Sugar.no Latvia catalog research/0.2 (https://sugar.no)";
 const defaultRimiCategories = [
   "gala-zivis-un-gatava-kulinarija",
@@ -130,6 +141,10 @@ async function productUrls(): Promise<string[]> {
     return [...new Set(sitemapLocations(await fetchText("https://www.livin.lv/sitemap/products.xml"))
       .filter((url) => url.startsWith("https://www.livin.lv/p/")))];
   }
+  if (source === "livinn") {
+    return [...new Set(sitemapLocations(await fetchText("https://www.livinn.lt/sitemap/products.xml"))
+      .filter((url) => url.startsWith("https://www.livinn.lt/p/")))];
+  }
   const root = sitemapLocations(await fetchText("https://www.rimi.lv/e-veikals/sitemap.xml"))
     .filter((url) => /Product_lv_\d+\.xml$/i.test(url));
   const nested = await Promise.all(root.map(fetchText));
@@ -176,13 +191,18 @@ async function initialProgress(urls: string[]): Promise<SyncProgress> {
       processedUrls: saved.processedUrls.filter((url) => currentUrls.has(url)),
       notFoundUrls: saved.notFoundUrls.filter((url) => currentUrls.has(url)),
       failedUrls: [],
-      products: saved.products.filter((product) => currentUrls.has(product.url))
+      products: saved.products.filter((product) => currentUrls.has(product.url)),
+      identities: (saved.identities || []).filter((product) => currentUrls.has(product.url))
     };
   }
   const existing = resume ? await readJson<ExternalCatalogProduct[]>(outputPath) : null;
+  const existingIdentities = source === "livinn" && resume
+    ? await readJson<ExternalCatalogIdentity[]>(identityOutputPath)
+    : null;
   const currentUrls = new Set(urls);
+  const expectedSourceId = source === "livinn" ? "livinn_lt" : `${source}_lv`;
   const existingProducts = existing?.filter(
-    (product) => product.source === `${source}_lv` && currentUrls.has(product.url)
+    (product) => product.source === expectedSourceId && currentUrls.has(product.url)
   ) || [];
   const completedReport = resume ? await readJson<Partial<SyncReport>>(reportPath) : null;
   if (
@@ -201,7 +221,8 @@ async function initialProgress(urls: string[]): Promise<SyncProgress> {
       processedUrls: urls,
       notFoundUrls: [],
       failedUrls: [],
-      products: existingProducts
+      products: existingProducts,
+      identities: (existingIdentities || []).filter((product) => currentUrls.has(product.url))
     };
   }
   return {
@@ -213,7 +234,8 @@ async function initialProgress(urls: string[]): Promise<SyncProgress> {
     processedUrls: existingProducts.map((product) => product.url),
     notFoundUrls: [],
     failedUrls: [],
-    products: existingProducts
+    products: existingProducts,
+    identities: (existingIdentities || []).filter((product) => currentUrls.has(product.url))
   };
 }
 
@@ -224,13 +246,14 @@ async function main() {
   const notFound = new Set(progress.notFoundUrls);
   const failures = new Set<string>();
   const products = new Map(progress.products.map((product) => [product.sourceProductId, product]));
+  const identities = new Map((progress.identities || []).map((product) => [product.sourceProductId, product]));
   const pending = urls.filter((url) => !processed.has(url));
   const capped = maxFetches > 0 ? pending.slice(0, maxFetches) : pending;
   let cursor = 0;
   let completedThisRun = 0;
   let checkpointChain = Promise.resolve();
 
-  console.log(`${source}: discovered ${urls.length} product URLs; ${processed.size} already processed; ${products.size} complete products; ${capped.length} pending`);
+  console.log(`${source}: discovered ${urls.length} product URLs; ${processed.size} already processed; ${identities.size} food identities; ${products.size} complete products; ${capped.length} pending`);
 
   const checkpoint = () => {
     const snapshot: SyncProgress = {
@@ -239,7 +262,8 @@ async function main() {
       processedUrls: [...processed],
       notFoundUrls: [...notFound],
       failedUrls: [...failures],
-      products: dedupeProducts([...products.values()])
+      products: dedupeProducts([...products.values()]),
+      identities: [...identities.values()].sort((left, right) => left.sourceProductId.localeCompare(right.sourceProductId))
     };
     checkpointChain = checkpointChain.then(() => writeJsonAtomic(progressPath, snapshot));
   };
@@ -251,9 +275,15 @@ async function main() {
       const url = capped[index];
       try {
         const html = await fetchText(url);
+        if (source === "livinn") {
+          const identity = parseLivinnProductIdentity(html, url, checkedAt);
+          if (identity) identities.set(identity.sourceProductId, identity);
+        }
         const product = source === "rimi"
           ? parseRimiProductPage(html, url, checkedAt)
-          : parseLivinProductPage(html, url, checkedAt);
+          : source === "livinn"
+            ? parseLivinnProductPage(html, url, checkedAt)
+            : parseLivinProductPage(html, url, checkedAt);
         if (product) products.set(product.sourceProductId, product);
         processed.add(url);
       } catch (error) {
@@ -268,7 +298,7 @@ async function main() {
       completedThisRun += 1;
       if (completedThisRun % checkpointEvery === 0) checkpoint();
       if (completedThisRun % 100 === 0) {
-        console.log(`${source}: checked ${completedThisRun}/${capped.length}; ${products.size} complete products; ${failures.size} transient failures`);
+        console.log(`${source}: checked ${completedThisRun}/${capped.length}; ${identities.size} food identities; ${products.size} complete products; ${failures.size} transient failures`);
       }
     }
   }
@@ -284,6 +314,16 @@ async function main() {
 
   const output = dedupeProducts([...products.values()]);
   await writeJsonAtomic(outputPath, output);
+  if (source === "livinn") {
+    await writeJsonAtomic(
+      identityOutputPath,
+      [...identities.values()].sort((left, right) => left.sourceProductId.localeCompare(right.sourceProductId))
+    );
+  }
+  const incompleteFoodProducts = source === "livinn" ? Math.max(0, identities.size - output.length) : null;
+  const nonFoodOrUnclassifiedPages = source === "livinn"
+    ? Math.max(0, processed.size - notFound.size - identities.size)
+    : null;
   const report: SyncReport = {
     source,
     categories: source === "rimi" ? rimiCategories : null,
@@ -293,7 +333,10 @@ async function main() {
     discoveredUrls: urls.length,
     processedUrls: processed.size,
     completeProducts: output.length,
-    skippedWithoutCompleteNutrition: Math.max(0, processed.size - notFound.size - output.length),
+    ...(source === "livinn"
+      ? { foodProducts: identities.size, nonFoodOrUnclassifiedPages: nonFoodOrUnclassifiedPages! }
+      : {}),
+    skippedWithoutCompleteNutrition: incompleteFoodProducts ?? Math.max(0, processed.size - notFound.size - output.length),
     notFoundUrls: notFound.size,
     failedUrls: failures.size,
     requestSpacingMs: spacingMs,
@@ -302,6 +345,7 @@ async function main() {
   await writeJsonAtomic(reportPath, report);
   if (fullRun) await rm(progressPath, { force: true });
   console.log(`Wrote ${output.length} ${source} products with protein and total sugar to ${outputPath}`);
+  if (source === "livinn") console.log(`Wrote ${identities.size} edible Livinn identities to ${identityOutputPath}`);
   console.log(JSON.stringify(report));
 }
 

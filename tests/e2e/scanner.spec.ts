@@ -503,8 +503,8 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
   const shelfPreview = page.getByLabel("Product result preview");
   await expect(shelfPreview.getByText(/^#[1-4]$/)).toHaveCount(4);
-  await expect(shelfPreview.getByText(/^Sugar \d+(?:\.\d+)?g$/)).toHaveCount(4);
-  await expect(shelfPreview.getByRole("button").first()).toHaveAccessibleName(/^Rank 1,.*Sugar .* grams per 100 grams$/);
+  await expect(shelfPreview.getByText(/^Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g(?: · Carbs \d+(?:\.\d+)?g)?$/)).toHaveCount(4);
+  await expect(shelfPreview.getByRole("button").first()).toHaveAccessibleName(/^Rank 1,.*Protein .* grams, Sugar .* grams.* per 100 grams$/);
   const shelfDeal = shelfPreview.getByLabel("Demo shelf price €3.49, online price €2.79, cheaper online");
   await expect(shelfDeal).toBeVisible();
   await expect(shelfDeal.getByText("€3.49", { exact: true })).toHaveCSS("text-decoration-line", "line-through");
@@ -623,8 +623,7 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(ranking.locator('[aria-label*="Barbora online"]')).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await expect(page.getByText("Outlines show products with both protein and total sugar available.", { exact: true })).toHaveCount(0);
-  await expect(ranking.getByText(/^Sugar \d+(?:\.\d+)?g$/)).toHaveCount(4);
-  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g|Carbs \d+(?:\.\d+)?g/)).toHaveCount(0);
+  await expect(ranking.getByText(/^Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g(?: · Carbs \d+(?:\.\d+)?g)?$/)).toHaveCount(4);
   await expect(page.getByText(/Sugar\.no Match \d+/)).toHaveCount(0);
   await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/\b(good|bad|unhealthy)\b/i)).toHaveCount(0);
@@ -696,8 +695,7 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await page.screenshot({ path: "test-results/checkout-results-mobile.png" });
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Sugar.no badge")).toHaveCount(0);
-  await expect(ranking.getByText(/^Sugar \d+(?:\.\d+)?g$/)).toHaveCount(3);
-  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g|Carbs \d+(?:\.\d+)?g/)).toHaveCount(0);
+  await expect(ranking.getByText(/^Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g(?: · Carbs \d+(?:\.\d+)?g)?$/)).toHaveCount(3);
   await expect(page.getByText("Needs nutrition label", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await ranking.getByRole("button", { name: /STOCKMANN Fresh chanterelles/ }).click();

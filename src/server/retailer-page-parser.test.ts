@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parseLivinProductPage, parseRimiProductPage } from "./retailer-page-parser";
+import {
+  parseLivinProductPage,
+  parseLivinnProductIdentity,
+  parseLivinnProductPage,
+  parseRimiProductPage
+} from "./retailer-page-parser";
 
 function productJsonLd(value: object): string {
   return `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@type": "Product", ...value })}</script>`;
@@ -75,6 +80,76 @@ describe("retailer product page parsers", () => {
     const html = productJsonLd({ name: "Unknown", sku: "1", offers: { price: "1.00", priceCurrency: "EUR" } });
     expect(parseRimiProductPage(html, "https://www.rimi.lv/e-veikals/lv/produkti/a/p/1")).toBeNull();
     expect(parseLivinProductPage(html, "https://www.livin.lv/p/a")).toBeNull();
+    expect(parseLivinnProductPage(html, "https://www.livinn.lt/p/a")).toBeNull();
+  });
+
+  it("extracts Lithuanian Livinn nutrition and keeps cross-language URL aliases", () => {
+    const html = `<link rel="alternate" href="https://www.livin.lv/p/bett-r-risu-galetes-ar-himalaju-sali-ekologiskas-1g1701009280" hreflang="lv" />
+      <link rel="alternate" href="https://www.livinn.lt/ru/p/bett-r-risovye-krekery-s-gimalaiskoi-soliu-organicheskie-1g1701009280" hreflang="ru-lt" />
+      ${productJsonLd({
+        name: "Ryžių trapučiai su Himalajų druska, ekologiški",
+        sku: "1G1701009280",
+        gtin12: "380023368242",
+        brand: { "@type": "Brand", name: "Bett&#039;r" },
+        image: { url: "https://images.livinn.lt/example.jpg" },
+        offers: { price: "2.19", priceCurrency: "EUR", availability: "https://schema.org/InStock" }
+      })}
+      <script type="application/ld+json">${JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { name: "Titulinis", item: "https://www.livinn.lt/" },
+          { name: "Maistas", item: "https://www.livinn.lt/maistas" },
+          { name: "Duona, bandelės, trapučiai", item: "https://www.livinn.lt/maistas/duona-ir-trapuciai" },
+          { name: "Ryžių trapučiai", item: "https://www.livinn.lt/p/example" }
+        ]
+      })}</script>
+      <h3>Maistinė vertė</h3>
+      <p>Maistinė vertė (100 g) – 1518 kJ / 362.81 kcal: angliavandenių 75,00 g (iš kurių cukrų 1,80 g), baltymų 8,10 g.</p>`;
+
+    expect(parseLivinnProductPage(
+      html,
+      "https://www.livinn.lt/p/eko-ryziu-trap-su-him-druska-bettr-120g-1g1701009280-lt",
+      "2026-09-02T00:00:00.000Z"
+    )).toMatchObject({
+      source: "livinn_lt",
+      retailer: "Livin",
+      brand: "Bett'r",
+      gtin: "380023368242",
+      category: "Maistas > Duona, bandelės, trapučiai",
+      packSize: "120g",
+      energyKcal: 362.81,
+      carbohydrateG: 75,
+      proteinG: 8.1,
+      totalSugarG: 1.8,
+      aliases: expect.arrayContaining([
+        "bett r risu galetes ar himalaju sali ekologiskas",
+        "bett r risovye krekery s gimalaiskoi soliu organicheskie"
+      ])
+    });
+  });
+
+  it("keeps an edible Livinn identity even when its nutrition table is incomplete", () => {
+    const html = `${productJsonLd({
+      name: "Maisto produktas",
+      sku: "FOOD1",
+      brand: "Example",
+      offers: { price: "1.00", priceCurrency: "EUR" }
+    })}<script type="application/ld+json">${JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { name: "Titulinis", item: "https://www.livinn.lt/" },
+        { name: "Maistas", item: "https://www.livinn.lt/maistas" },
+        { name: "Produktas", item: "https://www.livinn.lt/p/food1" }
+      ]
+    })}</script>`;
+    expect(parseLivinnProductIdentity(html, "https://www.livinn.lt/p/food1")).toMatchObject({
+      sourceProductId: "FOOD1",
+      category: "Maistas",
+      title: "Maisto produktas"
+    });
+    expect(parseLivinnProductPage(html, "https://www.livinn.lt/p/food1")).toBeNull();
   });
 
   it("does not treat an all-zero retailer placeholder as a GTIN", () => {

@@ -1,4 +1,6 @@
 import livinSnapshot from "../../data/livin-catalog.generated.json";
+import livinnFoodIndex from "../../data/livinn-food-index.generated.json";
+import livinnSnapshot from "../../data/livinn-catalog.generated.json";
 import rimiSnapshot from "../../data/rimi-catalog.generated.json";
 import { scoreReferenceProduct } from "@/lib/scoring";
 import type { ProductRecord, RetailerOffer, ScoredProduct } from "@/lib/types";
@@ -9,16 +11,24 @@ import {
   retailerBrandMatches,
   type BarboraLookupInput
 } from "./barbora-catalog";
-import type { ExternalCatalogProduct } from "./external-catalog-types";
+import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "./external-catalog-types";
 
 interface RankedExternalCatalogCandidate {
   product: ExternalCatalogProduct;
   confidence: number;
 }
 
-const rawProducts = [...(rimiSnapshot as ExternalCatalogProduct[]), ...(livinSnapshot as ExternalCatalogProduct[])];
+const rawProducts = [
+  ...(rimiSnapshot as ExternalCatalogProduct[]),
+  ...(livinSnapshot as ExternalCatalogProduct[]),
+  ...(livinnSnapshot as ExternalCatalogProduct[])
+];
 const stopWords = new Set(["and", "ar", "bar", "bez", "for", "from", "in", "of", "the", "un", "with"]);
 const identityPhraseAliases: Array<[RegExp, string]> = [
+  [/\bbrown rice cakes?\b/g, "risu galetes"],
+  [/\bhimalayan salt\b/g, "himalaju sali"],
+  [/\bgluten free\b/g, "bez glutena"],
+  [/\brosemary\b/g, "rozmarinu"],
   [/\bpastry twists? salty\b/g, "salsstandzinas"],
   [/\bsalty pastry twists?\b/g, "salsstandzinas"],
   [/\bpastry twists? cheese\b/g, "salsstandzinas siers"],
@@ -119,7 +129,42 @@ export function dedupeExternalCatalogProducts(candidates: ExternalCatalogProduct
 }
 
 const products = dedupeExternalCatalogProducts(rawProducts);
+const identities = livinnFoodIndex as ExternalCatalogIdentity[];
+
+function barcodeIndex<T extends { gtin: string | null }>(values: T[]): Map<string, T> {
+  const index = new Map<string, T>();
+  for (const value of values) {
+    if (value.gtin && !index.has(value.gtin)) index.set(value.gtin, value);
+  }
+  return index;
+}
+
+const productsByBarcode = barcodeIndex(products);
+const identitiesByBarcode = barcodeIndex(identities);
+const productsById = new Map<string, ExternalCatalogProduct>(
+  products.map((product) => [`${product.source}:${product.sourceProductId}`, product])
+);
+const identitiesById = new Map<string, ExternalCatalogIdentity>(
+  identities.map((product) => [`${product.source}:${product.sourceProductId}`, product])
+);
+
+function brandIndex<T extends { brand: string }>(values: T[]): Map<string, T[]> {
+  const index = new Map<string, T[]>();
+  for (const value of values) {
+    const key = normalizeRetailText(value.brand).replaceAll(" ", "");
+    index.set(key, [...(index.get(key) || []), value]);
+  }
+  return index;
+}
+
+const productsByBrand = brandIndex(products);
+const identitiesByBrand = brandIndex(identities);
 let scoredProducts: ScoredProduct[] | null = null;
+
+function indexedBrandCandidates<T>(inputBrand: string, index: Map<string, T[]>, fallback: T[]): T[] {
+  const key = normalizeRetailText(inputBrand).replaceAll(" ", "");
+  return index.get(key) || fallback;
+}
 
 function tokens(value: string, excluded: Set<string> = new Set()): string[] {
   const normalized = identityPhraseAliases.reduce(
@@ -175,8 +220,36 @@ export function rankExternalCatalogCandidates(
   return candidates
     .flatMap((product): RankedExternalCatalogCandidate[] => {
       if (!retailerBrandMatches(input.brand, product.brand)) return [];
-      const candidateTokens = tokens(product.title, brandTokens);
-      const nameScore = balancedCoverage(queryTokens, candidateTokens);
+      const nameScore = [product.title, ...(product.aliases || [])].reduce(
+        (best, name) => Math.max(best, balancedCoverage(queryTokens, tokens(name, brandTokens))),
+        0
+      );
+      const candidatePack = canonicalPack(product.packSize);
+      const packMatches = observedPack && candidatePack
+        ? observedPack.dimension === candidatePack.dimension &&
+          Math.abs(observedPack.amount - candidatePack.amount) / Math.max(observedPack.amount, candidatePack.amount) <= 0.04
+        : null;
+      if (packMatches === false || nameScore < 0.6) return [];
+      const confidence = Math.min(1, 0.28 + nameScore * 0.52 + packEvidenceBonus(packMatches, nameScore));
+      return [{ product, confidence }];
+    })
+    .sort((left, right) => right.confidence - left.confidence || left.product.sourceProductId.localeCompare(right.product.sourceProductId));
+}
+
+export function rankExternalCatalogIdentities(
+  input: BarboraLookupInput,
+  candidates: ExternalCatalogIdentity[] = identities
+): Array<{ product: ExternalCatalogIdentity; confidence: number }> {
+  const brandTokens = new Set(tokens(input.brand));
+  const queryTokens = tokens([input.name, input.variant, ...input.searchTerms].filter(Boolean).join(" "), brandTokens);
+  const observedPack = canonicalPack(input.packSize);
+  return candidates
+    .flatMap((product) => {
+      if (!retailerBrandMatches(input.brand, product.brand)) return [];
+      const nameScore = [product.title, ...product.aliases].reduce(
+        (best, name) => Math.max(best, balancedCoverage(queryTokens, tokens(name, brandTokens))),
+        0
+      );
       const candidatePack = canonicalPack(product.packSize);
       const packMatches = observedPack && candidatePack
         ? observedPack.dimension === candidatePack.dimension &&
@@ -197,7 +270,7 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
     brand: product.brand,
     name: product.title,
     shortName: product.title,
-    aliases: [],
+    aliases: product.aliases || [],
     format: "other",
     category: product.category,
     packSizeG: pack?.amount || 1,
@@ -215,7 +288,9 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
     retailerUrl: product.url,
     sources: [
       {
-        label: `${product.retailer || product.source} Latvia product-page snapshot`,
+        label: product.source === "livinn_lt"
+          ? "Livinn Lithuania product-page snapshot"
+          : `${product.retailer || product.source} Latvia product-page snapshot`,
         url: product.url,
         checkedAt: product.checkedAt,
         fields: [
@@ -236,8 +311,53 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
   return scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial");
 }
 
+export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogIdentity): ScoredProduct {
+  const pack = canonicalPack(product.packSize);
+  const record: ProductRecord = {
+    id: `${product.source}:${product.sourceProductId}`,
+    retailerProductId: product.sourceProductId,
+    brand: product.brand,
+    name: product.title,
+    shortName: product.title,
+    aliases: product.aliases,
+    format: "other",
+    category: product.category,
+    packSizeG: pack?.amount || 1,
+    nutritionBasis: pack?.dimension === "liquid" ? "100ml" : "100g",
+    energyKcalPer100: null,
+    gtin: product.gtin,
+    nutrientsPer100g: {
+      proteinG: null,
+      fiberG: null,
+      totalSugarG: null,
+      carbohydrateG: null
+    },
+    noAddedSugarClaim: false,
+    imageUrl: product.imageUrl,
+    retailerUrl: product.url,
+    sources: [
+      {
+        label: "Livinn Lithuania product identity",
+        url: product.url,
+        checkedAt: product.checkedAt,
+        fields: ["identity", "retailerUrl"],
+        status: "secondary"
+      }
+    ],
+    isGolden: false,
+    accent: "coral"
+  };
+  return scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial");
+}
+
 function offerFor(product: ExternalCatalogProduct, confidence: number): RetailerOffer | null {
-  if (!product.retailer || product.price === null || product.currency !== "EUR" || product.available === false) return null;
+  if (
+    product.source === "livinn_lt" ||
+    !product.retailer ||
+    product.price === null ||
+    product.currency !== "EUR" ||
+    product.available === false
+  ) return null;
   return {
     retailer: product.retailer,
     slug: `${product.source}:${product.sourceProductId}`,
@@ -260,12 +380,12 @@ export function resolveExternalCatalogProduct(
   barcode = ""
 ): { product: ScoredProduct; confidence: number; offer: RetailerOffer | null } | null {
   if (/^\d{8,14}$/.test(barcode)) {
-    const exact = products.find((product) => product.gtin === barcode);
+    const exact = productsByBarcode.get(barcode);
     if (exact && retailerBrandMatches(input.brand, exact.brand)) {
       return { product: externalCatalogToScoredProduct(exact), confidence: 1, offer: offerFor(exact, 1) };
     }
   }
-  const ranked = rankExternalCatalogCandidates(input);
+  const ranked = rankExternalCatalogCandidates(input, indexedBrandCandidates(input.brand, productsByBrand, products));
   const best = ranked[0];
   if (!best || best.confidence < 0.84 || best.confidence - (ranked[1]?.confidence || 0) < 0.08) return null;
   return {
@@ -275,14 +395,40 @@ export function resolveExternalCatalogProduct(
   };
 }
 
+export function resolveExternalCatalogIdentity(
+  input: BarboraLookupInput,
+  barcode = ""
+): { identity: ExternalCatalogIdentity; product: ScoredProduct; confidence: number } | null {
+  if (/^\d{8,14}$/.test(barcode)) {
+    const exact = identitiesByBarcode.get(barcode);
+    if (exact && retailerBrandMatches(input.brand, exact.brand)) {
+      return { identity: exact, product: externalCatalogIdentityToScoredProduct(exact), confidence: 1 };
+    }
+  }
+  const ranked = rankExternalCatalogIdentities(input, indexedBrandCandidates(input.brand, identitiesByBrand, identities));
+  const best = ranked[0];
+  if (!best || best.confidence < 0.84 || best.confidence - (ranked[1]?.confidence || 0) < 0.08) return null;
+  return {
+    identity: best.product,
+    product: externalCatalogIdentityToScoredProduct(best.product),
+    confidence: best.confidence
+  };
+}
+
 export function getExternalCatalogProductByBarcode(
   barcode: string
 ): { product: ScoredProduct; confidence: 1; offer: RetailerOffer | null } | null {
   if (!/^\d{8,14}$/.test(barcode)) return null;
-  const exact = products.find((product) => product.gtin === barcode);
+  const exact = productsByBarcode.get(barcode);
   return exact
     ? { product: externalCatalogToScoredProduct(exact), confidence: 1, offer: offerFor(exact, 1) }
     : null;
+}
+
+export function getExternalCatalogIdentityByBarcode(barcode: string): ScoredProduct | null {
+  if (!/^\d{8,14}$/.test(barcode)) return null;
+  const identity = identitiesByBarcode.get(barcode);
+  return identity ? externalCatalogIdentityToScoredProduct(identity) : null;
 }
 
 export function listExternalCatalogScoredProducts(): ScoredProduct[] {
@@ -292,28 +438,32 @@ export function listExternalCatalogScoredProducts(): ScoredProduct[] {
 
 export function getExternalCatalogProductById(id: string): ScoredProduct | null {
   const [source, sourceProductId] = id.split(":", 2);
-  if ((source !== "rimi_lv" && source !== "livin_lv") || !sourceProductId) return null;
-  const product = products.find(
-    (candidate) => candidate.source === source && candidate.sourceProductId === sourceProductId
-  );
-  return product ? externalCatalogToScoredProduct(product) : null;
+  if ((source !== "rimi_lv" && source !== "livin_lv" && source !== "livinn_lt") || !sourceProductId) return null;
+  const product = productsById.get(id);
+  if (product) return externalCatalogToScoredProduct(product);
+  const identity = identitiesById.get(id);
+  return identity ? externalCatalogIdentityToScoredProduct(identity) : null;
 }
 
 export function getExternalCatalogOfferByKey(key: string): RetailerOffer | null {
   const [source, sourceProductId] = key.split(":", 2);
   if ((source !== "rimi_lv" && source !== "livin_lv") || !sourceProductId) return null;
-  const product = products.find(
-    (candidate) => candidate.source === source && candidate.sourceProductId === sourceProductId
-  );
+  const product = productsById.get(key);
   return product ? offerFor(product, 1) : null;
 }
 
 export function externalCatalogCounts() {
   return products.reduce(
     (counts, product) => {
-      if (product.source === "rimi_lv" || product.source === "livin_lv") counts[product.source] += 1;
+      if (product.source === "rimi_lv" || product.source === "livin_lv" || product.source === "livinn_lt") {
+        counts[product.source] += 1;
+      }
       return counts;
     },
-    { rimi_lv: 0, livin_lv: 0 } as Record<"rimi_lv" | "livin_lv", number>
+    { rimi_lv: 0, livin_lv: 0, livinn_lt: 0 } as Record<"rimi_lv" | "livin_lv" | "livinn_lt", number>
   );
+}
+
+export function externalCatalogIdentityCount(): number {
+  return identities.length;
 }

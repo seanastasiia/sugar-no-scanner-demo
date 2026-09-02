@@ -1,5 +1,5 @@
 import type { ProductDetection, ScoredProduct } from "@/lib/types";
-import { getExternalCatalogProductByBarcode } from "./external-catalog";
+import { getExternalCatalogIdentityByBarcode, getExternalCatalogProductByBarcode } from "./external-catalog";
 import { getOpenFoodFactsBulkProductByBarcode } from "./open-food-facts";
 
 export interface BarcodeResolution {
@@ -15,9 +15,14 @@ export function resolveBarcodeFromKnownCatalogs(
   const catalogProduct = catalog.find((product) => product.gtin === barcode);
   const external = catalogProduct ? null : getExternalCatalogProductByBarcode(barcode);
   const off = catalogProduct || external ? null : getOpenFoodFactsBulkProductByBarcode(barcode);
-  const product = catalogProduct || external?.product || off;
+  const externalIdentity = catalogProduct || external || off ? null : getExternalCatalogIdentityByBarcode(barcode);
+  const product = catalogProduct || external?.product || off || externalIdentity;
   if (!product) return null;
-  const source = catalogProduct ? "catalog" : external ? "retailer_catalog" : "open_food_facts";
+  const source = catalogProduct
+    ? "catalog"
+    : external || externalIdentity
+      ? "retailer_catalog"
+      : "open_food_facts";
   return {
     source,
     detection: {
