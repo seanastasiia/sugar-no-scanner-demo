@@ -72,4 +72,8 @@ Production safety:
 - iPhone SE 375×667 local screenshot inspected: one screen, no clipping, real scan visual visible, `Open camera` and `Skip` both above the fold
 - `npm run verify`: passed; lint, typecheck, 48 test files and 247 tests, catalog validation, production build
 - `CI=1 npm run test:e2e`: passed; 33/33 Mobile Safari scenarios, including camera gating and entry accessibility
-- production was not changed; deployment verification is recorded after the staging-only push
+- implementation commit: `3d91e88ce3b48c1a9b41bd363c54512e3701497e`
+- Railway staging active deployment after the implementation push: `667a3f4c-0950-4de9-ba9d-6696fc5a5d50`, online
+- staging `/api/health`: implementation commit `3d91e88ce3b48c1a9b41bd363c54512e3701497e`
+- live staging DOM: short instruction, real scan preview, compact processing note and both actions present
+- production `/api/health`: unchanged commit `d127ef8275d81c3d8e725a70096a3956254315d5`
