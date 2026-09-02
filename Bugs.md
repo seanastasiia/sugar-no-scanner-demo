@@ -14,6 +14,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **Grounded nutrition can be unavailable.** Identity appears first; exact internet enrichment is background-only, requires a readable pack size or barcode, and its final grounded-search fallback defaults to 12 seconds.
 - **The investor URL is public.** Direct entry intentionally has no viewer access challenge. The silent same-site session, origin checks and rate limits reduce bare API abuse but are not authentication; restore an explicit identity or access gate before sharing restricted retailer data broadly.
 - **Railway config-as-code needs migration before 1 December 2026.** The current `railway.json`/`railway.toml` deployment still works, but Railway now recommends `.railway/railway.ts` and prints a deprecation warning during deploys.
+- **Amplitude Starter limits Funnel charts to two steps.** The saved activation chart measures `app_opened` to `scan_completed`; onboarding, camera-permission, scan-start and feedback events remain available in Live Events and can be explored in separate charts without upgrading.
 
 ## Recently resolved
 

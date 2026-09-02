@@ -184,6 +184,8 @@ Stage 1 uses the existing Railway project’s separate `staging` environment. De
 
 Supabase and Amplitude have different jobs. Supabase retains the complete accepted event, including an optional observed product identity in bounded JSON metadata for debugging. The relational `product_id` field is reserved for IDs that are guaranteed to exist in the managed `products` table; visual, demo and external-retailer identities never enter that foreign-key field. Amplitude receives only the event name, anonymous session UUID as `device_id`, source, environment, and a strict allowlist of funnel properties such as onboarding step, recognized count, latency bucket, confidence, feedback helpfulness, and error category. It never receives photos, OCR, feedback comments, email, raw user-agent strings, or exact product IDs. The event UUID becomes Amplitude `insert_id` so retries are deduplicated.
 
+The first saved Amplitude chart is `Shelf Scanner Activation: Open → Scan Completed`, measuring `app_opened` to `scan_completed` within one day. Amplitude Starter currently limits Funnel charts to two steps, so onboarding, camera-permission and feedback diagnostics remain visible as separate events rather than being added as intermediate steps to this chart.
+
 Normal releases are pushed once, after the requested batch is complete:
 
 ```bash

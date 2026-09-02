@@ -38,7 +38,18 @@ Production safety:
 - targeted Amplitude and route regression: passed; 2 files, 7 tests
 - `npm run verify`: passed; lint, typecheck, 48 test files and 247 tests, catalog validation, production build
 - `CI=1 npm run test:e2e`: passed; 33/33 Mobile Safari scenarios
-- deployment and live `scan_completed` readback: pending
+- Railway staging deployment `973c02b6-08bc-4ecb-84c8-e83670e50b92`: `SUCCESS`
+- staging `/api/health`: `ok`, fix commit `4b93bb61d6f2d3f47bb22f7a6c81b9b15367ed4d`
+- repeated Shelf demo: product result visible; Amplitude Live Events received both `scan_started` and `scan_completed`
+- production `/api/health`: `ok`, still unchanged on `d127ef8275d81c3d8e725a70096a3956254315d5`
+
+## First saved funnel
+
+- chart: `Shelf Scanner Activation: Open → Scan Completed`
+- steps: `app_opened` → `scan_completed`
+- conversion window: one day; counting by unique users
+- saved URL: `https://app.eu.amplitude.com/analytics/tiny-voice-226231/chart/e-knlpkj8m?sharingId=LqRl7BUh`
+- Amplitude Starter blocked a third funnel step behind the Growth upgrade; intermediate events remain available in Live Events and separate charts
 
 ## Product QA
 
