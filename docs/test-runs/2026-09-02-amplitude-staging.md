@@ -23,11 +23,11 @@ Production safety:
 - targeted Amplitude and event-route tests: passed; 2 files, 6 tests
 - `npm run verify`: passed; lint, typecheck, 48 test files and 246 tests, catalog validation, production build
 - `CI=1 npm run test:e2e`: passed; 33/33 Mobile Safari scenarios
-- GitHub branch commit: pending
-- Railway staging deployment: pending
-- staging `/api/health`: pending
-- live Amplitude event: pending
-- production `/api/health`: pending
+- implementation commit `b8062f732301332273914d782439746edd281bfc` pushed to the GitHub staging branch
+- Railway staging deployment `6df98364-87a4-4047-9953-c3f94329a405`: `SUCCESS`
+- staging `/api/health`: `ok`, implementation commit `b8062f732301332273914d782439746edd281bfc`
+- live Amplitude readback: `app_opened`, `onboarding_started`, and `onboarding_step_viewed` received as anonymous Web events
+- production `/api/health`: `ok`, unchanged commit `d127ef8275d81c3d8e725a70096a3956254315d5`
 
 ## Product QA
 
