@@ -412,6 +412,22 @@ test("first live recognition waits for camera positioning before capturing", asy
     return (state.__cameraRecognitionTimes?.[0] ?? 0) - (state.__cameraPlayAt ?? 0);
   });
   expect(initialDelay).toBeGreaterThanOrEqual(1_450);
+
+  const retryButton = page.getByRole("button", { name: "Not sure — try again", exact: true });
+  await expect(retryButton).toBeVisible();
+  await page.evaluate(() => {
+    (window as Window & { __cameraRetryAt?: number }).__cameraRetryAt = performance.now();
+  });
+  await retryButton.click();
+  await expect.poll(() => recognitionRequests, { timeout: 3_000 }).toBe(2);
+  const retryDelay = await page.evaluate(() => {
+    const state = window as Window & {
+      __cameraRecognitionTimes?: number[];
+      __cameraRetryAt?: number;
+    };
+    return (state.__cameraRecognitionTimes?.[1] ?? 0) - (state.__cameraRetryAt ?? 0);
+  });
+  expect(retryDelay).toBeLessThan(1_450);
 });
 
 test("entry opens directly into the camera-first experience without an access page", async ({ page }) => {

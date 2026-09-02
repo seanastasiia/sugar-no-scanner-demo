@@ -12,8 +12,8 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - The live feed spans the full phone width, with the Sugar.no brand, `Show demo` and recognition status layered over the camera. The stream keeps its native aspect ratio and `object-fit: contain`, so the app does not add digital zoom or stretch the image. Saved photos use one predictable rounded 3:4 preview and `object-fit: cover`; deterministic demo scenes keep their own designed framing.
 - `Reading visible products…` means the browser has selected one stable frame. That captured frame is held on screen while recognition and nutrition enrichment finish, so camera movement cannot detach result boxes from the products that were actually analyzed. A new scene is read only after the user explicitly starts a new scan.
 - Before Gemini returns, the browser may show neutral dashed candidate regions derived locally from edge detail. They are only aiming feedback: they never carry a product name, fit color or nutrition claim.
-- Camera starts after permission without requiring a shutter action. Mobile Safari requests the rear 1920×1080 feed at up to 30 fps and continuous focus when the device exposes it.
-- Live sampling starts after 340 ms, checks every 240 ms and sends one compact JPEG up to 960 px wide as soon as the scene is usable. A 1.25-second hard capture ceiling prevents the sharpness/stability gate from stalling indefinitely. The automatic loop pauses as soon as the frame is submitted, so one Gemini request is used per explicit scan and duplicate center/completion reads are not started.
+- Camera starts after permission without requiring a shutter action. Mobile Safari requests the rear 1920×1080 feed at up to 30 fps and continuous focus when the device exposes it. The first automatic capture waits at least 1.5 seconds after the video starts, giving the user time to position the phone and the camera time to focus; an explicit `Scan again` keeps the faster restart path.
+- Frame-quality sampling starts after 340 ms, checks every 240 ms and sends one compact JPEG up to 960 px wide only after the initial 1.5-second positioning window and as soon as the scene is usable. A further 1.25-second hard capture ceiling prevents the sharpness/stability gate from stalling indefinitely on a soft or low-detail scene. The automatic loop pauses as soon as the frame is submitted, so one Gemini request is used per explicit scan and duplicate center/completion reads are not started.
 - When the browser exposes native `BarcodeDetector`, EAN/UPC is resolved locally before Gemini. On Safari, Gemini can still return a visible barcode for the same exact local lookup.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
 - Live and saved-photo views omit the redundant source badge. The camera keeps only `Show demo` over the feed; saved photos keep only `Back to live` over their fixed rounded 3:4 media frame.
@@ -201,6 +201,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 20. Scan an exact SKU that previously resolved through cited web nutrition twice. Confirm the repeat result appears immediately. A result older than its freshness window must remain visible while its recheck happens silently, and an unsuccessful recheck must not remove its fit.
 21. Before the first AI result, confirm any locally proposed regions are neutral dashed outlines only. Green, yellow or red styling may appear only after an exact recognized product has verified nutrition.
 22. Point the camera at a scene that cannot be confidently recognized, or temporarily interrupt recognition. Confirm the bottom status becomes one full-width `Not sure — try again` button on one line and tapping it starts a fresh scan.
+23. Reload production and allow the camera. Confirm the first automatic read waits about 1.5 seconds after the live video appears, leaving enough time to aim at the shelf; then confirm `Scan again` still begins the next read promptly.
 
 ## Known limits
 
@@ -243,4 +244,5 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - [Scan again and exact web-fallback release evidence](docs/test-runs/2026-08-30-scan-again-web-fallback.md)
 - [Cross-retailer alternatives release evidence](docs/test-runs/2026-08-31-cross-retailer-alternatives.md)
 - [Thumbnail failure fallback and camera retry release evidence](docs/test-runs/2026-08-31-thumbnail-fallback-retry.md)
+- [Initial camera positioning delay release evidence](docs/test-runs/2026-09-02-camera-initial-focus-delay.md)
 - [Open and recent bugs](Bugs.md)
