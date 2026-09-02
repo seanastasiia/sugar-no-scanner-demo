@@ -89,3 +89,10 @@ Production safety:
 - local visual checks: 390×844, 375×667 and 844×390 all had no document overflow; both actions and the privacy note remained visible; minimum action height was 44 px; browser console errors were empty
 - `npm run verify`: passed; lint, typecheck, 48 test files and 247 tests, catalog validation and production build
 - `CI=1 npm run test:e2e`: passed; 34/34 Mobile Safari scenarios, including entry accessibility, reduced motion, camera gating, feedback and scanner regressions
+- implementation commit: `ebff73198175047a467afdf11367e55015bb68bc`
+- Railway staging GitHub-source deployment: `be27bc28-8d4d-44b4-a885-2efa482f9f87`, `SUCCESS`
+- staging `/api/health`: `ok`, implementation commit `ebff73198175047a467afdf11367e55015bb68bc`
+- live staging DOM: approved heading, result summary, two 44+ px actions and privacy note present; no overflow or console errors at 390×844
+- live `Try a sample shelf`: deterministic shelf opened with no camera-denied path
+- direct Railway source upload returned HTTP 404 before creating a deployment; the pushed staging branch triggered the verified GitHub-source deployment instead
+- production `/api/health` was `ok` at pre-existing commit `cc80a339fd5643aa3dbd80be808bbeecc24e6c83`; this task did not deploy or modify production
