@@ -406,7 +406,7 @@
   font-weight: 680;
   text-align: center;
   backdrop-filter: blur(12px);
-  transition: bottom 220ms ease;
+  transition: bottom 220ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
 .stageStatus > span {
@@ -415,6 +415,10 @@
 
 .stageStatusRetry {
   padding-inline: 0;
+  border-color: rgb(255 255 255 / 34%);
+  background: var(--action-primary);
+  box-shadow: 0 10px 28px rgb(0 40 90 / 35%);
+  backdrop-filter: none;
 }
 
 .stageStatusResultHidden {
@@ -445,6 +449,22 @@
   color: #ffffff;
   font: inherit;
   white-space: nowrap;
+  transition: background-color 160ms ease;
+}
+
+.recognitionRetry:active {
+  background: rgb(0 0 0 / 18%);
+}
+
+.recognitionRetry:focus-visible {
+  outline-color: #ffffff;
+  outline-offset: -4px;
+}
+
+@media (hover: hover) {
+  .recognitionRetry:hover {
+    background: rgb(255 255 255 / 10%);
+  }
 }
 
 .stageWithResults .stageStatus {

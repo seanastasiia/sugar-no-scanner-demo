@@ -1720,6 +1720,8 @@ test("provider unavailability pauses live recognition and offers manual recovery
   const retryButton = page.getByRole("button", { name: "Not sure — try again", exact: true });
   await expect(retryButton).toBeVisible({ timeout: 6_000 });
   await expect(retryButton).toHaveCSS("white-space", "nowrap");
+  await expect(retryButton).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(page.getByRole("status")).toHaveCSS("background-color", "rgb(0, 102, 204)");
   const [retryBox, statusBox] = await Promise.all([
     retryButton.boundingBox(),
     page.getByRole("status").boundingBox()
