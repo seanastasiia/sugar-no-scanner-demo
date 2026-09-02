@@ -2,6 +2,18 @@
 
 Run this check on the deployed HTTPS URL using Safari on an iPhone. Use a private tab first so direct entry and camera permissions are tested from a clean state.
 
+## Stage 1 onboarding
+
+Use the staging URL with `?onboarding=1`; production does not include this flow yet.
+
+1. Confirm the light Sugar.no screen shows one real shelf image, `4 products compared`, `Best fit appears first`, and a labelled `Great fit` pill.
+2. Reload once and confirm the entrance sequence and scan line run only once rather than looping.
+3. Confirm no camera prompt appears before a tap. Tap `Try a sample shelf` and confirm the deterministic shelf demo opens without requesting camera permission.
+4. Return to `?onboarding=1`, tap `Open camera`, and confirm the camera request begins directly from that tap.
+5. Reload without the query parameter and confirm completed onboarding stays hidden. Add `?onboarding=1` again and confirm QA can force it back.
+6. Turn on iOS Reduce Motion, reload, and confirm the entrance and scan-line motion are absent while both actions remain usable.
+7. On a small iPhone and in landscape, confirm the headline, both actions, and the privacy note remain visible without horizontal page scrolling.
+
 ## Core investor path
 
 1. Open the link. Confirm it opens the camera-first scanner directly, without a code page or `Private demo` label. The top-left brand must be the official white Sugar.no symbol plus wordmark from `sugar.no`, not styled text, and it must stay fully visible in portrait and landscape.

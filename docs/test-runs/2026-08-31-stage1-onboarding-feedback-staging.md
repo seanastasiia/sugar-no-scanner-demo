@@ -77,3 +77,15 @@ Production safety:
 - staging `/api/health`: implementation commit `3d91e88ce3b48c1a9b41bd363c54512e3701497e`
 - live staging DOM: short instruction, real scan preview, compact processing note and both actions present
 - production `/api/health`: unchanged commit `d127ef8275d81c3d8e725a70096a3956254315d5`
+
+## Approved Sugar.no design and motion transfer — 2026-09-02
+
+- scope: staging only; production, recognition, fit, catalog, pricing, nutrition and feedback contracts unchanged
+- design: cool `#F2F2F7` product canvas, black/coral Sugar.no wordmark, real scanner crop, overlaid four-product result summary, accessible dark-coral primary action and ink secondary action
+- motion: short staggered entrance, one non-looping scan pass, subtle button feedback and a complete `prefers-reduced-motion` fallback
+- sample path: `Try a sample shelf` now opens the deterministic shelf demo without requesting camera permission; only `Open camera` requests access
+- analytics: this redesign emits `onboardingVersion: 3` so staging results do not mix with the previous screen
+- targeted Mobile Safari onboarding/camera/sample/reduced-motion run: passed; 4/4 scenarios
+- local visual checks: 390×844, 375×667 and 844×390 all had no document overflow; both actions and the privacy note remained visible; minimum action height was 44 px; browser console errors were empty
+- `npm run verify`: passed; lint, typecheck, 48 test files and 247 tests, catalog validation and production build
+- `CI=1 npm run test:e2e`: passed; 34/34 Mobile Safari scenarios, including entry accessibility, reduced motion, camera gating, feedback and scanner regressions

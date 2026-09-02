@@ -13,9 +13,9 @@ async function unlock(page: Page) {
   await authenticate(page);
   await page.addInitScript(() => localStorage.setItem("sugar_scanner_onboarding_v1", "completed"));
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  const skipOnboarding = page.getByRole("button", { name: "Skip" });
-  await expect(page.getByLabel("Live camera scanner").or(skipOnboarding)).toBeVisible();
-  if (await skipOnboarding.isVisible()) await skipOnboarding.click();
+  const openCamera = page.getByRole("button", { name: "Open camera" });
+  await expect(page.getByLabel("Live camera scanner").or(openCamera)).toBeVisible();
+  if (await openCamera.isVisible()) await openCamera.click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
   await expect
@@ -391,16 +391,22 @@ test("first visit explains the pilot before requesting camera permission", async
   });
   await page.goto("/");
   await expect(page.getByLabel("Demo access code")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Compare the whole shelf." })).toBeVisible();
-  await expect(page.getByText("Scan several products. See the best fit first.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Find a better fit." })).toBeVisible();
+  await expect(page.getByText("Point your camera at a shelf. We compare similar products by sugar and protein.")).toBeVisible();
   await expect(page.getByTestId("onboarding-preview")).toBeVisible();
   await expect(page.getByAltText("Protein bars on a shop shelf. Four products are outlined and one is labelled Great fit.")).toBeVisible();
-  await expect(page.getByText("Camera frames are processed, not saved.")).toBeVisible();
+  await expect(page.getByText("4 products compared")).toBeVisible();
+  await expect(page.getByText("Best fit appears first")).toBeVisible();
+  await expect(page.getByText("Camera opens only after you choose Open camera. Photos are not saved.")).toBeVisible();
   const openCameraBox = await page.getByRole("button", { name: "Open camera" }).boundingBox();
-  const skipBox = await page.getByRole("button", { name: "Skip" }).boundingBox();
+  const sampleBox = await page.getByRole("button", { name: "Try a sample shelf" }).boundingBox();
+  const privacyBox = await page.getByText("Camera opens only after you choose Open camera. Photos are not saved.").boundingBox();
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   expect(openCameraBox?.y).toBeGreaterThan(0);
-  expect((skipBox?.y ?? viewportHeight) + (skipBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
+  expect((sampleBox?.y ?? viewportHeight) + (sampleBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
+  expect((privacyBox?.y ?? viewportHeight) + (privacyBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
+  await expectNoDocumentOverflow(page);
+  await expectVisibleTouchTargets(page);
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
   await page.getByRole("button", { name: "Open camera" }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
@@ -432,13 +438,13 @@ test("completed onboarding stays hidden unless QA forces it", async ({ page }) =
     });
   });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Compare the whole shelf." })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Find a better fit." })).toHaveCount(0);
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await page.goto("/?onboarding=1");
-  await expect(page.getByRole("heading", { name: "Compare the whole shelf." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Find a better fit." })).toBeVisible();
 });
 
-test("Skip dismisses the one-screen onboarding and starts the scanner only after the tap", async ({ page }) => {
+test("sample shelf dismisses onboarding without requesting camera permission", async ({ page }) => {
   await page.addInitScript(() => {
     let cameraRequests = 0;
     Object.defineProperty(window, "__cameraRequests", { configurable: true, get: () => cameraRequests });
@@ -451,12 +457,32 @@ test("Skip dismisses the one-screen onboarding and starts the scanner only after
     });
   });
   await page.goto("/?onboarding=1");
-  await expect(page.getByRole("heading", { name: "Compare the whole shelf." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Find a better fit." })).toBeVisible();
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
-  await page.getByRole("button", { name: "Skip" }).click();
-  await expect(page.getByLabel("Live camera scanner")).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem("sugar_scanner_onboarding_v1"))).toBe("skipped");
-  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(1);
+  await page.getByRole("button", { name: "Try a sample shelf" }).click();
+  await expect(page.getByLabel("Shelf photo scanner")).toBeVisible();
+  await expect(page.getByText("Shelf photo", { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("sugar_scanner_onboarding_v1"))).toBe("completed");
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
+});
+
+test("onboarding motion is one-time and respects reduced motion", async ({ page }) => {
+  await page.goto("/?onboarding=1");
+  const preview = page.getByTestId("onboarding-preview");
+  await expect(preview).toBeVisible();
+  expect(await preview.evaluate((element) => getComputedStyle(element).animationName)).toContain("onboarding-reveal-card");
+  expect(await preview.evaluate((element) => getComputedStyle(element, "::before").animationIterationCount)).toBe("1");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await expect(preview).toBeVisible();
+  expect(await preview.evaluate((element) => getComputedStyle(element).animationName)).toBe("none");
+  expect(await preview.evaluate((element) => getComputedStyle(element, "::before").display)).toBe("none");
+  expect(await page.getByRole("button", { name: "Open camera" }).evaluate((element) =>
+    getComputedStyle(element).transitionDuration
+      .split(",")
+      .every((value) => Number.parseFloat(value) <= 0.001)
+  )).toBe(true);
 });
 
 test("anonymous feedback validates Needs work and shows success", async ({ page }) => {

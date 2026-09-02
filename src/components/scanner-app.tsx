@@ -115,6 +115,7 @@ const CAMERA_FORCE_CAPTURE_MS = 1_250;
 const CAMERA_MIN_EDGE_SCORE = 4.1;
 const CAMERA_SAMPLE_WIDTH = 96;
 const CAMERA_SAMPLE_HEIGHT = 72;
+const ONBOARDING_VERSION = 3;
 
 interface NativeBarcodeDetector {
   detect(source: ImageBitmapSource): Promise<Array<{ rawValue?: string }>>;
@@ -1092,12 +1093,12 @@ export function ScannerApp() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setPilotSessionId(ensureSession());
-      track("app_opened", "camera", undefined, { onboardingVersion: 2 });
+      track("app_opened", "camera", undefined, { onboardingVersion: ONBOARDING_VERSION });
       const forceOnboarding = new URLSearchParams(window.location.search).get("onboarding") === "1";
       if (forceOnboarding || !readOnboardingCompletion(window.localStorage)) {
         setOnboardingState("showing");
-        track("onboarding_started", "camera", undefined, { onboardingVersion: 2 });
-        track("onboarding_step_viewed", "camera", undefined, { onboardingVersion: 2, step: 1 });
+        track("onboarding_started", "camera", undefined, { onboardingVersion: ONBOARDING_VERSION });
+        track("onboarding_step_viewed", "camera", undefined, { onboardingVersion: ONBOARDING_VERSION, step: 1 });
       } else {
         setOnboardingState("complete");
       }
@@ -1280,16 +1281,17 @@ export function ScannerApp() {
     setDemoOpen(true);
   }, []);
 
-  const finishOnboarding = useCallback((completion: "completed" | "skipped") => {
-    saveOnboardingCompletion(window.localStorage, completion);
-    track(completion === "completed" ? "onboarding_completed" : "onboarding_skipped", "camera", undefined, {
-      onboardingVersion: 2,
+  const finishOnboarding = useCallback((destination: "camera" | "sample") => {
+    saveOnboardingCompletion(window.localStorage, "completed");
+    track("onboarding_completed", destination === "sample" ? "sample-shelf" : "camera", undefined, {
+      onboardingVersion: ONBOARDING_VERSION,
       step: 1
     });
     cameraStartedFromOnboardingRef.current = true;
     setOnboardingState("complete");
-    void startCamera();
-  }, [startCamera, track]);
+    if (destination === "sample") startShelf();
+    else void startCamera();
+  }, [startCamera, startShelf, track]);
 
   const openFeedback = useCallback(() => {
     setPilotSessionId(ensureSession());
@@ -1334,8 +1336,8 @@ export function ScannerApp() {
   if (onboardingState === "showing") {
     return (
       <PilotOnboarding
-        onComplete={() => finishOnboarding("completed")}
-        onSkip={() => finishOnboarding("skipped")}
+        onComplete={() => finishOnboarding("camera")}
+        onTrySample={() => finishOnboarding("sample")}
       />
     );
   }

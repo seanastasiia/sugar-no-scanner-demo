@@ -10,11 +10,12 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 The isolated `stage/onboarding-feedback` branch adds a first-visit pilot layer without changing recognition, Sugar.no fit, catalog, prices, or nutrition logic:
 
-- one restrained English onboarding screen uses a real demo crop to show multi-product shelf comparison, with one short instruction and a compact image-processing note;
-- camera permission is requested only after `Open camera` or `Skip`;
+- one restrained English onboarding screen uses the light Sugar.no product language, a real demo crop, and an overlaid result summary to show multi-product shelf comparison;
+- a short one-time entrance sequence and scan-line pass explain the interaction; `prefers-reduced-motion` removes the motion;
+- camera permission is requested only after `Open camera`; `Try a sample shelf` opens the deterministic shelf demo without requesting camera access;
 - completion is stored locally under `sugar_scanner_onboarding_v1`; `?onboarding=1` forces onboarding for QA;
 - anonymous in-app feedback supports `Helpful` or `Needs work`, a bounded reason, and an optional 300-character comment;
-- onboarding version `2`, camera-permission, scan, and feedback events share one anonymous browser session;
+- onboarding version `3`, camera-permission, scan, and feedback events share one anonymous browser session so this approved design can be measured separately from the earlier staging screen;
 - the same privacy-safe product events are sent server-side to the separate EU Amplitude project `Shelf Scanner - Staging` for funnel analysis; Supabase remains the auditable event store;
 - `pilot_feedback` is metadata-only, protected by server validation, same-origin checks, rate limiting, RLS, and a staging-only migration.
 
