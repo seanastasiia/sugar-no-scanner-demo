@@ -354,6 +354,7 @@ async function mockLiveCamera(page: Page) {
     };
     HTMLMediaElement.prototype.play = async function (this: HTMLMediaElement) {
       if (this instanceof HTMLVideoElement) {
+        (window as Window & { __cameraPlayAt?: number }).__cameraPlayAt = performance.now();
         Object.defineProperties(this, {
           readyState: { configurable: true, get: () => 4 },
           videoWidth: { configurable: true, get: () => 640 },
@@ -372,6 +373,46 @@ async function mockLiveCamera(page: Page) {
     });
   });
 }
+
+test("first live recognition waits for camera positioning before capturing", async ({ page }) => {
+  await page.addInitScript(() => {
+    const originalFetch = window.fetch.bind(window);
+    (window as Window & { __cameraRecognitionTimes?: number[] }).__cameraRecognitionTimes = [];
+    window.fetch = async (...args) => {
+      const input = args[0];
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes("/api/recognize")) {
+        (window as Window & { __cameraRecognitionTimes?: number[] }).__cameraRecognitionTimes?.push(performance.now());
+      }
+      return originalFetch(...args);
+    };
+  });
+  await mockLiveCamera(page);
+  let recognitionRequests = 0;
+  await page.route("**/api/recognize", async (route) => {
+    recognitionRequests += 1;
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: "initial-camera-delay",
+        status: "not_sure",
+        detections: [],
+        latencyMs: 1,
+        model: "qa-mock",
+        imageStored: false
+      })
+    });
+  });
+
+  await unlock(page);
+  await expect(page.getByRole("status")).toContainText("Point at several products and hold steady");
+  await expect.poll(() => recognitionRequests, { timeout: 5_000 }).toBe(1);
+  const initialDelay = await page.evaluate(() => {
+    const state = window as Window & { __cameraPlayAt?: number; __cameraRecognitionTimes?: number[] };
+    return (state.__cameraRecognitionTimes?.[0] ?? 0) - (state.__cameraPlayAt ?? 0);
+  });
+  expect(initialDelay).toBeGreaterThanOrEqual(1_450);
+});
 
 test("entry opens directly into the camera-first experience without an access page", async ({ page }) => {
   await page.addInitScript(() => {

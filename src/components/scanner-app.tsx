@@ -81,6 +81,7 @@ type CameraState = "idle" | "requesting" | "live" | "denied" | "error";
 type RecognitionState = "idle" | "scanning" | "matched" | "retained" | "not_sure" | "unavailable" | "rate_limited" | "error";
 
 const CAMERA_AUTOFOCUS_SETTLE_MS = 320;
+const CAMERA_INITIAL_SCAN_DELAY_MS = 1_500;
 const CAMERA_SCAN_INTERVAL_MS = 240;
 const CAMERA_SCAN_KICKOFF_MS = 340;
 const CAMERA_MIN_CAPTURE_INTERVAL_MS = 1_000;
@@ -245,6 +246,7 @@ export function ScannerApp() {
   const trackingMismatchRef = useRef(0);
   const trackingActiveRef = useRef(false);
   const captureWaitStartedRef = useRef(0);
+  const initialCaptureNotBeforeRef = useRef(0);
   const retryRecognitionAtRef = useRef(0);
   const cameraReadyAtRef = useRef(0);
   const stableFrameCountRef = useRef(0);
@@ -660,6 +662,7 @@ export function ScannerApp() {
     trackingMismatchRef.current = 0;
     trackingActiveRef.current = false;
     captureWaitStartedRef.current = 0;
+    initialCaptureNotBeforeRef.current = 0;
     retryRecognitionAtRef.current = 0;
     setTrackingTranslation(null);
     setCandidateBoxes([]);
@@ -740,6 +743,13 @@ export function ScannerApp() {
     if (!trackingActiveRef.current && !inFlightRef.current) {
       setCandidateBoxes(proposeCameraCandidates(currentLuma));
     }
+
+    if (now < initialCaptureNotBeforeRef.current) {
+      lowResFrameRef.current = new Uint8ClampedArray(current);
+      stableFrameCountRef.current = 0;
+      return;
+    }
+    initialCaptureNotBeforeRef.current = 0;
 
     if (recognitionFrameRef.current) {
       const translation = estimateFrameTranslation(recognitionFrameRef.current, currentLuma);
@@ -898,7 +908,8 @@ export function ScannerApp() {
       track("scan_started", "camera");
       lastCaptureRef.current = 0;
       cameraReadyAtRef.current = Date.now();
-      captureWaitStartedRef.current = cameraReadyAtRef.current;
+      initialCaptureNotBeforeRef.current = cameraReadyAtRef.current + CAMERA_INITIAL_SCAN_DELAY_MS;
+      captureWaitStartedRef.current = initialCaptureNotBeforeRef.current;
       retryRecognitionAtRef.current = 0;
       stableFrameCountRef.current = 0;
       scanKickoffRef.current = setTimeout(captureStableFrame, CAMERA_SCAN_KICKOFF_MS);
@@ -935,6 +946,7 @@ export function ScannerApp() {
     trackingMismatchRef.current = 0;
     trackingActiveRef.current = false;
     captureWaitStartedRef.current = Date.now();
+    initialCaptureNotBeforeRef.current = 0;
     retryRecognitionAtRef.current = 0;
     setTrackingTranslation(null);
     setCandidateBoxes([]);
