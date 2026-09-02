@@ -253,4 +253,5 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 - [Thumbnail failure fallback and camera retry release evidence](docs/test-runs/2026-08-31-thumbnail-fallback-retry.md)
 - [Initial camera positioning delay release evidence](docs/test-runs/2026-09-02-camera-initial-focus-delay.md)
 - [Camera retry button color release evidence](docs/test-runs/2026-09-02-camera-retry-button-color.md)
+- [Multilingual Livinn coverage and protein-card local QA](docs/test-runs/2026-09-02-multilingual-livinn-protein-local.md)
 - [Open and recent bugs](Bugs.md)
