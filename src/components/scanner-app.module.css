@@ -41,16 +41,21 @@
   align-items: center;
 }
 
-.onboardingLogo {
-  font-family: var(--font-display);
-  font-size: 27px;
-  font-weight: 800;
-  letter-spacing: -1.25px;
-  line-height: 1;
+.onboardingBrand {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 42px;
+  align-items: center;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: #11121d;
+  box-shadow: 0 8px 20px rgb(17 18 29 / 12%);
 }
 
-.onboardingLogo span {
-  color: var(--onboarding-coral);
+.onboardingLogo {
+  display: block;
+  width: 108px;
+  height: auto;
 }
 
 .onboardingContent {
@@ -352,7 +357,7 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .onboardingLogo {
+  .onboardingBrand {
     animation: onboarding-reveal-up 320ms var(--onboarding-ease-out) both;
   }
 
@@ -365,7 +370,7 @@
   }
 
   .onboardingPreview::before {
-    animation: onboarding-scan-pass 900ms var(--onboarding-ease-out) 430ms both;
+    animation: onboarding-scan-pass 1400ms var(--onboarding-ease-out) 430ms both;
   }
 
   .onboardingResult {
@@ -762,22 +767,36 @@
 
 .stageTopbar > button,
 .stageActions > button {
-  display: grid;
-  width: 44px;
+  display: inline-flex;
+  width: auto;
+  min-width: 44px;
   height: 44px;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  place-items: center;
   border: 1px solid rgb(255 255 255 / 24%);
-  border-radius: 50%;
+  border-radius: 999px;
   background: rgb(20 21 30 / 82%);
   color: #ffffff;
   backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 14%);
+  transition: background-color 180ms ease, border-color 180ms ease, opacity 180ms ease;
 }
 
 .stageActions {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.stageActions > .feedbackTrigger {
+  min-width: 148px;
+  padding: 0 13px;
+  gap: 7px;
+  background: rgb(198 63 69 / 94%);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .stageActions > .demoTrigger {
@@ -807,10 +826,11 @@
   max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   margin: 0 auto;
   overflow-y: auto;
-  padding: 24px;
-  border-radius: 28px;
+  padding: 26px 24px 24px;
+  border: 1px solid rgb(255 255 255 / 70%);
+  border-radius: 30px;
   outline: 0;
-  background: var(--surface);
+  background: var(--canvas);
   color: var(--ink);
   box-shadow: 0 24px 70px rgb(0 0 0 / 34%);
 }
@@ -852,7 +872,8 @@
 .feedbackChoices {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 9px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .feedbackChoices button {
@@ -863,21 +884,22 @@
   gap: 8px;
   cursor: pointer;
   border: 1px solid var(--border);
-  border-radius: 15px;
+  border-radius: 18px;
   background: var(--surface);
   color: var(--ink);
   font-weight: 750;
 }
 
 .feedbackChoices .feedbackChoiceActive {
-  border-color: var(--accent-deep);
-  background: var(--accent-soft);
+  border-color: #c63f45;
+  background: #fff0ed;
+  color: #8e2930;
 }
 
 .feedbackReasons {
   display: grid;
   gap: 2px;
-  margin: 20px 0 0;
+  margin: 4px 0 0;
   padding: 0;
   border: 0;
 }
@@ -905,7 +927,7 @@
 .feedbackComment {
   display: grid;
   gap: 7px;
-  margin: 18px 0 20px;
+  margin: 18px 0 0;
   font-size: 14px;
   font-weight: 800;
 }
@@ -931,7 +953,7 @@
 }
 
 .feedbackError {
-  margin: 0 0 12px;
+  margin: 16px 0 0;
   color: #a83232;
   font-size: 13px;
 }
@@ -954,6 +976,13 @@
 .primaryButton:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.feedbackDialog form > .primaryButton {
+  margin-top: 20px;
+  background: #c63f45;
+  color: #ffffff;
+  box-shadow: 0 10px 24px rgb(198 63 69 / 20%);
 }
 
 @media (min-width: 700px) {
@@ -1351,6 +1380,13 @@
 
 .sheetActions button > svg {
   flex: 0 0 auto;
+}
+
+.sheetActions button:last-child {
+  border-color: #c63f45;
+  background: #c63f45;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgb(198 63 69 / 18%);
 }
 
 .resultsCollapsed .sheetChrome {
@@ -2211,15 +2247,17 @@
   display: grid;
   align-items: end;
   padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-  background: rgb(0 0 0 / 48%);
+  background: rgb(0 0 0 / 56%);
+  backdrop-filter: blur(8px);
 }
 
 .demoDialog {
   width: min(100%, 520px);
   margin: 0 auto;
-  padding: 18px;
-  border-radius: 28px;
-  background: var(--surface);
+  padding: 24px;
+  border: 1px solid rgb(255 255 255 / 70%);
+  border-radius: 30px;
+  background: var(--canvas);
   color: var(--ink);
   box-shadow: 0 24px 70px rgb(0 0 0 / 32%);
 }
@@ -2233,7 +2271,7 @@
 
 .demoHeading p {
   margin: 0 0 3px;
-  color: var(--accent-deep);
+  color: #a83239;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -2242,7 +2280,8 @@
 
 .demoHeading h2 {
   margin: 0;
-  font-size: 22px;
+  max-width: 330px;
+  font-size: 25px;
   letter-spacing: -0.04em;
   line-height: 1.1;
 }
@@ -2262,24 +2301,35 @@
 
 .demoChoices {
   display: grid;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 24px;
 }
 
 .demoChoices button,
 .demoUpload {
   display: grid;
-  min-height: 64px;
-  grid-template-columns: 28px minmax(0, 1fr);
+  min-height: 72px;
+  grid-template-columns: 42px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 12px;
   cursor: pointer;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 20px;
   background: var(--surface);
   color: var(--ink);
   text-align: left;
+}
+
+.demoChoices button > svg,
+.demoUpload > svg {
+  box-sizing: content-box;
+  width: 20px;
+  height: 20px;
+  padding: 10px;
+  border-radius: 14px;
+  background: #fff0ed;
+  color: #a83239;
 }
 
 .demoChoices span {
@@ -2307,13 +2357,38 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 16px;
   cursor: pointer;
   border: 0;
-  border-radius: 14px;
-  background: var(--ink);
-  color: var(--surface);
+  border-radius: 999px;
+  background: #c63f45;
+  color: #ffffff;
   font-weight: 800;
+  box-shadow: 0 10px 24px rgb(198 63 69 / 20%);
+}
+
+@media (hover: hover) {
+  .stageActions > button:hover {
+    border-color: rgb(255 255 255 / 42%);
+    background: rgb(32 34 46 / 92%);
+  }
+
+  .stageActions > .feedbackTrigger:hover,
+  .backToLive:hover {
+    background: #b7373e;
+  }
+
+  .demoChoices button:hover,
+  .demoUpload:hover {
+    border-color: #d7a1a4;
+    background: #fff8f7;
+  }
+}
+
+@media (max-width: 359px) {
+  .stageTopbar > span {
+    display: none;
+  }
 }
 
 .spin {
@@ -2529,7 +2604,11 @@
   }
 
   .resultsSheet,
-  .stageStatus {
+  .stageStatus,
+  .stageActions > button,
+  .demoChoices button,
+  .demoUpload,
+  .backToLive {
     transition: none;
   }
 }

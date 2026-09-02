@@ -1367,8 +1367,9 @@ export function ScannerApp() {
             >
               {source === "sample-shelf" || source === "sample-conveyor" ? <span>{sourceLabel(source)}</span> : null}
               <div className={styles.stageActions}>
-                <button type="button" onClick={openFeedback} aria-label="Give feedback">
+                <button className={styles.feedbackTrigger} type="button" onClick={openFeedback}>
                   <MessageSquareText aria-hidden="true" size={18} />
+                  <span>Leave feedback</span>
                 </button>
                 <button
                   ref={source === "camera" ? demoTriggerRef : undefined}

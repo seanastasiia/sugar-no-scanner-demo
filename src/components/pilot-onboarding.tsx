@@ -20,8 +20,16 @@ export function PilotOnboarding({
   return (
     <section className={styles.onboarding} aria-labelledby="onboarding-title">
       <div className={styles.onboardingHeader}>
-        <div className={styles.onboardingLogo} role="img" aria-label="Sugar.no">
-          sugar<span>.no</span>
+        <div className={styles.onboardingBrand}>
+          <Image
+            className={styles.onboardingLogo}
+            src="/brand/sugar-no-logo-white.svg"
+            alt="Sugar.no"
+            width={137}
+            height={26.07}
+            priority
+            unoptimized
+          />
         </div>
       </div>
       <div className={styles.onboardingContent}>

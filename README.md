@@ -10,21 +10,22 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 The isolated `stage/onboarding-feedback` branch adds a first-visit pilot layer without changing recognition, Sugar.no fit, catalog, prices, or nutrition logic:
 
-- one restrained English onboarding screen uses the light Sugar.no product language, a real demo crop, and an overlaid result summary to show multi-product shelf comparison;
-- a short one-time entrance sequence and scan-line pass explain the interaction; `prefers-reduced-motion` removes the motion;
+- one restrained English onboarding screen uses the official Sugar.no SVG wordmark, the light Sugar.no product language, a real demo crop, and an overlaid result summary to show multi-product shelf comparison;
+- a short one-time entrance sequence and a slower 1.4-second scan-line pass explain the interaction; `prefers-reduced-motion` removes the motion;
 - camera permission is requested only after `Open camera`; `Try a sample shelf` opens the deterministic shelf demo without requesting camera access;
 - completion is stored locally under `sugar_scanner_onboarding_v1`; `?onboarding=1` forces onboarding for QA;
 - anonymous in-app feedback supports `Helpful` or `Needs work`, a bounded reason, and an optional 300-character comment;
+- camera, deterministic demo, demo chooser, result sheet and feedback use the shared staging design system in `design-system/sugar-no-shelf-scanner/MASTER.md`; `Leave feedback` is a labelled 44 px control, and its modal keeps a 20 px minimum separation below the rating choices;
 - onboarding version `3`, camera-permission, scan, and feedback events share one anonymous browser session so this approved design can be measured separately from the earlier staging screen;
 - the same privacy-safe product events are sent server-side to the separate EU Amplitude project `Shelf Scanner - Staging` for funnel analysis; Supabase remains the auditable event store;
 - `pilot_feedback` is metadata-only, protected by server validation, same-origin checks, rate limiting, RLS, and a staging-only migration.
 
-Production remains pinned to `d127ef8` until the explicit command `ПУБЛИКУЙ`. Rollback tags are `production-baseline-2026-08-31` and `scanner-golden-3c83a65`. Apply `supabase/migrations/202608310002_pilot_feedback.sql` only to the separate staging Supabase project during Stage 1 validation.
+Stage 1 stays on `stage/onboarding-feedback` and must not merge into `main` or deploy to production until the explicit command `ПУБЛИКУЙ`. Rollback tags are `production-baseline-2026-08-31` and `scanner-golden-3c83a65`. Apply `supabase/migrations/202608310002_pilot_feedback.sql` only to the separate staging Supabase project during Stage 1 validation.
 
 ## Current product behavior
 
 - The scanner follows the supplied Sugar.no iOS product screens: a cool light-gray app canvas, large white cards and sheets, subtle neutral separators, near-black typography/controls and system blue reserved for actions and focus. `Great fit`, `Moderate fit` and `Low fit` use filled, text-labelled semantic pills.
-- The live feed spans the full phone width, with the Sugar.no brand, `Show demo` and recognition status layered over the camera. The stream keeps its native aspect ratio and `object-fit: contain`, so the app does not add digital zoom or stretch the image. Saved photos use one predictable rounded 3:4 preview and `object-fit: cover`; deterministic demo scenes keep their own designed framing.
+- The live feed spans the full phone width, with the official Sugar.no wordmark, labelled `Leave feedback`, `Show demo` and recognition status layered over the camera. The stream keeps its native aspect ratio and `object-fit: contain`, so the app does not add digital zoom or stretch the image. Saved photos use one predictable rounded 3:4 preview and `object-fit: cover`; deterministic demo scenes keep their own designed framing.
 - `Reading visible products…` means the browser has selected one stable frame. That captured frame is held on screen while recognition and nutrition enrichment finish, so camera movement cannot detach result boxes from the products that were actually analyzed. A new scene is read only after the user explicitly starts a new scan.
 - Before Gemini returns, the browser may show neutral dashed candidate regions derived locally from edge detail. They are only aiming feedback: they never carry a product name, fit color or nutrition claim.
 - Camera starts after permission without requiring a shutter action. Mobile Safari requests the rear 1920×1080 feed at up to 30 fps and continuous focus when the device exposes it.
@@ -56,7 +57,7 @@ Production remains pinned to `d127ef8` until the explicit command `ПУБЛИК�
 - `Better alternatives` are fail-closed and selected from the complete verified nutrition pool: the managed/local Sugar.no catalog, Barbora, Rimi, Livin and the isolated Open Food Facts layer. They must share the same exact product type and form, have `Great fit` that is no worse than the scanned product, and resolve to a current exact offer from a connected retailer. Open Food Facts rows without an exact connected-retailer offer can strengthen recognition and nutrition coverage but cannot become purchasable alternatives. Equal-fit candidates are ordered by lower exact offer price and then the closest known pack size. `Moderate fit`, `Low fit` and unrated products are excluded; if no true substitute is available, the section is hidden.
 - Offer lookup is retailer-neutral: exact Barbora, Rimi and Livin offer keys use one API contract. Every displayed price and destination belongs to that exact retailer SKU. The app never compares or labels fuzzy title matches as cheaper. `Buy cheaper online` and a crossed-out shelf price appear only when the exact current online offer is strictly below the observed shelf price; otherwise no saving claim is shown.
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
-- The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
+- The demo chooser uses the shared light Sugar.no modal surface and coral primary action, then goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
 
 ## Trust rules
 

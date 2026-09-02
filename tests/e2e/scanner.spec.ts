@@ -468,10 +468,12 @@ test("sample shelf dismisses onboarding without requesting camera permission", a
 
 test("onboarding motion is one-time and respects reduced motion", async ({ page }) => {
   await page.goto("/?onboarding=1");
+  await expectOfficialSugarNoLogo(page);
   const preview = page.getByTestId("onboarding-preview");
   await expect(preview).toBeVisible();
   expect(await preview.evaluate((element) => getComputedStyle(element).animationName)).toContain("onboarding-reveal-card");
   expect(await preview.evaluate((element) => getComputedStyle(element, "::before").animationIterationCount)).toBe("1");
+  expect(await preview.evaluate((element) => getComputedStyle(element, "::before").animationDuration)).toBe("1.4s");
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.reload();
@@ -492,8 +494,15 @@ test("anonymous feedback validates Needs work and shows success", async ({ page 
     await route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, storage: "supabase" }) });
   });
   await unlock(page);
-  await page.getByRole("button", { name: "Give feedback" }).click();
+  const feedbackTrigger = page.getByRole("button", { name: "Leave feedback" });
+  await expect(feedbackTrigger).toContainText("Leave feedback");
+  await expect(feedbackTrigger).toHaveCSS("white-space", "nowrap");
+  expect((await feedbackTrigger.boundingBox())?.width).toBeGreaterThanOrEqual(120);
+  await feedbackTrigger.click();
   const dialog = page.getByRole("dialog", { name: "Was this scan helpful?" });
+  const ratingBox = await dialog.getByRole("group", { name: "Feedback rating" }).boundingBox();
+  const submitBox = await dialog.getByRole("button", { name: "Send feedback" }).boundingBox();
+  expect((submitBox?.y ?? 0) - ((ratingBox?.y ?? 0) + (ratingBox?.height ?? 0))).toBeGreaterThanOrEqual(20);
   await dialog.getByRole("button", { name: "Needs work" }).click();
   await expect(dialog.getByRole("button", { name: "Send feedback" })).toBeDisabled();
   await dialog.getByLabel("Result was unclear").check();
@@ -794,8 +803,12 @@ test("demo chooser supports shelf, checkout and a clear return to live camera", 
   await expect(page.getByRole("heading", { name: "See how a shelf scan works" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Shelf demo" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Checkout demo" })).toBeVisible();
+  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  await expect(chooser).toHaveCSS("background-color", "rgb(243, 244, 248)");
+  await expect(chooser.getByRole("button", { name: "Back to live camera" })).toHaveCSS("background-color", "rgb(198, 63, 69)");
   await page.getByRole("button", { name: "Shelf demo" }).click();
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
+  await expect(page.getByRole("button", { name: "View all", exact: true })).toHaveCSS("background-color", "rgb(198, 63, 69)");
   await page.getByRole("button", { name: "Back to live camera" }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await openDemoScene(page, "Checkout demo");
