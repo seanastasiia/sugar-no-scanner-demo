@@ -61,3 +61,15 @@ Production safety:
 6. Reload and confirm onboarding stays hidden.
 7. Add `?onboarding=1` and confirm onboarding reappears.
 8. Deny camera access and confirm the recovery explanation and `Enable camera` action.
+
+## Visual onboarding refinement — 2026-09-02
+
+- scope: staging only; recognition, fit, catalog, pricing, nutrition, feedback and analytics behavior unchanged
+- design review: Claude reviewed only the public staging URL and two public demo screenshots; its proposed real-demo crop and short hierarchy were adapted to the verified scanner behavior
+- copy: the instruction is reduced to eight words, the image caption describes only verified sugar/protein fit, and the processing notice is reduced to one factual sentence
+- asset: one 4:3 crop from the existing public demo result, optimized to a 235 KB JPEG
+- targeted onboarding/forced-QA/Skip Mobile Safari run: passed; 3/3 scenarios
+- iPhone SE 375×667 local screenshot inspected: one screen, no clipping, real scan visual visible, `Open camera` and `Skip` both above the fold
+- `npm run verify`: passed; lint, typecheck, 48 test files and 247 tests, catalog validation, production build
+- `CI=1 npm run test:e2e`: passed; 33/33 Mobile Safari scenarios, including camera gating and entry accessibility
+- production was not changed; deployment verification is recorded after the staging-only push

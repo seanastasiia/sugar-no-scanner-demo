@@ -10,7 +10,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 The isolated `stage/onboarding-feedback` branch adds a first-visit pilot layer without changing recognition, Sugar.no fit, catalog, prices, or nutrition logic:
 
-- one restrained English onboarding screen explains the shelf comparison and image-processing limits without cards, decorative icons, or promotional language;
+- one restrained English onboarding screen uses a real demo crop to show multi-product shelf comparison, with one short instruction and a compact image-processing note;
 - camera permission is requested only after `Open camera` or `Skip`;
 - completion is stored locally under `sugar_scanner_onboarding_v1`; `?onboarding=1` forces onboarding for QA;
 - anonymous in-app feedback supports `Helpful` or `Needs work`, a bounded reason, and an optional 300-character comment;

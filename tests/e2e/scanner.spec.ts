@@ -392,7 +392,15 @@ test("first visit explains the pilot before requesting camera permission", async
   await page.goto("/");
   await expect(page.getByLabel("Demo access code")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Compare the whole shelf." })).toBeVisible();
-  await expect(page.getByText("Camera frames are processed to identify products and are not saved.")).toBeVisible();
+  await expect(page.getByText("Scan several products. See the best fit first.")).toBeVisible();
+  await expect(page.getByTestId("onboarding-preview")).toBeVisible();
+  await expect(page.getByAltText("Protein bars on a shop shelf. Four products are outlined and one is labelled Great fit.")).toBeVisible();
+  await expect(page.getByText("Camera frames are processed, not saved.")).toBeVisible();
+  const openCameraBox = await page.getByRole("button", { name: "Open camera" }).boundingBox();
+  const skipBox = await page.getByRole("button", { name: "Skip" }).boundingBox();
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  expect(openCameraBox?.y).toBeGreaterThan(0);
+  expect((skipBox?.y ?? viewportHeight) + (skipBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
   await page.getByRole("button", { name: "Open camera" }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();

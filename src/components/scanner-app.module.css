@@ -16,7 +16,7 @@
   min-height: 100vh;
   min-height: 100dvh;
   flex-direction: column;
-  padding: calc(24px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
+  padding: max(16px, env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
   overflow-y: auto;
   background: #16171c;
   color: #ffffff;
@@ -32,6 +32,7 @@
 .onboardingHeader {
   display: flex;
   align-items: center;
+  padding-bottom: 18px;
 }
 
 .onboardingLogo {
@@ -43,19 +44,16 @@
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
+  gap: 16px;
 }
 
 .onboardingMain {
-  display: flex;
-  min-height: 32px;
-  flex: 1 1 auto;
-  flex-direction: column;
-  justify-content: flex-end;
+  flex: 0 0 auto;
 }
 
 .onboarding h1 {
   max-width: 11ch;
-  margin: 0 0 16px;
+  margin: 0 0 8px;
   outline: 0;
   font-family: var(--font-display);
   font-size: clamp(30px, 8.5vw, 38px);
@@ -72,13 +70,35 @@
   line-height: 1.5;
 }
 
+.onboardingPreview {
+  min-height: 0;
+  margin: 0;
+}
+
+.onboardingPreviewImage {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 12px;
+  background: #0b0c10;
+}
+
+.onboardingPreviewImage img {
+  object-fit: cover;
+}
+
+.onboardingPreview figcaption {
+  margin-top: 7px;
+  color: #aeb1ba;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .onboardingNote {
-  display: grid;
-  gap: 6px;
-  margin: 28px 0 24px;
-  padding-top: 14px;
-  border-top: 1px solid rgb(255 255 255 / 10%);
-  color: #9a9da6;
+  margin: 0;
+  color: #aeb1ba;
   font-size: 13px;
   line-height: 1.45;
 }
@@ -90,6 +110,7 @@
 .onboardingActions {
   display: grid;
   gap: 8px;
+  margin-top: auto;
 }
 
 .onboardingPrimary,
@@ -134,6 +155,34 @@
 @media (prefers-reduced-motion: no-preference) {
   .onboardingContent {
     animation: onboarding-in 160ms ease-out both;
+  }
+}
+
+@media (max-height: 700px) {
+  .onboarding {
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .onboardingHeader {
+    padding-bottom: 12px;
+  }
+
+  .onboardingContent {
+    gap: 10px;
+  }
+
+  .onboarding h1 {
+    font-size: clamp(28px, 7.5vw, 34px);
+  }
+
+  .onboardingPreview {
+    align-self: center;
+    width: min(100%, 304px);
+  }
+
+  .onboardingPreview figcaption {
+    margin-top: 5px;
   }
 }
 

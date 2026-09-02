@@ -36,13 +36,25 @@ export function PilotOnboarding({
             Compare the whole shelf.
           </h1>
           <p className={styles.onboardingCopy}>
-            Point your camera at several products at once. Sugar.no compares similar items using verified total sugar, protein and product data.
+            Scan several products. See the best fit first.
           </p>
         </div>
 
+        <figure className={styles.onboardingPreview} data-testid="onboarding-preview">
+          <div className={styles.onboardingPreviewImage}>
+            <Image
+              src="/onboarding/shelf-scan.jpg"
+              alt="Protein bars on a shop shelf. Four products are outlined and one is labelled Great fit."
+              fill
+              priority
+              sizes="(max-width: 460px) calc(100vw - 40px), 420px"
+            />
+          </div>
+          <figcaption>Example scan. Fit uses verified sugar and protein.</figcaption>
+        </figure>
+
         <div className={styles.onboardingNote}>
-          <p>Camera frames are processed to identify products and are not saved.</p>
-          <p>Products without confirmed data stay unrated.</p>
+          <p>Camera frames are processed, not saved.</p>
         </div>
 
         <div className={styles.onboardingActions}>
