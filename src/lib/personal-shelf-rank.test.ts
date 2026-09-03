@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeIngredients, assessPersonalShelfProduct, rankPersonalShelfProducts, shelfCategory, splitIngredients, SHELF_CATEGORIES } from "./personal-shelf-rank";
+import { analyzeIngredients, applyShelfNutritionTrustGuard, assessPersonalShelfProduct, hasContradictoryShelfNutrition, rankPersonalShelfProducts, shelfCategory, splitIngredients, SHELF_CATEGORIES } from "./personal-shelf-rank";
 import { scoreBarboraProduct } from "./scoring";
 import { shelfFixture } from "../../tests/fixtures/personal-shelf";
 
@@ -37,6 +37,18 @@ describe("Personal Shelf Rank, independent pilot", () => {
   it("keeps zero distinct from missing and rejects inconsistent energy", () => {
     expect(assessPersonalShelfProduct(shelfFixture("qa", { saltG: 0, saturatedFatG: 0, totalSugarG: 0 })).status).toBe("scored");
     expect(assessPersonalShelfProduct(shelfFixture("qa", { proteinG: 90, energyKcal: 10 })).score).toBeNull();
+  });
+  it("quarantines an impossible source table in both models without correcting guessed decimals", () => {
+    const p = shelfFixture("qa", { proteinG: 57.8, carbohydrateG: 47, fatG: 29, energyKcal: 489 });
+    expect(hasContradictoryShelfNutrition(p.shelfEvidence)).toBe(true);
+    expect(assessPersonalShelfProduct(p).missing).toContain("consistent nutrition totals");
+    expect(applyShelfNutritionTrustGuard(p).matchScore).toBeNull();
+    expect(applyShelfNutritionTrustGuard(p).shelfEvidence?.proteinG).toBe(57.8);
+    expect(applyShelfNutritionTrustGuard(p).nutrientsPer100g.proteinG).toBeNull();
+    expect(applyShelfNutritionTrustGuard(shelfFixture()).matchScore).toBe(60);
+    expect(hasContradictoryShelfNutrition({ ...p.shelfEvidence!, proteinG: 5, carbohydrateG: 47, fatG: 29 })).toBe(false);
+    expect(hasContradictoryShelfNutrition({ ...p.shelfEvidence!, proteinG: 5, carbohydrateG: 0, totalSugarG: 20, fatG: 29 })).toBe(true);
+    expect(hasContradictoryShelfNutrition({ ...p.shelfEvidence!, proteinG: 5, carbohydrateG: 47, fatG: 1, saturatedFatG: 10 })).toBe(true);
   });
   it.each([{ totalSugarG: 30 }, { saltG: 2 }, { saturatedFatG: 6 }])("protein does not cancel a high limiting nutrient", (overrides) => {
     const a = assessPersonalShelfProduct(shelfFixture("qa", { ...overrides, proteinG: 50, fiberG: 10, ingredientsText: "Wholegrain oats, salt" }));

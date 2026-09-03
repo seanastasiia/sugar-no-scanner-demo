@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { ShelfEvidence } from "../src/lib/personal-shelf-rank";
 import { assessPersonalShelfProduct } from "../src/lib/personal-shelf-rank";
 import type { ExternalCatalogProduct } from "../src/server/external-catalog-types";
+import { parseShelfEvidence } from "../src/server/personal-shelf-evidence";
 
 const retailer: ShelfEvidence[] = JSON.parse(await readFile("data/personal-shelf-evidence.generated.json", "utf8"));
 const off: ShelfEvidence[] = [];
@@ -13,7 +14,7 @@ for (const file of ["data/open-food-facts-lv.generated.json", "data/open-food-fa
 const rows = [...retailer, ...off];
 if (new Set(rows.map((r) => r.productId)).size !== rows.length) throw new Error("Duplicate evidence identity");
 for (const row of rows) {
-  if (!Number.isFinite(Date.parse(row.checkedAt)) || !row.sourceUrl.startsWith("https://")) throw new Error("Evidence has no dated source");
+  if (!parseShelfEvidence(row)) throw new Error(`Invalid exact-source evidence: ${row.productId}`);
 }
 console.log(JSON.stringify({ mode: process.argv.includes("--apply") ? "apply" : "dry-run", retailer: retailer.length, openFoodFacts: off.length,
   scorable: rows.filter((row) => assessPersonalShelfProduct({ id: row.productId, gtin: row.gtin, category: row.category, format: "other", shelfEvidence: row }).score !== null).length }));

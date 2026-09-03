@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { hasSafeShelfSource, rankPersonalShelfProducts, SHELF_MODEL_VERSION, type ShelfEvidence } from "@/lib/personal-shelf-rank";
+import { hasContradictoryShelfNutrition, hasSafeShelfSource, rankPersonalShelfProducts, SHELF_MODEL_VERSION, type ShelfEvidence } from "@/lib/personal-shelf-rank";
 import type { ProductRecord } from "@/lib/types";
 import styles from "./personal-shelf-results.module.css";
 
@@ -80,8 +80,10 @@ export function PersonalShelfResults({ products, unidentifiedCount, thumbnail }:
                     {assessment.cap ? <p>{assessment.cap}</p> : null}
                     {assessment.tradeoffs.length > 1 ? <ul>{assessment.tradeoffs.slice(1).map((reason) => <li key={reason}>{reason}</li>)}</ul> : null}
                     {evidence ? <>
+                      {hasContradictoryShelfNutrition(evidence) ? <p><b>Source table is inconsistent. These original values are retained for checking, not trusted nutrition.</b></p> : null}
                       <p>Per {evidence.nutritionBasis === "100ml" ? "100 ml" : "100 g"}: {[
                         ["Energy", evidence.energyKcal, "kcal"], ["Protein", evidence.proteinG, "g"], ["Sugar", evidence.totalSugarG, "g"],
+                        ["Carbohydrate", evidence.carbohydrateG, "g"], ["Fat", evidence.fatG, "g"],
                         ["Fiber", evidence.fiberG, "g"], ["Salt", evidence.saltG, "g"], ["Saturated fat", evidence.saturatedFatG, "g"]
                       ].filter(([, value]) => value !== null && value !== undefined).map(([label, value, unit]) => `${label} ${value}${unit}`).join(" · ")}</p>
                       <p><b>Original ingredients ({evidence.ingredientsLanguage || "language unknown"})</b></p>

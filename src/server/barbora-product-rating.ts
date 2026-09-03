@@ -1,6 +1,7 @@
 import { scoreBarboraProduct } from "@/lib/scoring";
 import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
 import { barboraShelfEvidence } from "./personal-shelf-parser";
+import { applyShelfNutritionTrustGuard } from "@/lib/personal-shelf-rank";
 import {
   getBarboraProductBySlug,
   normalizeRetailText,
@@ -116,7 +117,7 @@ export function barboraPageToScoredProduct(
     }
   ];
 
-  const scored = scoreBarboraProduct(record);
+  const scored = applyShelfNutritionTrustGuard(scoreBarboraProduct(record));
   if (!product.is_adult) return scored;
   return {
     ...scored,

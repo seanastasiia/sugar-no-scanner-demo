@@ -16,7 +16,7 @@ const page = `<script type="application/ld+json">{"@type":"Product","name":"QA c
 describe("independent exact-source shelf evidence", () => {
   it("extracts only labelled Livinn blocks including shorthand saturates", () => {
     expect(livinnShelfEvidence(page, "https://www.livinn.lt/p/qa", "qa", time)).toMatchObject({
-      productId: "livinn_lt:qa", ingredientsLanguage: "lt", energyKcal: 446, proteinG: 6.6, totalSugarG: 18, fiberG: 6, saltG: .48, saturatedFatG: 2.5
+      productId: "livinn_lt:qa", ingredientsLanguage: "lt", energyKcal: 446, proteinG: 6.6, totalSugarG: 18, fiberG: 6, saltG: .48, saturatedFatG: 2.5, carbohydrateG: 66, fatG: 16
     });
   });
   it("rejects another SKU, per-serving evidence and missing exact blocks", () => {
@@ -44,5 +44,13 @@ describe("independent exact-source shelf evidence", () => {
     const external = await getExternalCatalogProductById("livinn_lt:03000007174");
     expect(external?.shelfEvidence).toEqual(getShelfEvidence("livinn_lt:03000007174"));
     expect(getShelfEvidence("livinn_lt:nonexistent")).toBeNull();
+  });
+  it("does not reuse the known contradictory Livinn chip table as original Fit", () => {
+    const product = getExternalCatalogProductById("livinn_lt:03000011074")!;
+    expect(product.shelfEvidence).toMatchObject({ proteinG: 57.8, carbohydrateG: 47, fatG: 29 });
+    expect(product.matchScore).toBeNull();
+    expect(product.ratingStatus).toBe("identity_only");
+    expect(product.nutrientsPer100g.proteinG).toBeNull();
+    expect(getExternalCatalogProductById("livinn_lt:03000011072")?.matchScore).not.toBeNull();
   });
 });

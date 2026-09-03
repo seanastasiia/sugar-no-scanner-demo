@@ -22,6 +22,7 @@ const candidates = [
 const counts = new Map<ShelfCategory, number>();
 const selected = candidates.filter((p) => {
   if (requestedIds.size) return requestedIds.has(p.id);
+  if (process.argv.includes("--refresh-existing")) return existingIds.has(p.id);
   if (process.argv.includes("--new-only") && existingIds.has(p.id)) return false;
   if (!p.category || (counts.get(p.category) || 0) >= limit) return false;
   counts.set(p.category, (counts.get(p.category) || 0) + 1);

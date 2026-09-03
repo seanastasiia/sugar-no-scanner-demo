@@ -1,4 +1,4 @@
-import type { ProductRecord } from "./types";
+import type { ProductRecord, ScoredProduct } from "./types";
 
 export const SHELF_MODEL_VERSION = "personal-shelf-v1.0-pilot";
 export type ShelfCategory = "chips" | "crackers" | "yogurt" | "dairy-dessert" | "bar" | "cookie";
@@ -21,6 +21,26 @@ export interface ShelfEvidence {
   fiberG: number | null;
   saltG: number | null;
   saturatedFatG: number | null;
+  /** Additional exact-label fields used for consistency, not extra scoring signals. */
+  carbohydrateG?: number | null;
+  fatG?: number | null;
+}
+
+export function hasContradictoryShelfNutrition(evidence: ShelfEvidence | null | undefined): boolean {
+  if (!evidence) return false;
+  if ([evidence.carbohydrateG, evidence.fatG].some((n) => n !== null && n !== undefined && !valid(n))) return true;
+  // Sugar is contained in carbs; saturates in fat. Never double count either.
+  const known = [evidence.proteinG, evidence.carbohydrateG, evidence.fatG].filter((n): n is number => typeof n === "number" && Number.isFinite(n) && n >= 0);
+  return known.reduce((a, b) => a + b, 0) > 101 ||
+    (typeof evidence.carbohydrateG === "number" && typeof evidence.totalSugarG === "number" && evidence.totalSugarG > evidence.carbohydrateG + 1) ||
+    (typeof evidence.fatG === "number" && typeof evidence.saturatedFatG === "number" && evidence.saturatedFatG > evidence.fatG + 1);
+}
+
+/** Preserve the identity/raw observation, but never reuse a demonstrably contradictory table as Fit. */
+export function applyShelfNutritionTrustGuard(product: ScoredProduct): ScoredProduct {
+  if (product.shelfEvidence?.productId !== product.id || (product.gtin && product.shelfEvidence.gtin && product.gtin !== product.shelfEvidence.gtin) || !hasContradictoryShelfNutrition(product.shelfEvidence)) return product;
+  return { ...product, matchScore: null, matchReason: "missing_nutrition", ratingStatus: "identity_only", ratingSignalCount: 0, ratingSignalMask: [], criterionScores: null,
+    nutrientsPer100g: { proteinG: null, totalSugarG: null, fiberG: null, carbohydrateG: null } };
 }
 
 export function hasSafeShelfSource(evidence: Pick<ShelfEvidence, "source" | "sourceUrl">): boolean {
@@ -146,6 +166,7 @@ export function assessPersonalShelfProduct(product: Pick<ProductRecord, "id" | "
     if (!valid(evidence[key], key === "energyKcal" ? 900 : 100) || (key === "energyKcal" && evidence[key] === 0)) result.missing.push(label);
   }
   if (config.balance.fiber && !valid(evidence.fiberG)) result.missing.push("fiber");
+  if (hasContradictoryShelfNutrition(evidence)) result.missing.push("consistent nutrition totals");
   if (valid(evidence.proteinG) && valid(evidence.energyKcal, 900) && evidence.proteinG * 4 > evidence.energyKcal * 1.15) result.missing.push("consistent protein and energy");
   if (result.missing.length) return result;
   const sugar = evidence.totalSugarG!;

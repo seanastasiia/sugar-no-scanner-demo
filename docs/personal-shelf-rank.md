@@ -14,6 +14,8 @@ Each observation contains exact canonical product ID, optional matching GTIN, so
 
 Energy, protein, total sugar, salt and saturated fat are required everywhere. Fiber is required for chips/crackers/bars/cookies and excluded from dairy scoring (not imputed as zero). Missing/negative/non-finite/out-of-range amounts, impossible protein-energy combinations, unknown food base, unsupported category or source mismatch produce no score. A declared zero remains zero; `<0.1 g` is not an exact zero and stays unknown. Liquids/per-100 ml and per-serving tables are outside v1. Allergens, intolerances, pregnancy suitability, glycemic response and individual medical risks are not assessed.
 
+Exact total carbohydrate and total fat are additional consistency fields, not extra score components. The sum of known protein/carbohydrate/fat cannot exceed 101 g per 100 g (1 g label-rounding allowance); sugar cannot exceed carbs by more than 1 g or saturates exceed fat by more than 1 g. Sugar/saturates are never double-counted in mass totals. Contradictory raw records stay visible for audit but cannot drive either pilot score or original Fit; this is a source-validity exception to preserving old ratings, not a new old-Fit formula. Missing extra fields do not become zero and cannot prove complete consistency.
+
 Categories use the most specific source category, not marketing names. Known conflicting evidence (e.g. curd cream filed under yogurt) prevents scoring; unseen retailer taxonomy mistakes still require manual review. Fixed source categories need more granular calibration before broad rollout.
 
 ## Formula: evidence anchors versus product choices
@@ -42,13 +44,15 @@ There is no additive-count or ingredient-count penalty. Sweeteners are disclosed
 
 The 198-row snapshot was obtained through two bounded public-page batches, 100 selected pages each (99 successfully extracted in each); the second batch excluded existing IDs. Three first-batch records were re-read after recognizing Livinn's abbreviated saturates label. Failed fetches left earlier observations untouched. No broad OFF dump or store-wide composition crawl ran.
 
+Real-card visual QA then found a source error in [Livinn GO PURE CANYON chips](https://www.livinn.lt/p/go-pure-ekologiski-bulviu-traskuciai-su-krapais-ir-laiskiniais-cesnakais-125-g-03000011074): its exact labelled table reports protein 57.8 g, carbs 47 g and fat 29 g per 100 g. A direct page re-read confirmed those fields. No alternative value was inferred. The 198 observations were re-fetched with extra macro fields; the contradiction now leaves that SKU unscored in both models, and the visual regression explicitly checks this case.
+
 | Group | Exact observations | Complete score |
 | --- | ---: | ---: |
-| Chips | 40 | 16 |
+| Chips | 40 | 15 |
 | Crackers/crispbreads | 40 | 9 |
 | Spoonable yogurt | 38 | 31 |
 | Bars | 40 | 4 |
-| Cookies/wafers | 40 | 4 |
+| Cookies/wafers | 40 | 5 |
 | Dairy desserts | 0 | 0 |
 | Total | 198 | 64 |
 
@@ -61,10 +65,13 @@ npm run catalog:sync:shelf-pilot
 npm run catalog:sync:shelf-pilot -- --apply
 # Select the next bounded batch instead of re-reading current IDs.
 npm run catalog:sync:shelf-pilot -- --apply --new-only
+# Re-read exactly the already selected pilot IDs without expanding scope.
+npm run catalog:sync:shelf-pilot -- --apply --refresh-existing
 # Optional env: SHELF_PILOT_PER_CATEGORY=20 (1..100), SHELF_PILOT_IDS=id1,id2
 
 # Validate counts without touching Supabase.
 npm run supabase:seed:shelf-pilot
+npm run catalog:validate:shelf-pilot
 # Only after approval of target, migration and retailer reuse:
 npx supabase db push
 npm run supabase:seed:shelf-pilot -- --apply

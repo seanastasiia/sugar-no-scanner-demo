@@ -18,8 +18,13 @@ const evidenceSchema = z.object({
   gtin: z.string().regex(/^\d{8,14}$/).nullable(), category: z.string().max(2_000), nutritionBasis: z.enum(["100g", "100ml"]),
   ingredientsText: z.string().max(12_000).nullable(), ingredientsLanguage: z.string().max(10).nullable(),
   energyKcal: nullableAmount, proteinG: nullableAmount, totalSugarG: nullableAmount, fiberG: nullableAmount,
-  saltG: nullableAmount, saturatedFatG: nullableAmount
+  saltG: nullableAmount, saturatedFatG: nullableAmount, carbohydrateG: nullableAmount.optional(), fatG: nullableAmount.optional()
 }).refine(hasSafeShelfSource);
+
+export function parseShelfEvidence(value: unknown): ShelfEvidence | null {
+  const parsed = evidenceSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
 
 /** Read only by canonical IDs, in isolated source tables. An absent migration is a local fallback. */
 export async function loadShelfEvidence(ids: string[]): Promise<Record<string, ShelfEvidence>> {

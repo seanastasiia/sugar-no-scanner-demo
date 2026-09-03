@@ -33,7 +33,8 @@ export function livinnShelfEvidence(html: string, url: string, expectedSku: stri
     proteinG: strictAmount(nutrition, "baltymu|baltymai"), totalSugarG: strictAmount(nutrition, "cukru|cukrus"),
     fiberG: strictAmount(nutrition, "skaiduliniu medziagu|skaidulines medziagos|skaidulu"),
     saltG: strictAmount(nutrition, "druskos|druska"),
-    saturatedFatG: strictAmount(nutrition, "sociuju riebalu rugsciu|sociosios riebalu rugstys|sociuju riebalu|sociuju")
+    saturatedFatG: strictAmount(nutrition, "sociuju riebalu rugsciu|sociosios riebalu rugstys|sociuju riebalu|sociuju"),
+    carbohydrateG: strictAmount(nutrition, "angliavandeniu|angliavandeniai"), fatG: strictAmount(nutrition, "riebalu|riebalai")
   };
 }
 
@@ -51,7 +52,7 @@ export function barboraShelfEvidence(product: BarboraPageProduct, checkedAt: str
     ingredientsText: product.ingredients ? ingredientPlainText(product.ingredients) : null, ingredientsLanguage: "lv",
     energyKcal: nutrient(/energetiska vertiba/, "kcal"), proteinG: nutrient(/^olbaltumvielas$/),
     totalSugarG: nutrient(/^cukuri$/), fiberG: nutrient(/skiedrvielas/),
-    saltG: nutrient(/^sals$/), saturatedFatG: nutrient(/piesatinatas taukskabes/)
+    saltG: nutrient(/^sals$/), saturatedFatG: nutrient(/piesatinatas taukskabes/), carbohydrateG: nutrient(/^oglhidrati$/), fatG: nutrient(/^tauki$/)
   };
 }
 
@@ -77,6 +78,6 @@ export function offShelfEvidence(product: Record<string, unknown>, checkedAt: st
     energyKcal: number("energy-kcal_100g") ?? (kj === null ? null : Math.round(kj / 4.184 * 10) / 10),
     proteinG: number("proteins_100g"), totalSugarG: number("sugars_100g"), fiberG: number("fiber_100g"),
     saltG: salt ?? (sodium === null ? null : Math.round(sodium * 2.5 * 10000) / 10000),
-    saturatedFatG: number("saturated-fat_100g")
+    saturatedFatG: number("saturated-fat_100g"), carbohydrateG: number("carbohydrates_100g"), fatG: number("fat_100g")
   };
 }

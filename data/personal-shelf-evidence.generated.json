@@ -3,7 +3,7 @@
     "productId": "barbora:biezp-des-danonki-zem-van-ban-4-x-90-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/biezp-des-danonki-zem-van-ban-4-x-90-g",
-    "checkedAt": "2026-09-03T09:36:23.532Z",
+    "checkedAt": "2026-09-03T09:59:24.991Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -14,13 +14,15 @@
     "totalSugarG": 9.8,
     "fiberG": null,
     "saltG": 0.09,
-    "saturatedFatG": 1.6
+    "saturatedFatG": 1.6,
+    "carbohydrateG": 10.5,
+    "fatG": 2.5
   },
   {
     "productId": "barbora:biezp-kr-prot-baltais-stracciatella-200-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/biezp-kr-prot-baltais-stracciatella-200-g",
-    "checkedAt": "2026-09-03T09:36:24.385Z",
+    "checkedAt": "2026-09-03T09:59:25.818Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts bez piedevām",
     "nutritionBasis": "100g",
@@ -31,13 +33,15 @@
     "totalSugarG": 2.9,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 0.6
+    "saturatedFatG": 0.6,
+    "carbohydrateG": 4.2,
+    "fatG": 0.9
   },
   {
     "productId": "barbora:bif-jog-karums-avenu-musli-bez-lakt-350-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/bif-jog-karums-avenu-musli-bez-lakt-350-g",
-    "checkedAt": "2026-09-03T09:36:25.209Z",
+    "checkedAt": "2026-09-03T09:59:26.645Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -48,13 +52,15 @@
     "totalSugarG": 11.9,
     "fiberG": null,
     "saltG": 0.09,
-    "saturatedFatG": 1.5
+    "saturatedFatG": 1.5,
+    "carbohydrateG": 13.2,
+    "fatG": 3
   },
   {
     "productId": "barbora:bif-jog-karums-bruk-rudz-m-bez-lakt-350-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/bif-jog-karums-bruk-rudz-m-bez-lakt-350-g",
-    "checkedAt": "2026-09-03T09:36:26.035Z",
+    "checkedAt": "2026-09-03T09:59:27.475Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -65,13 +71,15 @@
     "totalSugarG": 12.3,
     "fiberG": null,
     "saltG": 0.09,
-    "saturatedFatG": 1.4
+    "saturatedFatG": 1.4,
+    "carbohydrateG": 14,
+    "fatG": 2.6
   },
   {
     "productId": "barbora:bif-jog-karums-graudu-bez-laktozes-350-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/bif-jog-karums-graudu-bez-laktozes-350-g",
-    "checkedAt": "2026-09-03T09:36:26.860Z",
+    "checkedAt": "2026-09-03T09:59:28.300Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -82,13 +90,15 @@
     "totalSugarG": 11.3,
     "fiberG": null,
     "saltG": 0.09,
-    "saturatedFatG": 1.6
+    "saturatedFatG": 1.6,
+    "carbohydrateG": 12.8,
+    "fatG": 3.5
   },
   {
     "productId": "barbora:bio-jogurts-kirsu-well-done-140-g-76655",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/bio-jogurts-kirsu-well-done-140-g-76655",
-    "checkedAt": "2026-09-03T09:36:27.682Z",
+    "checkedAt": "2026-09-03T09:59:29.124Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -99,13 +109,15 @@
     "totalSugarG": 12,
     "fiberG": null,
     "saltG": 0.1,
-    "saturatedFatG": 1.8
+    "saturatedFatG": 1.8,
+    "carbohydrateG": 13,
+    "fatG": 2.5
   },
   {
     "productId": "barbora:bio-jogurts-natural-well-done-140-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/bio-jogurts-natural-well-done-140-g",
-    "checkedAt": "2026-09-03T09:36:29.631Z",
+    "checkedAt": "2026-09-03T09:59:29.943Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts bez piedevām",
     "nutritionBasis": "100g",
@@ -116,13 +128,15 @@
     "totalSugarG": 6.8,
     "fiberG": null,
     "saltG": 0.13,
-    "saturatedFatG": 1.4
+    "saturatedFatG": 1.4,
+    "carbohydrateG": 6.8,
+    "fatG": 2
   },
   {
     "productId": "barbora:bio-jogurts-zemenu-well-done-140-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/bio-jogurts-zemenu-well-done-140-g",
-    "checkedAt": "2026-09-03T09:36:30.462Z",
+    "checkedAt": "2026-09-03T09:59:30.769Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -133,13 +147,15 @@
     "totalSugarG": 12,
     "fiberG": null,
     "saltG": 0.1,
-    "saturatedFatG": 1.8
+    "saturatedFatG": 1.8,
+    "carbohydrateG": 13,
+    "fatG": 2.5
   },
   {
     "productId": "barbora:deserts-alpro-plant-protein-sokolad-200-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/deserts-alpro-plant-protein-sokolad-200-g",
-    "checkedAt": "2026-09-03T09:36:31.283Z",
+    "checkedAt": "2026-09-03T09:59:31.591Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -150,13 +166,15 @@
     "totalSugarG": 4.9,
     "fiberG": null,
     "saltG": 0.42,
-    "saturatedFatG": 0.8
+    "saturatedFatG": 0.8,
+    "carbohydrateG": 7,
+    "fatG": 2.9
   },
   {
     "productId": "barbora:deserts-alpro-plant-protein-vanilas-200-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/deserts-alpro-plant-protein-vanilas-200-g",
-    "checkedAt": "2026-09-03T09:36:32.106Z",
+    "checkedAt": "2026-09-03T09:59:32.422Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -167,13 +185,15 @@
     "totalSugarG": 4.9,
     "fiberG": null,
     "saltG": 0.42,
-    "saturatedFatG": 0.5
+    "saturatedFatG": 0.5,
+    "carbohydrateG": 7.7,
+    "fatG": 2.5
   },
   {
     "productId": "barbora:ekolog-jogurts-annele-nau-ar-avenem-125-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/ekolog-jogurts-annele-nau-ar-avenem-125-g",
-    "checkedAt": "2026-09-03T09:36:32.964Z",
+    "checkedAt": "2026-09-03T09:59:33.243Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -184,13 +204,15 @@
     "totalSugarG": 8.6,
     "fiberG": null,
     "saltG": 0.11,
-    "saturatedFatG": 2.3
+    "saturatedFatG": 2.3,
+    "carbohydrateG": 9.2,
+    "fatG": 3.5
   },
   {
     "productId": "barbora:fermentetas-sojas-produkts-alpro-400-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/fermentetas-sojas-produkts-alpro-400-g",
-    "checkedAt": "2026-09-03T09:36:33.793Z",
+    "checkedAt": "2026-09-03T09:59:34.079Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts bez piedevām",
     "nutritionBasis": "100g",
@@ -201,13 +223,15 @@
     "totalSugarG": 2.2,
     "fiberG": null,
     "saltG": 0.24,
-    "saturatedFatG": 0.4
+    "saturatedFatG": 0.4,
+    "carbohydrateG": 2.2,
+    "fatG": 2.3
   },
   {
     "productId": "barbora:grieku-jog-valmiera-bez-laktozes-0-proc-350-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/grieku-jog-valmiera-bez-laktozes-0-proc-350-g",
-    "checkedAt": "2026-09-03T09:36:34.631Z",
+    "checkedAt": "2026-09-03T09:59:34.945Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts bez piedevām",
     "nutritionBasis": "100g",
@@ -218,13 +242,15 @@
     "totalSugarG": 4.2,
     "fiberG": null,
     "saltG": 0.1,
-    "saturatedFatG": 0
+    "saturatedFatG": 0,
+    "carbohydrateG": 4.2,
+    "fatG": 0
   },
   {
     "productId": "barbora:grieku-jogurts-farm-milk-10-proc-400-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/grieku-jogurts-farm-milk-10-proc-400-g",
-    "checkedAt": "2026-09-03T09:36:35.474Z",
+    "checkedAt": "2026-09-03T09:59:35.774Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts bez piedevām",
     "nutritionBasis": "100g",
@@ -235,13 +261,15 @@
     "totalSugarG": 5,
     "fiberG": null,
     "saltG": 0.15,
-    "saturatedFatG": 6
+    "saturatedFatG": 6,
+    "carbohydrateG": 5,
+    "fatG": 9
   },
   {
     "productId": "barbora:jog-fantasia-ar-sok-parslam-102-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jog-fantasia-ar-sok-parslam-102-g",
-    "checkedAt": "2026-09-03T09:36:36.295Z",
+    "checkedAt": "2026-09-03T09:59:36.603Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -252,13 +280,15 @@
     "totalSugarG": 14.8,
     "fiberG": null,
     "saltG": 0.09,
-    "saturatedFatG": 3.4
+    "saturatedFatG": 3.4,
+    "carbohydrateG": 15.2,
+    "fatG": 5.3
   },
   {
     "productId": "barbora:jog-farmi-skyr-apels-straciatella-150-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jog-farmi-skyr-apels-straciatella-150-g",
-    "checkedAt": "2026-09-03T09:36:37.126Z",
+    "checkedAt": "2026-09-03T09:59:37.439Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -269,13 +299,15 @@
     "totalSugarG": 12.5,
     "fiberG": null,
     "saltG": 0.08,
-    "saturatedFatG": 0.7
+    "saturatedFatG": 0.7,
+    "carbohydrateG": 12.9,
+    "fatG": 1.2
   },
   {
     "productId": "barbora:jog-grieku-ar-persikiem-160-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jog-grieku-ar-persikiem-160-g",
-    "checkedAt": "2026-09-03T09:36:37.955Z",
+    "checkedAt": "2026-09-03T09:59:38.288Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -286,13 +318,15 @@
     "totalSugarG": 11.7,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 1
+    "saturatedFatG": 1,
+    "carbohydrateG": 12.3,
+    "fatG": 1.6
   },
   {
     "productId": "barbora:jog-muller-mix-ar-sok-bumb-130-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jog-muller-mix-ar-sok-bumb-130-g",
-    "checkedAt": "2026-09-03T09:36:38.779Z",
+    "checkedAt": "2026-09-03T09:59:39.117Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -303,13 +337,15 @@
     "totalSugarG": 14.9,
     "fiberG": null,
     "saltG": 0.13,
-    "saturatedFatG": 3.2
+    "saturatedFatG": 3.2,
+    "carbohydrateG": 17.3,
+    "fatG": 4.8
   },
   {
     "productId": "barbora:jog-muller-mix-makad-ar-sok-zvaigz-130-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jog-muller-mix-makad-ar-sok-zvaigz-130-g",
-    "checkedAt": "2026-09-03T09:36:39.600Z",
+    "checkedAt": "2026-09-03T09:59:39.939Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -320,13 +356,15 @@
     "totalSugarG": 15.2,
     "fiberG": null,
     "saltG": 0.15,
-    "saturatedFatG": 3
+    "saturatedFatG": 3,
+    "carbohydrateG": 17.6,
+    "fatG": 4.6
   },
   {
     "productId": "barbora:jog-rasens-zem-ban-ar-p-sok-kon-110-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jog-rasens-zem-ban-ar-p-sok-kon-110-g",
-    "checkedAt": "2026-09-03T09:41:49.078Z",
+    "checkedAt": "2026-09-03T09:59:40.761Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -337,13 +375,15 @@
     "totalSugarG": 15.3,
     "fiberG": null,
     "saltG": 0.1,
-    "saturatedFatG": 2.2
+    "saturatedFatG": 2.2,
+    "carbohydrateG": 16.7,
+    "fatG": 4
   },
   {
     "productId": "barbora:jog-saldkrejuma-alma-stracciatella-380-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jog-saldkrejuma-alma-stracciatella-380-g",
-    "checkedAt": "2026-09-03T09:41:49.906Z",
+    "checkedAt": "2026-09-03T09:59:41.576Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -354,13 +394,15 @@
     "totalSugarG": 12.8,
     "fiberG": null,
     "saltG": null,
-    "saturatedFatG": 5.2
+    "saturatedFatG": 5.2,
+    "carbohydrateG": 13.2,
+    "fatG": 7.8
   },
   {
     "productId": "barbora:jog-skyr-islandes-bez-pied-400-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jog-skyr-islandes-bez-pied-400-g",
-    "checkedAt": "2026-09-03T09:41:50.727Z",
+    "checkedAt": "2026-09-03T09:59:42.390Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts bez piedevām",
     "nutritionBasis": "100g",
@@ -371,13 +413,15 @@
     "totalSugarG": 4.5,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 0.06
+    "saturatedFatG": 0.06,
+    "carbohydrateG": 4.5,
+    "fatG": 0.1
   },
   {
     "productId": "barbora:jog-turku-baltais-bez-piedevam-300-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jog-turku-baltais-bez-piedevam-300-g",
-    "checkedAt": "2026-09-03T09:41:51.555Z",
+    "checkedAt": "2026-09-03T09:59:43.210Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts bez piedevām",
     "nutritionBasis": "100g",
@@ -388,13 +432,15 @@
     "totalSugarG": 4.4,
     "fiberG": null,
     "saltG": 0.17,
-    "saturatedFatG": 8.3
+    "saturatedFatG": 8.3,
+    "carbohydrateG": 4.4,
+    "fatG": 10
   },
   {
     "productId": "barbora:jogurta-dzer-activia-zemenu-kivi-300-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurta-dzer-activia-zemenu-kivi-300-g",
-    "checkedAt": "2026-09-03T09:41:52.375Z",
+    "checkedAt": "2026-09-03T09:59:44.038Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -405,13 +451,15 @@
     "totalSugarG": 10,
     "fiberG": null,
     "saltG": 0.11,
-    "saturatedFatG": 0.5
+    "saturatedFatG": 0.5,
+    "carbohydrateG": 10,
+    "fatG": 0.8
   },
   {
     "productId": "barbora:jogurts-activia-ar-meza-ogam-4-x-120-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-activia-ar-meza-ogam-4-x-120-g",
-    "checkedAt": "2026-09-03T09:41:53.221Z",
+    "checkedAt": "2026-09-03T09:59:44.866Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -422,13 +470,15 @@
     "totalSugarG": 11.5,
     "fiberG": null,
     "saltG": 0.17,
-    "saturatedFatG": 1.9
+    "saturatedFatG": 1.9,
+    "carbohydrateG": 11.7,
+    "fatG": 2.9
   },
   {
     "productId": "barbora:jogurts-activia-kirsu-4-x-120-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-activia-kirsu-4-x-120-g",
-    "checkedAt": "2026-09-03T09:41:54.040Z",
+    "checkedAt": "2026-09-03T09:59:45.689Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -439,13 +489,15 @@
     "totalSugarG": 11.2,
     "fiberG": null,
     "saltG": 0.15,
-    "saturatedFatG": 1.9
+    "saturatedFatG": 1.9,
+    "carbohydrateG": 11.6,
+    "fatG": 2.9
   },
   {
     "productId": "barbora:jogurts-activia-mellenu-4-x-120-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-activia-mellenu-4-x-120-g",
-    "checkedAt": "2026-09-03T09:41:54.865Z",
+    "checkedAt": "2026-09-03T09:59:46.523Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -456,13 +508,15 @@
     "totalSugarG": 12.3,
     "fiberG": null,
     "saltG": 0.11,
-    "saturatedFatG": 1.8
+    "saturatedFatG": 1.8,
+    "carbohydrateG": 12.9,
+    "fatG": 2.8
   },
   {
     "productId": "barbora:jogurts-activia-persiku-musli-4-x-120-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-activia-persiku-musli-4-x-120-g",
-    "checkedAt": "2026-09-03T09:41:55.688Z",
+    "checkedAt": "2026-09-03T09:59:47.345Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -473,13 +527,15 @@
     "totalSugarG": 11.5,
     "fiberG": null,
     "saltG": 0.17,
-    "saturatedFatG": 1.9
+    "saturatedFatG": 1.9,
+    "carbohydrateG": 11.7,
+    "fatG": 2.9
   },
   {
     "productId": "barbora:jogurts-activia-zemenu-4-x-120-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-activia-zemenu-4-x-120-g",
-    "checkedAt": "2026-09-03T09:41:56.509Z",
+    "checkedAt": "2026-09-03T09:59:48.159Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -490,13 +546,15 @@
     "totalSugarG": 11.5,
     "fiberG": null,
     "saltG": 0.14,
-    "saturatedFatG": 1.9
+    "saturatedFatG": 1.9,
+    "carbohydrateG": 11.9,
+    "fatG": 2.9
   },
   {
     "productId": "barbora:jogurts-baltais-ar-musli-380-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-baltais-ar-musli-380-g",
-    "checkedAt": "2026-09-03T09:41:57.328Z",
+    "checkedAt": "2026-09-03T09:59:49.085Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -507,13 +565,15 @@
     "totalSugarG": 14.5,
     "fiberG": null,
     "saltG": 0.1,
-    "saturatedFatG": 1.1
+    "saturatedFatG": 1.1,
+    "carbohydrateG": 16.6,
+    "fatG": 2.2
   },
   {
     "productId": "barbora:jogurts-baltais-maizes-ar-zav-aprik-380-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-baltais-maizes-ar-zav-aprik-380-g",
-    "checkedAt": "2026-09-03T09:41:58.148Z",
+    "checkedAt": "2026-09-03T09:59:49.908Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -524,13 +584,15 @@
     "totalSugarG": 13.9,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 1.1
+    "saturatedFatG": 1.1,
+    "carbohydrateG": 15.7,
+    "fatG": 1.9
   },
   {
     "productId": "barbora:jogurts-baltais-salda-krej-ar-graud-400-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-baltais-salda-krej-ar-graud-400-g",
-    "checkedAt": "2026-09-03T09:41:58.970Z",
+    "checkedAt": "2026-09-03T09:59:50.735Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -541,13 +603,15 @@
     "totalSugarG": 11.3,
     "fiberG": null,
     "saltG": 0.1,
-    "saturatedFatG": 3.5
+    "saturatedFatG": 3.5,
+    "carbohydrateG": 12.8,
+    "fatG": 5.3
   },
   {
     "productId": "barbora:jogurts-baltais-salda-krej-ar-kir-400-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-baltais-salda-krej-ar-kir-400-g",
-    "checkedAt": "2026-09-03T09:41:59.788Z",
+    "checkedAt": "2026-09-03T09:59:51.560Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -558,13 +622,15 @@
     "totalSugarG": 13.8,
     "fiberG": null,
     "saltG": 0.1,
-    "saturatedFatG": 3.4
+    "saturatedFatG": 3.4,
+    "carbohydrateG": 14.3,
+    "fatG": 5
   },
   {
     "productId": "barbora:jogurts-baltais-salda-krej-ar-zem-400-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-baltais-salda-krej-ar-zem-400-g",
-    "checkedAt": "2026-09-03T09:42:00.628Z",
+    "checkedAt": "2026-09-03T09:59:52.384Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -575,13 +641,15 @@
     "totalSugarG": 13.7,
     "fiberG": null,
     "saltG": 0.1,
-    "saturatedFatG": 3.4
+    "saturatedFatG": 3.4,
+    "carbohydrateG": 14.2,
+    "fatG": 5
   },
   {
     "productId": "barbora:jogurts-baltais-skyr-vanilas-300-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-baltais-skyr-vanilas-300-g",
-    "checkedAt": "2026-09-03T09:42:01.441Z",
+    "checkedAt": "2026-09-03T09:59:53.207Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -592,13 +660,15 @@
     "totalSugarG": 10.3,
     "fiberG": null,
     "saltG": 0.18,
-    "saturatedFatG": 0.1
+    "saturatedFatG": 0.1,
+    "carbohydrateG": 10.7,
+    "fatG": 0.2
   },
   {
     "productId": "barbora:jogurts-baltais-skyr-zemenu-300-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-baltais-skyr-zemenu-300-g",
-    "checkedAt": "2026-09-03T09:42:02.270Z",
+    "checkedAt": "2026-09-03T09:59:54.063Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -609,13 +679,15 @@
     "totalSugarG": 8.9,
     "fiberG": null,
     "saltG": 0.18,
-    "saturatedFatG": 0.1
+    "saturatedFatG": 0.1,
+    "carbohydrateG": 9.2,
+    "fatG": 0.2
   },
   {
     "productId": "barbora:jogurts-danonki-pouch-ar-zem-ban-70-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-danonki-pouch-ar-zem-ban-70-g",
-    "checkedAt": "2026-09-03T09:42:03.095Z",
+    "checkedAt": "2026-09-03T09:59:54.880Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -626,13 +698,15 @@
     "totalSugarG": 9.6,
     "fiberG": null,
     "saltG": 0.11,
-    "saturatedFatG": 1.4
+    "saturatedFatG": 1.4,
+    "carbohydrateG": 11.4,
+    "fatG": 2.1
   },
   {
     "productId": "barbora:jogurts-fantasia-ar-m-ms-120-g",
     "source": "barbora_lv",
     "sourceUrl": "https://barbora.lv/produkti/jogurts-fantasia-ar-m-ms-120-g",
-    "checkedAt": "2026-09-03T09:42:03.966Z",
+    "checkedAt": "2026-09-03T09:59:55.745Z",
     "gtin": null,
     "category": "Piena produkti un olas/Jogurti un deserti/Jogurts ar piedevām",
     "nutritionBasis": "100g",
@@ -643,13 +717,15 @@
     "totalSugarG": 17.4,
     "fiberG": null,
     "saltG": 0.18,
-    "saturatedFatG": 2.3
+    "saturatedFatG": 2.3,
+    "carbohydrateG": 18.4,
+    "fatG": 3.7
   },
   {
     "productId": "livinn_lt:03000003615",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/pilnagrudziu-miltu-vafliai-su-vaniliniu-idaru-ekologiski-100-g-03000003615-lt",
-    "checkedAt": "2026-09-03T09:39:25.209Z",
+    "checkedAt": "2026-09-03T09:54:48.062Z",
     "gtin": "400604019082",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -660,13 +736,15 @@
     "totalSugarG": 27,
     "fiberG": null,
     "saltG": 0.24,
-    "saturatedFatG": 17
+    "saturatedFatG": 17,
+    "carbohydrateG": 54,
+    "fatG": 36
   },
   {
     "productId": "livinn_lt:03000007174",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/mo-bio-coconut-biscuits-125g-03000007174-lt",
-    "checkedAt": "2026-09-03T09:34:18.668Z",
+    "checkedAt": "2026-09-03T09:54:52.201Z",
     "gtin": "426031198040",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -677,13 +755,15 @@
     "totalSugarG": 20,
     "fiberG": 4.4,
     "saltG": 0.12,
-    "saturatedFatG": 11
+    "saturatedFatG": 11,
+    "carbohydrateG": 68,
+    "fatG": 18
   },
   {
     "productId": "livinn_lt:03000007175",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/mo-bio-cocoa-biscuits-125g-03000007175-lt",
-    "checkedAt": "2026-09-03T09:39:26.810Z",
+    "checkedAt": "2026-09-03T09:54:53.873Z",
     "gtin": "426031198042",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -694,13 +774,15 @@
     "totalSugarG": 24,
     "fiberG": 4,
     "saltG": 0.14,
-    "saturatedFatG": 5.1
+    "saturatedFatG": 5.1,
+    "carbohydrateG": 69,
+    "fatG": 15
   },
   {
     "productId": "livinn_lt:03000007331",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/juodasis-sokoladas-su-vysniomis-ekologiskas-35-g-03000007331-lt",
-    "checkedAt": "2026-09-03T09:34:22.177Z",
+    "checkedAt": "2026-09-03T09:54:55.513Z",
     "gtin": "404488900252",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -711,13 +793,15 @@
     "totalSugarG": 37.6,
     "fiberG": null,
     "saltG": 0.01,
-    "saturatedFatG": 26.7
+    "saturatedFatG": 26.7,
+    "carbohydrateG": 41.4,
+    "fatG": 42.4
   },
   {
     "productId": "livinn_lt:03000007332",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/pieniskas-sokoladas-su-karameliniu-kremu-ekologiskas-40-g-03000007332-lt",
-    "checkedAt": "2026-09-03T09:34:23.836Z",
+    "checkedAt": "2026-09-03T09:54:57.055Z",
     "gtin": "404488900251",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -728,13 +812,15 @@
     "totalSugarG": 50.3,
     "fiberG": null,
     "saltG": 0.41,
-    "saturatedFatG": 21.2
+    "saturatedFatG": 21.2,
+    "carbohydrateG": 51.2,
+    "fatG": 33.9
   },
   {
     "productId": "livinn_lt:03000007333",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/juodasis-sokoladas-su-karamelizuotais-lazdynu-riesutais-ekologiskas-35-g-03000007333-lt",
-    "checkedAt": "2026-09-03T09:34:25.486Z",
+    "checkedAt": "2026-09-03T09:54:59.220Z",
     "gtin": "404488900255",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -745,13 +831,15 @@
     "totalSugarG": 38.9,
     "fiberG": null,
     "saltG": 0.01,
-    "saturatedFatG": 15.8
+    "saturatedFatG": 15.8,
+    "carbohydrateG": 45.8,
+    "fatG": 39.2
   },
   {
     "productId": "livinn_lt:03000008255",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/pilno-grudo-sausainiai-ekologiski-350g",
-    "checkedAt": "2026-09-03T09:39:28.815Z",
+    "checkedAt": "2026-09-03T09:55:01.239Z",
     "gtin": "800900480017",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -762,13 +850,15 @@
     "totalSugarG": 18,
     "fiberG": 6,
     "saltG": 0.48,
-    "saturatedFatG": 2.5
+    "saturatedFatG": 2.5,
+    "carbohydrateG": 66,
+    "fatG": 16
   },
   {
     "productId": "livinn_lt:03000008260",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/pusiau-pilno-grudo-kvieciu-sausainiai-su-sokolado-gabaliukais-ekologiski-250-g-03000008260-lt",
-    "checkedAt": "2026-09-03T09:34:29.145Z",
+    "checkedAt": "2026-09-03T09:55:02.951Z",
     "gtin": "800900481125",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai su šokoladu",
     "nutritionBasis": "100g",
@@ -779,13 +869,15 @@
     "totalSugarG": 23,
     "fiberG": 3.3,
     "saltG": 0.37,
-    "saturatedFatG": null
+    "saturatedFatG": 5.1,
+    "carbohydrateG": 65,
+    "fatG": 18
   },
   {
     "productId": "livinn_lt:03000011072",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/go-pure-ekologiski-bulviu-traskuciai-su-juros-druska-125-g-03000011072",
-    "checkedAt": "2026-09-03T09:34:30.728Z",
+    "checkedAt": "2026-09-03T09:55:04.764Z",
     "gtin": "871878120023",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -796,13 +888,15 @@
     "totalSugarG": 0.6,
     "fiberG": 5.3,
     "saltG": 1.03,
-    "saturatedFatG": 2.6
+    "saturatedFatG": 2.6,
+    "carbohydrateG": 47,
+    "fatG": 30
   },
   {
     "productId": "livinn_lt:03000011074",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/go-pure-ekologiski-bulviu-traskuciai-su-krapais-ir-laiskiniais-cesnakais-125-g-03000011074",
-    "checkedAt": "2026-09-03T09:34:32.332Z",
+    "checkedAt": "2026-09-03T09:55:06.521Z",
     "gtin": "871878120005",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -813,13 +907,15 @@
     "totalSugarG": 0.7,
     "fiberG": 5.6,
     "saltG": 1.12,
-    "saturatedFatG": 2.5
+    "saturatedFatG": 2.5,
+    "carbohydrateG": 47,
+    "fatG": 29
   },
   {
     "productId": "livinn_lt:03000011075",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/go-pure-ekologiski-bulviu-traskuciai-su-juodaisiais-pipirais-ir-juros-druska-125-g-03000011075",
-    "checkedAt": "2026-09-03T09:34:33.962Z",
+    "checkedAt": "2026-09-03T09:55:08.168Z",
     "gtin": "871878120035",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -830,13 +926,15 @@
     "totalSugarG": 0.6,
     "fiberG": 5.5,
     "saltG": 1.21,
-    "saturatedFatG": 2.4
+    "saturatedFatG": 2.4,
+    "carbohydrateG": 48,
+    "fatG": 28
   },
   {
     "productId": "livinn_lt:03000011424",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/speltu-sausainiai-su-juoduoju-sokoladu-ekologiski-03000011424-lt",
-    "checkedAt": "2026-09-03T09:34:35.857Z",
+    "checkedAt": "2026-09-03T09:55:09.972Z",
     "gtin": "800900490130",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai su šokoladu",
     "nutritionBasis": "100g",
@@ -847,13 +945,15 @@
     "totalSugarG": 30,
     "fiberG": null,
     "saltG": 0.4,
-    "saturatedFatG": 11
+    "saturatedFatG": 11,
+    "carbohydrateG": 60,
+    "fatG": 23
   },
   {
     "productId": "livinn_lt:1AM070100137",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-migdolais-cantuccini-1am070100137-lt",
-    "checkedAt": "2026-09-03T09:34:38.557Z",
+    "checkedAt": "2026-09-03T09:55:11.548Z",
     "gtin": "803375700044",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -864,13 +964,15 @@
     "totalSugarG": 30,
     "fiberG": null,
     "saltG": 0.62,
-    "saturatedFatG": 3.6
+    "saturatedFatG": 3.6,
+    "carbohydrateG": 56,
+    "fatG": 19
   },
   {
     "productId": "livinn_lt:1AM070100138",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-figomis-ir-migdol-cantucci-1am070100138-lt",
-    "checkedAt": "2026-09-03T09:34:40.054Z",
+    "checkedAt": "2026-09-03T09:55:13.055Z",
     "gtin": "803375700105",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -881,13 +983,15 @@
     "totalSugarG": 43,
     "fiberG": null,
     "saltG": 0.52,
-    "saturatedFatG": 2.4
+    "saturatedFatG": 2.4,
+    "carbohydrateG": 65,
+    "fatG": 11
   },
   {
     "productId": "livinn_lt:1AM070100139",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-apelsinu-cukatom-cantucci-1am070100139-lt",
-    "checkedAt": "2026-09-03T09:34:41.452Z",
+    "checkedAt": "2026-09-03T09:55:14.817Z",
     "gtin": "803375700162",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -898,13 +1002,15 @@
     "totalSugarG": 33,
     "fiberG": null,
     "saltG": 0.05,
-    "saturatedFatG": 2.4
+    "saturatedFatG": 2.4,
+    "carbohydrateG": 58,
+    "fatG": 5
   },
   {
     "productId": "livinn_lt:1AM070100140",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-imbieru-ir-ries-zenzerini-1am070100140-lt",
-    "checkedAt": "2026-09-03T09:34:43.086Z",
+    "checkedAt": "2026-09-03T09:55:16.777Z",
     "gtin": "803375700016",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -915,13 +1021,15 @@
     "totalSugarG": 35,
     "fiberG": null,
     "saltG": 0.05,
-    "saturatedFatG": 9.4
+    "saturatedFatG": 9.4,
+    "carbohydrateG": 56,
+    "fatG": 26
   },
   {
     "productId": "livinn_lt:1AM070100141",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-sokol-gab-carletti-ciocco-1am070100141-lt",
-    "checkedAt": "2026-09-03T09:34:44.685Z",
+    "checkedAt": "2026-09-03T09:55:18.391Z",
     "gtin": "803375700187",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -932,13 +1040,15 @@
     "totalSugarG": 33,
     "fiberG": null,
     "saltG": 0.38,
-    "saturatedFatG": 12
+    "saturatedFatG": 12,
+    "carbohydrateG": 52,
+    "fatG": 28
   },
   {
     "productId": "livinn_lt:1AM070100142",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-migdolais-gastone-1am070100142-lt",
-    "checkedAt": "2026-09-03T09:34:46.376Z",
+    "checkedAt": "2026-09-03T09:55:19.962Z",
     "gtin": "803375700037",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -949,13 +1059,15 @@
     "totalSugarG": 29,
     "fiberG": null,
     "saltG": 0.33,
-    "saturatedFatG": 15
+    "saturatedFatG": 15,
+    "carbohydrateG": 51,
+    "fatG": 30
   },
   {
     "productId": "livinn_lt:1AM070100143",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-sokol-su-lazd-ries-dolciam-1am070100143-lt",
-    "checkedAt": "2026-09-03T09:34:48.254Z",
+    "checkedAt": "2026-09-03T09:55:21.549Z",
     "gtin": "803375700030",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -966,13 +1078,15 @@
     "totalSugarG": 30,
     "fiberG": null,
     "saltG": 0.43,
-    "saturatedFatG": 15
+    "saturatedFatG": 15,
+    "carbohydrateG": 47,
+    "fatG": 33
   },
   {
     "productId": "livinn_lt:1AM070100144",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-sokol-su-lazd-ries-golosti-1am070100144-lt",
-    "checkedAt": "2026-09-03T09:34:49.822Z",
+    "checkedAt": "2026-09-03T09:55:22.973Z",
     "gtin": "803375700072",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -983,13 +1097,15 @@
     "totalSugarG": 35,
     "fiberG": null,
     "saltG": 0.45,
-    "saturatedFatG": 8.5
+    "saturatedFatG": 8.5,
+    "carbohydrateG": 56,
+    "fatG": 22
   },
   {
     "productId": "livinn_lt:1AM070100349",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/vafliai-su-kakavos-idaru-be-glitimo-1am070100349-lt",
-    "checkedAt": "2026-09-03T09:34:51.246Z",
+    "checkedAt": "2026-09-03T09:55:24.664Z",
     "gtin": "802816920842",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai be glitimo",
     "nutritionBasis": "100g",
@@ -1000,13 +1116,15 @@
     "totalSugarG": 36,
     "fiberG": null,
     "saltG": 0.23,
-    "saturatedFatG": 5.5
+    "saturatedFatG": 5.5,
+    "carbohydrateG": 57,
+    "fatG": 26
   },
   {
     "productId": "livinn_lt:1AM070100813",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-riesutu-kremu-nocciola-be-glitimo-1am070100813-lt",
-    "checkedAt": "2026-09-03T09:34:52.845Z",
+    "checkedAt": "2026-09-03T09:55:26.516Z",
     "gtin": "803245400316",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai be glitimo",
     "nutritionBasis": "100g",
@@ -1017,13 +1135,15 @@
     "totalSugarG": 20.1,
     "fiberG": null,
     "saltG": 0.03,
-    "saturatedFatG": 6.3
+    "saturatedFatG": 6.3,
+    "carbohydrateG": 66,
+    "fatG": 24
   },
   {
     "productId": "livinn_lt:1AM070100814",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/speltu-sausainiai-su-kokosais-ir-aguonomis-1am070100814-lt",
-    "checkedAt": "2026-09-03T09:34:54.297Z",
+    "checkedAt": "2026-09-03T09:55:28.392Z",
     "gtin": "803245405010",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -1034,13 +1154,15 @@
     "totalSugarG": 10.5,
     "fiberG": null,
     "saltG": 0.15,
-    "saturatedFatG": 2.7
+    "saturatedFatG": 2.7,
+    "carbohydrateG": 70,
+    "fatG": 16.6
   },
   {
     "productId": "livinn_lt:1AM070100815",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/speltu-sausainiai-su-agavu-sirupu-krumi-farro-1am070100815-lt",
-    "checkedAt": "2026-09-03T09:34:55.689Z",
+    "checkedAt": "2026-09-03T09:55:31.164Z",
     "gtin": "803245405087",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -1051,13 +1173,15 @@
     "totalSugarG": 20.8,
     "fiberG": null,
     "saltG": 0.02,
-    "saturatedFatG": 20.8
+    "saturatedFatG": 20.8,
+    "carbohydrateG": 52,
+    "fatG": 20.9
   },
   {
     "productId": "livinn_lt:1AM070100972",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/marcipanai-daidone-1am070100972-lt",
-    "checkedAt": "2026-09-03T09:34:57.173Z",
+    "checkedAt": "2026-09-03T09:55:36.289Z",
     "gtin": "803349339671",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -1068,13 +1192,15 @@
     "totalSugarG": 27.6,
     "fiberG": null,
     "saltG": 0.04,
-    "saturatedFatG": 1.3
+    "saturatedFatG": 1.3,
+    "carbohydrateG": 57.2,
+    "fatG": 16.3
   },
   {
     "productId": "livinn_lt:1AM070101077",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/tradiciniai-italiski-pyrageliai-cannoli-siciliani-cioccolato-1am070101077-lt",
-    "checkedAt": "2026-09-03T09:34:59.162Z",
+    "checkedAt": "2026-09-03T09:55:38.180Z",
     "gtin": "803349339252",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -1085,13 +1211,15 @@
     "totalSugarG": 37.7,
     "fiberG": null,
     "saltG": 0.29,
-    "saturatedFatG": 3.6
+    "saturatedFatG": 3.6,
+    "carbohydrateG": 59.3,
+    "fatG": 23.8
   },
   {
     "productId": "livinn_lt:1AM070101204",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/ploni-sviest-vafliai-la-gaufre-fine-du-nord-1am070101204-lt",
-    "checkedAt": "2026-09-03T09:39:30.677Z",
+    "checkedAt": "2026-09-03T09:55:39.991Z",
     "gtin": "370025408250",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -1102,13 +1230,15 @@
     "totalSugarG": 35,
     "fiberG": null,
     "saltG": 1,
-    "saturatedFatG": 12
+    "saturatedFatG": 12,
+    "carbohydrateG": 72,
+    "fatG": 19
   },
   {
     "productId": "livinn_lt:1AM070101294",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/citrininiai-sausainiai-girasoli-be-glitimo-ekologiski-200-g-1am070101294-lt",
-    "checkedAt": "2026-09-03T09:39:32.293Z",
+    "checkedAt": "2026-09-03T09:55:41.700Z",
     "gtin": "803245400383",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai be glitimo",
     "nutritionBasis": "100g",
@@ -1119,13 +1249,15 @@
     "totalSugarG": 20,
     "fiberG": 1,
     "saltG": 0.01,
-    "saturatedFatG": 6
+    "saturatedFatG": 6,
+    "carbohydrateG": 73,
+    "fatG": 21
   },
   {
     "productId": "livinn_lt:1AM070101296",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/grikiu-miltu-sausainiai-su-kokosais-ciuffeti-be-glitimo-ekologiski-200-g-1am070101296-lt",
-    "checkedAt": "2026-09-03T09:39:33.931Z",
+    "checkedAt": "2026-09-03T09:55:43.352Z",
     "gtin": "803245400382",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai be glitimo",
     "nutritionBasis": "100g",
@@ -1136,13 +1268,15 @@
     "totalSugarG": 20,
     "fiberG": 14,
     "saltG": 0.14,
-    "saturatedFatG": 7
+    "saturatedFatG": 7,
+    "carbohydrateG": 50,
+    "fatG": 23
   },
   {
     "productId": "livinn_lt:1AM070301266",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladinis-batonelis-praline-amandes-framboise-1am070301266-lt",
-    "checkedAt": "2026-09-03T09:35:01.030Z",
+    "checkedAt": "2026-09-03T09:55:44.885Z",
     "gtin": "540021951560",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1153,13 +1287,15 @@
     "totalSugarG": 40.9,
     "fiberG": 9.8,
     "saltG": 0.04,
-    "saturatedFatG": 16.7
+    "saturatedFatG": 16.7,
+    "carbohydrateG": 46.5,
+    "fatG": 32.4
   },
   {
     "productId": "livinn_lt:1AM070301267",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladinis-batonelis-citron-meringue-1am070301267-lt",
-    "checkedAt": "2026-09-03T09:35:02.757Z",
+    "checkedAt": "2026-09-03T09:55:46.500Z",
     "gtin": "540021952300",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1170,13 +1306,15 @@
     "totalSugarG": 40.1,
     "fiberG": 10.7,
     "saltG": 0.02,
-    "saturatedFatG": 19.1
+    "saturatedFatG": 19.1,
+    "carbohydrateG": 44.5,
+    "fatG": 31
   },
   {
     "productId": "livinn_lt:1AM070700227",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/baltyminis-batonelis-strawberry-cream-1am070700227-lt",
-    "checkedAt": "2026-09-03T09:35:04.465Z",
+    "checkedAt": "2026-09-03T09:55:48.017Z",
     "gtin": "475101057988",
     "category": "Maistas > Skanėstai > Batonėliai > Baltyminiai batonėliai",
     "nutritionBasis": "100g",
@@ -1187,13 +1325,15 @@
     "totalSugarG": 7.6,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 5.3
+    "saturatedFatG": 5.3,
+    "carbohydrateG": 39.1,
+    "fatG": 10.9
   },
   {
     "productId": "livinn_lt:1AM070700228",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/baltyminis-batonelis-salted-caramel-1am070700228-lt",
-    "checkedAt": "2026-09-03T09:35:06.089Z",
+    "checkedAt": "2026-09-03T09:55:49.559Z",
     "gtin": "475227800013",
     "category": "Maistas > Skanėstai > Batonėliai > Baltyminiai batonėliai",
     "nutritionBasis": "100g",
@@ -1204,13 +1344,15 @@
     "totalSugarG": 8,
     "fiberG": null,
     "saltG": 0.7,
-    "saturatedFatG": 6.3
+    "saturatedFatG": 6.3,
+    "carbohydrateG": 39.2,
+    "fatG": 12.9
   },
   {
     "productId": "livinn_lt:1AM070700884",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladinis-batonelis-dark-chocolate-85-su-saldikliu-1am070700884-lt",
-    "checkedAt": "2026-09-03T09:35:07.777Z",
+    "checkedAt": "2026-09-03T09:55:51.061Z",
     "gtin": "541377746516",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1221,13 +1363,15 @@
     "totalSugarG": 2,
     "fiberG": 36.6,
     "saltG": 0.01,
-    "saturatedFatG": 21.8
+    "saturatedFatG": 21.8,
+    "carbohydrateG": 14.9,
+    "fatG": 36.5
   },
   {
     "productId": "livinn_lt:1AM070700885",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladinis-batonelis-noir-orange-1am070700885-lt",
-    "checkedAt": "2026-09-03T09:35:09.267Z",
+    "checkedAt": "2026-09-03T09:55:52.500Z",
     "gtin": "540021951510",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1238,13 +1382,15 @@
     "totalSugarG": 41.7,
     "fiberG": null,
     "saltG": 0.03,
-    "saturatedFatG": 19.1
+    "saturatedFatG": 19.1,
+    "carbohydrateG": 45.8,
+    "fatG": 30.9
   },
   {
     "productId": "livinn_lt:1AM070700886",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladinis-batonelis-salted-caramel-1am070700886-lt",
-    "checkedAt": "2026-09-03T09:35:10.712Z",
+    "checkedAt": "2026-09-03T09:55:53.975Z",
     "gtin": "540021952310",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1255,13 +1401,15 @@
     "totalSugarG": 49,
     "fiberG": null,
     "saltG": 0.91,
-    "saturatedFatG": 19.9
+    "saturatedFatG": 19.9,
+    "carbohydrateG": 50.9,
+    "fatG": 32.4
   },
   {
     "productId": "livinn_lt:1AM092400039",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lesiu-traskuciai-barbecue-1am092400039-lt",
-    "checkedAt": "2026-09-03T09:35:12.310Z",
+    "checkedAt": "2026-09-03T09:55:55.526Z",
     "gtin": "506028376225",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -1272,13 +1420,15 @@
     "totalSugarG": 4.5,
     "fiberG": null,
     "saltG": 2.55,
-    "saturatedFatG": 2.9
+    "saturatedFatG": 2.9,
+    "carbohydrateG": 63.6,
+    "fatG": 19.4
   },
   {
     "productId": "livinn_lt:1AM092400040",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lesiu-traskuciai-su-juros-druska-1am092400040-lt",
-    "checkedAt": "2026-09-03T09:35:13.820Z",
+    "checkedAt": "2026-09-03T09:55:57.165Z",
     "gtin": "506028376223",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -1289,13 +1439,15 @@
     "totalSugarG": 1,
     "fiberG": null,
     "saltG": 1.84,
-    "saturatedFatG": 2
+    "saturatedFatG": 2,
+    "carbohydrateG": 63.6,
+    "fatG": 20.8
   },
   {
     "productId": "livinn_lt:1AM092400041",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lesiu-tras-su-grietine-ir-laisk-cesnaku-1am092400041-lt",
-    "checkedAt": "2026-09-03T09:35:15.526Z",
+    "checkedAt": "2026-09-03T09:55:59.585Z",
     "gtin": "506028376226",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -1306,13 +1458,15 @@
     "totalSugarG": 1.5,
     "fiberG": null,
     "saltG": null,
-    "saturatedFatG": 2.9
+    "saturatedFatG": 2.9,
+    "carbohydrateG": 63,
+    "fatG": 19.3
   },
   {
     "productId": "livinn_lt:1AM092400042",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lesiu-traskuciai-sweet-sriracha-1am092400042-lt",
-    "checkedAt": "2026-09-03T09:35:17.092Z",
+    "checkedAt": "2026-09-03T09:56:01.423Z",
     "gtin": "506028376224",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -1323,13 +1477,15 @@
     "totalSugarG": 3.4,
     "fiberG": null,
     "saltG": 2.55,
-    "saturatedFatG": 2.9
+    "saturatedFatG": 2.9,
+    "carbohydrateG": 63.6,
+    "fatG": 19.5
   },
   {
     "productId": "livinn_lt:1AM092400665",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-su-sezamu-seklomis-primopane-1am092400665-lt",
-    "checkedAt": "2026-09-03T09:35:18.672Z",
+    "checkedAt": "2026-09-03T09:56:03.189Z",
     "gtin": "800794500123",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -1340,13 +1496,15 @@
     "totalSugarG": 1.1,
     "fiberG": 3.7,
     "saltG": 2.5,
-    "saturatedFatG": 2.8
+    "saturatedFatG": 2.8,
+    "carbohydrateG": 67,
+    "fatG": 10.7
   },
   {
     "productId": "livinn_lt:1AM092400847",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lesiu-traskuciai-su-juodaisiais-pipirais-1am092400847-lt",
-    "checkedAt": "2026-09-03T09:35:20.117Z",
+    "checkedAt": "2026-09-03T09:56:04.685Z",
     "gtin": "426071784122",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -1357,13 +1515,15 @@
     "totalSugarG": 1.5,
     "fiberG": null,
     "saltG": 1.72,
-    "saturatedFatG": 1
+    "saturatedFatG": 1,
+    "carbohydrateG": 55,
+    "fatG": 9
   },
   {
     "productId": "livinn_lt:1AM092400848",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lesiu-traskuciai-su-juros-druska-1am092400848-lt",
-    "checkedAt": "2026-09-03T09:35:21.612Z",
+    "checkedAt": "2026-09-03T09:56:06.370Z",
     "gtin": "426071784121",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -1374,13 +1534,15 @@
     "totalSugarG": 1.5,
     "fiberG": null,
     "saltG": 2.1,
-    "saturatedFatG": 0.5
+    "saturatedFatG": 0.5,
+    "carbohydrateG": 52,
+    "fatG": 4.1
   },
   {
     "productId": "livinn_lt:1AM092400902",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-patatas-fritas-receta-original-1am092400902-lt",
-    "checkedAt": "2026-09-03T09:35:23.162Z",
+    "checkedAt": "2026-09-03T09:56:07.954Z",
     "gtin": "842694400034",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -1391,13 +1553,15 @@
     "totalSugarG": 0,
     "fiberG": null,
     "saltG": 1,
-    "saturatedFatG": 3.5
+    "saturatedFatG": 3.5,
+    "carbohydrateG": 51,
+    "fatG": 33
   },
   {
     "productId": "livinn_lt:1AM092401039",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-su-cesnakais-ir-cili-1am092401039-lt",
-    "checkedAt": "2026-09-03T09:35:24.674Z",
+    "checkedAt": "2026-09-03T09:56:09.480Z",
     "gtin": "803292721613",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -1408,13 +1572,15 @@
     "totalSugarG": 0.4,
     "fiberG": null,
     "saltG": 1.7,
-    "saturatedFatG": 0.6
+    "saturatedFatG": 0.6,
+    "carbohydrateG": 9.6,
+    "fatG": 10.4
   },
   {
     "productId": "livinn_lt:1AM092401040",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-su-sezamu-seklomis-1am092401040-lt",
-    "checkedAt": "2026-09-03T09:35:26.281Z",
+    "checkedAt": "2026-09-03T09:56:11.050Z",
     "gtin": "803292721615",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -1425,13 +1591,15 @@
     "totalSugarG": 0.9,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 1.7
+    "saturatedFatG": 1.7,
+    "carbohydrateG": 40.3,
+    "fatG": 15.3
   },
   {
     "productId": "livinn_lt:1AM092401041",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/traskios-duoneles-su-burokeliais-ir-cija-1am092401041-lt",
-    "checkedAt": "2026-09-03T09:35:27.794Z",
+    "checkedAt": "2026-09-03T09:56:12.843Z",
     "gtin": "803292721614",
     "category": "Maistas > Duona, bandelės, trapučiai > Trapučiai, duoniukai ir krekeriai",
     "nutritionBasis": "100g",
@@ -1442,13 +1610,15 @@
     "totalSugarG": 12.9,
     "fiberG": null,
     "saltG": 1.5,
-    "saturatedFatG": 0.6
+    "saturatedFatG": 0.6,
+    "carbohydrateG": 61.6,
+    "fatG": 6.2
   },
   {
     "productId": "livinn_lt:1AM092401197",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sviestiniai-krekeriai-su-suriu-ir-medumi-1am092401197-lt",
-    "checkedAt": "2026-09-03T09:35:29.748Z",
+    "checkedAt": "2026-09-03T09:56:14.699Z",
     "gtin": "370025408225",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -1459,13 +1629,15 @@
     "totalSugarG": 13,
     "fiberG": null,
     "saltG": 3,
-    "saturatedFatG": 17
+    "saturatedFatG": 17,
+    "carbohydrateG": 50,
+    "fatG": 26
   },
   {
     "productId": "livinn_lt:1AM092401198",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sviestiniai-krekeriai-su-suriu-ir-pipirais-1am092401198-lt",
-    "checkedAt": "2026-09-03T09:35:31.185Z",
+    "checkedAt": "2026-09-03T09:56:16.228Z",
     "gtin": "370025408224",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -1476,13 +1648,15 @@
     "totalSugarG": 10,
     "fiberG": null,
     "saltG": 2.2,
-    "saturatedFatG": 18
+    "saturatedFatG": 18,
+    "carbohydrateG": 47,
+    "fatG": 28
   },
   {
     "productId": "livinn_lt:1AM092401199",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sviestiniai-krekeriai-su-trumais-truffle-1am092401199-lt",
-    "checkedAt": "2026-09-03T09:35:32.691Z",
+    "checkedAt": "2026-09-03T09:56:17.710Z",
     "gtin": "370025408248",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -1493,13 +1667,15 @@
     "totalSugarG": 6.3,
     "fiberG": null,
     "saltG": 2.7,
-    "saturatedFatG": 16
+    "saturatedFatG": 16,
+    "carbohydrateG": 54,
+    "fatG": 26
   },
   {
     "productId": "livinn_lt:1AM092401200",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sviestiniai-krekeriai-su-druska-sea-salt-1am092401200-lt",
-    "checkedAt": "2026-09-03T09:35:34.132Z",
+    "checkedAt": "2026-09-03T09:56:19.150Z",
     "gtin": "370025408232",
     "category": "Maistas > Duona, bandelės, trapučiai > Trapučiai, duoniukai ir krekeriai",
     "nutritionBasis": "100g",
@@ -1510,13 +1686,15 @@
     "totalSugarG": 12,
     "fiberG": null,
     "saltG": 4,
-    "saturatedFatG": 15
+    "saturatedFatG": 15,
+    "carbohydrateG": 56,
+    "fatG": 24
   },
   {
     "productId": "livinn_lt:1AM092401201",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/traskus-krekeriai-pilno-grudo-whole-grain-1am092401201-lt",
-    "checkedAt": "2026-09-03T09:35:35.615Z",
+    "checkedAt": "2026-09-03T09:56:20.664Z",
     "gtin": "370025408161",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -1527,13 +1705,15 @@
     "totalSugarG": 2,
     "fiberG": null,
     "saltG": 2.8,
-    "saturatedFatG": 2.5
+    "saturatedFatG": 2.5,
+    "carbohydrateG": 55,
+    "fatG": 20.9
   },
   {
     "productId": "livinn_lt:1AM092401202",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-su-alyvuogiu-aliejumi-ir-bazilikais-1am092401202-lt",
-    "checkedAt": "2026-09-03T09:35:37.063Z",
+    "checkedAt": "2026-09-03T09:56:22.090Z",
     "gtin": "370025408162",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -1544,13 +1724,15 @@
     "totalSugarG": 1,
     "fiberG": null,
     "saltG": 3.1,
-    "saturatedFatG": 2.3
+    "saturatedFatG": 2.3,
+    "carbohydrateG": 65,
+    "fatG": 17.4
   },
   {
     "productId": "livinn_lt:1AM092401276",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/kukuruzai-scaliti-al-mais-di-storo-1am092401276-lt",
-    "checkedAt": "2026-09-03T09:35:38.518Z",
+    "checkedAt": "2026-09-03T09:56:23.717Z",
     "gtin": "800928000160",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -1561,13 +1743,15 @@
     "totalSugarG": 0.8,
     "fiberG": null,
     "saltG": 1.5,
-    "saturatedFatG": 1.2
+    "saturatedFatG": 1.2,
+    "carbohydrateG": 63,
+    "fatG": 7.5
   },
   {
     "productId": "livinn_lt:1AM092401277",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/dziuveseliai-su-alyvuogiu-aliejumi-1am092401277-lt",
-    "checkedAt": "2026-09-03T09:35:39.955Z",
+    "checkedAt": "2026-09-03T09:56:25.130Z",
     "gtin": "800928000371",
     "category": "Maistas > Duona, bandelės, trapučiai > Trapučiai, duoniukai ir krekeriai",
     "nutritionBasis": "100g",
@@ -1578,13 +1762,15 @@
     "totalSugarG": 2,
     "fiberG": null,
     "saltG": 2.4,
-    "saturatedFatG": 1.7
+    "saturatedFatG": 1.7,
+    "carbohydrateG": 67,
+    "fatG": 13
   },
   {
     "productId": "livinn_lt:1AM092401278",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/kukuruzu-krekeriai-striscette-al-mais-1am092401278-lt",
-    "checkedAt": "2026-09-03T09:35:41.353Z",
+    "checkedAt": "2026-09-03T09:56:26.567Z",
     "gtin": "800928000714",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -1595,13 +1781,15 @@
     "totalSugarG": 2,
     "fiberG": 2.5,
     "saltG": 2.4,
-    "saturatedFatG": 1.3
+    "saturatedFatG": 1.3,
+    "carbohydrateG": 62,
+    "fatG": 12.5
   },
   {
     "productId": "livinn_lt:1AM092401279",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lazdeles-brezel-sticks-1am092401279-lt",
-    "checkedAt": "2026-09-03T09:35:43.846Z",
+    "checkedAt": "2026-09-03T09:56:28.248Z",
     "gtin": "800928000728",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -1612,13 +1800,15 @@
     "totalSugarG": 1.5,
     "fiberG": null,
     "saltG": 2.8,
-    "saturatedFatG": 1.3
+    "saturatedFatG": 1.3,
+    "carbohydrateG": 72,
+    "fatG": 11
   },
   {
     "productId": "livinn_lt:1AM092401290",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-su-avokadu-aliejumi-lime-and-black-pepper-125-g-1am092401290-lt",
-    "checkedAt": "2026-09-03T09:35:45.355Z",
+    "checkedAt": "2026-09-03T09:56:30.058Z",
     "gtin": "842694400041",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -1629,13 +1819,15 @@
     "totalSugarG": 0,
     "fiberG": 5.2,
     "saltG": 1.2,
-    "saturatedFatG": 3.4
+    "saturatedFatG": 3.4,
+    "carbohydrateG": 55,
+    "fatG": 33
   },
   {
     "productId": "livinn_lt:1AM092401291",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-su-avokadu-aliejumi-sea-salt-125-g-1am092401291-lt",
-    "checkedAt": "2026-09-03T09:35:46.945Z",
+    "checkedAt": "2026-09-03T09:56:31.661Z",
     "gtin": "842694400038",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -1646,13 +1838,15 @@
     "totalSugarG": 0,
     "fiberG": 3.7,
     "saltG": 0.73,
-    "saturatedFatG": 4
+    "saturatedFatG": 4,
+    "carbohydrateG": 43,
+    "fatG": 39
   },
   {
     "productId": "livinn_lt:1AM180309678",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/baltym-batonelis-hazelnut-butter-dark-1am180309678-lt",
-    "checkedAt": "2026-09-03T09:35:48.395Z",
+    "checkedAt": "2026-09-03T09:56:33.208Z",
     "gtin": "542503687121",
     "category": "Maistas > Skanėstai > Batonėliai > Baltyminiai batonėliai",
     "nutritionBasis": "100g",
@@ -1663,13 +1857,15 @@
     "totalSugarG": 20.9,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 6.2
+    "saturatedFatG": 6.2,
+    "carbohydrateG": 41.6,
+    "fatG": 35.5
   },
   {
     "productId": "livinn_lt:1AM180309679",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/baltyminis-batonelis-almond-butter-honey-1am180309679-lt",
-    "checkedAt": "2026-09-03T09:35:49.811Z",
+    "checkedAt": "2026-09-03T09:56:36.195Z",
     "gtin": "542503687123",
     "category": "Maistas > Skanėstai > Batonėliai > Baltyminiai batonėliai",
     "nutritionBasis": "100g",
@@ -1680,13 +1876,15 @@
     "totalSugarG": 20.1,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 2.5
+    "saturatedFatG": 2.5,
+    "carbohydrateG": 37.6,
+    "fatG": 31.6
   },
   {
     "productId": "livinn_lt:1AM180309680",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/baltym-batonelis-cashew-butter-red-ber-1am180309680-lt",
-    "checkedAt": "2026-09-03T09:35:51.193Z",
+    "checkedAt": "2026-09-03T09:56:37.921Z",
     "gtin": "542503687122",
     "category": "Maistas > Skanėstai > Batonėliai > Baltyminiai batonėliai",
     "nutritionBasis": "100g",
@@ -1697,13 +1895,15 @@
     "totalSugarG": 22.3,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 6
+    "saturatedFatG": 6,
+    "carbohydrateG": 43.7,
+    "fatG": 30.6
   },
   {
     "productId": "livinn_lt:1AM180309681",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/baltym-batonelis-almond-butter-double-1am180309681-lt",
-    "checkedAt": "2026-09-03T09:35:52.671Z",
+    "checkedAt": "2026-09-03T09:56:40.721Z",
     "gtin": "542503687120",
     "category": "Maistas > Skanėstai > Batonėliai > Baltyminiai batonėliai",
     "nutritionBasis": "100g",
@@ -1714,13 +1914,15 @@
     "totalSugarG": 21,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 5.3
+    "saturatedFatG": 5.3,
+    "carbohydrateG": 39.4,
+    "fatG": 33.6
   },
   {
     "productId": "livinn_lt:1G0442008878",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/speltu-duonos-paploteliai-1g0442008878-lt",
-    "checkedAt": "2026-09-03T09:35:54.186Z",
+    "checkedAt": "2026-09-03T09:56:43.902Z",
     "gtin": "803245405021",
     "category": "Maistas > Duona, bandelės, trapučiai > Trapučiai, duoniukai ir krekeriai",
     "nutritionBasis": "100g",
@@ -1731,13 +1933,15 @@
     "totalSugarG": 4.1,
     "fiberG": null,
     "saltG": 1.5,
-    "saturatedFatG": 1.3
+    "saturatedFatG": 1.3,
+    "carbohydrateG": 69.7,
+    "fatG": 8.5
   },
   {
     "productId": "livinn_lt:1G0901004565",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladiniu-triufeliu-batonelis-irish-cream-truffle-1g0901004565-lt",
-    "checkedAt": "2026-09-03T09:35:55.878Z",
+    "checkedAt": "2026-09-03T09:56:45.430Z",
     "gtin": "509946617701",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1748,13 +1952,15 @@
     "totalSugarG": 50,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 17
+    "saturatedFatG": 17,
+    "carbohydrateG": 52,
+    "fatG": 27
   },
   {
     "productId": "livinn_lt:1G0901004571",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladiniu-triufeliu-batonelis-mint-truffle-1g0901004571-lt",
-    "checkedAt": "2026-09-03T09:35:57.390Z",
+    "checkedAt": "2026-09-03T09:56:46.936Z",
     "gtin": "509946617711",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1765,13 +1971,15 @@
     "totalSugarG": 47,
     "fiberG": null,
     "saltG": 0,
-    "saturatedFatG": 15
+    "saturatedFatG": 15,
+    "carbohydrateG": 50,
+    "fatG": 25
   },
   {
     "productId": "livinn_lt:1G0901006168",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladiniu-triufeliu-batonelis-milk-chocolate-1g0901006168-lt",
-    "checkedAt": "2026-09-03T09:35:59.345Z",
+    "checkedAt": "2026-09-03T09:56:48.766Z",
     "gtin": "509946617702",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1782,13 +1990,15 @@
     "totalSugarG": 56,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 16
+    "saturatedFatG": 16,
+    "carbohydrateG": 56,
+    "fatG": 26
   },
   {
     "productId": "livinn_lt:1G0901006169",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladinis-batonelis-caramel-crunch-1g0901006169-lt",
-    "checkedAt": "2026-09-03T09:36:00.770Z",
+    "checkedAt": "2026-09-03T09:56:50.218Z",
     "gtin": "509946617110",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1799,13 +2009,15 @@
     "totalSugarG": 49,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 15
+    "saturatedFatG": 15,
+    "carbohydrateG": 58,
+    "fatG": 24
   },
   {
     "productId": "livinn_lt:1G0901009567",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladinis-batonelis-noisettes-lait-1g0901009567-lt",
-    "checkedAt": "2026-09-03T09:36:02.180Z",
+    "checkedAt": "2026-09-03T09:56:52.149Z",
     "gtin": "540021950520",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1816,13 +2028,15 @@
     "totalSugarG": 44.8,
     "fiberG": null,
     "saltG": 0.21,
-    "saturatedFatG": 19.1
+    "saturatedFatG": 19.1,
+    "carbohydrateG": 46.7,
+    "fatG": 35.4
   },
   {
     "productId": "livinn_lt:1G0901009568",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladinis-batonelis-pistache-lait-1g0901009568-lt",
-    "checkedAt": "2026-09-03T09:36:03.698Z",
+    "checkedAt": "2026-09-03T09:56:53.733Z",
     "gtin": "540021950640",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1833,13 +2047,15 @@
     "totalSugarG": 47.1,
     "fiberG": 4,
     "saltG": 0.17,
-    "saturatedFatG": 16.6
+    "saturatedFatG": 16.6,
+    "carbohydrateG": 48.9,
+    "fatG": 34.3
   },
   {
     "productId": "livinn_lt:1G0901009701",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladinis-batonelis-noir-fourre-fruit-de-la-passion-1g0901009701-lt",
-    "checkedAt": "2026-09-03T09:39:35.547Z",
+    "checkedAt": "2026-09-03T09:56:55.246Z",
     "gtin": "540021950610",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1850,13 +2066,15 @@
     "totalSugarG": 41,
     "fiberG": 6,
     "saltG": 0.06,
-    "saturatedFatG": 16.9
+    "saturatedFatG": 16.9,
+    "carbohydrateG": 48.3,
+    "fatG": 28.9
   },
   {
     "productId": "livinn_lt:1G0901009965",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sventinis-pieninio-sokolado-batonelis-speculoos-1g0901009965-lt",
-    "checkedAt": "2026-09-03T09:39:37.009Z",
+    "checkedAt": "2026-09-03T09:56:56.708Z",
     "gtin": "540021951590",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -1867,13 +2085,15 @@
     "totalSugarG": 46,
     "fiberG": null,
     "saltG": 0.26,
-    "saturatedFatG": 20
+    "saturatedFatG": 20,
+    "carbohydrateG": 51,
+    "fatG": 36
   },
   {
     "productId": "livinn_lt:1G0902004707",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/cantucci-piaceri-mediterranei-200-1g0902004707-lt",
-    "checkedAt": "2026-09-03T09:39:38.472Z",
+    "checkedAt": "2026-09-03T09:56:58.389Z",
     "gtin": "802816920024",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai be glitimo",
     "nutritionBasis": "100g",
@@ -1884,13 +2104,15 @@
     "totalSugarG": 9.9,
     "fiberG": null,
     "saltG": 0.6,
-    "saturatedFatG": 1.8
+    "saturatedFatG": 1.8,
+    "carbohydrateG": 68,
+    "fatG": 17
   },
   {
     "productId": "livinn_lt:1G0902004709",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausain-battiti-piaceri-mediterranei-200-1g0902004709-lt",
-    "checkedAt": "2026-09-03T09:39:40.191Z",
+    "checkedAt": "2026-09-03T09:57:01.362Z",
     "gtin": "802816920316",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai be glitimo",
     "nutritionBasis": "100g",
@@ -1901,13 +2123,15 @@
     "totalSugarG": 26.5,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 4.5
+    "saturatedFatG": 4.5,
+    "carbohydrateG": 64.3,
+    "fatG": 20.3
   },
   {
     "productId": "livinn_lt:1G0902004722",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-dobloni-dark-be-glitimo-1g0902004722-lt",
-    "checkedAt": "2026-09-03T09:39:41.710Z",
+    "checkedAt": "2026-09-03T09:57:02.908Z",
     "gtin": "802816920403",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai be glitimo",
     "nutritionBasis": "100g",
@@ -1918,13 +2142,15 @@
     "totalSugarG": 21.6,
     "fiberG": null,
     "saltG": 0.7,
-    "saturatedFatG": 7.1
+    "saturatedFatG": 7.1,
+    "carbohydrateG": 67.5,
+    "fatG": 20.8
   },
   {
     "productId": "livinn_lt:1G0902004990",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/vafliai-kakav-piaceri-mediterranei-175g-1g0902004990-lt",
-    "checkedAt": "2026-09-03T09:39:43.225Z",
+    "checkedAt": "2026-09-03T09:57:04.423Z",
     "gtin": "802816920719",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai be glitimo",
     "nutritionBasis": "100g",
@@ -1935,13 +2161,15 @@
     "totalSugarG": 25,
     "fiberG": null,
     "saltG": null,
-    "saturatedFatG": 23
+    "saturatedFatG": 23,
+    "carbohydrateG": 62,
+    "fatG": 26
   },
   {
     "productId": "livinn_lt:1G0902008524",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/piaceri-mediterranei-vafliai-vanilin-175-1g0902008524-lt",
-    "checkedAt": "2026-09-03T09:39:44.738Z",
+    "checkedAt": "2026-09-03T09:57:06.184Z",
     "gtin": "802816920718",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai be glitimo",
     "nutritionBasis": "100g",
@@ -1952,13 +2180,15 @@
     "totalSugarG": 25,
     "fiberG": null,
     "saltG": null,
-    "saturatedFatG": 22
+    "saturatedFatG": 22,
+    "carbohydrateG": 68,
+    "fatG": 24
   },
   {
     "productId": "livinn_lt:1G0902008709",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/kukuruzu-lazdeles-su-juoduoju-sokoladu-zulu-1g0902008709-lt",
-    "checkedAt": "2026-09-03T09:39:46.310Z",
+    "checkedAt": "2026-09-03T09:57:07.746Z",
     "gtin": "800928000662",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -1969,13 +2199,15 @@
     "totalSugarG": 37,
     "fiberG": 7,
     "saltG": 0.2,
-    "saturatedFatG": 18
+    "saturatedFatG": 18,
+    "carbohydrateG": 51.5,
+    "fatG": 31
   },
   {
     "productId": "livinn_lt:1G0902008710",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/ryziu-lazdeles-su-pieniniu-sokoladu-zulu-1g0902008710-lt",
-    "checkedAt": "2026-09-03T09:39:47.880Z",
+    "checkedAt": "2026-09-03T09:57:09.287Z",
     "gtin": "800928000674",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -1986,13 +2218,15 @@
     "totalSugarG": 41,
     "fiberG": 2,
     "saltG": 0.2,
-    "saturatedFatG": 18
+    "saturatedFatG": 18,
+    "carbohydrateG": 56,
+    "fatG": 30
   },
   {
     "productId": "livinn_lt:1G0902008899",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/speltu-sausainiai-su-sokolado-gabaliukais-biscotti-farro-1g0902008899-lt",
-    "checkedAt": "2026-09-03T09:39:49.512Z",
+    "checkedAt": "2026-09-03T09:57:10.781Z",
     "gtin": "803245405124",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai su šokoladu",
     "nutritionBasis": "100g",
@@ -2003,13 +2237,15 @@
     "totalSugarG": 26,
     "fiberG": null,
     "saltG": 0.2,
-    "saturatedFatG": 3
+    "saturatedFatG": 3,
+    "carbohydrateG": 64,
+    "fatG": 18
   },
   {
     "productId": "livinn_lt:1G0902008901",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/speltu-sausainiai-su-avizomis-ir-vaisiais-integrali-di-farro-1g0902008901-lt",
-    "checkedAt": "2026-09-03T09:39:50.975Z",
+    "checkedAt": "2026-09-03T09:57:12.323Z",
     "gtin": "803245400089",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -2020,13 +2256,15 @@
     "totalSugarG": 23.6,
     "fiberG": null,
     "saltG": 0.07,
-    "saturatedFatG": 1.3
+    "saturatedFatG": 1.3,
+    "carbohydrateG": 61.3,
+    "fatG": 18
   },
   {
     "productId": "livinn_lt:1G0902008902",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sottolestelle-eko-piln-grud-sausain-300g-1g0902008902-lt",
-    "checkedAt": "2026-09-03T09:39:52.518Z",
+    "checkedAt": "2026-09-03T09:57:13.832Z",
     "gtin": "803245400062",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -2037,13 +2275,15 @@
     "totalSugarG": 21,
     "fiberG": null,
     "saltG": 0.14,
-    "saturatedFatG": 2.3
+    "saturatedFatG": 2.3,
+    "carbohydrateG": 59,
+    "fatG": 20
   },
   {
     "productId": "livinn_lt:1G0902009079",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-millefiori-medumi-ir-sokoladu-crumiri-dritti-ricoperti-1g0902009079-lt",
-    "checkedAt": "2026-09-03T09:39:54.066Z",
+    "checkedAt": "2026-09-03T09:57:15.231Z",
     "gtin": "802642430007",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai su šokoladu",
     "nutritionBasis": "100g",
@@ -2054,13 +2294,15 @@
     "totalSugarG": 25,
     "fiberG": null,
     "saltG": 0.36,
-    "saturatedFatG": 18
+    "saturatedFatG": 18,
+    "carbohydrateG": 55,
+    "fatG": 30
   },
   {
     "productId": "livinn_lt:1G0902009080",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-sokolado-gabaliukais-biscotin-1g0902009080-lt",
-    "checkedAt": "2026-09-03T09:39:55.733Z",
+    "checkedAt": "2026-09-03T09:57:16.624Z",
     "gtin": "802642430009",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai su šokoladu",
     "nutritionBasis": "100g",
@@ -2071,13 +2313,15 @@
     "totalSugarG": 29,
     "fiberG": null,
     "saltG": 0.71,
-    "saturatedFatG": 18
+    "saturatedFatG": 18,
+    "carbohydrateG": 57,
+    "fatG": 29
   },
   {
     "productId": "livinn_lt:1G0902009081",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-migdolais-ir-sokoladu-frollini-1g0902009081-lt",
-    "checkedAt": "2026-09-03T09:39:57.245Z",
+    "checkedAt": "2026-09-03T09:57:18.358Z",
     "gtin": "802642430010",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai su šokoladu",
     "nutritionBasis": "100g",
@@ -2088,13 +2332,15 @@
     "totalSugarG": 28,
     "fiberG": null,
     "saltG": 0.39,
-    "saturatedFatG": 16
+    "saturatedFatG": 16,
+    "carbohydrateG": 52,
+    "fatG": 30
   },
   {
     "productId": "livinn_lt:1G0902009082",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-lazdyno-riesutais-baci-di-dama-1g0902009082-lt",
-    "checkedAt": "2026-09-03T09:39:58.956Z",
+    "checkedAt": "2026-09-03T09:57:20.175Z",
     "gtin": "802642430004",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai su šokoladu",
     "nutritionBasis": "100g",
@@ -2105,13 +2351,15 @@
     "totalSugarG": 25,
     "fiberG": null,
     "saltG": 0.47,
-    "saturatedFatG": 17
+    "saturatedFatG": 17,
+    "carbohydrateG": 51,
+    "fatG": 32
   },
   {
     "productId": "livinn_lt:1G0902009083",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-lazdyno-riesutais-ir-kakava-baci-di-dama-1g0902009083-lt",
-    "checkedAt": "2026-09-03T09:40:00.459Z",
+    "checkedAt": "2026-09-03T09:57:21.664Z",
     "gtin": "802642430008",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai su šokoladu",
     "nutritionBasis": "100g",
@@ -2122,13 +2370,15 @@
     "totalSugarG": 24,
     "fiberG": null,
     "saltG": 0.36,
-    "saturatedFatG": 18
+    "saturatedFatG": 18,
+    "carbohydrateG": 46,
+    "fatG": 35
   },
   {
     "productId": "livinn_lt:1G0902009203",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokoladiniai-sausainiai-sables-tout-chocolat-1g0902009203-lt",
-    "checkedAt": "2026-09-03T09:40:02.573Z",
+    "checkedAt": "2026-09-03T09:57:23.347Z",
     "gtin": "317853040984",
     "category": "Maistas > Skanėstai > Sausainiai > Sausainiai su šokoladu",
     "nutritionBasis": "100g",
@@ -2139,13 +2389,15 @@
     "totalSugarG": 32,
     "fiberG": null,
     "saltG": 0.75,
-    "saturatedFatG": 16
+    "saturatedFatG": 16,
+    "carbohydrateG": 61,
+    "fatG": 26
   },
   {
     "productId": "livinn_lt:1G0902009780",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sausainiai-su-pistaciju-kremu-cuor-di-crema-1g0902009780-lt",
-    "checkedAt": "2026-09-03T09:40:04.369Z",
+    "checkedAt": "2026-09-03T09:57:25.001Z",
     "gtin": "803245400297",
     "category": "Maistas > Skanėstai > Sausainiai",
     "nutritionBasis": "100g",
@@ -2156,13 +2408,15 @@
     "totalSugarG": 25,
     "fiberG": null,
     "saltG": 0.04,
-    "saturatedFatG": 5.8
+    "saturatedFatG": 5.8,
+    "carbohydrateG": 60,
+    "fatG": 25
   },
   {
     "productId": "livinn_lt:1G0972000123",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/sokolad-batonelis-su-migdolais-salted-almond-1g0972000123-lt",
-    "checkedAt": "2026-09-03T09:40:05.918Z",
+    "checkedAt": "2026-09-03T09:57:26.803Z",
     "gtin": "509946617717",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -2173,13 +2427,15 @@
     "totalSugarG": 52,
     "fiberG": null,
     "saltG": 0.59,
-    "saturatedFatG": 16
+    "saturatedFatG": 16,
+    "carbohydrateG": 53,
+    "fatG": 35
   },
   {
     "productId": "livinn_lt:1G0972009417",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/dziovintu-vaisiu-batonelis-su-riesutais-1g0972009417-lt",
-    "checkedAt": "2026-09-03T09:40:08.033Z",
+    "checkedAt": "2026-09-03T09:57:28.772Z",
     "gtin": "803245400106",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -2190,13 +2446,15 @@
     "totalSugarG": 30,
     "fiberG": null,
     "saltG": 0.13,
-    "saturatedFatG": 5.2
+    "saturatedFatG": 5.2,
+    "carbohydrateG": 47,
+    "fatG": 27
   },
   {
     "productId": "livinn_lt:1G0972009677",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/nuts-berries-eko-batonel-anakard-abri-30-1g0972009677-lt",
-    "checkedAt": "2026-09-03T09:40:09.610Z",
+    "checkedAt": "2026-09-03T09:57:31.514Z",
     "gtin": "542503687062",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -2207,13 +2465,15 @@
     "totalSugarG": 26.3,
     "fiberG": null,
     "saltG": 0.09,
-    "saturatedFatG": 4.6
+    "saturatedFatG": 4.6,
+    "carbohydrateG": 48,
+    "fatG": 27.1
   },
   {
     "productId": "livinn_lt:1G0972009678",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/nuts-berries-eko-batonel-migdol-spang-30-1g0972009678-lt",
-    "checkedAt": "2026-09-03T09:40:11.145Z",
+    "checkedAt": "2026-09-03T09:57:32.933Z",
     "gtin": "542503687061",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -2224,13 +2484,15 @@
     "totalSugarG": 26.3,
     "fiberG": null,
     "saltG": 0.05,
-    "saturatedFatG": 3.7
+    "saturatedFatG": 3.7,
+    "carbohydrateG": 43,
+    "fatG": 32
   },
   {
     "productId": "livinn_lt:1G0972009679",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/nuts-berries-eko-batonel-pekan-cinamo-30-1g0972009679-lt",
-    "checkedAt": "2026-09-03T09:40:12.849Z",
+    "checkedAt": "2026-09-03T09:57:34.448Z",
     "gtin": "542503687063",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -2241,13 +2503,15 @@
     "totalSugarG": 26.3,
     "fiberG": null,
     "saltG": 0.3,
-    "saturatedFatG": 2.6
+    "saturatedFatG": 2.6,
+    "carbohydrateG": 41.7,
+    "fatG": 33.4
   },
   {
     "productId": "livinn_lt:1G0972009680",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/nuts-berries-eko-batonel-sokolad-kard-40-1g0972009680-lt",
-    "checkedAt": "2026-09-03T09:40:14.338Z",
+    "checkedAt": "2026-09-03T09:57:35.896Z",
     "gtin": "542503687082",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -2258,13 +2522,15 @@
     "totalSugarG": 18.75,
     "fiberG": null,
     "saltG": 0.68,
-    "saturatedFatG": 5
+    "saturatedFatG": 5,
+    "carbohydrateG": 34.75,
+    "fatG": 22.5
   },
   {
     "productId": "livinn_lt:1G0972009681",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/nuts-berries-eko-batonel-soko-vysnios-40-1g0972009681-lt",
-    "checkedAt": "2026-09-03T09:40:16.008Z",
+    "checkedAt": "2026-09-03T09:57:37.395Z",
     "gtin": "542503687081",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -2275,13 +2541,15 @@
     "totalSugarG": 19.25,
     "fiberG": null,
     "saltG": 0.67,
-    "saturatedFatG": 4.5
+    "saturatedFatG": 4.5,
+    "carbohydrateG": 37,
+    "fatG": 21.5
   },
   {
     "productId": "livinn_lt:1G0972009682",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/nuts-berries-eko-batonelis-deluxe-40-1g0972009682-lt",
-    "checkedAt": "2026-09-03T09:40:17.464Z",
+    "checkedAt": "2026-09-03T09:57:39.912Z",
     "gtin": "542503687003",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -2292,13 +2560,15 @@
     "totalSugarG": 21,
     "fiberG": null,
     "saltG": 0.03,
-    "saturatedFatG": 3
+    "saturatedFatG": 3,
+    "carbohydrateG": 36,
+    "fatG": 21
   },
   {
     "productId": "livinn_lt:1G1701001625",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/darzoviu-traskuciai-torres-veggie-1g1701001625-lt",
-    "checkedAt": "2026-09-03T09:36:05.242Z",
+    "checkedAt": "2026-09-03T09:57:41.485Z",
     "gtin": "842694461080",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2309,13 +2579,15 @@
     "totalSugarG": 22,
     "fiberG": 10,
     "saltG": 1.4,
-    "saturatedFatG": 3.6
+    "saturatedFatG": 3.6,
+    "carbohydrateG": 45,
+    "fatG": 34
   },
   {
     "productId": "livinn_lt:1G1701003504",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-brandinto-surio-skonio-1g1701003504-lt",
-    "checkedAt": "2026-09-03T09:36:06.747Z",
+    "checkedAt": "2026-09-03T09:57:43.048Z",
     "gtin": "842694400002",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2326,13 +2598,15 @@
     "totalSugarG": 4.2,
     "fiberG": null,
     "saltG": 1.5,
-    "saturatedFatG": 3.5
+    "saturatedFatG": 3.5,
+    "carbohydrateG": 50,
+    "fatG": 33
   },
   {
     "productId": "livinn_lt:1G1701006599",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/saldziu-bulviu-traskuciai-torres-veggie-1g1701006599-lt",
-    "checkedAt": "2026-09-03T09:36:08.174Z",
+    "checkedAt": "2026-09-03T09:57:44.933Z",
     "gtin": "842694460001",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2343,13 +2617,15 @@
     "totalSugarG": 9.8,
     "fiberG": null,
     "saltG": 0.9,
-    "saturatedFatG": 3.4
+    "saturatedFatG": 3.4,
+    "carbohydrateG": 52,
+    "fatG": 32
   },
   {
     "productId": "livinn_lt:1G1701008862",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-su-alyvuogiu-aliejumi-primopane-1g1701008862-lt",
-    "checkedAt": "2026-09-03T09:36:09.626Z",
+    "checkedAt": "2026-09-03T09:57:46.472Z",
     "gtin": "800794500099",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2360,13 +2636,15 @@
     "totalSugarG": 1,
     "fiberG": 3,
     "saltG": 2.3,
-    "saturatedFatG": 1.2
+    "saturatedFatG": 1.2,
+    "carbohydrateG": 66,
+    "fatG": 7.7
   },
   {
     "productId": "livinn_lt:1G1701008863",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-su-rozmarinais-primopane-1g1701008863-lt",
-    "checkedAt": "2026-09-03T09:36:11.103Z",
+    "checkedAt": "2026-09-03T09:57:48.081Z",
     "gtin": "800794500101",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2377,13 +2655,15 @@
     "totalSugarG": 1,
     "fiberG": 3.4,
     "saltG": 2.3,
-    "saturatedFatG": 1.3
+    "saturatedFatG": 1.3,
+    "carbohydrateG": 66,
+    "fatG": 7.9
   },
   {
     "productId": "livinn_lt:1G1701008864",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-su-svogunais-primopane-1g1701008864-lt",
-    "checkedAt": "2026-09-03T09:36:12.584Z",
+    "checkedAt": "2026-09-03T09:57:49.667Z",
     "gtin": "800794500105",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2394,13 +2674,15 @@
     "totalSugarG": 2.5,
     "fiberG": 3.4,
     "saltG": 2.3,
-    "saturatedFatG": 1.2
+    "saturatedFatG": 1.2,
+    "carbohydrateG": 69,
+    "fatG": 7.8
   },
   {
     "productId": "livinn_lt:1G1701008865",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-pilno-grudo-primopane-1g1701008865-lt",
-    "checkedAt": "2026-09-03T09:36:14.008Z",
+    "checkedAt": "2026-09-03T09:57:51.273Z",
     "gtin": "800794500100",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2411,13 +2693,15 @@
     "totalSugarG": 1.2,
     "fiberG": 4.8,
     "saltG": 2.3,
-    "saturatedFatG": 1.3
+    "saturatedFatG": 1.3,
+    "carbohydrateG": 63,
+    "fatG": 8
   },
   {
     "productId": "livinn_lt:1G1701008866",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lazdeles-grissini-di-grano-capelli-1g1701008866-lt",
-    "checkedAt": "2026-09-03T09:36:15.493Z",
+    "checkedAt": "2026-09-03T09:57:53.261Z",
     "gtin": "800794540002",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2428,13 +2712,15 @@
     "totalSugarG": 1.9,
     "fiberG": 4.1,
     "saltG": 1.4,
-    "saturatedFatG": 1.1
+    "saturatedFatG": 1.1,
+    "carbohydrateG": 72,
+    "fatG": 6.5
   },
   {
     "productId": "livinn_lt:1G1701008867",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-croccanti-di-grano-capelli-1g1701008867-lt",
-    "checkedAt": "2026-09-03T09:36:16.957Z",
+    "checkedAt": "2026-09-03T09:57:54.783Z",
     "gtin": "800794540003",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2445,13 +2731,15 @@
     "totalSugarG": 1.6,
     "fiberG": 3.8,
     "saltG": 2.1,
-    "saturatedFatG": 1.4
+    "saturatedFatG": 1.4,
+    "carbohydrateG": 75,
+    "fatG": 8.8
   },
   {
     "productId": "livinn_lt:1G1701008874",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/eko-krekeriai-rozmar-sottolestelle-200g-1g1701008874-lt",
-    "checkedAt": "2026-09-03T09:40:19.015Z",
+    "checkedAt": "2026-09-03T09:57:56.545Z",
     "gtin": "803245406070",
     "category": "Maistas > Duona, bandelės, trapučiai > Trapučiai, duoniukai ir krekeriai",
     "nutritionBasis": "100g",
@@ -2462,13 +2750,15 @@
     "totalSugarG": 2.6,
     "fiberG": null,
     "saltG": 2.2,
-    "saturatedFatG": 1.2
+    "saturatedFatG": 1.2,
+    "carbohydrateG": 72,
+    "fatG": 7.8
   },
   {
     "productId": "livinn_lt:1G1701009280",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/eko-ryziu-trap-su-him-druska-bettr-120g-1g1701009280-lt",
-    "checkedAt": "2026-09-03T09:40:20.470Z",
+    "checkedAt": "2026-09-03T09:57:58.434Z",
     "gtin": "380023368242",
     "category": "Maistas > Duona, bandelės, trapučiai > Trapučiai, duoniukai ir krekeriai",
     "nutritionBasis": "100g",
@@ -2479,13 +2769,15 @@
     "totalSugarG": 1.8,
     "fiberG": null,
     "saltG": 1.5,
-    "saturatedFatG": 0.8
+    "saturatedFatG": 0.8,
+    "carbohydrateG": 75,
+    "fatG": 1.9
   },
   {
     "productId": "livinn_lt:1G1701009281",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/eko-ryziu-trap-bettr-7-super-seeds-120g-1g1701009281-lt",
-    "checkedAt": "2026-09-03T09:40:22.103Z",
+    "checkedAt": "2026-09-03T09:57:59.871Z",
     "gtin": "380023368243",
     "category": "Maistas > Duona, bandelės, trapučiai > Trapučiai, duoniukai ir krekeriai",
     "nutritionBasis": "100g",
@@ -2496,13 +2788,15 @@
     "totalSugarG": 2.3,
     "fiberG": null,
     "saltG": 1.5,
-    "saturatedFatG": 0.6
+    "saturatedFatG": 0.6,
+    "carbohydrateG": 69,
+    "fatG": 2.4
   },
   {
     "productId": "livinn_lt:1G1701009297",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/eko-ryziu-trap-5cereal-sottolestell-100g-1g1701009297-lt",
-    "checkedAt": "2026-09-03T09:40:23.702Z",
+    "checkedAt": "2026-09-03T09:58:01.593Z",
     "gtin": "803245403134",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2513,13 +2807,15 @@
     "totalSugarG": 0.7,
     "fiberG": null,
     "saltG": 0.003,
-    "saturatedFatG": 0.6
+    "saturatedFatG": 0.6,
+    "carbohydrateG": 80.1,
+    "fatG": 2.3
   },
   {
     "productId": "livinn_lt:1G1701009298",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/eko-kukur-trapuciai-sottolestelle-100g-1g1701009298-lt",
-    "checkedAt": "2026-09-03T09:40:25.316Z",
+    "checkedAt": "2026-09-03T09:58:03.149Z",
     "gtin": "803245403003",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2530,13 +2826,15 @@
     "totalSugarG": 0.4,
     "fiberG": null,
     "saltG": 0.5,
-    "saturatedFatG": 0.2
+    "saturatedFatG": 0.2,
+    "carbohydrateG": 85,
+    "fatG": 1.2
   },
   {
     "productId": "livinn_lt:1G1701009473",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-acto-skonio-tapas-vinegar-1g1701009473-lt",
-    "checkedAt": "2026-09-03T09:36:18.405Z",
+    "checkedAt": "2026-09-03T09:58:04.776Z",
     "gtin": "842694400017",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2547,13 +2845,15 @@
     "totalSugarG": 0.9,
     "fiberG": null,
     "saltG": 1.3,
-    "saturatedFatG": 3
+    "saturatedFatG": 3,
+    "carbohydrateG": 46,
+    "fatG": 35
   },
   {
     "productId": "livinn_lt:1G1701009514",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-be-mieliu-senatore-cappelli-1g1701009514-lt",
-    "checkedAt": "2026-09-03T09:40:26.828Z",
+    "checkedAt": "2026-09-03T09:58:06.295Z",
     "gtin": "803245404075",
     "category": "Maistas > Duona, bandelės, trapučiai > Trapučiai, duoniukai ir krekeriai",
     "nutritionBasis": "100g",
@@ -2564,13 +2864,15 @@
     "totalSugarG": 3.9,
     "fiberG": null,
     "saltG": 1.9,
-    "saturatedFatG": 1.1
+    "saturatedFatG": 1.1,
+    "carbohydrateG": 65.7,
+    "fatG": 7.3
   },
   {
     "productId": "livinn_lt:1G1701009717",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/duonos-lazd-ivair-sekl-lingue-pane-1g1701009717-lt",
-    "checkedAt": "2026-09-03T09:40:28.974Z",
+    "checkedAt": "2026-09-03T09:58:07.918Z",
     "gtin": "800794500059",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2581,13 +2883,15 @@
     "totalSugarG": 0.6,
     "fiberG": null,
     "saltG": 1.7,
-    "saturatedFatG": 0.8
+    "saturatedFatG": 0.8,
+    "carbohydrateG": 74,
+    "fatG": 6.5
   },
   {
     "productId": "livinn_lt:1G1701009719",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/duonos-lazd-piln-grudo-le-lingue-di-pane-1g1701009719-lt",
-    "checkedAt": "2026-09-03T09:40:30.813Z",
+    "checkedAt": "2026-09-03T09:58:09.449Z",
     "gtin": "800794500054",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2598,13 +2902,15 @@
     "totalSugarG": 1.4,
     "fiberG": null,
     "saltG": 1.5,
-    "saturatedFatG": 1.3
+    "saturatedFatG": 1.3,
+    "carbohydrateG": 65,
+    "fatG": 7
   },
   {
     "productId": "livinn_lt:1G1701010328",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/tortiliju-traskuciai-wanted-original-1g1701010328-lt",
-    "checkedAt": "2026-09-03T09:36:19.942Z",
+    "checkedAt": "2026-09-03T09:58:11.051Z",
     "gtin": "570139700000",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2615,13 +2921,15 @@
     "totalSugarG": 0.8,
     "fiberG": null,
     "saltG": 1.1,
-    "saturatedFatG": 2.5
+    "saturatedFatG": 2.5,
+    "carbohydrateG": 65,
+    "fatG": 23
   },
   {
     "productId": "livinn_lt:1G1701010339",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-su-grikiu-miltais-saraceni-1g1701010339-lt",
-    "checkedAt": "2026-09-03T09:40:32.285Z",
+    "checkedAt": "2026-09-03T09:58:12.590Z",
     "gtin": "805728836101",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2632,13 +2940,15 @@
     "totalSugarG": 1.4,
     "fiberG": 3,
     "saltG": 1.6,
-    "saturatedFatG": 0.7
+    "saturatedFatG": 0.7,
+    "carbohydrateG": 67,
+    "fatG": 9.5
   },
   {
     "productId": "livinn_lt:1G1701010490",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-su-druska-kettle-1g1701010490-lt",
-    "checkedAt": "2026-09-03T09:36:21.367Z",
+    "checkedAt": "2026-09-03T09:58:14.170Z",
     "gtin": "570139738652",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2649,13 +2959,15 @@
     "totalSugarG": 0.2,
     "fiberG": null,
     "saltG": 1.3,
-    "saturatedFatG": 2.6
+    "saturatedFatG": 2.6,
+    "carbohydrateG": 50,
+    "fatG": 26
   },
   {
     "productId": "livinn_lt:1G1701010491",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-su-grietine-kettle-1g1701010491-lt",
-    "checkedAt": "2026-09-03T09:36:22.676Z",
+    "checkedAt": "2026-09-03T09:58:17.349Z",
     "gtin": "570139730653",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2666,13 +2978,15 @@
     "totalSugarG": 3,
     "fiberG": null,
     "saltG": 1.3,
-    "saturatedFatG": 3.1
+    "saturatedFatG": 3.1,
+    "carbohydrateG": 51,
+    "fatG": 28
   },
   {
     "productId": "livinn_lt:1G1701010492",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-su-pipirais-kettle-1g1701010492-lt",
-    "checkedAt": "2026-09-03T09:40:33.728Z",
+    "checkedAt": "2026-09-03T09:58:18.889Z",
     "gtin": "570139739020",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2683,13 +2997,15 @@
     "totalSugarG": 1.6,
     "fiberG": null,
     "saltG": 1.9,
-    "saturatedFatG": 3.1
+    "saturatedFatG": 3.1,
+    "carbohydrateG": 50,
+    "fatG": 28.2
   },
   {
     "productId": "livinn_lt:1G1701010569",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/krekeriai-picos-skonio-primopane-1g1701010569-lt",
-    "checkedAt": "2026-09-03T09:40:35.450Z",
+    "checkedAt": "2026-09-03T09:58:20.512Z",
     "gtin": "800794500115",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2700,13 +3016,15 @@
     "totalSugarG": 2,
     "fiberG": 3.3,
     "saltG": 2.4,
-    "saturatedFatG": 1.2
+    "saturatedFatG": 1.2,
+    "carbohydrateG": 67,
+    "fatG": 7.8
   },
   {
     "productId": "livinn_lt:1G1701010777",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/pilno-grudo-speltu-krekeriai-pancrik-1g1701010777-lt",
-    "checkedAt": "2026-09-03T09:40:37.071Z",
+    "checkedAt": "2026-09-03T09:58:22.025Z",
     "gtin": "805728836064",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2717,13 +3035,15 @@
     "totalSugarG": 1.5,
     "fiberG": null,
     "saltG": 2,
-    "saturatedFatG": 1.3
+    "saturatedFatG": 1.3,
+    "carbohydrateG": 66,
+    "fatG": 8
   },
   {
     "productId": "livinn_lt:1G1701010778",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/pilno-grudo-kvieciu-krekeriai-su-seklomis-1g1701010778-lt",
-    "checkedAt": "2026-09-03T09:40:38.797Z",
+    "checkedAt": "2026-09-03T09:58:23.610Z",
     "gtin": "805728836103",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2734,13 +3054,15 @@
     "totalSugarG": 1.7,
     "fiberG": null,
     "saltG": 1.6,
-    "saturatedFatG": 1
+    "saturatedFatG": 1,
+    "carbohydrateG": 70,
+    "fatG": 11.4
   },
   {
     "productId": "livinn_lt:1G1803010617",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/batoneliai-su-uogomis-premium-4-vnt-1g1803010617-lt",
-    "checkedAt": "2026-09-03T09:40:40.778Z",
+    "checkedAt": "2026-09-03T09:58:25.179Z",
     "gtin": "800936100532",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -2751,13 +3073,15 @@
     "totalSugarG": 32,
     "fiberG": null,
     "saltG": 0.31,
-    "saturatedFatG": 4.2
+    "saturatedFatG": 4.2,
+    "carbohydrateG": 56,
+    "fatG": 19
   },
   {
     "productId": "livinn_lt:1G1803010618",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/batoneliai-su-sokoladu-premium-4-vnt-1g1803010618-lt",
-    "checkedAt": "2026-09-03T09:40:42.376Z",
+    "checkedAt": "2026-09-03T09:58:26.834Z",
     "gtin": "800936100536",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -2768,13 +3092,15 @@
     "totalSugarG": 22,
     "fiberG": null,
     "saltG": 0.31,
-    "saturatedFatG": 10
+    "saturatedFatG": 10,
+    "carbohydrateG": 43,
+    "fatG": 30
   },
   {
     "productId": "livinn_lt:1G3002001243",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/ryziu-krekeria-yamato-golden-turtle-300g-1g3002001243-lt",
-    "checkedAt": "2026-09-03T09:40:43.854Z",
+    "checkedAt": "2026-09-03T09:58:28.752Z",
     "gtin": "871770361687",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2785,13 +3111,15 @@
     "totalSugarG": 2,
     "fiberG": null,
     "saltG": 1.12,
-    "saturatedFatG": 0
+    "saturatedFatG": 0,
+    "carbohydrateG": 85,
+    "fatG": 0
   },
   {
     "productId": "livinn_lt:360302003690",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lazdeles-torinesi-gourmet-360302003690-lt",
-    "checkedAt": "2026-09-03T09:40:45.287Z",
+    "checkedAt": "2026-09-03T09:58:31.131Z",
     "gtin": "800928000215",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2802,13 +3130,15 @@
     "totalSugarG": 3.5,
     "fiberG": 4,
     "saltG": 2.3,
-    "saturatedFatG": 0.8
+    "saturatedFatG": 0.8,
+    "carbohydrateG": 72,
+    "fatG": 8.5
   },
   {
     "productId": "livinn_lt:360302003693",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/senovines-italiskos-lazdeles-rustici-360302003693-lt",
-    "checkedAt": "2026-09-03T09:40:46.819Z",
+    "checkedAt": "2026-09-03T09:58:32.892Z",
     "gtin": "800928000275",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2819,13 +3149,15 @@
     "totalSugarG": 3.8,
     "fiberG": 4.4,
     "saltG": 2.1,
-    "saturatedFatG": 2.2
+    "saturatedFatG": 2.2,
+    "carbohydrateG": 73,
+    "fatG": 6.5
   },
   {
     "productId": "livinn_lt:360302003694",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/senovines-italiskos-lazdeles-rustici-con-cruscas-360302003694-lt",
-    "checkedAt": "2026-09-03T09:40:48.390Z",
+    "checkedAt": "2026-09-03T09:58:34.676Z",
     "gtin": "800928000276",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2836,13 +3168,15 @@
     "totalSugarG": 3,
     "fiberG": 6,
     "saltG": 2.2,
-    "saturatedFatG": 2.7
+    "saturatedFatG": 2.7,
+    "carbohydrateG": 67,
+    "fatG": 8
   },
   {
     "productId": "livinn_lt:360302003700",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/senovines-italiskos-lazdeles-grissini-ruztici-360302003700-lt",
-    "checkedAt": "2026-09-03T09:40:49.925Z",
+    "checkedAt": "2026-09-03T09:58:36.307Z",
     "gtin": "800928000272",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2853,13 +3187,15 @@
     "totalSugarG": 2.5,
     "fiberG": 4,
     "saltG": 2.1,
-    "saturatedFatG": 0.7
+    "saturatedFatG": 0.7,
+    "carbohydrateG": 73,
+    "fatG": 6.5
   },
   {
     "productId": "livinn_lt:360302003701",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lazdeles-grissini-torinesi-360302003701-lt",
-    "checkedAt": "2026-09-03T09:40:51.562Z",
+    "checkedAt": "2026-09-03T09:58:37.812Z",
     "gtin": "800928000216",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2870,13 +3206,15 @@
     "totalSugarG": 3.5,
     "fiberG": 4,
     "saltG": 2.3,
-    "saturatedFatG": 0.8
+    "saturatedFatG": 0.8,
+    "carbohydrateG": 72,
+    "fatG": 8.5
   },
   {
     "productId": "livinn_lt:360302003702",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lazdeles-su-druska-grissini-saltelli-360302003702-lt",
-    "checkedAt": "2026-09-03T09:40:53.156Z",
+    "checkedAt": "2026-09-03T09:58:39.369Z",
     "gtin": "800928000157",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2887,13 +3225,15 @@
     "totalSugarG": 2,
     "fiberG": 4,
     "saltG": 2.7,
-    "saturatedFatG": 1.4
+    "saturatedFatG": 1.4,
+    "carbohydrateG": 67,
+    "fatG": 12
   },
   {
     "productId": "livinn_lt:360302003703",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/picos-skonio-lazdeles-mini-grissini-pizza-360302003703-lt",
-    "checkedAt": "2026-09-03T09:40:54.670Z",
+    "checkedAt": "2026-09-03T09:58:40.888Z",
     "gtin": "800928000352",
     "category": "Maistas > Užkandžiai > Krekeriai ir trapučiai",
     "nutritionBasis": "100g",
@@ -2904,13 +3244,15 @@
     "totalSugarG": 2.5,
     "fiberG": 3,
     "saltG": 2,
-    "saturatedFatG": 1.6
+    "saturatedFatG": 1.6,
+    "carbohydrateG": 65,
+    "fatG": 16
   },
   {
     "productId": "livinn_lt:460305003716",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-su-juodaisiais-ikrais-caviar-460305003716-lt",
-    "checkedAt": "2026-09-03T09:40:56.117Z",
+    "checkedAt": "2026-09-03T09:58:42.411Z",
     "gtin": "842694400115",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2921,13 +3263,15 @@
     "totalSugarG": null,
     "fiberG": 4.1,
     "saltG": 0.85,
-    "saturatedFatG": 6
+    "saturatedFatG": 6,
+    "carbohydrateG": 40,
+    "fatG": 48
   },
   {
     "productId": "livinn_lt:460305003717",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-su-trumais-trufa-negra-460305003717-lt",
-    "checkedAt": "2026-09-03T09:40:57.735Z",
+    "checkedAt": "2026-09-03T09:58:44.006Z",
     "gtin": "842694400107",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2938,13 +3282,15 @@
     "totalSugarG": null,
     "fiberG": 3.8,
     "saltG": 1.5,
-    "saturatedFatG": 5.4
+    "saturatedFatG": 5.4,
+    "carbohydrateG": 41,
+    "fatG": 44
   },
   {
     "productId": "livinn_lt:460305003718",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-su-trumais-trufa-negra-460305003718-lt",
-    "checkedAt": "2026-09-03T09:40:59.724Z",
+    "checkedAt": "2026-09-03T09:58:45.540Z",
     "gtin": "842694400110",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2955,13 +3301,15 @@
     "totalSugarG": null,
     "fiberG": 3.8,
     "saltG": 1.5,
-    "saturatedFatG": 5.4
+    "saturatedFatG": 5.4,
+    "carbohydrateG": 41,
+    "fatG": 44
   },
   {
     "productId": "livinn_lt:460305003721",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-hierbas-mediterraneas-460305003721-lt",
-    "checkedAt": "2026-09-03T09:41:01.250Z",
+    "checkedAt": "2026-09-03T09:58:47.097Z",
     "gtin": "842694400109",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2972,13 +3320,15 @@
     "totalSugarG": 0.5,
     "fiberG": null,
     "saltG": 0.4,
-    "saturatedFatG": 5.3
+    "saturatedFatG": 5.3,
+    "carbohydrateG": 44,
+    "fatG": 43
   },
   {
     "productId": "livinn_lt:460305005197",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-iberijos-kumpio-skonio-460305005197-lt",
-    "checkedAt": "2026-09-03T09:41:02.791Z",
+    "checkedAt": "2026-09-03T09:58:48.489Z",
     "gtin": "842694402125",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -2989,13 +3339,15 @@
     "totalSugarG": 0.6,
     "fiberG": 4.2,
     "saltG": 0.9,
-    "saturatedFatG": 5.7
+    "saturatedFatG": 5.7,
+    "carbohydrateG": 41,
+    "fatG": 47
   },
   {
     "productId": "livinn_lt:560305001731",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-su-rukyta-aitriaja-paprika-560305001731-lt",
-    "checkedAt": "2026-09-03T09:41:04.537Z",
+    "checkedAt": "2026-09-03T09:58:49.923Z",
     "gtin": "842694404050",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3006,13 +3358,15 @@
     "totalSugarG": null,
     "fiberG": null,
     "saltG": 1.2,
-    "saturatedFatG": 3.5
+    "saturatedFatG": 3.5,
+    "carbohydrateG": 5.2,
+    "fatG": 33
   },
   {
     "productId": "livinn_lt:ALCE80972",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/alce-nero-sezamu-ir-medaus-batonelis-22-g",
-    "checkedAt": "2026-09-03T09:41:06.104Z",
+    "checkedAt": "2026-09-03T09:58:51.633Z",
     "gtin": "800900480972",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -3023,13 +3377,15 @@
     "totalSugarG": 37.4,
     "fiberG": 6.2,
     "saltG": 5.6,
-    "saturatedFatG": 3.5
+    "saturatedFatG": 3.5,
+    "carbohydrateG": 49.2,
+    "fatG": 25.3
   },
   {
     "productId": "livinn_lt:ALKE2056",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/batonelis-pusta-vaikyste",
-    "checkedAt": "2026-09-03T09:41:07.661Z",
+    "checkedAt": "2026-09-03T09:58:53.196Z",
     "gtin": "477904712056",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -3040,13 +3396,15 @@
     "totalSugarG": 22,
     "fiberG": null,
     "saltG": 0.18,
-    "saturatedFatG": 14
+    "saturatedFatG": 14,
+    "carbohydrateG": 35,
+    "fatG": 32
   },
   {
     "productId": "livinn_lt:ALKE2120",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/pusta-vaikyste-su-vysniomis-ir-migdolais-40-g-alke2120-lt",
-    "checkedAt": "2026-09-03T09:41:09.430Z",
+    "checkedAt": "2026-09-03T09:58:54.862Z",
     "gtin": "477904712120",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -3057,13 +3415,15 @@
     "totalSugarG": 28,
     "fiberG": 5.2,
     "saltG": 0.13,
-    "saturatedFatG": 11
+    "saturatedFatG": 11,
+    "carbohydrateG": 44,
+    "fatG": 26
   },
   {
     "productId": "livinn_lt:ALKE2121",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/pusta-vaikyste-su-cinamonu-ir-obuoliais-40-g-alke2121-lt",
-    "checkedAt": "2026-09-03T09:41:10.947Z",
+    "checkedAt": "2026-09-03T09:58:56.428Z",
     "gtin": "477904712121",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -3074,13 +3434,15 @@
     "totalSugarG": 30,
     "fiberG": 5.7,
     "saltG": 0.14,
-    "saturatedFatG": 11
+    "saturatedFatG": 11,
+    "carbohydrateG": 47,
+    "fatG": 23
   },
   {
     "productId": "livinn_lt:BIOS3196",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/kepti-kukuruzu-traskuciai-su-meduoliu-prieskoniais-ekologiski-50-g-bios3196-lt",
-    "checkedAt": "2026-09-03T09:41:14.885Z",
+    "checkedAt": "2026-09-03T09:58:58.262Z",
     "gtin": "858800773196",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3091,13 +3453,15 @@
     "totalSugarG": 4.7,
     "fiberG": 4.3,
     "saltG": 0.27,
-    "saturatedFatG": 1.6
+    "saturatedFatG": 1.6,
+    "carbohydrateG": 67,
+    "fatG": 14.5
   },
   {
     "productId": "livinn_lt:BIOS3831",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/biosaurus-kepti-kukuruzu-traskuciai-su-surio-prieskoniais-ekologiski-bios3831-lt",
-    "checkedAt": "2026-09-03T09:41:16.670Z",
+    "checkedAt": "2026-09-03T09:59:00.044Z",
     "gtin": "858800463831",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3108,13 +3472,15 @@
     "totalSugarG": 3.5,
     "fiberG": 3.7,
     "saltG": 1.4,
-    "saturatedFatG": 1.8
+    "saturatedFatG": 1.8,
+    "carbohydrateG": 65,
+    "fatG": 17.6
   },
   {
     "productId": "livinn_lt:BIOS3832",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/biosaurus-kepti-kukuruzu-traskuciai-su-kecupo-prieskoniais-ekologiski-bios3832-lt",
-    "checkedAt": "2026-09-03T09:41:18.238Z",
+    "checkedAt": "2026-09-03T09:59:01.652Z",
     "gtin": "858800463832",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3125,13 +3491,15 @@
     "totalSugarG": 2.6,
     "fiberG": 3,
     "saltG": 0.61,
-    "saturatedFatG": 1.4
+    "saturatedFatG": 1.4,
+    "carbohydrateG": 67,
+    "fatG": 16.8
   },
   {
     "productId": "livinn_lt:BIOS3833",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/biosaurus-kepti-kukuruzu-traskuciai-su-juros-druska-ekologiski-bios3833-lt",
-    "checkedAt": "2026-09-03T09:41:20.716Z",
+    "checkedAt": "2026-09-03T09:59:03.277Z",
     "gtin": "858800463833",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3142,13 +3510,15 @@
     "totalSugarG": 1.9,
     "fiberG": 3,
     "saltG": 0.84,
-    "saturatedFatG": 1.5
+    "saturatedFatG": 1.5,
+    "carbohydrateG": 58.4,
+    "fatG": 16.5
   },
   {
     "productId": "livinn_lt:CARE0046",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/funkcinis-juodojo-sokolado-batonelis-neuriq-50-g-care0046-lt",
-    "checkedAt": "2026-09-03T09:41:22.211Z",
+    "checkedAt": "2026-09-03T09:59:04.763Z",
     "gtin": "085003730046",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -3159,13 +3529,15 @@
     "totalSugarG": 22.2,
     "fiberG": 11.8,
     "saltG": 0.14,
-    "saturatedFatG": 12.4
+    "saturatedFatG": 12.4,
+    "carbohydrateG": 48,
+    "fatG": 21.6
   },
   {
     "productId": "livinn_lt:CARE0048",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/funkcinis-pienisko-sokolado-batonelis-immuniq-50-g-care0048-lt",
-    "checkedAt": "2026-09-03T09:41:23.698Z",
+    "checkedAt": "2026-09-03T09:59:06.504Z",
     "gtin": "085003730048",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -3176,13 +3548,15 @@
     "totalSugarG": 22.4,
     "fiberG": 10.8,
     "saltG": 0.08,
-    "saturatedFatG": 12.4
+    "saturatedFatG": 12.4,
+    "carbohydrateG": 48,
+    "fatG": 22.6
   },
   {
     "productId": "livinn_lt:CARE0050",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/funkcinis-baltojo-sokolado-batonelis-regeneriq-50-g-care0050-lt",
-    "checkedAt": "2026-09-03T09:41:26.289Z",
+    "checkedAt": "2026-09-03T09:59:08.028Z",
     "gtin": "085003730050",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -3193,13 +3567,15 @@
     "totalSugarG": 23.6,
     "fiberG": 10.2,
     "saltG": 0.14,
-    "saturatedFatG": 12.4
+    "saturatedFatG": 12.4,
+    "carbohydrateG": 48.8,
+    "fatG": 19.2
   },
   {
     "productId": "livinn_lt:ENER0017",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/funkcinis-zemes-rie-sutu-kremo-batonelis-sveikeris-original-78-g-ener0017-lt",
-    "checkedAt": "2026-09-03T09:41:27.819Z",
+    "checkedAt": "2026-09-03T09:59:09.559Z",
     "gtin": "477800050017",
     "category": "Maistas > Skanėstai > Batonėliai",
     "nutritionBasis": "100g",
@@ -3210,13 +3586,15 @@
     "totalSugarG": 12.3,
     "fiberG": null,
     "saltG": 0.26,
-    "saturatedFatG": 28.4
+    "saturatedFatG": 28.4,
+    "carbohydrateG": 27.8,
+    "fatG": 45.2
   },
   {
     "productId": "livinn_lt:GAR403",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/rugiu-seleneliu-traskuciai-100-g",
-    "checkedAt": "2026-09-03T09:41:29.877Z",
+    "checkedAt": "2026-09-03T09:59:11.043Z",
     "gtin": "477028712408",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3227,13 +3605,15 @@
     "totalSugarG": 0.2,
     "fiberG": null,
     "saltG": 1.5,
-    "saturatedFatG": 1.4
+    "saturatedFatG": 1.4,
+    "carbohydrateG": 26.9,
+    "fatG": 14.5
   },
   {
     "productId": "livinn_lt:GAR415",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/burokeliu-traskuciai-50-g",
-    "checkedAt": "2026-09-03T09:41:31.645Z",
+    "checkedAt": "2026-09-03T09:59:12.656Z",
     "gtin": "475101889078",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3244,13 +3624,15 @@
     "totalSugarG": null,
     "fiberG": null,
     "saltG": null,
-    "saturatedFatG": null
+    "saturatedFatG": null,
+    "carbohydrateG": null,
+    "fatG": null
   },
   {
     "productId": "livinn_lt:GAR417",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lapiniu-kopustu-traskuciai-su-citrinzole-30-g",
-    "checkedAt": "2026-09-03T09:41:35.242Z",
+    "checkedAt": "2026-09-03T09:59:14.269Z",
     "gtin": "475101889067",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3261,13 +3643,15 @@
     "totalSugarG": 29,
     "fiberG": 8.7,
     "saltG": 0.13,
-    "saturatedFatG": 6.9
+    "saturatedFatG": 6.9,
+    "carbohydrateG": 39,
+    "fatG": 40
   },
   {
     "productId": "livinn_lt:GAR493",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/traskus-speltos-rutuliukai-su-pomidorais-ir-morkomis-biodinaminiai-40-g",
-    "checkedAt": "2026-09-03T09:41:37.094Z",
+    "checkedAt": "2026-09-03T09:59:16.072Z",
     "gtin": "426031198139",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3278,13 +3662,15 @@
     "totalSugarG": 2,
     "fiberG": 3.3,
     "saltG": 2.5,
-    "saturatedFatG": 3.3
+    "saturatedFatG": 3.3,
+    "carbohydrateG": 54,
+    "fatG": 27
   },
   {
     "productId": "livinn_lt:GAR501",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/humuso-traskuciai-su-saldziaisiais-cili-pipirais-ekologiski-75-g",
-    "checkedAt": "2026-09-03T09:41:38.731Z",
+    "checkedAt": "2026-09-03T09:59:17.721Z",
     "gtin": "871915301515",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3295,13 +3681,15 @@
     "totalSugarG": 2.6,
     "fiberG": 5.9,
     "saltG": 1.8,
-    "saturatedFatG": 1.8
+    "saturatedFatG": 1.8,
+    "carbohydrateG": 64,
+    "fatG": 22
   },
   {
     "productId": "livinn_lt:GAR536",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/saldziuju-bulviu-traskuciai-40g",
-    "checkedAt": "2026-09-03T09:41:40.468Z",
+    "checkedAt": "2026-09-03T09:59:19.321Z",
     "gtin": "475101889195",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3312,13 +3700,15 @@
     "totalSugarG": 0.03,
     "fiberG": 13,
     "saltG": 2.9,
-    "saturatedFatG": 2.4
+    "saturatedFatG": 2.4,
+    "carbohydrateG": 71.22,
+    "fatG": 17
   },
   {
     "productId": "livinn_lt:GAR620",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/lesiu-traskuciai-su-rozmarinais-ekologiski-75-g-gar620-lt",
-    "checkedAt": "2026-09-03T09:41:42.106Z",
+    "checkedAt": "2026-09-03T09:59:20.902Z",
     "gtin": "871915304778",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3329,13 +3719,15 @@
     "totalSugarG": 0,
     "fiberG": 3.9,
     "saltG": 2.1,
-    "saturatedFatG": 1.4
+    "saturatedFatG": 1.4,
+    "carbohydrateG": 62,
+    "fatG": 17
   },
   {
     "productId": "livinn_lt:GAR621",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/humuso-traskuciai-su-kario-prieskoniais-ekologiski-75-g-gar621-lt",
-    "checkedAt": "2026-09-03T09:41:45.418Z",
+    "checkedAt": "2026-09-03T09:59:22.405Z",
     "gtin": "871915304779",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3346,13 +3738,15 @@
     "totalSugarG": 0,
     "fiberG": 5.3,
     "saltG": 1.4,
-    "saturatedFatG": 2.4
+    "saturatedFatG": 2.4,
+    "carbohydrateG": 62,
+    "fatG": 25
   },
   {
     "productId": "livinn_lt:GOPU0441",
     "source": "livinn_lt",
     "sourceUrl": "https://www.livinn.lt/p/bulviu-traskuciai-su-juros-druska-ir-balzaminiu-actu-ekologiski-125-g-gopu0441-lt",
-    "checkedAt": "2026-09-03T09:41:46.933Z",
+    "checkedAt": "2026-09-03T09:59:24.058Z",
     "gtin": "871878120441",
     "category": "Maistas > Užkandžiai > Traškučiai",
     "nutritionBasis": "100g",
@@ -3363,6 +3757,8 @@
     "totalSugarG": 0.91,
     "fiberG": 4.6,
     "saltG": 0.97,
-    "saturatedFatG": 3
+    "saturatedFatG": 3,
+    "carbohydrateG": 50,
+    "fatG": 35
   }
 ]

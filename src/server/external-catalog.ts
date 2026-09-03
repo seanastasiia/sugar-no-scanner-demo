@@ -13,6 +13,7 @@ import {
 } from "./barbora-catalog";
 import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "./external-catalog-types";
 import { getShelfEvidence } from "./personal-shelf-evidence";
+import { applyShelfNutritionTrustGuard } from "@/lib/personal-shelf-rank";
 
 interface RankedExternalCatalogCandidate {
   product: ExternalCatalogProduct;
@@ -310,7 +311,7 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
     isGolden: false,
     accent: "coral"
   };
-  return scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial");
+  return applyShelfNutritionTrustGuard(scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial"));
 }
 
 export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogIdentity): ScoredProduct {

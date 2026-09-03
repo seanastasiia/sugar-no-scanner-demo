@@ -5,6 +5,7 @@ import regionalBulkSnapshot from "../../data/open-food-facts-regional.generated.
 import type { ExternalCatalogProduct } from "./external-catalog-types";
 import { openFoodFactsProductNames } from "./open-food-facts-bulk";
 import { offShelfEvidence } from "./personal-shelf-parser";
+import { applyShelfNutritionTrustGuard } from "@/lib/personal-shelf-rank";
 import {
   normalizeRetailQuantityText,
   normalizeRetailText,
@@ -23,6 +24,7 @@ interface OpenFoodFactsNutriments {
   salt_100g?: number;
   sodium_100g?: number;
   "saturated-fat_100g"?: number;
+  fat_100g?: number;
 }
 
 export interface OpenFoodFactsProduct {
@@ -131,7 +133,8 @@ function bulkProductToOpenFoodFactsProduct(source: ExternalCatalogProduct): Open
       carbohydrates_100g: source.carbohydrateG ?? undefined,
       fiber_100g: source.shelfEvidence?.fiberG ?? undefined,
       salt_100g: source.shelfEvidence?.saltG ?? undefined,
-      "saturated-fat_100g": source.shelfEvidence?.saturatedFatG ?? undefined
+      "saturated-fat_100g": source.shelfEvidence?.saturatedFatG ?? undefined,
+      fat_100g: source.shelfEvidence?.fatG ?? undefined
     },
     image_front_url: source.imageUrl,
     categories: source.category
@@ -365,7 +368,7 @@ export function openFoodFactsToScoredProduct(
       status: "secondary"
     }
   ];
-  return scoreReferenceProduct(record, "open_food_facts_reference", "open_food_facts_reference_partial");
+  return applyShelfNutritionTrustGuard(scoreReferenceProduct(record, "open_food_facts_reference", "open_food_facts_reference_partial"));
 }
 
 async function fetchByBarcode(barcode: string): Promise<OpenFoodFactsProduct | null> {

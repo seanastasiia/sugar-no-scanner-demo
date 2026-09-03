@@ -3,6 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { shelfFixture } from "../fixtures/personal-shelf";
 import type { ScoredProduct } from "../../src/lib/types";
 import type { ShelfEvidence } from "../../src/lib/personal-shelf-rank";
+import { applyShelfNutritionTrustGuard } from "../../src/lib/personal-shelf-rank";
 import type { ExternalCatalogProduct } from "../../src/server/external-catalog-types";
 
 async function authenticate(page: Page) {
@@ -194,24 +195,26 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   // Do not load Next's JSON module graph into the standalone Node/Playwright runner.
   const observations: ShelfEvidence[] = JSON.parse(await readFile("data/personal-shelf-evidence.generated.json", "utf8"));
   const catalog: ExternalCatalogProduct[] = JSON.parse(await readFile("data/livinn-catalog.generated.json", "utf8"));
-  const samples = ["03000011072", "03000011074"].map((sku) => {
+  const samples = ["03000011072", "03000011075", "03000011074"].map((sku) => {
     const id = `livinn_lt:${sku}`;
     const source = catalog.find((row) => row.sourceProductId === sku)!;
     const evidence = observations.find((row) => row.productId === id)!;
-    return { ...shelfFixture(id, evidence), brand: source.brand, name: source.title, shortName: source.title, imageUrl: source.imageUrl, gtin: source.gtin };
+    return applyShelfNutritionTrustGuard({ ...shelfFixture(id, evidence), brand: source.brand, name: source.title, shortName: source.title, imageUrl: source.imageUrl, gtin: source.gtin });
   });
   // Recognition is mocked; ingredient/nutrition evidence below is the real dated snapshot.
   await openPersonalShelfFixture(page, samples);
   await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
   const chips = page.getByRole("region", { name: "Chips", exact: true });
   await expect(chips.getByText("#1 of 2 in chips", { exact: true })).toBeVisible();
-  await expect(chips.getByRole("heading", { level: 4 }).first()).toHaveText(samples[1].shortName);
-  await expect(chips.getByText("71/100", { exact: true })).toBeVisible();
+  await expect(chips.getByRole("heading", { level: 4 }).first()).toHaveText(samples[0].shortName);
+  await expect(chips.getByText("64/100", { exact: true })).toBeVisible();
+  await expect(chips.getByText(/Missing or unverified: consistent nutrition totals/)).toBeVisible();
   await expectNoDocumentOverflow(page);
-  await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn.png"), fullPage: true });
+  await expect.poll(() => chips.getByTestId("product-packshot").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete)), { timeout: 10_000 }).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn.png"), fullPage: true, animations: "disabled" });
   await chips.getByText("Why this score?", { exact: true }).first().click();
   await expect(chips.locator("details[open]").getByText("Original ingredients (lt)", { exact: true })).toBeVisible();
-  await expect(chips.locator("details[open]").getByRole("link", { name: "Open exact source" })).toHaveAttribute("href", samples[1].shelfEvidence!.sourceUrl);
+  await expect(chips.locator("details[open]").getByRole("link", { name: "Open exact source" })).toHaveAttribute("href", samples[0].shelfEvidence!.sourceUrl);
 });
 
 async function mockSampleShelfRecognition(page: Page) {
