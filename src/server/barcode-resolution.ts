@@ -2,6 +2,7 @@ import type { ProductDetection, ScoredProduct } from "@/lib/types";
 import { getExternalCatalogIdentityByBarcode, getExternalCatalogProductByBarcode } from "./external-catalog";
 import { getOpenFoodFactsBulkProductByBarcode } from "./open-food-facts";
 import { findSharedWebProductByBarcode } from "./shared-web-catalog";
+import { validWebGtin } from "./web-product-evidence";
 
 export interface BarcodeResolution {
   detection: ProductDetection;
@@ -22,8 +23,9 @@ export function resolveBarcodeFromKnownCatalogs(
   barcode: string,
   catalog: ScoredProduct[]
 ): BarcodeResolution | null {
-  if (!/^\d{8,14}$/.test(barcode)) return null;
-  const catalogProduct = catalog.find((product) => product.gtin === barcode);
+  const canonical = validWebGtin(barcode);
+  if (!canonical) return null;
+  const catalogProduct = catalog.find((product) => product.gtin === barcode || validWebGtin(product.gtin) === canonical);
   const external = catalogProduct ? null : getExternalCatalogProductByBarcode(barcode);
   const off = catalogProduct || external ? null : getOpenFoodFactsBulkProductByBarcode(barcode);
   const externalIdentity = catalogProduct || external || off ? null : getExternalCatalogIdentityByBarcode(barcode);

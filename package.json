@@ -25,6 +25,7 @@
     "catalog:sync:shelf-demo": "tsx scripts/sync-shelf-demo-evidence.ts",
     "catalog:sync:shelf-batch": "tsx scripts/sync-personal-shelf-batch.ts",
     "catalog:audit:personal-fit": "tsx scripts/audit-personal-shelf-catalog.ts",
+    "catalog:report:personal-fit": "tsx scripts/report-personal-shelf-quality.ts",
     "catalog:validate:shelf-pilot": "tsx scripts/validate-personal-shelf-evidence.ts",
     "supabase:seed:shelf-pilot": "tsx scripts/seed-personal-shelf-evidence.ts",
     "catalog:sync:barbora-index": "tsx scripts/sync-barbora-index.ts",

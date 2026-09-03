@@ -106,12 +106,73 @@ describe("Personal Shelf Rank, independent pilot", () => {
     expect(shelfCategory("Saldumi-un-uzkodas > batonini > musli")).toBe("bar");
     expect(shelfCategory("Breakfast cereals", "bar")).toBe("bar");
   });
+  it.each([
+    ["Saldētā pārtika/Saldējums un ledus/Porcijas saldējumi", "ice-cream"],
+    ["Bakaleja/Uzkodas/Kukurūzas nūjiņas un popkorns", "savory-snack"],
+    ["Maize un konditoreja/Maize/Tumšā maize", "bread"],
+    ["Maistas > Makaronai > Ryžių makaronai", "pasta"],
+    ["Rieksti un žāvēti augļi/Rieksti", "nuts-seeds"],
+    ["Maistas > Džiovinti vaisiai ir daržovės > Vaisiai ir uogos", "dried-fruit"],
+    ["Saldumi/Šokolāde/Piena šokolāde", "chocolate"],
+    ["Skanėstai > Guminukai", "candy"],
+    ["Piena produkti un olas/Siers/Fermentēts siers", "cheese"],
+    ["Gaļas un mājputnu produkti/Vārītas desas", "meat-product"],
+    ["Zivju produkti/Zivs konservi un salāti", "fish-product"],
+    ["Padažai ir užtepai > Padažai", "sauce"]
+  ])("maps a reviewed source family without using the product name: %s", (category, expected) => {
+    expect(shelfCategory(category)).toBe(expected);
+  });
+  it("preserves specific existing families ahead of broad fallback categories", () => {
+    expect(shelfCategory("Maistas > Skanėstai > Sausainiai > Sausainiai su šokoladu")).toBe("cookie");
+    expect(shelfCategory("saldumi-un-uzkodas > batonini > sokolades-auglu-un-marcipana")).toBe("bar");
+    expect(shelfCategory("jogurti-un-deserti > biezpiena-sierini")).toBe("dairy-dessert");
+    expect(shelfCategory("Saldējums konusa vafelē vai glāzītē")).toBe("cookie");
+  });
+  it.each(["Tea", "Spices", "Soft drinks", "Maistas > Gėrimai > Sultys", "Baby food > Cheese"])("keeps incomparable or liquid source categories unsupported: %s", (category) => {
+    expect(shelfCategory(category)).toBeNull();
+  });
   it.each([["Seeds (sunflower seeds, pumpkin seeds), salt", "en"], ["Sėklos (saulėgrąžų sėklos, moliūgų sėklos), druska", "lt"], ["Sēklas (saulespuķu sēklas), sāls", "lv"], ["Семена подсолнечника, соль", "ru"], ["Päevalilleseemned, sool", "et"]])("recognizes explicit seed bases in %s", (text, language) => {
     expect(analyzeIngredients(text, language)?.score).toBe(100);
   });
   it("does not turn seed oil or isolated seed protein into whole-seed credit", () => {
     expect(analyzeIngredients("Sunflower seed oil, salt", "en")?.score).toBeNull();
     expect(analyzeIngredients("Pumpkin seed protein, salt", "en")?.score).toBe(25);
+  });
+  it.each([
+    ["Tomatoes, salt", "en", 100], ["Datulės, riešutai", "lt", 100], ["Cocoa mass, sugar", "en", 40],
+    ["Durum wheat semolina, water", "en", 25], ["Cūkgaļa, sāls", "lv", 85], ["Тунец, соль", "ru", 85]
+  ])("recognizes an explicit whole/refined food base without translation: %s", (text, language, score) => {
+    expect(analyzeIngredients(text, language, "sauce")?.score).toBe(score);
+  });
+  it("does not let a new-family ingredient alias change legacy category scoring", () => {
+    expect(analyzeIngredients("Dates, cocoa", "en")?.score).toBeNull();
+    expect(analyzeIngredients("Dates, cocoa", "en", "cookie")?.score).toBeNull();
+    expect(analyzeIngredients("Dates, cocoa", "en", "dried-fruit")?.score).toBe(100);
+  });
+  it("rejects source placeholder zeroes that conflict with a new-family ingredient list or total fat", () => {
+    const chocolate = shelfFixture("chocolate", { category: "Dark chocolate", ingredientsText: "Cocoa mass, cocoa butter, sugar", totalSugarG: 0,
+      saturatedFatG: 0, carbohydrateG: 19, fatG: 46, fiberG: null });
+    const result = assessPersonalShelfProduct(chocolate);
+    expect(result.status).toBe("missing_data");
+    expect(result.missing).toContain("consistent zero sugar and ingredient list");
+    expect(result.missing).toContain("consistent zero saturated fat and total fat");
+    const fish = assessPersonalShelfProduct(shelfFixture("fish", { category: "Canned fish", ingredientsText: "Tuna, salt", totalSugarG: 0, saltG: 0, saturatedFatG: 1, fatG: 10 }));
+    expect(fish.missing).toContain("consistent zero salt and ingredient list");
+  });
+  it("does not retroactively apply new-family placeholder rules to the original seven categories", () => {
+    expect(assessPersonalShelfProduct(shelfFixture("chips", { category: "Chips", ingredientsText: "Potatoes, sunflower oil, salt", saltG: 0, saturatedFatG: 0, fatG: 30 })).status).toBe("scored");
+  });
+  it("limits missing-fiber uncertainty to ten points in every category", () => {
+    for (const [category, config] of Object.entries(SHELF_CATEGORIES)) {
+      expect(config.weights.balance * config.balance.fiber).toBeLessThanOrEqual(10.00001);
+      const result = assessPersonalShelfProduct(shelfFixture(category, { category, ingredientsText: "Wholegrain oats, salt", fiberG: null }));
+      if (config.balance.fiber && result.scoreRange) expect(result.scoreRange.max - result.scoreRange.min).toBeLessThanOrEqual(10);
+    }
+  });
+  it("does not give full food-base credit to a low-share or mechanically separated meat base", () => {
+    expect(analyzeIngredients("Pork 92%, salt", "en", "meat-product")?.score).toBe(85);
+    expect(analyzeIngredients("Fish 40%, water, salt", "en", "fish-product")?.score).toBe(40);
+    expect(analyzeIngredients("Mehāniski atdalīta vistas gaļa 29%, water", "lv", "meat-product")?.score).toBe(40);
   });
   it("rates dry cereals separately and keeps missing fiber bounded and essentials unknown", () => {
     const cereal = shelfFixture("cereal", { category: "Breakfast cereals", ingredientsText: "Wholegrain oats, salt", fiberG: null });

@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { assessPersonalShelfProduct, hasContradictoryShelfNutrition, shelfScoreBounds } from "../src/lib/personal-shelf-rank";
+import { assessPersonalShelfProduct, hasContradictoryShelfNutrition, shelfScoreBounds, SHELF_CATEGORIES } from "../src/lib/personal-shelf-rank";
 import { parseShelfEvidence } from "../src/server/personal-shelf-evidence";
 import { getCatalog } from "../src/lib/catalog";
 import { SHELF_DEMO_PRODUCTS } from "../src/lib/shelf-demo-products";
@@ -22,7 +22,7 @@ for (const row of rows) {
   if (assessment.score !== null) {
     group.scored++;
     if (!Number.isInteger(assessment.score) || assessment.score < 0 || assessment.score > 100 || assessment.components.some((part) => part.points < 0 || part.points > part.weight)) throw new Error(`Invalid pilot score: ${evidence.productId}`);
-    if (assessment.category !== "yogurt" && assessment.category !== "dairy-dessert") {
+    if (assessment.category && SHELF_CATEGORIES[assessment.category].balance.fiber) {
       const masked = assessPersonalShelfProduct({ id: evidence.productId, gtin: evidence.gtin, category: evidence.category, format: "other", shelfEvidence: { ...evidence, fiberG: null } });
       if (!masked.scoreRange || masked.scoreRange.min > assessment.score || masked.scoreRange.max < assessment.score) throw new Error(`Fiber bounds do not enclose the complete score: ${evidence.productId}`);
     }
@@ -30,8 +30,11 @@ for (const row of rows) {
   if (assessment.scoreRange) {
     group.provisional++;
     const { min, max } = assessment.scoreRange;
+    const fiberRangeMaximum = assessment.category
+      ? Math.ceil(SHELF_CATEGORIES[assessment.category].weights.balance * SHELF_CATEGORIES[assessment.category].balance.fiber)
+      : 0;
     if (assessment.status !== "provisional" || evidence.fiberG !== null || assessment.score !== null ||
-      !Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max > 100 || min > max || max - min > 10) throw new Error(`Invalid interval: ${evidence.productId}`);
+      !Number.isInteger(min) || !Number.isInteger(max) || min < 0 || max > 100 || min > max || max - min > fiberRangeMaximum) throw new Error(`Invalid interval: ${evidence.productId}`);
   }
   if (hasContradictoryShelfNutrition(evidence)) {
     if (shelfScoreBounds(assessment)) throw new Error(`Contradictory source was scored: ${evidence.productId}`);

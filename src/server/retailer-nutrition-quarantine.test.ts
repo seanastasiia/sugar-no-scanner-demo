@@ -15,7 +15,8 @@ describe("production Livinn nutrition quarantine", () => {
     });
     expect(product?.name).toBeTruthy();
     expect(product?.sources[0].url).toBe(entry.sourceUrl);
-    expect(resolveBarcodeFromKnownCatalogs(product!.gtin!, [])?.detection.inlineProduct?.matchScore).toBeNull();
+    expect(product?.gtin).toBeNull();
+    expect(resolveBarcodeFromKnownCatalogs(entry.sourceProductId, [])).toBeNull();
   });
 
   it("keeps the verified Bett'r rice cakes rated", () => {
@@ -25,7 +26,7 @@ describe("production Livinn nutrition quarantine", () => {
   });
 
   it("reports only eligible nutrition records in runtime health counts", () => {
-    expect(externalCatalogCounts().livinn_lt).toBe(1853);
+    expect(externalCatalogCounts().livinn_lt).toBe(1851);
   });
 
   it("does not quarantine another retailer using the same local ID", () => {

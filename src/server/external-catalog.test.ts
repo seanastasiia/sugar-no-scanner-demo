@@ -226,6 +226,12 @@ describe("external retailer catalog", () => {
     expect(scored.id).toBe("livinn_lt:1G1701009280");
     expect(scored.ratingStatus).toBe("identity_only");
     expect(scored.matchScore).toBeNull();
+    expect(scored.gtin).toBeNull();
+    expect(scored.shelfEvidence).toMatchObject({
+      productId: "livinn_lt:1G1701009280",
+      proteinG: 8.1,
+      totalSugarG: 1.8
+    });
     expect(scored.nutrientsPer100g).toEqual({
       proteinG: null,
       fiberG: null,
@@ -241,6 +247,21 @@ describe("external retailer catalog", () => {
       [candidate]
     );
     expect(ranked[0]?.product.sourceProductId).toBe("330");
+  });
+
+  it("never treats a retailer SKU as a GTIN or lets it block exact source evidence", () => {
+    const invalidIdentity: ExternalCatalogIdentity = {
+      source: "livinn_lt", sourceProductId: "02000005925", retailer: "Livin", url: "https://www.livinn.lt/p/example-02000005925",
+      title: "Prieskonių mišinys", aliases: [], brand: "Sonnentor", gtin: "02000005925", sku: "02000005925", category: "Prieskoniai",
+      packSize: "35 g", imageUrl: null, price: null, currency: null, available: true, checkedAt: "2026-09-02T00:00:00.000Z"
+    };
+    const invalidProduct: ExternalCatalogProduct = { ...product, gtin: "02000005925" };
+    expect(externalCatalogIdentityToScoredProduct(invalidIdentity).gtin).toBeNull();
+    expect(externalCatalogToScoredProduct(invalidProduct).gtin).toBeNull();
+    expect(dedupeExternalCatalogProducts([
+      { ...invalidProduct, sourceProductId: "a", title: "Product A" },
+      { ...invalidProduct, sourceProductId: "b", title: "Product B" }
+    ])).toHaveLength(2);
   });
 
   it.each([

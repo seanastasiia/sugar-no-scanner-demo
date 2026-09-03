@@ -1,11 +1,12 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { assessPersonalShelfProduct, shelfCategory, SHELF_CATEGORIES, type ShelfEvidence } from "../src/lib/personal-shelf-rank";
 import { barboraShelfEvidence, livinnShelfEvidence, offShelfEvidence, rimiShelfCategory, rimiShelfEvidence } from "../src/server/personal-shelf-parser";
 import { parseBarboraProductPage } from "../src/server/barbora-catalog";
 import { parseShelfEvidence } from "../src/server/personal-shelf-evidence";
-import type { ExternalCatalogProduct } from "../src/server/external-catalog-types";
+import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "../src/server/external-catalog-types";
 import type { BarboraNutritionIndexProduct } from "../src/server/barbora-nutrition-index";
+import { retryBoundaryElapsed, retryNotBefore } from "../src/server/source-retry";
 
 // Independent, bounded source queues. No search/model calls; no scan images or user data.
 type Candidate = { id: string; sku: string; source: ShelfEvidence["source"]; url: string; gtin: string | null; category: string | null };
@@ -22,9 +23,10 @@ const retailerFile = "data/personal-shelf-evidence.generated.json";
 const offFile = "data/personal-shelf-off-evidence.generated.json";
 const previous = [...await json<ShelfEvidence[]>(retailerFile), ...await json<ShelfEvidence[]>(offFile)];
 const rows = new Map(previous.map((row) => [row.productId, row]));
+const sources: ShelfEvidence["source"][] = ["barbora_lv", "rimi_lv", "livinn_lt", "open_food_facts"];
 const barbora = await json<BarboraNutritionIndexProduct[]>("data/barbora-nutrition-index.generated.json");
-const external = [...await json<ExternalCatalogProduct[]>("data/rimi-catalog.generated.json"),
-  ...await json<ExternalCatalogProduct[]>("data/livinn-catalog.generated.json"), ...await json<ExternalCatalogProduct[]>("data/open-food-facts-lv.generated.json")];
+const external: Array<ExternalCatalogProduct | ExternalCatalogIdentity> = [...await json<ExternalCatalogProduct[]>("data/rimi-catalog.generated.json"),
+  ...await json<ExternalCatalogIdentity[]>("data/livinn-food-index.generated.json"), ...await json<ExternalCatalogProduct[]>("data/open-food-facts-lv.generated.json")];
 const candidates: Candidate[] = [
   ...barbora.filter((p) => !p.isAdult).map((p) => ({ id: `barbora:${p.slug}`, sku: p.slug, source: "barbora_lv" as const,
     url: `https://barbora.lv/produkti/${p.slug}`, gtin: null, category: p.category })),
@@ -45,22 +47,40 @@ const pending = selected.filter((p) => {
   sourceCounts[p.source] = (sourceCounts[p.source] || 0) + 1;
   return true;
 });
-console.log(JSON.stringify({ mode: reportOnly ? "report-only" : apply ? "apply" : "dry-run", candidates: selected.length, existingEvidence: rows.size, planned: reportOnly ? 0 : pending.length, bySource: sourceCounts }));
-if (!apply) process.exit(0);
-await mkdir(".catalog-sync", { recursive: true });
+if (apply) await mkdir(".catalog-sync", { recursive: true });
 const checkpointPath = resolve(".catalog-sync/personal-shelf-batch-v1.json");
-type Attempt = { id: string; ok: boolean; error?: string };
+type Attempt = { id: string; ok: boolean; error?: string; attemptedAt?: string };
 const attempts = new Map<string, Attempt>();
+const sourceCooldowns: Partial<Record<ShelfEvidence["source"], string>> = {};
 try {
-  const saved = await json<{ observations: ShelfEvidence[]; attempts: Attempt[] }>(checkpointPath);
+  const saved = await json<{ observations: ShelfEvidence[]; attempts: Attempt[]; sourceCooldowns?: Partial<Record<ShelfEvidence["source"], string>> }>(checkpointPath);
   for (const row of saved.observations) {
     const current = rows.get(row.productId);
     if (parseShelfEvidence(row) && selected.some((p) => p.id === row.productId) &&
       (!current || Date.parse(row.checkedAt) > Date.parse(current.checkedAt))) rows.set(row.productId, row);
   }
   for (const attempt of saved.attempts) attempts.set(attempt.id, attempt);
+  Object.assign(sourceCooldowns, saved.sourceCooldowns);
+  // Old checkpoints did not store an absolute cooldown. Anchor their final 429
+  // to the checkpoint mtime once, rather than hammering or postponing forever.
+  if (!saved.sourceCooldowns) {
+    const checkpointTime = (await stat(checkpointPath)).mtimeMs;
+    for (const attempt of saved.attempts.filter((row) => row.error?.startsWith("HTTP 429"))) {
+      const source = selected.find((row) => row.id === attempt.id)?.source;
+      if (source) sourceCooldowns[source] = retryNotBefore(null, checkpointTime);
+    }
+  }
 } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
-const jobs = reportOnly ? [] : pending.filter((p) => refresh || !attempts.has(p.id) || (retryFailed && !attempts.get(p.id)!.ok));
+for (const source of Object.keys(sourceCooldowns) as ShelfEvidence["source"][]) {
+  if (retryBoundaryElapsed(sourceCooldowns[source])) delete sourceCooldowns[source];
+}
+const jobs = reportOnly ? [] : pending.filter((p) => !sourceCooldowns[p.source] &&
+  (refresh || !attempts.has(p.id) || (retryFailed && !attempts.get(p.id)!.ok)));
+const plannedBySource = Object.fromEntries(sources.map((source) =>
+  [source, jobs.filter((row) => row.source === source).length]));
+console.log(JSON.stringify({ mode: reportOnly ? "report-only" : apply ? "apply" : "dry-run", candidates: selected.length,
+  existingEvidence: rows.size, planned: jobs.length, bySource: plannedBySource, sourceCooldowns }));
+if (!apply) process.exit(0);
 const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
 let checkpointChain = Promise.resolve();
 const atomicJson = async (path: string, value: unknown) => {
@@ -68,7 +88,7 @@ const atomicJson = async (path: string, value: unknown) => {
   await rename(`${path}.tmp`, path);
 };
 const checkpoint = () => {
-  const value = { observations: [...rows.values()], attempts: [...attempts.values()] };
+  const value = { observations: [...rows.values()], attempts: [...attempts.values()], sourceCooldowns };
   checkpointChain = checkpointChain.then(() => atomicJson(checkpointPath, value));
   return checkpointChain;
 };
@@ -76,6 +96,9 @@ const hosts: Record<ShelfEvidence["source"], string[]> = {
   barbora_lv: ["barbora.lv", "www.barbora.lv"], rimi_lv: ["www.rimi.lv", "rimi.lv"],
   livinn_lt: ["www.livinn.lt", "livinn.lt"], open_food_facts: ["world.openfoodfacts.org"]
 };
+class SourceRateLimitError extends Error {
+  constructor(public readonly notBefore: string) { super("HTTP 429"); }
+}
 async function fetchEvidence(item: Candidate): Promise<ShelfEvidence> {
   let url = item.source === "open_food_facts" ? `https://world.openfoodfacts.org/api/v2/product/${item.sku}.json` : item.url;
   let body = "";
@@ -87,7 +110,7 @@ async function fetchEvidence(item: Candidate): Promise<ShelfEvidence> {
       url = new URL(response.headers.get("location")!, url).href; continue;
     }
     // Stop this source's queue on rate limiting; never retry earlier than its instruction.
-    if (response.status === 429) throw new Error(`HTTP 429; Retry-After ${response.headers.get("retry-after") || "not specified"}`);
+    if (response.status === 429) throw new SourceRateLimitError(retryNotBefore(response.headers.get("retry-after")));
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     if (Number(response.headers.get("content-length") || 0) > 4000000) throw new Error("Source too large");
     body = await response.text();
@@ -118,12 +141,13 @@ await Promise.all(Object.keys(hosts).map(async (source) => {
   for (const item of jobs.filter((p) => p.source === source)) {
     try {
       rows.set(item.id, await fetchEvidence(item));
-      attempts.set(item.id, { id: item.id, ok: true });
+      attempts.set(item.id, { id: item.id, ok: true, attemptedAt: new Date().toISOString() });
     } catch (error) {
       const message = error instanceof Error ? error.message : "source unavailable";
-      attempts.set(item.id, { id: item.id, ok: false, error: message });
-      console.warn(JSON.stringify({ id: item.id, error: message }));
-      if (message.startsWith("HTTP 429")) { await checkpoint(); break; }
+      attempts.set(item.id, { id: item.id, ok: false, error: message, attemptedAt: new Date().toISOString() });
+      if (error instanceof SourceRateLimitError) sourceCooldowns[item.source] = error.notBefore;
+      console.warn(JSON.stringify({ id: item.id, error: message, retryNotBefore: sourceCooldowns[item.source] || null }));
+      if (error instanceof SourceRateLimitError) { await checkpoint(); break; }
     }
     completed++;
     if (completed % 20 === 0) {
@@ -148,7 +172,7 @@ const coverage = Object.fromEntries(Object.keys(hosts).map((source) => {
   const failures = scope.flatMap((p) => { const a = attempts.get(p.id); return a && !a.ok ? [a] : []; });
   return [source, { candidates: scope.length, observations: scope.filter((p) => rows.has(p.id)).length,
     failed: failures.length, unattempted: scope.filter((p) => !rows.has(p.id) && !attempts.has(p.id)).length,
-    rateLimited: failures.some((a) => a.error?.startsWith("HTTP 429")) }];
+    rateLimited: Boolean(sourceCooldowns[source as ShelfEvidence["source"]]), retryNotBefore: sourceCooldowns[source as ShelfEvidence["source"]] || null }];
 }));
 const report = { checkedAt: new Date().toISOString(), candidates: selected.length, observations: rows.size, groups, coverage,
   attempts: [...attempts.values()], elapsedSeconds: Math.round((Date.now() - started) / 1000) };

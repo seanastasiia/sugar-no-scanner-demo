@@ -16,11 +16,14 @@ import { isQuarantinedRetailerNutrition } from "./retailer-nutrition-quarantine"
 import { getShelfEvidence } from "./personal-shelf-evidence";
 import { applyShelfNutritionTrustGuard } from "@/lib/personal-shelf-rank";
 import { isReviewedPackageAlias, withReviewedPackageAliases } from "./reviewed-package-aliases";
+import { validWebGtin } from "./web-product-evidence";
 
 interface RankedExternalCatalogCandidate {
   product: ExternalCatalogProduct;
   confidence: number;
 }
+
+const safeGtin = (value: string | null): string | null => validWebGtin(value) ? value : null;
 
 const rawProducts = [
   ...(rimiSnapshot as ExternalCatalogProduct[]),
@@ -95,9 +98,12 @@ function canonicalPack(value: string | null | undefined): { amount: number; dime
 }
 
 function dedupeIdentityKey(product: ExternalCatalogProduct): string {
-  if (product.gtin) return `${product.source}:gtin:${product.gtin}`;
+  const gtin = safeGtin(product.gtin);
+  if (gtin) return `${product.source}:gtin:${gtin}`;
   const pack = canonicalPack(product.packSize);
   const packKey = pack ? `${pack.dimension}:${pack.amount}` : normalizeRetailText(product.packSize);
+  // Invalid source numbers do not participate. Fall back to the existing
+  // conservative within-retailer identity; this is never a cross-source merge.
   return [
     product.source,
     normalizeRetailText(product.brand).replaceAll(" ", ""),
@@ -108,7 +114,7 @@ function dedupeIdentityKey(product: ExternalCatalogProduct): string {
 
 function candidatePriority(product: ExternalCatalogProduct): number {
   return (product.available === true ? 8 : product.available === null ? 2 : 0) +
-    (product.gtin ? 4 : 0) +
+    (safeGtin(product.gtin) ? 4 : 0) +
     (product.imageUrl ? 2 : 0) +
     (product.price !== null ? 1 : 0);
 }
@@ -138,7 +144,10 @@ const identities = (livinnFoodIndex as ExternalCatalogIdentity[]).map(withReview
 function barcodeIndex<T extends { gtin: string | null }>(values: T[]): Map<string, T> {
   const index = new Map<string, T>();
   for (const value of values) {
-    if (value.gtin && !index.has(value.gtin)) index.set(value.gtin, value);
+    const canonical = validWebGtin(value.gtin);
+    if (!canonical) continue;
+    if (!index.has(value.gtin!)) index.set(value.gtin!, value);
+    if (!index.has(canonical)) index.set(canonical, value);
   }
   return index;
 }
@@ -294,7 +303,7 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
     packSizeG: pack?.amount || 1,
     nutritionBasis: product.nutritionBasis,
     energyKcalPer100: product.energyKcal,
-    gtin: product.gtin,
+    gtin: safeGtin(product.gtin),
     nutrientsPer100g: {
       proteinG: product.proteinG,
       fiberG: null,
@@ -344,6 +353,7 @@ export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogI
   const pack = canonicalPack(product.packSize);
   const record: ProductRecord = {
     id: `${product.source}:${product.sourceProductId}`,
+    shelfEvidence: getShelfEvidence(`${product.source}:${product.sourceProductId}`),
     retailerProductId: product.sourceProductId,
     brand: product.brand,
     name: product.title,
@@ -354,7 +364,7 @@ export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogI
     packSizeG: pack?.amount || 1,
     nutritionBasis: pack?.dimension === "liquid" ? "100ml" : "100g",
     energyKcalPer100: null,
-    gtin: product.gtin,
+    gtin: safeGtin(product.gtin),
     nutrientsPer100g: {
       proteinG: null,
       fiberG: null,
@@ -408,8 +418,9 @@ export function resolveExternalCatalogProduct(
   input: BarboraLookupInput,
   barcode = ""
 ): { product: ScoredProduct; confidence: number; offer: RetailerOffer | null } | null {
-  if (/^\d{8,14}$/.test(barcode)) {
-    const exact = productsByBarcode.get(barcode);
+  const canonicalBarcode = validWebGtin(barcode);
+  if (canonicalBarcode) {
+    const exact = productsByBarcode.get(barcode) || productsByBarcode.get(canonicalBarcode);
     if (exact && retailerBrandMatches(input.brand, exact.brand)) {
       return { product: externalCatalogToScoredProduct(exact), confidence: 1, offer: offerFor(exact, 1) };
     }
@@ -428,8 +439,9 @@ export function resolveExternalCatalogIdentity(
   input: BarboraLookupInput,
   barcode = ""
 ): { identity: ExternalCatalogIdentity; product: ScoredProduct; confidence: number } | null {
-  if (/^\d{8,14}$/.test(barcode)) {
-    const exact = identitiesByBarcode.get(barcode);
+  const canonicalBarcode = validWebGtin(barcode);
+  if (canonicalBarcode) {
+    const exact = identitiesByBarcode.get(barcode) || identitiesByBarcode.get(canonicalBarcode);
     if (exact && retailerBrandMatches(input.brand, exact.brand)) {
       return { identity: exact, product: externalCatalogIdentityToScoredProduct(exact), confidence: 1 };
     }
@@ -447,16 +459,18 @@ export function resolveExternalCatalogIdentity(
 export function getExternalCatalogProductByBarcode(
   barcode: string
 ): { product: ScoredProduct; confidence: 1; offer: RetailerOffer | null } | null {
-  if (!/^\d{8,14}$/.test(barcode)) return null;
-  const exact = productsByBarcode.get(barcode);
+  const canonical = validWebGtin(barcode);
+  if (!canonical) return null;
+  const exact = productsByBarcode.get(barcode) || productsByBarcode.get(canonical);
   return exact
     ? { product: externalCatalogToScoredProduct(exact), confidence: 1, offer: offerFor(exact, 1) }
     : null;
 }
 
 export function getExternalCatalogIdentityByBarcode(barcode: string): ScoredProduct | null {
-  if (!/^\d{8,14}$/.test(barcode)) return null;
-  const identity = identitiesByBarcode.get(barcode);
+  const canonical = validWebGtin(barcode);
+  if (!canonical) return null;
+  const identity = identitiesByBarcode.get(barcode) || identitiesByBarcode.get(canonical);
   return identity ? externalCatalogIdentityToScoredProduct(identity) : null;
 }
 
