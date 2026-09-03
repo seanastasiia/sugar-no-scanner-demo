@@ -15,6 +15,7 @@ Use this page to locate a change without scanning the whole repository.
 9. `src/server/web-nutrition-cache.ts` reads and writes the fail-open Supabase cache around the final cited-search fallback. The process cache remains the first lookup for repeated scans in one running instance.
 10. `src/components/scanner-results.tsx` renders source-backed fit, per-card online purchase state and Better alternatives.
 11. `src/components/personal-shelf-results.tsx` is an opt-in expanded-sheet pilot. It calls the pure versioned `src/lib/personal-shelf-rank.ts`, never the legacy Fit formula. Exact observations come from retailer/OFF adapters and `src/server/personal-shelf-parser.ts`; `/api/personal-shelf` optionally refreshes at most ten IDs from the isolated Supabase tables with a two-second deadline. This lookup never runs on the camera/legacy critical path. `scripts/sync-personal-shelf-evidence.ts` creates the small reproducible snapshot; `scripts/seed-personal-shelf-evidence.ts` is dry-run by default.
+12. `/demo/personal-shelf` is a separate camera-free catalog example, reached directly or through the demo chooser. `src/server/personal-shelf-demo.ts` selects five exact existing records without I/O; only those records are passed into the client `PersonalShelfDemo`, which reuses `PersonalShelfResults` in fixed `demo` context without background evidence refresh. It has no new scan source/API mode, provider calls or mock recognition frames. The original Shelf/Checkout scene contracts remain unchanged.
 
 ## Data resolution
 

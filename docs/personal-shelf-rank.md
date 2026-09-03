@@ -2,6 +2,8 @@
 
 Status: isolated owner preview, 3 September 2026; not in production and not clinically validated. Model ID: `personal-shelf-v1.0-pilot`. [Try the preview](https://sugar-no-personal-rank-personal-rank-preview.up.railway.app). [Release verification](test-runs/2026-09-03-personal-shelf-preview-release.md).
 
+For an immediate camera-free example, open [New rating demo](https://sugar-no-personal-rank-personal-rank-preview.up.railway.app/demo/personal-shelf). Its five selected catalog records use the same scorer and cards: chip scores 64/61 plus one unscored contradictory-source chip, and yogurt scores 97/54. This is an explicitly labelled selection, not a recognition test or market-wide ranking. Existing source data and rules are unchanged; no refresh or provider request is made by the demo.
+
 ## What the user gets
 
 Expand a scan, turn on `Personal Shelf Rank`, compare products within one supported category, and open `Why this score?` for the original ingredients, nutrition, weighted points and dated source. The original Fit remains the default and is preserved exactly when the pilot is disabled. Camera markers, compact previews, prices and Better alternatives still use original Fit; the switch says so. Scores use neutral styling, not health traffic lights. The toggle is not saved across a reload.

@@ -17,15 +17,17 @@ export function ShelfRankToggle({ enabled, onChange }: { enabled: boolean; onCha
   );
 }
 
-export function PersonalShelfResults({ products, unidentifiedCount, thumbnail }: {
+export function PersonalShelfResults({ products, unidentifiedCount, thumbnail, context = "scan" }: {
   products: ProductRecord[];
   unidentifiedCount: number;
   thumbnail: (id: string) => ReactNode;
+  context?: "scan" | "demo";
 }) {
   const [managed, setManaged] = useState<Record<string, ShelfEvidence>>({});
   const ids = JSON.stringify([...new Set(products.map((p) => p.id).filter((id) => /^(?:barbora:[a-z0-9-]+|livinn_lt:[A-Za-z0-9._~-]+|off:\d{8,14})$/.test(id)))].sort());
   useEffect(() => {
-    if (ids === "[]") return;
+    // The catalog demo is a fixed example, without a camera or background data calls.
+    if (context === "demo" || ids === "[]") return;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3_000);
     // This only runs when the owner opens the pilot; never delay the camera or legacy Fit.
@@ -39,7 +41,7 @@ export function PersonalShelfResults({ products, unidentifiedCount, thumbnail }:
     }).catch(() => { /* Keep exact local evidence available on a network failure. */ })
       .finally(() => clearTimeout(timeout));
     return () => { controller.abort(); clearTimeout(timeout); };
-  }, [ids]);
+  }, [context, ids]);
   const { groups, unsupported } = rankPersonalShelfProducts(products.map((product) => {
     const next = managed[product.id];
     const current = product.shelfEvidence;
@@ -53,7 +55,7 @@ export function PersonalShelfResults({ products, unidentifiedCount, thumbnail }:
       {groups.map((group) => (
         <section key={group.category} aria-labelledby={`shelf-group-${group.category}`}>
           <h3 id={`shelf-group-${group.category}`}>{group.label}</h3>
-          <p className={styles.groupNote}>{group.scoredCount} of {group.total} scorable in this scan{group.scoredCount < 2 ? ". Need two for a relative rank." : ". Equal scores share a place."}</p>
+          <p className={styles.groupNote}>{group.scoredCount} of {group.total} scorable in this {context}{group.scoredCount < 2 ? ". Need two for a relative rank." : ". Equal scores share a place."}</p>
           <ul className={styles.list}>
             {group.entries.map(({ product, assessment, rank, tied }) => {
               const evidence = product.shelfEvidence?.productId === product.id && (!product.gtin || !product.shelfEvidence.gtin || product.gtin === product.shelfEvidence.gtin) ? product.shelfEvidence : null;
@@ -92,7 +94,7 @@ export function PersonalShelfResults({ products, unidentifiedCount, thumbnail }:
                       <p>Checked {evidence.checkedAt.slice(0, 10)} · {evidence.source === "open_food_facts" ? "Open Food Facts community record (ODbL)" : "Retailer product page"}. Check the package for recipe changes and allergens.</p>
                     </> : <p>Original Sugar + Protein Fit is still available. This pilot requires a separate, dated ingredient and nutrient record for this exact SKU.</p>}
                     <p className={styles.model}>Model {SHELF_MODEL_VERSION}. Weights are a product hypothesis. A shorter ingredient list, E-number count and price do not improve or reduce this score. Total sugars are measured; added/free sugar grams are not inferred.</p>
-                    <p className={styles.model}>Score is fixed for the product and model version, not a shelf percentile. Category position changes with this scan. Ties use competition ranking (1, 1, 3).</p>
+                    <p className={styles.model}>Score is fixed for the product and model version, not a shelf percentile. Category position depends on the products in this comparison. Ties use competition ranking (1, 1, 3).</p>
                   </details>
                 </li>
               );

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowUpRight,
   Camera,
@@ -1766,6 +1767,10 @@ export function ScannerApp() {
               </button>
             </div>
             <div className={styles.demoChoices}>
+              <Link href="/demo/personal-shelf" prefetch={false} className={styles.ratingDemoLink}>
+                <List aria-hidden="true" size={22} />
+                <span><strong>New rating demo</strong><small>5 real products with scores and ingredients</small></span>
+              </Link>
               <button type="button" onClick={startShelf}>
                 <Layers3 aria-hidden="true" size={22} />
                 <span><strong>Shelf demo</strong><small>Compare several products at once</small></span>

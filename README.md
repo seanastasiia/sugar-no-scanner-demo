@@ -41,7 +41,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - `Better alternatives` are fail-closed and selected from the complete verified nutrition pool: the managed/local Sugar.no catalog, Barbora, Rimi, Livin and the isolated Open Food Facts layer. They must share the same exact product type and form, have `Great fit` that is no worse than the scanned product, and resolve to a current exact offer from a connected retailer. Open Food Facts rows without an exact connected-retailer offer can strengthen recognition and nutrition coverage but cannot become purchasable alternatives. Equal-fit candidates are ordered by lower exact offer price and then the closest known pack size. `Moderate fit`, `Low fit` and unrated products are excluded; if no true substitute is available, the section is hidden.
 - Offer lookup is retailer-neutral: exact Barbora, Rimi and Livin offer keys use one API contract. Every displayed price and destination belongs to that exact retailer SKU. The app never compares or labels fuzzy title matches as cheaper. `Buy cheaper online` and a crossed-out shelf price appear only when the exact current online offer is strictly below the observed shelf price; otherwise no saving claim is shown.
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
-- The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
+- The demo chooser offers `New rating demo`, Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
 
 ## Personal Shelf Rank — isolated opt-in preview
 
@@ -55,7 +55,9 @@ The checked-in evidence pilot contains **198 exact retailer observations, 64 sco
 
 See [model, evidence and calibration rules](docs/personal-shelf-rank.md) for the full formula, scientific anchors versus product choices, reproducible sync/seed steps and owner checks. The pilot and preceding multilingual catalog batch are confined to the separate [owner preview](https://sugar-no-personal-rank-personal-rank-preview.up.railway.app), branch `codex/personal-rank-preview`. Production remains gated by the owner's explicit `ПУБЛИКУЙ`.
 
-To try it, scan or upload a shelf photo, open `View all`, then enable `Personal Shelf Rank · Pilot`. Open `Why this score?` on a scored card; switch the pilot off to return to the original Fit. The existing Shelf/Checkout demos do not guarantee ingredient coverage for this new model. An unscored result is expected for products outside the 64 complete pilot records; it is not a low score.
+To try it immediately, open the [New rating demo](https://sugar-no-personal-rank-personal-rank-preview.up.railway.app/demo/personal-shelf), or choose `Show demo → New rating demo`. No camera, photo or provider call is needed. Five selected real catalog products use the same cards, sources and model as scan results: two scored chips (64/61), a chip with contradictory source data (unscored), and two spoonable yogurts (97/54). Ranks are separate within each category; the unscored chip does not enter the denominator. This is a labelled catalog example, not simulated recognition or a representative market sample. Packshot failures show a neutral placeholder without hiding the evidence.
+
+For your own shelf, scan or upload a photo, open `View all`, then enable `Personal Shelf Rank · Pilot`. Open `Why this score?` on a scored card; switch the pilot off to return to the original Fit. The older Shelf/Checkout demos do not guarantee composition coverage. An unscored result is expected outside the 64 complete pilot records; it is not a low score. The direct demo does not mount the scanner or run evidence refresh/analytics calls. Links back to the scanner do not prefetch it; camera permission is requested only after opening the scanner.
 
 The preview uses a new Railway environment and service, its own session signing inputs, and the checked-in catalog/evidence. It has no Supabase or Amplitude credentials and cannot write production catalog, cache or analytics data. Live recognition uses the existing Gemini account, so normal provider usage still applies; online results are cached only in this preview process and may be fetched again after a restart. The production and existing onboarding staging services are not changed.
 
@@ -204,7 +206,7 @@ npx @railway/cli up --detach \
 
 Wait for deployment `SUCCESS`, verify preview `/api/health` matches the uploaded commit, test direct entry, protected API boundaries and the pilot toggle, and recheck both existing URLs against their pre-deploy SHAs. Do not seed/migrate a database for this preview. A preview rollback redeploys an earlier preview commit to this same service only; it must not use the production rollback lane.
 
-The initial preview was released from clean GitHub-backed commit `a6ce77e` using direct CLI upload (no automatic source connection). See [live release checks](docs/test-runs/2026-09-03-personal-shelf-preview-release.md). Later documentation-only commits do not change the running application or trigger a deployment.
+The preview uses a clean GitHub-backed commit and direct CLI upload (no automatic source connection). The first release was `a6ce77e`; the dedicated rating-demo release is documented in [demo release checks](docs/test-runs/2026-09-03-personal-shelf-demo-release.md). Documentation-only commits do not change the running application or trigger a deployment.
 
 ### Production — requires separate approval
 
@@ -230,6 +232,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 4. Confirm verified results gain fit labels and every confidently named product remains in the list after lookup. An unresolved product must stay neutral with no invented fit; an anonymous price-only finding must stay hidden.
 5. In the collapsed result sheet, tap `Scan again`. Confirm the captured result clears and the live camera starts a fresh scan; `View all` must still open the ranked comparison.
 6. Open Shelf and Checkout demos and expand `View all`.
+6a. Open `Show demo → New rating demo`, or go directly to `/demo/personal-shelf`. Confirm the two separate category rankings, 64/61 and 97/54 scores, and one unscored chip. Open `Why this score?` to see original ingredients and the exact source. Reload the direct link: it must not request camera permission. Return to scanner and confirm the original Fit remains the default.
 7. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
 7a. Confirm every rated card visibly shows `Protein …g · Sugar …g` and adds `Carbs …g` only when the exact source provides carbohydrates; the numbers are per 100 g or 100 ml and protein remains part of the unchanged two-signal fit.
 7b. In the isolated preview, enable `Personal Shelf Rank`. Check within-category places, a neutral unscored card for missing fields, and `Why this score?` with original ingredients/source. Switch it off: the original order and Fit values must return unchanged. Follow the dedicated [pilot product checklist](docs/personal-shelf-rank.md#owner-product-check) before approving production publication.

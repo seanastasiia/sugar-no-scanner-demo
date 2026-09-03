@@ -1683,6 +1683,7 @@
 }
 
 .demoChoices button,
+.demoChoices a,
 .demoUpload {
   display: grid;
   min-height: 64px;
@@ -1707,6 +1708,11 @@
   color: var(--muted);
   font-size: 11px;
 }
+
+.demoChoices a { text-decoration: none; }
+.demoChoices .ratingDemoLink { border-color: var(--ink); background: var(--surface-accent); }
+.demoChoices .ratingDemoLink small { font-size: 13px; }
+.demoChoices a:active { background: var(--canvas); }
 
 .demoUpload input {
   position: absolute;
