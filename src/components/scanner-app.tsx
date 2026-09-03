@@ -285,6 +285,7 @@ export function ScannerApp() {
   const lastCaptureRef = useRef(0);
   const sessionIdRef = useRef<string | null>(null);
   const resultsSheetRef = useRef<HTMLElement>(null);
+  const resultsPreviewRef = useRef<HTMLDivElement>(null);
   const demoDialogRef = useRef<HTMLDivElement>(null);
   const demoTriggerRef = useRef<HTMLButtonElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -1241,7 +1242,7 @@ export function ScannerApp() {
   const selectedPayload = effectiveSelectedId ? products[effectiveSelectedId] : undefined;
   const selectedDetection = effectiveSelectedId ? detectionById[effectiveSelectedId] : undefined;
   const resultsAreExpanded = resultsExpanded && visibleTrayIds.length > 0;
-  const sheetPreviewIds = rankedTrayIds.slice(0, 4);
+  const sheetPreviewIds = rankedTrayIds;
   const visibleBases = new Set(
     visibleTrayIds.flatMap((id) => (products[id] ? [products[id].product.nutritionBasis || "100g"] : []))
   );
@@ -1280,6 +1281,20 @@ export function ScannerApp() {
     if (!manualSelectionRef.current && (bestId || firstRankedId)) setSelectedId(bestId || firstRankedId);
   }, [bestId, firstRankedId]);
 
+  useEffect(() => {
+    const preview = resultsPreviewRef.current;
+    const firstCard = preview?.firstElementChild;
+    if (!preview || !firstCard || resultsAreExpanded) return;
+    const measure = () => {
+      const height = firstCard.getBoundingClientRect().height;
+      if (height > 0) preview.style.setProperty("--preview-card-height", `${height}px`);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(firstCard);
+    return () => observer.disconnect();
+  }, [firstRankedId, resultsAreExpanded]);
+
   const backToProductList = useCallback(() => {
     setProductDetailsOpen(false);
     resultsSheetRef.current?.scrollTo({ top: 0 });
@@ -1294,7 +1309,8 @@ export function ScannerApp() {
       const controls = Array.from(resultsSheetRef.current?.querySelectorAll<HTMLElement>("[data-result-trigger]") || []);
       const trigger = controls.find((control) => control.dataset.resultTrigger === resultReturnTriggerRef.current)
         || controls.find((control) => control.dataset.resultTrigger === "view-all");
-      (trigger || (previousFocusRef.current?.isConnected ? previousFocusRef.current : null))?.focus({ preventScroll: true });
+      // Native focus also reveals a returned-to card inside the vertical preview.
+      (trigger || (previousFocusRef.current?.isConnected ? previousFocusRef.current : null))?.focus();
     });
   }, []);
 
@@ -1705,7 +1721,7 @@ export function ScannerApp() {
 
             {!resultsAreExpanded ? (
               <>
-                <div className={styles.sheetPreview} aria-label="Product result preview">
+                <div ref={resultsPreviewRef} className={styles.sheetPreview} role="group" aria-label="Product result preview" tabIndex={0}>
                   {sheetPreviewIds.map((id) => {
                     const item = products[id]?.product;
                     const detection = detectionById[id];
@@ -1740,7 +1756,7 @@ export function ScannerApp() {
                               sceneImageUrl={sceneImageUrl}
                               sceneDimensions={mediaDimensions}
                               detection={detection}
-                              sizes="48px"
+                              sizes="56px"
                               targetAspect={1}
                             />
                           </span>

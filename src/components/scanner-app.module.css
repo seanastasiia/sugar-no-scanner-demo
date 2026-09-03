@@ -618,24 +618,36 @@
 }
 .sheetPreview {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: max-content;
+  align-content: start;
+  height: calc(var(--preview-card-height, 96px) * 1.3 + 8px);
   gap: 8px;
   margin-top: 12px;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y proximity;
+}
+.sheetPreview:has(> :only-child) {
+  height: auto;
+}
+.sheetPreview:focus-visible {
+  outline-offset: -3px;
 }
 .sheetPreviewCard {
   min-width: 0;
+  scroll-snap-align: start;
   border-radius: 18px;
   background: var(--canvas);
 }
 .sheetPreviewOpen {
   position: relative;
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-columns: 56px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
-  min-height: 84px;
+  gap: 12px;
+  min-height: 96px;
   width: 100%;
-  padding: 8px;
+  padding: 12px;
   border: 0;
   border-radius: inherit;
   background: transparent;
@@ -645,8 +657,8 @@
 }
 .sheetPreviewThumb {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: 12px;
   overflow: hidden;
   background: var(--surface);
@@ -664,7 +676,7 @@
 .sheetPreviewCopy > span {
   grid-column: 1 / -1;
   overflow-wrap: anywhere;
-  font: 600 12px/17px var(--font-display);
+  font: 600 15px/20px var(--font-display);
 }
 .sheetPreviewCopy > span b {
   color: var(--muted);
@@ -678,8 +690,8 @@
   line-height: 16px;
 }
 .sheetPreviewSugar {
-  font-size: 10px;
-  line-height: 15px;
+  font-size: 13px;
+  line-height: 18px;
   text-align: right;
   overflow-wrap: anywhere;
 }
@@ -1611,22 +1623,6 @@
   .resultsCollapsed {
     max-height: min(68dvh, 440px);
   }
-  .sheetPreviewOpen {
-    grid-template-columns: 32px minmax(0, 1fr);
-    gap: 6px;
-    padding: 8px;
-  }
-  .sheetPreviewThumb {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-  }
-  .sheetPreviewCopy {
-    grid-template-columns: 1fr;
-  }
-  .sheetPreviewSugar {
-    text-align: left;
-  }
   .header {
     padding-inline: 16px;
   }
@@ -1951,8 +1947,9 @@
   flex: none;
 }
 .resultsCollapsed .sheetPreview {
-  flex: 1;
+  flex: 0 1 auto;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 @media (orientation: landscape) and (max-height: 500px) {

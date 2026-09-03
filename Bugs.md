@@ -21,6 +21,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: The compact 2×2 grid took too much space and lacked a vertical browsing cue.** Replaced it with a single-column scroll area showing a full card plus about 30% of the next. All displayed scan products are reachable, with fixed bottom actions and a content-aware first-card height. Single-result and short-landscape fallbacks remain usable.
+
 - **2026-09-03: Show demo and Leave feedback used a separate flat camera style.** Both now reuse the shared black gradient/rim/shadow and rounded semibold type, with compact sizing for the top bar. Removed the live-camera fill override; demo/photo feedback and recovery's Show demo follow the same black finish.
 
 - **2026-09-03: Back to live duplicated Scan again over the demo photo.** Removed the floating return button from shelf/checkout demos and saved photos. Scan again still opens the camera, and chooser/recovery return paths remain available.

@@ -60,12 +60,33 @@ test("Pen screens remain readable and actionable across iPhone sizes and rotatio
       if (viewport.width < viewport.height) {
         const cards = preview.getByRole("button");
         await expect(cards).toHaveCount(4);
+        await expect.poll(() => preview.evaluate((element) => {
+          const viewport = element.getBoundingClientRect();
+          const first = element.children[0].getBoundingClientRect();
+          const second = element.children[1].getBoundingClientRect();
+          return { firstFits: first.top >= viewport.top - 1 && first.bottom <= viewport.bottom + 1,
+            nextVisible: Math.round((viewport.bottom - second.top) / second.height * 100) };
+        })).toEqual({ firstFits: true, nextVisible: 30 });
+        const actionsBefore = await page.getByRole("button", { name: "View all", exact: true }).boundingBox();
+        await preview.focus();
+        await page.keyboard.press("ArrowDown");
+        await expect.poll(() => preview.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
         for (const card of await cards.all()) {
+          await card.scrollIntoViewIfNeeded();
           await unobstructed(card);
           await siblingsDoNotOverlap(card);
           await siblingsDoNotOverlap(card.locator(":scope > span").last());
           expect(await card.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
         }
+        const actionsAfter = await page.getByRole("button", { name: "View all", exact: true }).boundingBox();
+        expect(actionsAfter?.y).toBe(actionsBefore?.y);
+        await cards.last().click();
+        await expect(page.getByRole("heading", { name: "Lemon Cheesecake", exact: true })).toBeVisible();
+        await page.keyboard.press("Escape");
+        await expect(cards.last()).toBeFocused();
+        await unobstructed(cards.last());
+        await preview.evaluate((element) => element.scrollTo({ top: 0, behavior: "instant" }));
+        await expect.poll(() => preview.evaluate((element) => element.scrollTop)).toBe(0);
       }
       await unobstructed(page.getByRole("button", { name: "View all", exact: true }));
       await unobstructed(page.getByRole("button", { name: "Scan again", exact: true }));

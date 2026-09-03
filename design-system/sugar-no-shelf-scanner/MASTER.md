@@ -29,7 +29,7 @@ Use the official SVG proportions. The existing white SVG stays white over the li
 | --- | --- |
 | 01 `WWm4o` Welcome | `PilotOnboarding`; real clean shelf + native overlays; one 3.2 s sweep |
 | 02 `d6Pdh`, 03 `Hr0OH` Aim / reading | Live stream or held frame; neutral local candidate boxes before verified results |
-| 04 `BmBpL` Compact | Four leading results, 2×2 grid; Scan again / View all |
+| 04 `BmBpL` Compact | Vertical ranked-card carousel, one full card + about 30% next; fixed Scan again / View all below |
 | 05 `qMiRn`, 06 `WaJO0` List / detail | Ranked product cards; detail with fit, source nutrition, exact saving, source link |
 | 07 `KMksd` Demo chooser | Shelf, Checkout, saved photo; full-screen light surface |
 | 08 `qg85c`, 09 `Hvd7y` Saved photo / Checkout | Rounded adaptive media, contain geometry, Scan again below results; no floating Back to live |
@@ -40,7 +40,7 @@ Use the official SVG proportions. The existing white SVG stays white over the li
 | 17 `EdasX`, 18 `qhp4K` Feedback / Needs work | White 370 px maximum dialog, rating, reasons and optional comment |
 | 19 `ZtBQ6`, 20 `C4x6dO`, 21 `UWwfO` Saving / error / success | Locked form; retained answer on retry; success + Done |
 
-The welcome distributes header, introduction, preview and actions with 24 px minimum gaps; short screens reduce the photo height. Compact packshots are 48 px (32 px at widths up to 360 px), and the detail packshot is square up to 290 px. The list includes verified protein and separates informational prices from the fit row. Feedback uses 8 px internal gaps, a fixed header/footer and scrollable body sized to the visual viewport; the success mark is green with a white check.
+The welcome distributes header, introduction, preview and actions with 24 px minimum gaps; short screens reduce the photo height. Compact packshots are 56 px, and the detail packshot is square up to 290 px. Compact cards use a 96 px minimum height, 12 px padding/gap, 15/20 px names and 13/18 px nutrition; the vertical viewport is first-card height × 1.3 + the 8 px card gap. It adapts when content wraps, includes all displayed products and uses native vertical proximity snapping; a single card needs no peek area. The list includes verified protein and separates informational prices from the fit row. Feedback uses 8 px internal gaps, a fixed header/footer and scrollable body sized to the visual viewport; the success mark is green with a white check.
 
 Runtime content can be longer or use a different source/price than the static examples. Exact Carbs and eligible Better alternatives remain visible even when absent from a sample frame. The runtime uses actual packshots and verified per-100 nutrition; generic placeholder images and example numbers in Pen are not product evidence. A tablet uses a side result pane; phone landscape keeps the primary compact actions visible. Live camera and held frames fill the viewport with centered object-cover mapping; photo/demo overlays retain object-contain mapping. Capture dimensions remain independent of CSS.
 
