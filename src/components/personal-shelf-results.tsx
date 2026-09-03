@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { hasContradictoryShelfNutrition, hasSafeShelfSource, rankPersonalShelfProducts, shelfScoreLabel, SHELF_MODEL_VERSION, type ShelfEvidence } from "@/lib/personal-shelf-rank";
+import { rankPersonalShelfProducts, shelfScoreLabel, type ShelfEvidence } from "@/lib/personal-shelf-rank";
 import type { ProductRecord } from "@/lib/types";
 import styles from "./personal-shelf-results.module.css";
 
@@ -58,7 +58,6 @@ export function PersonalShelfResults({ products, unidentifiedCount, thumbnail, c
           <p className={styles.groupNote}>{group.scoredCount} of {group.total} assessed in this {context}{group.provisionalCount ? ` · ${group.provisionalCount} provisional. Ranges use the lower bound; overlapping ranges do not establish a winner.` : group.scoredCount < 2 ? ". Need two for a relative rank." : ". Equal scores share a place."}</p>
           <ul className={styles.list}>
             {group.entries.map(({ product, assessment, rank, tied, rankProvisional }) => {
-              const evidence = product.shelfEvidence?.productId === product.id && (!product.gtin || !product.shelfEvidence.gtin || product.gtin === product.shelfEvidence.gtin) ? product.shelfEvidence : null;
               const scoreLabel = shelfScoreLabel(assessment);
               return (
                 <li className={styles.card} key={product.id}>
@@ -76,28 +75,12 @@ export function PersonalShelfResults({ products, unidentifiedCount, thumbnail, c
                     <ul className={styles.reasons}>{assessment.reasons.slice(0, 2).map((reason) => <li key={reason}>{reason}</li>)}</ul>
                     <p className={styles.tradeoff}><b>Consider:</b> {assessment.tradeoffs[0]}</p>
                   </> : <p className={styles.tradeoff}>{assessment.status === "unsupported" ? "Only solid products with per-100 g evidence are compared in v1." : `Missing or unverified: ${assessment.missing.join(", ")}. No score or rank is assigned.`}</p>}
-                  <details className={styles.details}>
-                    <summary>{scoreLabel !== null ? "Why this score?" : "View available evidence"}</summary>
+                  {assessment.components.length ? <details className={styles.details}>
+                    <summary>Why this score?</summary>
                     {assessment.status === "provisional" ? <p>Fiber is not listed. The range covers its possible point contribution, not estimated grams. Provisional places use the lower bound; overlapping ranges do not establish a winner.</p> : null}
-                    {assessment.reasons[2] ? <p>{assessment.reasons[2]}</p> : null}
                     {assessment.components.length ? <dl className={styles.breakdown}>{assessment.components.map((part) => <div key={part.key}><dt>{part.label}</dt><dd>{part.points}{part.maxPoints !== undefined && part.maxPoints !== part.points ? `–${part.maxPoints}` : ""} / {part.weight} points</dd></div>)}</dl> : null}
                     {assessment.cap ? <p>{assessment.cap}</p> : null}
-                    {assessment.tradeoffs.length > 1 ? <ul>{assessment.tradeoffs.slice(1).map((reason) => <li key={reason}>{reason}</li>)}</ul> : null}
-                    {evidence ? <>
-                      {hasContradictoryShelfNutrition(evidence) ? <p><b>Source table is inconsistent. These original values are retained for checking, not trusted nutrition.</b></p> : null}
-                      <p>Per {evidence.nutritionBasis === "100ml" ? "100 ml" : "100 g"}: {[
-                        ["Energy", evidence.energyKcal, "kcal"], ["Protein", evidence.proteinG, "g"], ["Sugar", evidence.totalSugarG, "g"],
-                        ["Carbohydrate", evidence.carbohydrateG, "g"], ["Fat", evidence.fatG, "g"],
-                        ["Fiber", evidence.fiberG, "g"], ["Salt", evidence.saltG, "g"], ["Saturated fat", evidence.saturatedFatG, "g"]
-                      ].filter(([, value]) => value !== null && value !== undefined).map(([label, value, unit]) => `${label} ${value}${unit}`).join(" · ")}</p>
-                      <p><b>Original ingredients ({evidence.ingredientsLanguage || "language unknown"})</b></p>
-                      <p lang={evidence.ingredientsLanguage || undefined}>{evidence.ingredientsText || "Not available from this source"}</p>
-                      {hasSafeShelfSource(evidence) ? <a href={evidence.sourceUrl} target="_blank" rel="noopener noreferrer">Open exact source</a> : null}
-                      <p>Checked {evidence.checkedAt.slice(0, 10)} · {evidence.source === "open_food_facts" ? "Open Food Facts community record (ODbL)" : "Retailer product page"}. Check the package for recipe changes and allergens.</p>
-                    </> : <p>Original Sugar + Protein Fit is still available. This pilot requires a separate, dated ingredient and nutrient record for this exact SKU.</p>}
-                    <p className={styles.model}>Model {SHELF_MODEL_VERSION}. Weights are a product hypothesis. A shorter ingredient list, E-number count and price do not improve or reduce this score. Total sugars are measured; added/free sugar grams are not inferred.</p>
-                    <p className={styles.model}>Score is fixed for the product and model version, not a shelf percentile. Category position depends on the products in this comparison. Ties use competition ranking (1, 1, 3).</p>
-                  </details>
+                  </details> : null}
                 </li>
               );
             })}

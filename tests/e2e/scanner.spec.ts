@@ -160,9 +160,9 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   await expect(results.getByText("Score only · Spoonable yogurts", { exact: true })).toBeVisible();
   await chips.getByText("Why this score?", { exact: true }).first().click();
   const details = chips.locator("details[open]");
-  await expect(details.getByText("Original ingredients (en)", { exact: true })).toBeVisible();
-  await expect(details.getByText("Potatoes, sunflower oil, salt", { exact: true })).toBeVisible();
-  await expect(details.getByRole("link", { name: "Open exact source" })).toHaveAttribute("href", "https://barbora.lv/produkti/qa-chips-a");
+  await expect(details.locator("dt")).toHaveText(["Sugar", "Protein", "Food base", "Salt, saturates & fiber"]);
+  await expect(results.getByRole("link", { includeHidden: true })).toHaveCount(0);
+  await expect(results).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Potatoes, sunflower oil, salt/);
   await expectNoDocumentOverflow(page);
   await expectVisibleTouchTargets(page);
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-pilot.png"), fullPage: true });
@@ -210,8 +210,11 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await expect.poll(() => chips.getByTestId("product-packshot").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete)), { timeout: 10_000 }).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn.png"), fullPage: true, animations: "disabled" });
   await chips.getByText("Why this score?", { exact: true }).first().click();
-  await expect(chips.locator("details[open]").getByText("Original ingredients (lt)", { exact: true })).toBeVisible();
-  await expect(chips.locator("details[open]").getByRole("link", { name: "Open exact source" })).toHaveAttribute("href", samples[0].shelfEvidence!.sourceUrl);
+  await expect(chips.locator("details[open]").locator("dd")).toHaveText(["10 / 10 points", "2.1 / 10 points", "22.5 / 30 points", "28.9 / 50 points"]);
+  await expect(chips).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Sudedamosios dalys/);
+  await expect(chips.getByText("View available evidence", { exact: true })).toHaveCount(0);
+  await expect(chips.getByRole("link", { includeHidden: true })).toHaveCount(0);
+  await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn-expanded.png"), fullPage: true, animations: "disabled" });
 });
 
 async function mockSampleShelfRecognition(page: Page) {

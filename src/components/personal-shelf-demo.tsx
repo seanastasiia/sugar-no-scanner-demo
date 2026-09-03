@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, Package } from "lucide-react";
 import { useId, useState } from "react";
-import { hasContradictoryShelfNutrition, hasSafeShelfSource, rankPersonalShelfProducts, shelfScoreLabel, SHELF_MODEL_VERSION, type ShelfCategory } from "@/lib/personal-shelf-rank";
+import { hasContradictoryShelfNutrition, rankPersonalShelfProducts, shelfScoreLabel } from "@/lib/personal-shelf-rank";
 import type { ProductRecord, ScoredProduct } from "@/lib/types";
 import styles from "./personal-shelf-demo.module.css";
 
@@ -52,27 +52,15 @@ function DemoCard({ entry }: { entry: DemoEntry }) {
         {assessment.cap ? <p>{assessment.cap}</p> : null}
         {provisional ? <p>Fiber is not listed. This range covers its possible contribution; no fiber value is estimated.</p> : null}
         {rankProvisional ? <p>Provisional order uses the lower score bound. Overlapping ranges do not establish a winner.</p> : null}
-        {evidence ? <>
-          {inconsistent ? <p>Source table is inconsistent. No score assigned.</p> : <p>Per 100 g: {[
-            ["Energy", evidence.energyKcal, "kcal"], ["Protein", evidence.proteinG, "g"], ["Sugar", evidence.totalSugarG, "g"],
-            ["Carbohydrate", evidence.carbohydrateG, "g"], ["Fat", evidence.fatG, "g"],
-            ["Fiber", evidence.fiberG, "g"], ["Salt", evidence.saltG, "g"], ["Saturated fat", evidence.saturatedFatG, "g"]
-          ].filter(([, value]) => value !== null && value !== undefined).map(([label, value, unit]) => `${label} ${value}${unit}`).join(" · ")}</p>}
-          <p><b>Original ingredients ({evidence.ingredientsLanguage || "language unknown"})</b></p>
-          <p lang={evidence.ingredientsLanguage || undefined}>{evidence.ingredientsText || "Not available from this source"}</p>
-          {hasSafeShelfSource(evidence) ? <a href={evidence.sourceUrl} target="_blank" rel="noopener noreferrer">Open exact source</a> : null}
-          <p className={styles.note}>Checked {evidence.checkedAt.slice(0, 10)}. Check the package for recipe changes and allergens.</p>
-        </> : <p>No verified evidence for this exact product.</p>}
-        <p className={styles.note}>Pilot preference score, not a health rating. Model {SHELF_MODEL_VERSION}.</p>
+        {scoreLabel === null ? <p>{inconsistent ? "Source table is inconsistent. No score assigned." : `Missing or unverified: ${assessment.missing.join(", ") || "exact product evidence"}. No score assigned.`}</p> : null}
       </div>
     </li>
   );
 }
 
 export function PersonalShelfDemo({ products }: { products: ScoredProduct[] }) {
-  const [category, setCategory] = useState<ShelfCategory>("chips");
   const { groups } = rankPersonalShelfProducts(products);
-  const selected = groups.find((group) => group.category === category) || groups[0];
+  const selected = groups.find((group) => group.category === "chips");
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -80,14 +68,7 @@ export function PersonalShelfDemo({ products }: { products: ScoredProduct[] }) {
         <span className={styles.demoBadge}><span aria-hidden="true">Demo</span><span className={styles.srOnly}>Catalog demo, not a live scan</span></span>
         <Link className={styles.back} href="/" prefetch={false} aria-label="Back to scanner"><ChevronDown aria-hidden="true" size={22} /></Link>
       </header>
-      <fieldset className={styles.categories}>
-        <legend className={styles.srOnly}>Product type</legend>
-        {groups.map((group) => <label key={group.category}>
-          <input className={styles.srOnly} type="radio" name="demo-category" value={group.category}
-            checked={selected?.category === group.category} onChange={() => setCategory(group.category)} />
-          <span>{group.category === "yogurt" ? "Yogurts" : group.label}</span>
-        </label>)}
-      </fieldset>
+      <h2 className={styles.category}>Chips</h2>
       {selected ? <section key={selected.category} aria-label={selected.label}>
         <ul className={styles.list}>{selected.entries.map((entry) => <DemoCard key={entry.product.id} entry={entry} />)}</ul>
       </section> : null}
