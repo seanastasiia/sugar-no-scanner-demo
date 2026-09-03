@@ -145,17 +145,6 @@ async function mockSampleShelfRecognition(page: Page) {
   });
 }
 
-async function waitForAlternativeImages(page: Page) {
-  await page.waitForFunction(() => {
-    const images = [...document.querySelectorAll<HTMLImageElement>('img[alt=""]')].filter((image) => {
-      const url = new URL(image.currentSrc || image.src, window.location.href);
-      const optimizedSource = url.searchParams.get("url");
-      return !optimizedSource?.startsWith("http");
-    });
-    return images.every((image) => image.complete && image.naturalWidth > 0);
-  });
-}
-
 async function mockAlternativeOffers(page: Page, price = 1.49) {
   await page.route("**/api/offers", async (route) => {
     const { keys } = route.request().postDataJSON() as { keys: string[] };
