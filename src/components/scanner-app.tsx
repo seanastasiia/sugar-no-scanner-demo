@@ -1362,10 +1362,7 @@ export function ScannerApp() {
             inert={resultsAreExpanded || demoOpen}
             aria-hidden={resultsAreExpanded || demoOpen || undefined}
           >
-            <div
-              className={`${styles.stageTopbar} ${source === "camera" || source === "upload" ? styles.stageTopbarEnd : ""}`}
-            >
-              {source === "sample-shelf" || source === "sample-conveyor" ? <span>{sourceLabel(source)}</span> : null}
+            <div className={styles.stageTopbar}>
               <div className={styles.stageActions}>
                 <button className={styles.feedbackTrigger} type="button" onClick={openFeedback}>
                   <MessageSquareText aria-hidden="true" size={18} />

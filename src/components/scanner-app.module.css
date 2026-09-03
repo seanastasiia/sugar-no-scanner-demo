@@ -748,24 +748,10 @@
   left: max(14px, env(safe-area-inset-left));
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.stageTopbarEnd {
+  /* Keep demo actions aligned with live-camera actions, without a source badge. */
   justify-content: flex-end;
 }
 
-.stageTopbar > span {
-  padding: 7px 10px;
-  border: 1px solid rgb(255 255 255 / 24%);
-  border-radius: 999px;
-  background: rgb(20 21 30 / 82%);
-  backdrop-filter: blur(10px);
-  font-size: 12px;
-  font-weight: 750;
-}
-
-.stageTopbar > button,
 .stageActions > button {
   display: inline-flex;
   width: auto;
@@ -2395,12 +2381,6 @@
   .demoUpload:hover {
     border-color: #d7a1a4;
     background: #fff8f7;
-  }
-}
-
-@media (max-width: 359px) {
-  .stageTopbar > span {
-    display: none;
   }
 }
 

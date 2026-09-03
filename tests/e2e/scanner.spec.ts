@@ -115,6 +115,9 @@ async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
   await expect(chooser).toBeVisible();
   await chooser.getByRole("button", { name: new RegExp(name) }).click();
+  await expect(page.getByText(/^(Shelf photo|Checkout photo)$/)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Leave feedback", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Back to live camera", exact: true })).toBeVisible();
 }
 
 async function mockSampleShelfRecognition(page: Page) {
@@ -461,7 +464,7 @@ test("sample shelf dismisses onboarding without requesting camera permission", a
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
   await page.getByRole("button", { name: "Try a sample shelf" }).click();
   await expect(page.getByLabel("Shelf photo scanner")).toBeVisible();
-  await expect(page.getByText("Shelf photo", { exact: true })).toBeVisible();
+  await expect(page.getByText("Shelf photo", { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem("sugar_scanner_onboarding_v1"))).toBe("completed");
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
 });

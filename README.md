@@ -15,6 +15,7 @@ The isolated `stage/onboarding-feedback` branch adds a first-visit pilot layer w
 - camera permission is requested only after `Open camera`; `Try a sample shelf` opens the deterministic shelf demo without requesting camera access;
 - completion is stored locally under `sugar_scanner_onboarding_v1`; `?onboarding=1` forces onboarding for QA;
 - anonymous in-app feedback supports `Helpful` or `Needs work`, a bounded reason, and an optional 300-character comment;
+- shelf and checkout demos show only the feedback and back-to-camera actions in the top bar, with no `Shelf photo` or `Checkout photo` badge; descriptive scanner labels remain available to screen readers;
 - camera, deterministic demo, demo chooser, result sheet and feedback use the shared staging design system in `design-system/sugar-no-shelf-scanner/MASTER.md`; `Leave feedback` is a labelled secondary 44 px control, `Not sure — try again` is a distinct coral retry button, and the feedback modal keeps a 20 px minimum separation below the rating choices;
 - onboarding version `3`, camera-permission, scan, and feedback events share one anonymous browser session so this approved design can be measured separately from the earlier staging screen;
 - the same privacy-safe product events are sent server-side to the separate EU Amplitude project `Shelf Scanner - Staging` for funnel analysis; Supabase remains the auditable event store;
