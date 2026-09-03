@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
 import { classifyUserAgent, metadataIsSafe } from "@/server/event-privacy";
 import { readBoundedJson } from "@/server/request-body";
 import { hasTrustedBrowserOrigin } from "@/server/request-origin";
 import { FixedWindowRateLimiter, recognitionClientKey } from "@/server/rate-limit";
 import { getSupabaseAdmin } from "@/server/supabase";
+import { sendFeedbackEmail } from "@/server/feedback-email";
 
 const feedbackRateLimiter = new FixedWindowRateLimiter(10, 60_000);
 
@@ -65,6 +66,11 @@ export async function POST(request: Request) {
     if (sessionError) return response({ error: "session_storage_failed" }, 503);
     const { error } = await supabase.from("pilot_feedback").insert(row);
     if (error) return response({ error: "feedback_storage_failed" }, 503);
+    try {
+      after(async () => { await sendFeedbackEmail(row); });
+    } catch {
+      console.warn(JSON.stringify({ event: "feedback_email", feedbackId: row.id, status: "scheduling_failed" }));
+    }
     return response({ ok: true, storage: "supabase" });
   }
 

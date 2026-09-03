@@ -4,6 +4,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Open
 
+- **Feedback email is best-effort.** The staging notification retries one transient failure, but does not have a durable delivery queue. A process restart or exhausted Resend quota can prevent the email; feedback remains in Supabase and metadata-only delivery logs identify failures.
+
 - **Normal-mode contrast follows the approved Pen design.** White text on the colorful fit gradients and the original system-blue controls does not meet every AA text contrast threshold. Increased-contrast mode provides darker text/actions and is checked separately.
 - **Rounded typography is platform-dependent on the web.** Apple Safari resolves the system rounded face; browsers without it use a system fallback. Apple font binaries are not included in the repository.
 
@@ -20,6 +22,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **Amplitude Starter limits Funnel charts to two steps.** The saved activation chart measures `app_opened` to `scan_completed`; onboarding, camera-permission, scan-start and feedback events remain available in Live Events and can be explored in separate charts without upgrading.
 
 ## Recently resolved
+
+- **2026-09-03: feedback had no owner email notification.** Staging can now send a bounded plain-text notification after successful storage, using a dedicated sending-only Resend key. Mail failures do not turn saved feedback into an error; production sending is disabled.
 
 - **2026-09-03: Compact cards showed grams without naming the nutrient.** Added `Sugar` before each known sugar value, for example `Sugar 2.3 g`. A flexible nutrient column prevents overlap with the fit badge on narrow cards; the number and unit stay together.
 

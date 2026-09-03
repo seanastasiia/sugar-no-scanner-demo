@@ -186,6 +186,16 @@ The managed `products` table is optional in this proof of concept. If it has not
 
 ## Railway release
 
+### Staging feedback email notifications
+
+After `pilot_feedback` is saved, a Next.js `after()` callback sends a plain-text email through Resend. It includes the rating, reason, optional comment, screen context, UTC timestamp and feedback ID, but no session identifier, photos, OCR, or browser fingerprint. Recipients and sender are server configuration only; user input cannot change them. Amplitude still never receives the comment.
+
+Set `FEEDBACK_EMAIL_ENABLED=true`, `RESEND_API_KEY`, `FEEDBACK_EMAIL_FROM` (a bare address on the verified domain) and `FEEDBACK_EMAIL_TO` (one owner address) in Railway staging. Sending is also gated by `RAILWAY_ENVIRONMENT_NAME=staging`; it remains disabled in production even if the flag/key is copied. Use a dedicated sending-only key restricted to the verified sender domain. To disable notifications without affecting feedback storage, set `FEEDBACK_EMAIL_ENABLED=false` and deploy staging.
+
+The approved setup uses `scanner@marketing.intend.com` to notify `anastasiia@sugar.no`, with a separate key and the existing Resend account's shared quota. No paid plan or pay-as-you-go is required or enabled by this integration. There are two bounded attempts for transient failures using the same [Resend idempotency key](https://resend.com/docs/dashboard/emails/idempotency-keys). A notification failure never changes the successful feedback response. Delivery is best-effort, not a durable queue: crashes or quota exhaustion can prevent an email; the saved feedback remains in Supabase. Metadata-only `feedback_email` logs record success/failure and the feedback ID; `sent` means accepted by Resend, not confirmed inbox delivery.
+
+Check: submit a clearly labelled test feedback in staging, confirm its success state and Supabase row, then confirm the matching email in the owner's mailbox or a `Delivered` event in Resend. Test invalid inputs and mail failures with `npx vitest run src/server/feedback-email.test.ts src/app/api/feedback/route.test.ts`; local/E2E environments must not load real mail credentials.
+
 Stage 1 uses the existing Railway project’s separate `staging` environment. Deploy the `stage/onboarding-feedback` worktree only with `--environment staging`, give it its own Railway domain, and set `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` from the separate staging Supabase project. Store the `Shelf Scanner - Staging` EU project key as the server-only `AMPLITUDE_API_KEY` and set `AMPLITUDE_ENVIRONMENT=staging`. Never copy production Supabase or Amplitude values into staging, and never use a `NEXT_PUBLIC_` analytics key. Verify the deployed branch through `/api/health` before product QA.
 
 For this staging-only design batch, push the reviewed commit to `stage/onboarding-feedback` and use the explicit staging target for a direct upload:
