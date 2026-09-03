@@ -1557,7 +1557,6 @@ export function ScannerApp() {
                 >
                   <span>
                     <OverlayToneIcon tone={presentation.tone} />
-                    <strong>{presentation.label}</strong>
                   </span>
                 </button>
               );

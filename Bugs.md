@@ -21,6 +21,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: The selected camera marker’s floating Great fit pill overflowed narrow product outlines on iPhone.** Removed floating text pills from every rated camera/photo marker, including selected markers. Colored outlines and icons remain; result-card labels and accessible marker names are preserved.
+
 - **2026-09-03: Final Pen details drifted during implementation.** Restored compact packshots, the square detail image, separate informational price rows and verified protein in comparison; aligned welcome spacing, demo navigation, service recovery and feedback styling with the current Pen file. Placeholder nutrition/photos in the design never replace exact product data.
 - **2026-09-03: Narrow-phone tiles split product names awkwardly and hid part of the last row.** The 320 px layout uses smaller packshots and enough sheet height for all four demo tiles; actions remain separately accessible in landscape.
 - **2026-09-03: Long feedback scrolled the close/submit controls away and clipped focus/shadow details.** Header and footer stay separate from the scrollable content; the visual viewport controls the available height. The textarea focus ring is inset, and the success footer keeps the Done shadow intact. Browser regression includes keyboard-like height reduction; physical iPhone behavior remains an owner check.

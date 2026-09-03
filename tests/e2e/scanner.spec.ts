@@ -558,8 +558,8 @@ test("scanner follows the current Sugar.no app surface language without changing
   await expect(page.getByRole("status")).toHaveCSS("background-color", "rgba(255, 255, 255, 0.94)");
   const markers = page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]');
   await expect(markers).toHaveCount(4);
-  await expect(markers.filter({ hasText: "Great fit" })).toHaveCount(2);
-  await expect(markers.filter({ hasText: "Moderate fit" })).toHaveCount(2);
+  await expect(markers.and(page.getByRole("button", { name: /: Great fit$/ }))).toHaveCount(2);
+  await expect(markers.and(page.getByRole("button", { name: /: Moderate fit$/ }))).toHaveCount(2);
   const markerFillAlphas = await markers.evaluateAll((elements) =>
     elements.map((element) => {
       const color = getComputedStyle(element).backgroundColor;
@@ -584,8 +584,10 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(markers).toHaveCount(4);
   await expect(page.locator('svg[data-fit-icon="great"]')).toHaveCount(2);
   await expect(page.locator('svg[data-fit-icon="moderate"]')).toHaveCount(2);
-  await markers.filter({ hasText: "Moderate fit" }).first().click();
-  await expect(markers.filter({ hasText: "Moderate fit" }).first().locator("strong")).toBeVisible();
+  await markers.and(page.getByRole("button", { name: /: Moderate fit$/ })).first().click();
+  await expect(markers).toHaveText(["", "", "", ""]);
+  await expect(preview.getByText("Great fit", { exact: true })).toHaveCount(2);
+  await expect(preview.getByLabel("Moderate fit", { exact: true })).toHaveCount(2);
   await expectNoDocumentOverflow(page);
   await page.screenshot({ path: "test-results/shelf-mobile.png" });
   await page.getByRole("button", { name: "View all", exact: true }).click();
@@ -656,8 +658,8 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
   const checkoutMarkers = page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]');
   await expect(checkoutMarkers).toHaveCount(3);
-  await expect(checkoutMarkers.filter({ hasText: "Great fit" })).toHaveCount(2);
-  await expect(checkoutMarkers.filter({ hasText: "Moderate fit" })).toHaveCount(1);
+  await expect(checkoutMarkers.and(page.getByRole("button", { name: /: Great fit$/ }))).toHaveCount(2);
+  await expect(checkoutMarkers.and(page.getByRole("button", { name: /: Moderate fit$/ }))).toHaveCount(1);
   await expect(page.getByText("Sugar per 100 g / 100 ml · best fit first", { exact: true })).toBeVisible();
   await expect(page.getByAltText("Groceries on a real supermarket checkout conveyor belt")).toBeVisible();
   await page.waitForFunction(() =>

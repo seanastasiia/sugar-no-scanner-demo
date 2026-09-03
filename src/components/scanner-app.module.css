@@ -515,20 +515,6 @@
   background: var(--tone-gradient);
   color: #fff;
 }
-.detectionBox > span strong {
-  position: absolute;
-  bottom: 34px;
-  left: 0;
-  padding: 4px 8px;
-  border: 1.25px solid #ffffff99;
-  border-radius: 24px;
-  background: var(--tone-gradient);
-  font: 600 15px/22px var(--font-display);
-  white-space: nowrap;
-}
-.detectionBox:not(.selectedBox) > span strong {
-  display: none;
-}
 .cameraError,
 .recoveryCard {
   position: absolute;

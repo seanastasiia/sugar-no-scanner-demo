@@ -42,6 +42,8 @@ The welcome distributes header, introduction, preview and actions with 24 px min
 
 Runtime content can be longer or use a different source/price than the static examples. Exact Carbs and eligible Better alternatives remain visible even when absent from a sample frame. The runtime uses actual packshots and verified per-100 nutrition; generic placeholder images and example numbers in Pen are not product evidence. A tablet uses a side result pane; phone landscape keeps the primary compact actions visible. All camera and photo overlays use object-contain mapping, and capture dimensions remain independent of CSS.
 
+Owner correction, 3 September 2026: rated camera/photo overlays use colored outlines and icon discs only. Do not show a floating fit-text pill, even on the selected product. Keep the full fit label in the accessible marker name and result cards.
+
 ## Interaction and validation
 
 Use semantic buttons, 44 px touch targets, focus rings, modal focus trapping, Escape close and return focus. Unknown values stay unknown. A saving action requires exact identity and an online offer below the observed shelf price. Prices never affect fit. Reduced motion removes decorative animation. Do not force a device-mask border radius onto the live web viewport.
