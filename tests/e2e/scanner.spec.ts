@@ -648,6 +648,27 @@ test("sample shelf dismisses onboarding without requesting camera permission", a
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
 });
 
+test("anonymous analytics visit spans onboarding, multiple scans and reload", async ({ page }) => {
+  const events: { name: string; sessionId: string; browserSessionId: string }[] = [];
+  await page.route("**/api/events", async (route) => {
+    events.push(route.request().postDataJSON());
+    await route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
+  });
+  await page.goto("/?onboarding=1");
+  await page.getByRole("button", { name: "Try a sample shelf" }).click();
+  await expect.poll(() => events.filter((event) => event.name === "scan_completed").length).toBe(1);
+  await page.getByRole("button", { name: "Scan again", exact: true }).click();
+  await openDemoScene(page, "Checkout demo");
+  await expect.poll(() => events.filter((event) => event.name === "scan_completed").length).toBe(2);
+  const scans = events.filter((event) => event.name === "scan_started");
+  expect(new Set(scans.map((event) => event.sessionId)).size).toBe(2);
+  expect(events.some((event) => event.name === "onboarding_completed")).toBe(true);
+  await page.reload();
+  await expect.poll(() => events.filter((event) => event.name === "app_opened").length).toBe(2);
+  expect(events[0].browserSessionId).toMatch(/^[0-9a-f-]{36}$/);
+  expect(new Set(events.map((event) => event.browserSessionId)).size).toBe(1);
+});
+
 test("sample overlays track the contained photo after onboarding and resizing", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/?onboarding=1");

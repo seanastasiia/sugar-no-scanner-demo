@@ -289,6 +289,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   const stableFrameCountRef = useRef(0);
   const lastCaptureRef = useRef(0);
   const sessionIdRef = useRef<string | null>(null);
+  const browserSessionIdRef = useRef<string | null>(null);
   const resultsSheetRef = useRef<HTMLElement>(null);
   const demoDialogRef = useRef<HTMLDivElement>(null);
   const demoTriggerRef = useRef<HTMLButtonElement>(null);
@@ -328,13 +329,19 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   const feedbackFocusRef = useRef<HTMLButtonElement>(null);
   const [pilotSessionId, setPilotSessionId] = useState("");
 
-  const ensureSession = useCallback(() => {
-    if (!sessionIdRef.current) {
-      sessionIdRef.current = readPilotSession(window.sessionStorage) || makeSessionId();
-      savePilotSession(window.sessionStorage, sessionIdRef.current);
+  const ensureBrowserSession = useCallback(() => {
+    if (!browserSessionIdRef.current) {
+      browserSessionIdRef.current = readPilotSession(window.sessionStorage) || makeSessionId();
+      savePilotSession(window.sessionStorage, browserSessionIdRef.current);
     }
-    return sessionIdRef.current;
+    return browserSessionIdRef.current;
   }, []);
+
+  const ensureSession = useCallback(() => {
+    // Scan IDs may rotate; the anonymous tab visit must span the whole funnel.
+    if (!sessionIdRef.current) sessionIdRef.current = ensureBrowserSession();
+    return sessionIdRef.current;
+  }, [ensureBrowserSession]);
 
   const track = useCallback(
     (
@@ -348,6 +355,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           sessionId: ensureSession(),
+          browserSessionId: ensureBrowserSession(),
           name,
           source: eventSource,
           productId: productId || null,
@@ -356,7 +364,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
         keepalive: true
       }).catch(() => undefined);
     },
-    [ensureSession]
+    [ensureSession, ensureBrowserSession]
   );
 
   const hydrateProducts = useCallback(async (ids: string[]) => {

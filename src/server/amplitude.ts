@@ -3,6 +3,7 @@ type AnalyticsMetadata = Record<string, string | number | boolean | null>;
 export type AmplitudeEvent = {
   id: string;
   sessionId: string;
+  browserSessionId?: string;
   name: string;
   source: string;
   metadata: AnalyticsMetadata;
@@ -90,7 +91,7 @@ export async function sendAmplitudeEvent(event: AmplitudeEvent): Promise<Amplitu
         api_key: apiKey,
         events: [
           {
-            device_id: event.sessionId,
+            device_id: event.browserSessionId || event.sessionId,
             event_type: event.name,
             insert_id: event.id,
             time: Date.now(),

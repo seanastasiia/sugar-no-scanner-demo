@@ -12,6 +12,7 @@ const eventsRateLimiter = createRecognitionRateLimiter({ RECOGNITION_RATE_LIMIT:
 
 const eventSchema = z.object({
   sessionId: z.uuid(),
+  browserSessionId: z.uuid().optional(),
   name: z.enum([
     "app_opened",
     "onboarding_started",
@@ -65,9 +66,12 @@ export async function POST(request: Request) {
       { status: 400, headers: { "cache-control": "no-store" } }
     );
   }
-  const eventMetadata = parsed.data.productId
+  const productMetadata = parsed.data.productId
     ? { ...parsed.data.metadata, observedProductId: parsed.data.productId }
     : parsed.data.metadata;
+  const eventMetadata = parsed.data.browserSessionId
+    ? { ...productMetadata, browserSessionId: parsed.data.browserSessionId }
+    : productMetadata;
   const row = {
     id: randomUUID(),
     session_id: parsed.data.sessionId,
@@ -111,6 +115,7 @@ export async function POST(request: Request) {
     const amplitude = await sendAmplitudeEvent({
       id: row.id,
       sessionId: row.session_id,
+      browserSessionId: parsed.data.browserSessionId,
       name: row.event_name,
       source: row.source,
       metadata: row.metadata
@@ -127,6 +132,7 @@ export async function POST(request: Request) {
   const amplitude = await sendAmplitudeEvent({
     id: row.id,
     sessionId: row.session_id,
+    browserSessionId: parsed.data.browserSessionId,
     name: row.event_name,
     source: row.source,
     metadata: row.metadata

@@ -121,4 +121,39 @@ describe("POST /api/events", () => {
       })
     );
   });
+
+  it.each([false, true])("preserves scan IDs but forwards a stable browser visit (Supabase: %s)", async (stored) => {
+    vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    if (stored) getSupabaseAdmin.mockReturnValue({
+      from: (table: string) => table === "scan_sessions" ? { upsert } : { insert }
+    });
+    sendAmplitudeEvent.mockResolvedValue("sent");
+    const browserSessionId = crypto.randomUUID();
+    const scanIds = [crypto.randomUUID(), crypto.randomUUID()];
+    for (const sessionId of scanIds) {
+      const response = await POST(new Request("https://scanner.example/api/events", {
+        method: "POST",
+        headers: { origin: "https://scanner.example", "content-type": "application/json" },
+        body: JSON.stringify({ sessionId, browserSessionId, name: "scan_started", source: "sample-shelf" })
+      }));
+      expect(response.status).toBe(200);
+      expect(sendAmplitudeEvent).toHaveBeenLastCalledWith(expect.objectContaining({ sessionId, browserSessionId }));
+      if (stored) expect(insert).toHaveBeenLastCalledWith(expect.objectContaining({
+        session_id: sessionId, metadata: { browserSessionId }
+      }));
+    }
+  });
+
+  it("rejects a non-UUID browser identity before storage or forwarding", async () => {
+    const response = await POST(new Request("https://scanner.example/api/events", {
+      method: "POST",
+      headers: { origin: "https://scanner.example", "content-type": "application/json" },
+      body: JSON.stringify({ sessionId: crypto.randomUUID(), browserSessionId: "someone@example.com", name: "app_opened", source: "camera" })
+    }));
+    expect(response.status).toBe(400);
+    expect(sendAmplitudeEvent).not.toHaveBeenCalled();
+    expect(getSupabaseAdmin).not.toHaveBeenCalled();
+  });
 });

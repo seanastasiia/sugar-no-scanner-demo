@@ -80,6 +80,20 @@ describe("Amplitude analytics", () => {
     await expect(sendAmplitudeEvent(event)).resolves.toBe("failed");
   });
 
+  it("keeps one anonymous device across multiple scans without forwarding scan identity", async () => {
+    process.env.AMPLITUDE_API_KEY = "test-project-key";
+    const fetchMock = vi.fn().mockResolvedValue(new Response("success"));
+    vi.stubGlobal("fetch", fetchMock);
+    const browserSessionId = crypto.randomUUID();
+    for (const name of ["app_opened", "scan_started", "scan_completed"]) {
+      await sendAmplitudeEvent({ ...event, id: crypto.randomUUID(), sessionId: crypto.randomUUID(), browserSessionId, name });
+    }
+    const events = fetchMock.mock.calls.map(([, request]) => JSON.parse(request.body).events[0]);
+    expect(new Set(events.map((item) => item.device_id))).toEqual(new Set([browserSessionId]));
+    expect(new Set(events.map((item) => item.insert_id)).size).toBe(3);
+    expect(events.every((item) => !Object.hasOwn(item.event_properties, "browserSessionId"))).toBe(true);
+  });
+
   it("labels production separately without forwarding feedback or product identity", () => {
     process.env.AMPLITUDE_ENVIRONMENT = "production";
     const properties = amplitudeEventProperties(event);
