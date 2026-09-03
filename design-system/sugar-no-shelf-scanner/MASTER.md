@@ -57,6 +57,8 @@ Owner carousel correction, 3 September 2026: Better alternatives scroll horizont
 
 ## Interaction and validation
 
+Motion: 180 ms surface fades and 260 ms content/sheet entrances with `cubic-bezier(0.22, 1, 0.36, 1)`, 10–24 px travel, and a 12 px horizontal detail entrance. Ranked/preview cards use a 30 ms stagger capped at 90 ms. Button presses scale to 0.985 with a 160 ms release. Only opacity and transforms animate; no layout dimensions, video or detection coordinates. Entrance effects run on navigation/mount, not every data refresh. Reduce Motion removes these effects, spinner and shimmer; navigation and focus never wait for an animation to finish.
+
 Use semantic buttons, 44 px touch targets, focus rings, modal focus trapping, Escape close and return focus. Unknown values stay unknown. A saving action requires exact identity and an online offer below the observed shelf price. Prices never affect fit. Reduced motion removes decorative animation. Do not force a device-mask border radius onto the live web viewport.
 
 Check the full Mobile Safari suite, the small/large-phone + tablet matrix, source-backed nutrition and offer gates, progressively resolved identities, feedback failure/retry, and comparison screenshots against Pen. Real-store camera accuracy remains an owner/device check.

@@ -571,6 +571,52 @@ test("scanner follows the current Sugar.no app surface language without changing
   expect(markerFillAlphas.every((alpha) => alpha >= 0.09 && alpha <= 0.11)).toBe(true);
 });
 
+for (const reducedMotion of ["no-preference", "reduce"] as const) {
+  test(`result motion keeps rapid navigation and focus usable (${reducedMotion})`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion });
+    await mockAlternativeOffers(page);
+    await unlock(page);
+    await openDemoScene(page, "Shelf demo");
+    const viewAll = page.getByRole("button", { name: "View all", exact: true });
+    const dialog = page.getByRole("dialog", { name: "Products from this scan" });
+    const content = dialog.locator("#scan-results-content");
+    // Dispatch without Playwright's stability wait so navigation can interrupt entry.
+    await viewAll.focus();
+    await viewAll.dispatchEvent("click");
+    await expect(dialog).toBeVisible();
+    const animated = await content.evaluate((el) => getComputedStyle(el).animationName !== "none");
+    expect(animated).toBe(reducedMotion === "no-preference");
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(viewAll).toBeFocused();
+
+    await viewAll.dispatchEvent("click");
+    await dialog.getByRole("button", { name: "Rank 1, BAREBELLS Salty Peanut, Great fit", exact: true }).dispatchEvent("click");
+    await expect(dialog.getByRole("heading", { name: "Salty Peanut", exact: true })).toBeVisible();
+    await dialog.getByRole("button", { name: "Back to all results" }).dispatchEvent("click");
+    await expect(dialog.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+    await expect(dialog).toBeFocused();
+    // A system preference change also stops an entry already in progress.
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(content).toHaveCSS("animation-name", "none");
+    await expect(content).toHaveCSS("transform", "none");
+    const carousel = dialog.getByRole("group", { name: "Alternative products" });
+    await carousel.getByRole("link").last().scrollIntoViewIfNeeded();
+    await expectInsideViewport(page, carousel.getByRole("link").last());
+    await expectNoDocumentOverflow(page);
+    await page.keyboard.press("Escape");
+    await expect(viewAll).toBeFocused();
+
+    await page.emulateMedia({ reducedMotion });
+    const feedback = page.getByRole("button", { name: "Leave feedback", exact: true });
+    await feedback.dispatchEvent("click");
+    await expect(page.getByRole("dialog", { name: /Was this scan/ })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(feedback).toBeFocused();
+  });
+}
+
 test("sample shelf photo highlights products and ranks two-factor Sugar.no fits", async ({ page }) => {
   await mockAlternativeOffers(page);
   await unlock(page);
@@ -624,7 +670,12 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   // Approved normal-mode badge colors are retained; the system's increased
   // contrast preference supplies an accessible variant of the same components.
   await page.emulateMedia({ contrast: "more" });
-  await page.emulateMedia({ contrast: "more" });
+  // Measure final colors after entrance opacity has settled, not a blended frame.
+  await dialog.evaluate(async (element) => {
+    await Promise.all(element.getAnimations({ subtree: true })
+      .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+      .map((animation) => animation.finished.catch(() => undefined)));
+  });
   const accessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
   expect(accessibility.violations).toEqual([]);
 });

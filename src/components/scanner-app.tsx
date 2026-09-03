@@ -288,6 +288,7 @@ export function ScannerApp() {
   const demoDialogRef = useRef<HTMLDivElement>(null);
   const demoTriggerRef = useRef<HTMLButtonElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const resultReturnTriggerRef = useRef("view-all");
   const manualSelectionRef = useRef(false);
   const cameraRequestRef = useRef(0);
   const cameraStartedFromOnboardingRef = useRef(false);
@@ -1288,11 +1289,18 @@ export function ScannerApp() {
   const closeResults = useCallback(() => {
     setResultsExpanded(false);
     setProductDetailsOpen(false);
-    window.requestAnimationFrame(() => previousFocusRef.current?.focus());
+    window.requestAnimationFrame(() => {
+      // Compact controls remount when the full results close.
+      const controls = Array.from(resultsSheetRef.current?.querySelectorAll<HTMLElement>("[data-result-trigger]") || []);
+      const trigger = controls.find((control) => control.dataset.resultTrigger === resultReturnTriggerRef.current)
+        || controls.find((control) => control.dataset.resultTrigger === "view-all");
+      (trigger || (previousFocusRef.current?.isConnected ? previousFocusRef.current : null))?.focus({ preventScroll: true });
+    });
   }, []);
 
-  const openResults = useCallback(() => {
+  const openResults = useCallback((trigger = "view-all") => {
     previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    resultReturnTriggerRef.current = trigger;
     setResultsExpanded(true);
   }, []);
 
@@ -1715,6 +1723,7 @@ export function ScannerApp() {
                       <article className={styles.sheetPreviewCard} key={id}>
                         <button
                           className={styles.sheetPreviewOpen}
+                          data-result-trigger={id}
                           type="button"
                           aria-label={
                             isRated
@@ -1724,7 +1733,7 @@ export function ScannerApp() {
                           onClick={() => {
                             manualSelectionRef.current = true;
                             setSelectedId(id);
-                            openResults();
+                            openResults(id);
                             setProductDetailsOpen(true);
                             track("result_opened", source, id);
                           }}
@@ -1768,13 +1777,17 @@ export function ScannerApp() {
                     <RefreshCw aria-hidden="true" size={20} />
                     <span>Scan again</span>
                   </button>
-                  <button className={styles.primaryButton} type="button" onClick={openResults} aria-controls="scan-results-content">
+                  <button className={styles.primaryButton} type="button" onClick={() => openResults()} data-result-trigger="view-all" aria-controls="scan-results-content">
                     <span>View all</span>
                   </button>
                 </div>
               </>
             ) : (
-              <div className={styles.sheetContent} id="scan-results-content">
+              <div
+                className={styles.sheetContent}
+                id="scan-results-content"
+                data-view={productDetailsOpen ? "detail" : "list"}
+              >
                 {!productDetailsOpen && visibleTrayIds.length === 1 ? (
                   <div className={styles.scanSummary}>
                     <div>
