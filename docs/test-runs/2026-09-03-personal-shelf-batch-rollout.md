@@ -52,4 +52,15 @@ Barbora/OFF stopped on HTTP 429; Rimi/Livinn completed their queues. No retries 
 
 ## Final verification
 
-Pending final snapshot, candidate commit, full suite, Supabase seed and Railway HTTPS smoke. Do not treat this section as release confirmation until the recorded results are complete.
+Tested application commit: `370a73cafbd77739a442bbcd97e732f543eccb47`. A documentation-only release commit follows; application/data/migration trees are unchanged.
+
+- `npm run verify`: PASS, ESLint, TypeScript, 55 files / 364 Vitest tests, all three catalog validators, Next.js optimized build and standalone assets. Output: `verify-final.log` in the evidence directory above.
+- `CI=1 E2E_PRODUCTION=0 SHARED_WEB_CATALOG_ENABLED=true PERSONAL_SHELF_RANK_ENABLED=true npm run test:e2e`: PASS, 38/38 Mobile Safari tests, 1.5 minutes, on the tested commit. Output: `e2e-final.log`. Expected request-cancellation ECONNRESET messages occurred in abort/retry scenarios without failed assertions.
+- Supabase SDK seed/readback: PASS, all 1,223 retailer and 25 OFF rows verified, no rows deleted. Output: `supabase-seed.log`. No synthetic fixture was inserted into production.
+- Independent SQL readback: 1,223 retailer rows, 25 OFF rows, no anonymous read or RPC execution, no authenticated insert. All 1,023 retailer observations with absent fiber retain SQL/JSON null, not zero. RLS is enabled on both evidence tables.
+- Dry-run, checkpoint report-only and snapshot validator passed (`catalog-report.log`, `catalog-validation.log`, `seed-dry-run.log`). Complete/provisional totals and source accounting are recorded above.
+- Final old/new complete-score parity: 64 unchanged, zero changed complete baseline scores; no source values modified (`score-parity-final.log`).
+
+Release lane: GitHub `main`, then explicit Railway CLI deployment to service `6d0d8abe-cb63-4d29-96bd-c3a290be3e7c`, project `9e2a4887-0e19-4ca7-ae99-d68816542558`, environment `production`. Set `PERSONAL_SHELF_RANK_ENABLED=true`; preserve `SHARED_WEB_CATALOG_ENABLED=true`. Do not update the separate preview/staging services.
+
+Production completion, terminal deployment ID/status and HTTPS smoke results are recorded in the dated shared Sugar.no Update only after actual live verification. Required smoke: root/session, unauthenticated 401, cross-origin 403, exact-source evidence including a null-fiber range and contradiction, existing barcode/Shelf demo, and `/api/health` matching main SHA with 1,248/242/716/290 snapshot counts. Rollback hides the new feature with `PERSONAL_SHELF_RANK_ENABLED=false` plus redeploy; it does not delete evidence or change default Fit.
