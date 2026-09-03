@@ -606,7 +606,7 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   await expect(dialog.getByRole("heading", { name: "Salty Peanut", exact: true })).toBeVisible();
   await expect(dialog.getByLabel("Sugar.no badge")).toContainText("2.3 g");
   await expect(dialog.getByLabel("Sugar.no badge")).toContainText("36 g");
-  await expect(dialog.getByRole("link", { name: /Open retailer/ })).toHaveAttribute("href", "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g");
+  await expect(dialog.getByRole("link", { name: /Buy cheaper online/ })).toHaveAttribute("href", "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g");
   const alternatives = dialog.getByRole("region", { name: "Same product type · Great fit only" });
   await expect(alternatives.getByRole("link", { name: /Buy online .* for €1\.49/ })).toHaveCount(4);
   await expect(alternatives.getByText("Great fit", { exact: true })).toHaveCount(4);
@@ -2051,7 +2051,7 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
-  const inlineOffer = page.getByRole("link", { name: /Open retailer for Zero Peach.* at Barbora/ });
+  const inlineOffer = page.getByRole("link", { name: /Buy cheaper online Zero Peach.* at Barbora/ });
   await expect(inlineOffer).toHaveAttribute(
     "href",
     "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
@@ -2061,7 +2061,8 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await expect(inlineOffer.getByText("€1.69 shelf", { exact: true })).toHaveCount(0);
   const expandedPrice = page.getByLabel("Shelf price €1.69, online price €0.99, cheaper online").last();
   await expect(expandedPrice.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "line-through");
-  await expect(expandedPrice.getByText("€0.99", { exact: true })).toBeVisible();
+  await expect(expandedPrice.locator("strong")).toHaveText("€0.99");
+  await expect(inlineOffer.getByRole("group", { name: "Shelf price €1.69, online price €0.99, cheaper online" })).toBeVisible();
   expect((await inlineOffer.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   const inlineOfferBox = await inlineOffer.boundingBox();
   const inlineOfferCardBox = await inlineOffer.locator("..").boundingBox();
@@ -2077,7 +2078,7 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await chooseSavedPhoto(page, "possible-price-check.png");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Open retailer/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Buy cheaper online/ })).toHaveCount(0);
   await expect(page.getByLabel("Product result preview").getByRole("link", { name: /Buy .* cheaper at Barbora/ })).toHaveCount(0);
 
   exactSku = true;
@@ -2094,7 +2095,7 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await expect(page.getByRole("link", { name: /Buy cheaper online Zero Peach.* at Barbora for €0\.99/ })).toHaveCount(0);
   await expect(page.getByText("Barbora online", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Online price €0.99")).toBeVisible();
-  await expect(page.getByRole("link", { name: /Open retailer/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Buy cheaper online/ })).toHaveCount(0);
   await expect(page.locator('[aria-label*="Barbora online"]')).toHaveCount(0);
 });
 

@@ -89,9 +89,11 @@ test("Pen screens remain readable and actionable across iPhone sizes and rotatio
       const packshot = dialog.getByTestId("product-packshot").first();
       const photo = await packshot.locator("..").boundingBox();
       expect(Math.abs((photo?.width || 0) - (photo?.height || 0))).toBeLessThanOrEqual(1);
-      const retailer = dialog.getByRole("link", { name: /Open retailer/ });
+      const retailer = dialog.getByRole("region", { name: "Product price" }).getByRole("link", { name: /Buy cheaper online/ });
       await retailer.scrollIntoViewIfNeeded();
       await unobstructed(retailer);
+      await siblingsDoNotOverlap(retailer);
+      expect(await retailer.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
       await noOverflow(page);
       await page.screenshot({ scale: "css", path: `test-results/pen-detail-${viewport.width}x${viewport.height}.png` });
     });

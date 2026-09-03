@@ -21,6 +21,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: Saving prices lacked the approved hierarchy and were separated from the detail action.** The shared cheaper-online button now places the small crossed-out shelf price and larger bold online price together on the right. Details and eligible alternatives reuse the ranked-card action. Exact-SKU and genuine-saving conditions are preserved.
+
 - **2026-09-03: Scan again and View all still used flat white secondary buttons.** Matched the supplied Figma action pair: blue gradient with a left refresh icon for Scan again, black gradient for View all, and the shared app rim. Removed the rule hiding icons in the compact action row; narrow-phone spacing stays contained.
 
 - **2026-09-03: The live camera was boxed below a light header and repeated the automatic-scan explanation.** The feed now fills the viewport behind the white logo and dark controls. Preview and held frame share centered cover geometry; outlines follow that crop, while capture still uses the complete source frame. The redundant caption is removed, and photo/demo layouts remain contained.

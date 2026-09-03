@@ -196,23 +196,31 @@ export function ProductResult({
                       <MatchPill product={alternative} />
                     </span>
                   </button>
-                  <a
-                    className={styles.alternativeBuy}
-                    href={offer.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => onRetailer(alternative.id)}
-                    aria-label={`${cheaperOnline ? "Buy cheaper online" : "Buy online"} ${alternative.name} for €${offer.price.toFixed(2)}`}
-                  >
-                    <span>
-                      <strong>{cheaperOnline ? "Cheaper online" : "Buy online"}</strong>
-                      {cheaperOnline && shelfPrice ? <s>€{shelfPrice.amount.toFixed(2)}</s> : null}
-                    </span>
-                    <span className={styles.alternativeBuyPrice}>
-                      €{offer.price.toFixed(2)}
-                      <ArrowUpRight aria-hidden="true" size={16} />
-                    </span>
-                  </a>
+                  {cheaperOnline ? (
+                    <OnlineOfferAction
+                      productName={productDisplayName(alternative)}
+                      detection={scanDetections[alternative.id]}
+                      offer={offer}
+                      onRetailer={() => onRetailer(alternative.id)}
+                    />
+                  ) : (
+                    <a
+                      className={styles.alternativeBuy}
+                      href={offer.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => onRetailer(alternative.id)}
+                      aria-label={`Buy online ${alternative.name} for €${offer.price.toFixed(2)}`}
+                    >
+                      <span>
+                        <strong>Buy online</strong>
+                      </span>
+                      <span className={styles.alternativeBuyPrice}>
+                        €{offer.price.toFixed(2)}
+                        <ArrowUpRight aria-hidden="true" size={16} />
+                      </span>
+                    </a>
+                  )}
                 </article>
               );
             })}
@@ -276,10 +284,12 @@ export function LoadingProductResult({ detection }: { detection: ProductDetectio
 
 export function CompactProductPrice({
   detection,
-  offer: offerOverride
+  offer: offerOverride,
+  appearance = "summary"
 }: {
   detection?: ProductDetection;
   offer?: RetailerOffer | null;
+  appearance?: "summary" | "button";
 }) {
   const shelfPrice = detection?.shelfPrice;
   const offer = offerOverride?.exactSku
@@ -298,7 +308,7 @@ export function CompactProductPrice({
         : `Online price €${offer?.price.toFixed(2)}`;
 
   return (
-    <div className={styles.compactProductPrice} role="group" aria-label={accessibleLabel}>
+    <div className={appearance === "button" ? styles.onlineOfferPrice : styles.compactProductPrice} role="group" aria-label={accessibleLabel}>
       {shelfPrice ? (
         cheaperOnline ? (
           <s className={styles.compactCrossedPrice}>€{shelfPrice.amount.toFixed(2)}</s>
@@ -343,9 +353,7 @@ export function OnlineOfferAction({
       aria-label={`Buy cheaper online ${productName} at ${offer.retailer} for €${offer.price.toFixed(2)}`}
     >
       <strong>Buy cheaper online</strong>
-      <span className={styles.onlineOfferPrice}>
-        {shelfPrice ? <s>€{shelfPrice.amount.toFixed(2)}</s> : null}€{offer.price.toFixed(2)}
-      </span>
+      <CompactProductPrice detection={detection} offer={offer} appearance="button" />
     </a>
   );
 }
@@ -366,23 +374,19 @@ function ProductDetailOffer({
   const cheaper = offer && isExactOnlineSaving(offer, detection?.shelfPrice);
   return (
     <section className={styles.offerSummary} aria-label="Product price">
-      <div className={styles.offerSummaryHeading}>
-        <span>{cheaper ? "Buy cheaper online" : offer ? "Online price" : "Shelf price"}</span>
-        <CompactProductPrice detection={detection} offer={offer} />
-      </div>
       {cheaper && offer ? (
-        <a
-          className={styles.onlineOfferAction}
-          style={{ justifyContent: "center" }}
-          href={offer.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={onRetailer}
-          aria-label={`Open retailer for ${productDisplayName(product)} at ${offer.retailer}`}
-        >
-          Open retailer
-        </a>
-      ) : null}
+        <OnlineOfferAction
+          productName={productDisplayName(product)}
+          detection={detection}
+          offer={offer}
+          onRetailer={onRetailer}
+        />
+      ) : (
+        <div className={styles.offerSummaryHeading}>
+          <span>{offer ? "Online price" : "Shelf price"}</span>
+          <CompactProductPrice detection={detection} offer={offer} />
+        </div>
+      )}
     </section>
   );
 }

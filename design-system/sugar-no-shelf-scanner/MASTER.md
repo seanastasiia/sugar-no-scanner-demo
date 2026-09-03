@@ -49,6 +49,8 @@ Owner correction, 3 September 2026: rated camera/photo overlays use colored outl
 
 Owner action correction, 3 September 2026: use the button finishes from Figma `15128:89227` (meal details footer). Compact Scan again is blue with a refresh icon; View all uses the black primary gradient. Keep both labels white, a 12 px gap and equal flexible columns so Scan again fits. At widths up to 360 px use 15 px labels and 12 px horizontal padding.
 
+Owner price correction, 3 September 2026: every confirmed cheaper-online card uses one black-gradient button. Label on the left; old shelf price in white regular 13/18 with a strike-through and online price in white bold 17/22 on the right, aligned on the baseline with an 8 px gap (5 px on narrow phones). Keep the pair together. Reuse this action in details and eligible alternatives; do not separate the prices above an Open retailer action.
+
 Better alternatives stay inside the same content gutters as the surrounding cards. Use a single column on phones and two columns when at least 492 px is available; no negative side margins or horizontally clipped product cards. Wrap long names and headings.
 
 ## Interaction and validation

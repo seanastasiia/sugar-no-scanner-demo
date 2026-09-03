@@ -895,23 +895,27 @@
   gap: 8px;
   margin-top: 12px;
 }
-.onlineOfferAction strong {
+.onlineOfferAction > strong {
   font: inherit;
 }
 .onlineOfferPrice {
   display: inline-flex;
   flex: none;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   white-space: nowrap;
 }
+.onlineOfferPrice > strong {
+  font-weight: 700;
+}
 .onlineOfferPrice s {
+  color: #fff;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 400;
-  opacity: 0.85;
+  line-height: 18px;
 }
 .productResult {
   width: 100%;
@@ -1015,6 +1019,10 @@
   padding: 20px;
   border-radius: 32px;
   background: var(--surface);
+}
+.offerSummary > .onlineOfferAction,
+.alternativeCard > .onlineOfferAction {
+  margin-top: 0;
 }
 .offerSummaryHeading {
   display: flex;
@@ -1149,10 +1157,6 @@
 }
 .alternativeBuy > span:first-child {
   display: grid;
-}
-.alternativeBuy s {
-  font-size: 11px;
-  opacity: 0.8;
 }
 .alternativeBuyPrice {
   display: inline-flex;
@@ -1520,7 +1524,6 @@
   }
   .onlineOfferPrice {
     gap: 5px;
-    font-size: 14px;
   }
   .resultsCollapsed {
     max-height: min(68dvh, 440px);
