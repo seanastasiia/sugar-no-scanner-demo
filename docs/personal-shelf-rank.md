@@ -1,6 +1,6 @@
-# Personal Shelf Rank v1.1.1 — bounded preview contract
+# Personal Shelf Rank v1.2 — bounded preview contract
 
-Status: v1.1.1 is a preview-only demo fix, 3 September 2026; not clinically validated and not a replacement for default Fit. Model ID: `personal-shelf-v1.1.1-bounded`. Production keeps its separately approved release. [Preview](https://sugar-no-personal-rank-personal-rank-preview.up.railway.app/).
+Status: v1.2 adds dry breakfast cereals/muesli/granola and preserves unrated cards in the preview, 3 September 2026; not clinically validated and not a replacement for default Fit. Model ID: `personal-shelf-v1.2-bounded`. Production keeps its separately approved release. [Preview](https://sugar-no-personal-rank-personal-rank-preview.up.railway.app/).
 
 For an immediate camera-free example, open [New rating demo](https://sugar-no-scanner-demo-production.up.railway.app/demo/personal-shelf). Its four selected chip records use the same scorer: 64/61, real PROPER lentil chips 57–59 with unknown fiber and one unscored contradictory-source chip. The Yogurts demo tab is removed; real yogurt recognition and assessment are unchanged. This is a labelled selection, not a recognition test or market-wide ranking. No refresh or provider request is made by the demo.
 
@@ -10,7 +10,7 @@ Expand a scan, turn on `Personal Shelf Rank`, compare products within one suppor
 
 There are two distinct numbers: a product preference score/range out of 100 and a relative place **among assessable products of the same type in this scan**. A single assessed product gets no place. Fully known exact ties share competition ranks (1, 1, 3). Provisional ranges sort by their lower bound; every provisional assessment and any full score overlapping a provisional range has a visibly provisional place, not a verified winner/tie. Essential-missing/unsupported products remain visible but excluded from rank denominators. Score is not a percentile and price cannot affect it.
 
-The compact presentation omits group counters, introductory boilerplate, verbose missing-data text and the separate unsupported/unidentified list. Supported incomplete cards show a neutral dash with `Not scored` accessibility text. Unsupported products stay in original Fit, not in a separate pilot block. When no categories remain, a short hint directs the user back to the existing mode switch. These are display rules, not wider scoring coverage or new evidence.
+The compact presentation omits group counters, introductory boilerplate and verbose missing-data text. Supported incomplete cards show a neutral dash with `Not scored` accessibility text. Unsupported and unresolved named packages remain as ordinary compact cards under `More products`, excluded from ranking. No supported categories is not an empty scan; only zero cards can show an empty-state message.
 
 ## Required evidence and language rules
 
@@ -31,6 +31,11 @@ The following **weights, linear curves, food-base points and 59-point ceiling ar
 | Chips; crackers/crispbreads (separate rank groups) | 10 | 10 | 30 | 50 |
 | Spoonable yogurt; dairy dessert (separate groups) | 30 | 25 | 20 | 25 |
 | Snack bar; cookie/wafer (separate groups) | 30 | 20 | 25 | 25 |
+| Dry breakfast cereals, muesli and granola (one separate group) | 30 | 20 | 25 | 25 |
+
+The breakfast profile uses salt/saturates/fiber balance shares 20%/40%/40%, hence at most ten unknown-fiber points. Its weights are a product preference choice, not an official health formula. Only exact-source ready-to-eat category leaves qualify: broad cereals, cooking oats/porridge, infant foods, cereal drinks and prepared-with-milk tables are excluded. Rimi `musli` under the bar aisle remains a bar. Explicit seed bases join whole-grain/legume/nut bases; seed oil and isolated seed protein still follow the existing extracted-component rules. All 976 assessable records at the prior preview revision keep identical assessments; five previously unknown seed bases become assessable.
+
+English package labels for eight Turtle SKUs are independently reviewed identity aliases, not ingredient translations. They require exact source URL/brand/pack/image metadata and reject extra unknown flavour tokens. Cinnamon Crunch and Bites are the brand's two labels on the same [English product page](https://turtlecereals.com/collections/cereal-classics/products/cinnamon-cereals) and [German product page](https://turtlecereals.com/de-de/kategorien/vegan/produkte/cinnamon-cereals); the checked Livinn 300g observation matches the disclosed composition/table. Other manufacturer tables are not merged into retailer observations; recipes may differ across markets or change over time.
 
 Every component is normalized to 0–100, then multiplied by its weight/100. Component contributions are rounded to one decimal; integer tenths are summed before final rounding to avoid binary half-point errors. The audited 64 complete baseline scores are unchanged in v1.1. Missing-fiber bounds remain at most ten points apart; a ceiling can collapse them to one displayed value, still explicitly provisional.
 

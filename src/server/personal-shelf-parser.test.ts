@@ -54,6 +54,10 @@ describe("independent exact-source shelf evidence", () => {
       productId: "livinn_lt:qa", ingredientsLanguage: "lt", energyKcal: 446, proteinG: 6.6, totalSugarG: 18, fiberG: 6, saltG: .48, saturatedFatG: 2.5, carbohydrateG: 66, fatG: 16
     });
   });
+  it("does not use a prepared-with-milk table as dry cereal nutrition", () => {
+    expect(livinnShelfEvidence(page.replace("(100 g)", "(100 g paruošto produkto su pienu)"), "https://www.livinn.lt/p/qa", "qa", time)).toBeNull();
+    expect(rimiShelfEvidence(rimiPage("0.5 g", "Sastāvdaļas", "100g ar pienu"), rimiUrl, "100", time)).toBeNull();
+  });
   it("rejects another SKU, per-serving evidence and missing exact blocks", () => {
     expect(livinnShelfEvidence(page, "https://www.livinn.lt/p/qa", "wrong", time)).toBeNull();
     expect(livinnShelfEvidence(page.replace("(100 g)", "(30 g)"), "https://www.livinn.lt/p/qa", "qa", time)).toBeNull();

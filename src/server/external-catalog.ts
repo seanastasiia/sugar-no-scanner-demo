@@ -15,6 +15,7 @@ import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "./external
 import { isQuarantinedRetailerNutrition } from "./retailer-nutrition-quarantine";
 import { getShelfEvidence } from "./personal-shelf-evidence";
 import { applyShelfNutritionTrustGuard } from "@/lib/personal-shelf-rank";
+import { isReviewedPackageAlias, withReviewedPackageAliases } from "./reviewed-package-aliases";
 
 interface RankedExternalCatalogCandidate {
   product: ExternalCatalogProduct;
@@ -131,8 +132,8 @@ export function dedupeExternalCatalogProducts(candidates: ExternalCatalogProduct
   return [...deduped.values()].sort((left, right) => left.sourceProductId.localeCompare(right.sourceProductId));
 }
 
-const products = dedupeExternalCatalogProducts(rawProducts);
-const identities = livinnFoodIndex as ExternalCatalogIdentity[];
+const products = dedupeExternalCatalogProducts(rawProducts.map(withReviewedPackageAliases));
+const identities = (livinnFoodIndex as ExternalCatalogIdentity[]).map(withReviewedPackageAliases);
 
 function barcodeIndex<T extends { gtin: string | null }>(values: T[]): Map<string, T> {
   const index = new Map<string, T>();
@@ -203,6 +204,19 @@ function balancedCoverage(query: string[], candidate: string[]): number {
   return (2 * queryCoverage * candidateCoverage) / (queryCoverage + candidateCoverage);
 }
 
+function aliasCoverage(query: string[], name: string, excluded: Set<string>): number {
+  const candidate = tokens(name, excluded);
+  if (!isReviewedPackageAlias(name)) return balancedCoverage(query, candidate);
+  // A reviewed label is not permission to ignore an extra flavour. Allow only
+  // generic label words and pack numbers (the separate pack guard checks those).
+  const generic = new Set(["organic", "cereal", "cereals", "breakfast"]);
+  const clean = (values: string[]) => values.filter((token) => !generic.has(token) && !/^\d+$/.test(token));
+  const cleanQuery = clean(query);
+  const cleanCandidate = clean(candidate);
+  if (coverage(cleanQuery, cleanCandidate) < 1) return 0;
+  return balancedCoverage(cleanQuery, cleanCandidate);
+}
+
 function packEvidenceBonus(packMatches: boolean | null, nameScore: number): number {
   if (packMatches === true) return 0.2;
   // Protein and sugar are normalized per 100 g / 100 ml, so a missing pack
@@ -224,7 +238,7 @@ export function rankExternalCatalogCandidates(
     .flatMap((product): RankedExternalCatalogCandidate[] => {
       if (!retailerBrandMatches(input.brand, product.brand)) return [];
       const nameScore = [product.title, ...(product.aliases || [])].reduce(
-        (best, name) => Math.max(best, balancedCoverage(queryTokens, tokens(name, brandTokens))),
+        (best, name) => Math.max(best, aliasCoverage(queryTokens, name, brandTokens)),
         0
       );
       const candidatePack = canonicalPack(product.packSize);
@@ -250,7 +264,7 @@ export function rankExternalCatalogIdentities(
     .flatMap((product) => {
       if (!retailerBrandMatches(input.brand, product.brand)) return [];
       const nameScore = [product.title, ...product.aliases].reduce(
-        (best, name) => Math.max(best, balancedCoverage(queryTokens, tokens(name, brandTokens))),
+        (best, name) => Math.max(best, aliasCoverage(queryTokens, name, brandTokens)),
         0
       );
       const candidatePack = canonicalPack(product.packSize);

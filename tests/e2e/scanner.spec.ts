@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { shelfFixture } from "../fixtures/personal-shelf";
-import type { ScoredProduct } from "../../src/lib/types";
+import type { ProductDetection, ScoredProduct } from "../../src/lib/types";
 import type { ShelfEvidence } from "../../src/lib/personal-shelf-rank";
 import { applyShelfNutritionTrustGuard } from "../../src/lib/personal-shelf-rank";
 import type { ExternalCatalogProduct } from "../../src/server/external-catalog-types";
@@ -114,7 +114,7 @@ async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   await expect(page.getByRole("button", { name: "Back to live camera", exact: true })).toHaveCount(0);
 }
 
-async function openPersonalShelfFixture(page: Page, samples?: ScoredProduct[]) {
+async function openPersonalShelfFixture(page: Page, samples?: ScoredProduct[], unresolved: ProductDetection[] = []) {
   const products = samples || [
     shelfFixture("qa-chips-a"), shelfFixture("qa-chips-b"),
     shelfFixture("qa-chips-c", { fiberG: null }),
@@ -123,17 +123,27 @@ async function openPersonalShelfFixture(page: Page, samples?: ScoredProduct[]) {
   ].map((product) => ({ ...product, id: `barbora:${product.id}`, shelfEvidence: { ...product.shelfEvidence!, productId: `barbora:${product.id}` } }));
   await page.route("**/api/recognize", (route) => route.fulfill({ contentType: "application/json", body: JSON.stringify({
     requestId: "personal-shelf-qa", status: "matched", latencyMs: 1, model: "qa-fixture", imageStored: false,
-    detections: products.map((product, index) => ({
+    detections: [...products.map((product, index) => ({
       productId: product.id, catalogProductId: product.id, confidence: .99,
-      box: { x: .02 + index * .19, y: .1, width: .16, height: .6 }, observedText: product.name,
+      box: { x: .02 + (index % 5) * .19, y: .05 + Math.floor(index / 5) * .45, width: .16, height: .4 }, observedText: product.name,
       identity: { brand: product.brand, name: product.name, variant: null, packSize: "100g", category: product.category, matchKind: "barbora" },
       inlineProduct: product, shelfPrice: null, retailerOffer: null
-    }))
+    })), ...unresolved]
   }) }));
+  await page.route("**/api/resolve-products", async (route) => {
+    const { detections } = route.request().postDataJSON();
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify({ detections, latencyMs: 1, imageStored: false }) });
+  });
   await page.route("**/api/offers", (route) => route.fulfill({ contentType: "application/json", body: '{"offers":{}}' }));
+  await page.route("**/api/products/**", (route) => {
+    const id = decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-1)!);
+    const product = products.find((item) => item.id === id);
+    return route.fulfill({ status: product ? 200 : 404, contentType: "application/json", body: JSON.stringify(product ? { product, alternatives: [] } : { error: "not_found" }) });
+  });
   await page.route("**/api/personal-shelf", (route) => route.fulfill({ contentType: "application/json", body: '{"evidence":{}}' }));
   await unlock(page);
   await chooseSavedPhoto(page, "synthetic-personal-shelf-qa.png");
+  if (products.length + unresolved.length === 1) await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Products from this scan" })).toBeVisible();
 }
 
@@ -219,7 +229,7 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn-expanded.png"), fullPage: true, animations: "disabled" });
 });
 
-test("personal shelf pilot keeps incomplete cards compact and unsupported products in original Fit", async ({ page }, testInfo) => {
+test("personal shelf pilot keeps incomplete and unsupported products visible without verbose warnings", async ({ page }, testInfo) => {
   const bar = { ...shelfFixture("barbora:qa-skriveru-bar", { category: "Snack bars" }), shelfEvidence: undefined };
   const candy = shelfFixture("barbora:qa-raffaello", { category: "Confectionery" });
   await openPersonalShelfFixture(page, [bar, candy]);
@@ -229,7 +239,8 @@ test("personal shelf pilot keeps incomplete cards compact and unsupported produc
   await toggle.click();
   const results = page.getByLabel("Personal Shelf Rank results");
   await expect(results.getByRole("heading", { name: "Snack bars", exact: true })).toBeVisible();
-  await expect(results.getByRole("heading", { level: 4 })).toHaveCount(1);
+  await expect(results.getByRole("heading", { level: 4 })).toHaveCount(2);
+  await expect(results.getByText("Personal score unavailable", { exact: true })).toBeVisible();
   await expect(results.getByLabel("Not scored", { exact: true })).toHaveText("—");
   await expect(results.locator("details")).toHaveCount(0);
   await expect(results).not.toContainText(/Within-type comparison|assessed in this|Not enough verified data|Missing or unverified|Not compared in this pilot|still need an exact identity/);
@@ -240,17 +251,60 @@ test("personal shelf pilot keeps incomplete cards compact and unsupported produc
   await expect(original.getByRole("button")).toHaveCount(2);
 });
 
-test("personal shelf pilot has a short empty state instead of the unsupported-product list", async ({ page }) => {
+test("personal shelf pilot preserves all unsupported cards instead of showing a false empty state", async ({ page }) => {
   const samples = [shelfFixture("barbora:qa-candy-a", { category: "Confectionery" }), shelfFixture("barbora:qa-candy-b", { category: "Confectionery" })];
   await openPersonalShelfFixture(page, samples);
   const toggle = page.getByRole("switch", { name: /Personal Shelf Rank/ });
   await toggle.click();
   const results = page.getByLabel("Personal Shelf Rank results");
-  await expect(results.getByText("No ratings for this shelf yet. Switch off Personal Shelf Rank to view all products.", { exact: true })).toBeVisible();
-  await expect(results.locator("ul")).toHaveCount(0);
-  await expect(results).not.toContainText(/Not compared in this pilot|assessed in this|qa-candy/);
+  await expect(results.getByRole("heading", { level: 4 })).toHaveText(samples.map((sample) => sample.shortName));
+  await expect(results.getByText("Personal score unavailable", { exact: true })).toHaveCount(2);
+  await expect(results).not.toContainText(/No ratings for this shelf|Not compared in this pilot|assessed in this/);
   await toggle.click();
   await expect(page.getByLabel("Products ranked by Sugar.no fit").getByRole("button")).toHaveCount(2);
+});
+
+test("personal shelf pilot preserves a visual-only name without inventing nutrition or a score", async ({ page }) => {
+  await openPersonalShelfFixture(page, [], [{
+    productId: "visual:qa-cereal", catalogProductId: null, confidence: .97,
+    box: { x: .2, y: .2, width: .6, height: .6 }, observedText: "Unknown cereal",
+    identity: { brand: "Example", name: "Unknown cereal", variant: null, packSize: null, category: null, matchKind: "visual_only" },
+    inlineProduct: null
+  }]);
+  await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
+  const results = page.getByLabel("Personal Shelf Rank results");
+  await expect(results.getByRole("heading", { name: "Unknown cereal", exact: true })).toBeVisible();
+  await expect(results.getByText("Nutrition not verified", { exact: true })).toBeVisible();
+  await expect(results).not.toContainText(/\/100|No ratings for this shelf|0 g/);
+  await expectNoDocumentOverflow(page);
+});
+
+test("personal shelf pilot displays all eight real Turtle cereal records and leaves original Fit unchanged", async ({ page }, testInfo) => {
+  // Fixed detection fixture tests rendering/assessment, not visual recognition accuracy.
+  const { readFile } = await import("node:fs/promises");
+  const observations: ShelfEvidence[] = JSON.parse(await readFile("data/personal-shelf-evidence.generated.json", "utf8"));
+  const catalog: ExternalCatalogProduct[] = JSON.parse(await readFile("data/livinn-catalog.generated.json", "utf8"));
+  const samples = ["TURT3022", "TURT3024", "TURT3036", "TURT3038", "TURT3041", "TURT3044", "TURT3048", "TURT3070"]
+    .map((sku) => {
+      const id = `livinn_lt:${sku}`;
+      const source = catalog.find((row) => row.sourceProductId === sku)!;
+      const evidence = observations.find((row) => row.productId === id)!;
+      return { ...shelfFixture(id, evidence), brand: source.brand, name: source.title, shortName: source.title, imageUrl: source.imageUrl, gtin: source.gtin };
+    });
+  await openPersonalShelfFixture(page, samples);
+  const original = page.getByLabel("Products ranked by Sugar.no fit");
+  await expect(original.getByRole("button")).toHaveCount(8);
+  const before = await original.innerText();
+  await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
+  const group = page.getByRole("region", { name: "Breakfast cereals & granola", exact: true });
+  await expect(group.getByRole("heading", { level: 4 })).toHaveCount(8);
+  await expect(group.getByText("79/100", { exact: true })).toBeVisible();
+  await expect(group.getByRole("heading", { level: 4 }).first()).toHaveText(samples[5].shortName);
+  await expect(group).not.toContainText(/No ratings for this shelf|Personal score unavailable/);
+  await expectNoDocumentOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath("personal-shelf-turtle.png"), fullPage: true, animations: "disabled" });
+  await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
+  expect(await original.innerText()).toBe(before);
 });
 
 async function mockSampleShelfRecognition(page: Page) {

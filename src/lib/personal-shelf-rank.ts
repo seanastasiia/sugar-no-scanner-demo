@@ -1,7 +1,7 @@
 import type { ProductRecord, ScoredProduct } from "./types";
 
-export const SHELF_MODEL_VERSION = "personal-shelf-v1.1.1-bounded";
-export type ShelfCategory = "chips" | "crackers" | "yogurt" | "dairy-dessert" | "bar" | "cookie";
+export const SHELF_MODEL_VERSION = "personal-shelf-v1.2-bounded";
+export type ShelfCategory = "chips" | "crackers" | "yogurt" | "dairy-dessert" | "bar" | "cookie" | "breakfast-cereal";
 export type ShelfComponentKey = "sugar" | "protein" | "composition" | "balance";
 
 /** A single source observation, not a mixture of similar products or estimated nutrients. */
@@ -61,7 +61,8 @@ export const SHELF_CATEGORIES: Record<ShelfCategory, {
   yogurt: { label: "Spoonable yogurts", weights: { sugar: 30, protein: 25, composition: 20, balance: 25 }, balance: { salt: .35, saturatedFat: .65, fiber: 0 } },
   "dairy-dessert": { label: "Dairy desserts", weights: { sugar: 30, protein: 25, composition: 20, balance: 25 }, balance: { salt: .35, saturatedFat: .65, fiber: 0 } },
   bar: { label: "Snack bars", weights: { sugar: 30, protein: 20, composition: 25, balance: 25 }, balance: { salt: .2, saturatedFat: .4, fiber: .4 } },
-  cookie: { label: "Cookies & wafers", weights: { sugar: 30, protein: 20, composition: 25, balance: 25 }, balance: { salt: .2, saturatedFat: .4, fiber: .4 } }
+  cookie: { label: "Cookies & wafers", weights: { sugar: 30, protein: 20, composition: 25, balance: 25 }, balance: { salt: .2, saturatedFat: .4, fiber: .4 } },
+  "breakfast-cereal": { label: "Breakfast cereals & granola", weights: { sugar: 30, protein: 20, composition: 25, balance: 25 }, balance: { salt: .2, saturatedFat: .4, fiber: .4 } }
 };
 
 export function normalizeIngredientText(text: string): string {
@@ -70,8 +71,11 @@ export function normalizeIngredientText(text: string): string {
 
 export function shelfCategory(category: string | null | undefined, format?: string): ShelfCategory | null {
   // Use the most specific exact-source category, never brand/packaging marketing or OCR aliases.
-  const leaf = normalizeIngredientText((category || "").split(/[/>]/).at(-1) || "");
-  if (/drink|dzeram|geriam|питьев|joog|baby|kudik|bernu|детск/.test(leaf)) return null;
+  const path = normalizeIngredientText(category || "");
+  const leaf = path.split(/[/>]/).at(-1)?.trim() || "";
+  if (/drink|dzeram|geriam|питьев|joog|baby|kudik|bernu|детск/.test(path)) return null;
+  // Rimi uses "musli" under both breakfast cereals and its separate cereal-bar aisle.
+  if (/^(?:musli|muesli)$/.test(leaf) && /(?:^|[/>])\s*batonini\s*[/>]/.test(path)) return "bar";
   // Exact Latvian retailer leaf: savory biscuits are crackers, not sweet cookies.
   if (/^salie[- ]cepumi$/.test(leaf.trim())) return "crackers";
   const matches: ShelfCategory[] = [];
@@ -81,6 +85,9 @@ export function shelfCategory(category: string | null | undefined, format?: stri
   if (/dairy dessert|piena desert|pieno desert|молочн.*десерт/.test(leaf)) matches.push("dairy-dessert");
   if (/snack bar|protein bar|cereal bar|batonin|batonel|batonin|батончик|batoon/.test(leaf)) matches.push("bar");
   if (/cookie|biscuit|wafer|sausain|cepum|vafel|печень|вафл|kupsis/.test(leaf)) matches.push("cookie");
+  // Dry, ready-to-eat source categories only. Do not infer from a product name,
+  // a broad "cereals" aisle, cooking oats/porridge, or milk-added nutrition.
+  if (/^(?:breakfast[ -]cereals?|sausi pusryciai|brokastu[- ]parslas(?:[- ]un[- ]musli)?|musli|mueslis?|granolas?|сухие завтраки|мюсли|гранола|hommikuhelbed)$/.test(leaf) && format !== "bar") matches.push("breakfast-cereal");
   if (matches.length) return matches.length === 1 ? matches[0] : null;
   return format === "bar" || format === "cookie" ? format : null;
 }
@@ -107,7 +114,7 @@ export function splitIngredients(text: string): string[] {
 const word = (pattern: string) => new RegExp(`(?:^|[^\\p{L}])(?:${pattern})(?=$|[^\\p{L}])`, "u");
 const sugars = word("sugar|sugars|sucrose|glucose|fructose|dextrose|syrup|honey|cukurs|cukura|cukuri|cukrus|cukraus|sirupas|sirupo|sirups|sirupa|medus|medaus|сахар|сахара|сироп|сиропа|мед|меда|suhkur|suhkru|siirup|mesi");
 const sweeteners = word("sucralose|aspartame|acesulfame|stevia|steviol|sukraloze|sukraloze|aspartamas|steviolio|stevija|сукралоза|аспартам|стевия|e950|e951|e952|e954|e955|e960|erythritol|maltitol|maltitols|maltits|maltita|sorbitol|ksilitols|eritritols|эритрит|мальтит|сорбит");
-const wholeBase = /whole[ -]?grain|whole[ -]?wheat|brown rice|pilngraud|pilnagrud|pilno grudo|viso grudo|цельнозер|taitera|chickpea|lentil|nut[sz]?\b|almond|oat flakes|avizu dribs|auzu parsl|avizirn|zirni|zirniu|lesiu|lesiai|migdol|lazdyn|riesut|riekst|миндал|нут\b|чечевиц|орех|kaerahelb/;
+const wholeBase = /whole[ -]?grain|whole[ -]?wheat|brown rice|pilngraud|pilnagrud|pilno grudo|viso grudo|цельнозер|taitera|chickpea|lentil|nut[sz]?\b|almond|oat flakes|avizu dribs|auzu parsl|avizirn|zirni|zirniu|lesiu|lesiai|migdol|lazdyn|riesut|riekst|миндал|нут\b|чечевиц|орех|kaerahelb|\bseeds?\b|sekl|semen|семен|seemn/;
 const potatoCornBase = /potato|bulv|kartupel|картоф|kartul|corn|kukuruz|kukuruzu|kukuruzu|кукуруз|mais/;
 const dairyBase = /^(?:organic |ekologisk\p{L}* |bio )?(?:milk|skimmed milk|pasteuri[sz]ed milk|piens|piena|vajpiens|biezpiens|pienas|pieno|молоко|молока|piim|yogurt|jogurt|йогурт)/u;
 const refinedBase = /flour|starch|miltai|miltu|milti\b|krakmol|ciete|мука|муки|крахмал|jahu|tarklis|rice|ryz|risi|рис|riis|protein|olbaltum|baltym|белок/;

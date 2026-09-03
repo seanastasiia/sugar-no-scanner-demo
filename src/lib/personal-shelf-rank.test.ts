@@ -95,6 +95,40 @@ describe("Personal Shelf Rank, independent pilot", () => {
     expect(shelfCategory("Dzeramais jogurts")).toBeNull();
     expect(shelfCategory("Grocery")).toBeNull();
   });
+  it.each(["Breakfast cereals", "Maistas > Dribsniai, košės, sausi pusryčiai > Sausi pusryčiai", "Brokastu pārslas", "iepakota-partika > brokastu-parslas-un-musli > musli", "Müsli", "Granola", "Сухие завтраки", "Мюсли", "Hommikuhelbed"])("recognizes a dry breakfast source category: %s", (category) => {
+    expect(shelfCategory(category)).toBe("breakfast-cereal");
+  });
+  it.each(["Cereals and their products", "Dribsniai ir košės", "Avižinė košė", "Breakfast cereals with milk", "Baby food > Breakfast cereals", "Cereal drinks", "Cereals / Porridge"])("keeps broad, prepared and infant categories unsupported: %s", (category) => {
+    expect(shelfCategory(category)).toBeNull();
+  });
+  it("does not confuse cereal bars with loose breakfast cereal", () => {
+    expect(shelfCategory("Cereal bars")).toBe("bar");
+    expect(shelfCategory("Saldumi-un-uzkodas > batonini > musli")).toBe("bar");
+    expect(shelfCategory("Breakfast cereals", "bar")).toBe("bar");
+  });
+  it.each([["Seeds (sunflower seeds, pumpkin seeds), salt", "en"], ["Sėklos (saulėgrąžų sėklos, moliūgų sėklos), druska", "lt"], ["Sēklas (saulespuķu sēklas), sāls", "lv"], ["Семена подсолнечника, соль", "ru"], ["Päevalilleseemned, sool", "et"]])("recognizes explicit seed bases in %s", (text, language) => {
+    expect(analyzeIngredients(text, language)?.score).toBe(100);
+  });
+  it("does not turn seed oil or isolated seed protein into whole-seed credit", () => {
+    expect(analyzeIngredients("Sunflower seed oil, salt", "en")?.score).toBeNull();
+    expect(analyzeIngredients("Pumpkin seed protein, salt", "en")?.score).toBe(25);
+  });
+  it("rates dry cereals separately and keeps missing fiber bounded and essentials unknown", () => {
+    const cereal = shelfFixture("cereal", { category: "Breakfast cereals", ingredientsText: "Wholegrain oats, salt", fiberG: null });
+    const result = assessPersonalShelfProduct(cereal);
+    expect(result.status).toBe("provisional");
+    expect(result.scoreRange!.max - result.scoreRange!.min).toBeLessThanOrEqual(10);
+    for (const fiberG of [0, 3, 6]) {
+      const full = assessPersonalShelfProduct({ ...cereal, shelfEvidence: { ...cereal.shelfEvidence!, fiberG } });
+      expect(full.score).toBeGreaterThanOrEqual(result.scoreRange!.min);
+      expect(full.score).toBeLessThanOrEqual(result.scoreRange!.max);
+    }
+    expect(assessPersonalShelfProduct({ ...cereal, shelfEvidence: { ...cereal.shelfEvidence!, saltG: null } }).scoreRange).toBeNull();
+    expect(assessPersonalShelfProduct({ ...cereal, shelfEvidence: { ...cereal.shelfEvidence!, nutritionBasis: "100ml" } }).status).toBe("unsupported");
+    const groups = rankPersonalShelfProducts([cereal, shelfFixture("chips")]).groups;
+    expect(groups).toHaveLength(2);
+    expect(groups.every((group) => group.entries[0].rank === null)).toBe(true);
+  });
   it("separates categories, excludes missing values from denominator and shares ties", () => {
     const a = shelfFixture("a"); const b = shelfFixture("b");
     const c = shelfFixture("c", { saltG: 1 });

@@ -228,6 +228,25 @@
     "fatG": 25
   },
   {
+    "productId": "off:4750020042394",
+    "source": "open_food_facts",
+    "sourceUrl": "https://world.openfoodfacts.org/product/4750020042394",
+    "checkedAt": "2026-09-03T15:57:33.614Z",
+    "gtin": "4750020042394",
+    "category": "en:Breakfast cereals",
+    "nutritionBasis": "100g",
+    "ingredientsText": null,
+    "ingredientsLanguage": null,
+    "energyKcal": 364,
+    "proteinG": 14.2,
+    "totalSugarG": 1.2,
+    "fiberG": 0,
+    "saltG": 0,
+    "saturatedFatG": 1,
+    "carbohydrateG": 55.1,
+    "fatG": 6.9
+  },
+  {
     "productId": "off:4750024001908",
     "source": "open_food_facts",
     "sourceUrl": "https://world.openfoodfacts.org/product/4750024001908",
@@ -473,5 +492,24 @@
     "saturatedFatG": 1.1,
     "carbohydrateG": 2.3,
     "fatG": 2
+  },
+  {
+    "productId": "off:4751019538782",
+    "source": "open_food_facts",
+    "sourceUrl": "https://world.openfoodfacts.org/product/4751019538782",
+    "checkedAt": "2026-09-03T15:57:34.725Z",
+    "gtin": "4751019538782",
+    "category": "Mueslis",
+    "nutritionBasis": "100g",
+    "ingredientsText": "granola 45% (whole grain oat flakes, oligofructose syrup (natural fibre in the form of syrup), honey, sunflower oil, antioxidant: tocopherol extract (natural extract derived from vegetable oils)) (origin eu), toasted wholegrain wheat flakes 27% (origin eu), sunflower seeds, chocolate pieces 6% (cocoa solids: 40% minimum) (sugar, cocoa mass, cocoa butter, emulsifier: sunflower lecithin (natural fat from seeds)),  roasted peanut pieces, pumpkin seeds, ground flaxseeds, dried orange pieces 2%, carob powder 1%,",
+    "ingredientsLanguage": "en",
+    "energyKcal": 434,
+    "proteinG": 14,
+    "totalSugarG": 9.8,
+    "fiberG": 10,
+    "saltG": 0,
+    "saturatedFatG": 2.8,
+    "carbohydrateG": 53,
+    "fatG": 16
   }
 ]

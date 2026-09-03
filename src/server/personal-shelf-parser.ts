@@ -16,6 +16,10 @@ function strictAmount(text: string, label: string): number | null {
   return match ? Number(match[1].replace(",", ".")) : null;
 }
 
+function preparedNutrition(text: string): boolean {
+  return /with milk|prepared|ar pienu|pagatavot|su pienu|paruost|с молоком|приготовлен|piimaga/.test(normalizeIngredientText(text));
+}
+
 export function livinnShelfEvidence(html: string, url: string, expectedSku: string, checkedAt: string): ShelfEvidence | null {
   const identity = parseLivinnProductIdentity(html, url, checkedAt);
   if (!identity || identity.sourceProductId !== expectedSku) return null;
@@ -23,7 +27,7 @@ export function livinnShelfEvidence(html: string, url: string, expectedSku: stri
   const block = (heading: string) => html.match(new RegExp(`<h3[^>]*>\\s*${heading}\\s*<\\/h3>\\s*<div[^>]*class=["'][^"']*html-block[^"']*["'][^>]*>([\\s\\S]*?)<\\/div>`, "i"))?.[1] || "";
   const nutrition = ingredientPlainText(block("Maistinė vertė"));
   const ingredients = ingredientPlainText(block("Sudėtis"));
-  if (!/100\s*g\b/.test(nutrition) || /100\s*ml\b/i.test(nutrition)) return null;
+  if (!/100\s*g\b/.test(nutrition) || /100\s*ml\b/i.test(nutrition) || preparedNutrition(nutrition)) return null;
   const kcal = normalizeIngredientText(nutrition).match(/(\d+(?:[.,]\d+)?)\s*kcal\b/);
   return {
     productId: `livinn_lt:${expectedSku}`, source: "livinn_lt", sourceUrl: url, checkedAt,
@@ -103,6 +107,7 @@ export function rimiShelfEvidence(html: string, url: string, expectedSku: string
   const solidPack = /\b\d+(?:[.,]\d+)?\s*(?:kg|g)\b/i.test(product.packSize);
   const liquidPack = /\b\d+(?:[.,]\d+)?\s*(?:ml|cl|l)\b/i.test(product.packSize);
   if (mixedBasis ? !solidPack && !liquidPack : !/100\s*g\b|100\s*ml\b/i.test(tableText)) return null;
+  if (preparedNutrition(tableText)) return null;
   const cells = [...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].flatMap((row) => {
     const values = [...row[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((cell) => ingredientPlainText(cell[1]));
     return values.length === 2 ? [{ label: normalizeIngredientText(values[0]), value: values[1] }] : [];

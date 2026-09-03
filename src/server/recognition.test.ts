@@ -591,6 +591,19 @@ describe("resolveVisibleDetections", () => {
     expect(resolveWebNutrition).not.toHaveBeenCalled();
   });
 
+  it.each(["fast", "complete"] as const)("resolves the English Turtle label locally before photo merging (%s)", async (mode) => {
+    const resolveOpenFoodFacts = vi.fn(async () => null);
+    const resolveWebNutrition = vi.fn(async () => null);
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, { brand: "Turtle", productName: "Cocoa Pillows Hazelnut filling 300g", searchQuery: "Turtle Cocoa Pillows Hazelnut filling 300g" })], [],
+      { getOfferBySlug: async () => null, resolveOffer: async () => null, resolveIndexedCandidate: () => null,
+        resolveExternalCatalog: resolveExternalCatalogProduct, resolveOpenFoodFacts, resolveWebNutrition }, 3, mode
+    );
+    expect(detections[0]).toMatchObject({ productId: "livinn_lt:TURT3041", identity: { matchKind: "retailer_catalog" }, inlineProduct: { shelfEvidence: { productId: "livinn_lt:TURT3041", ingredientsLanguage: "lt" } } });
+    expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
+    expect(resolveWebNutrition).not.toHaveBeenCalled();
+  });
+
   it("uses a cited grounded web result only after catalog, Barbora and Open Food Facts miss", async () => {
     const fallback = { ...getCatalog()[0], id: "web:selga-classic", ratingBasis: "web_search_reference" as const };
     const resolveWebNutrition = vi.fn(async () => ({ product: fallback, confidence: 0.96 }));

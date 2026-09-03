@@ -1816,7 +1816,12 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
                   <PersonalShelfResults
                     context={source === "sample-shelf" ? "demo" : "scan"}
                     products={visibleTrayIds.flatMap((id) => products[id]?.product ? [source === "sample-shelf" ? shelfDemoPersonalProduct(products[id].product) : products[id].product] : [])}
-                    unidentifiedCount={visibleTrayIds.filter((id) => !products[id]?.product).length}
+                    unresolved={visibleTrayIds.filter((id) => !products[id]?.product).map((id) => ({
+                      id,
+                      brand: detectionById[id]?.identity?.brand || "Product",
+                      name: detectionById[id]?.identity?.name || detectionById[id]?.observedText || "Identified product",
+                      pending: pendingProductIds.has(id)
+                    }))}
                     thumbnail={(id) => {
                       const sourceId = source === "sample-shelf" ? shelfDemoOriginalId(id) : id;
                       const item = products[sourceId]?.product;

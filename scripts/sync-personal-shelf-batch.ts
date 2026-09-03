@@ -1,6 +1,6 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { assessPersonalShelfProduct, shelfCategory, type ShelfEvidence } from "../src/lib/personal-shelf-rank";
+import { assessPersonalShelfProduct, shelfCategory, SHELF_CATEGORIES, type ShelfEvidence } from "../src/lib/personal-shelf-rank";
 import { barboraShelfEvidence, livinnShelfEvidence, offShelfEvidence, rimiShelfCategory, rimiShelfEvidence } from "../src/server/personal-shelf-parser";
 import { parseBarboraProductPage } from "../src/server/barbora-catalog";
 import { parseShelfEvidence } from "../src/server/personal-shelf-evidence";
@@ -15,6 +15,8 @@ const retryFailed = process.argv.includes("--retry-failed");
 const refresh = process.argv.includes("--refresh-existing");
 const maxPerSource = Number(process.env.SHELF_BATCH_LIMIT_PER_SOURCE || "10000");
 if (!Number.isInteger(maxPerSource) || maxPerSource < 1 || maxPerSource > 10000) throw new Error("SHELF_BATCH_LIMIT_PER_SOURCE must be 1..10000");
+const categoryScope = process.env.SHELF_BATCH_CATEGORIES?.split(",").map((value) => value.trim());
+if (categoryScope?.some((value) => !Object.hasOwn(SHELF_CATEGORIES, value))) throw new Error("Unknown SHELF_BATCH_CATEGORIES value");
 const json = async <T>(file: string): Promise<T> => JSON.parse(await readFile(file, "utf8"));
 const retailerFile = "data/personal-shelf-evidence.generated.json";
 const offFile = "data/personal-shelf-off-evidence.generated.json";
@@ -32,7 +34,10 @@ const candidates: Candidate[] = [
     category: p.source === "rimi_lv" ? rimiShelfCategory(p.url) : p.category
   }))
 ];
-const selected = [...new Map(candidates.filter((p) => shelfCategory(p.category)).map((p) => [p.id, p])).values()];
+const selected = [...new Map(candidates.filter((p) => {
+  const category = shelfCategory(p.category);
+  return category && (!categoryScope || categoryScope.includes(category));
+}).map((p) => [p.id, p])).values()];
 const sourceCounts: Record<string, number> = {};
 const pending = selected.filter((p) => {
   if (!refresh && rows.has(p.id)) return false;
@@ -48,7 +53,11 @@ type Attempt = { id: string; ok: boolean; error?: string };
 const attempts = new Map<string, Attempt>();
 try {
   const saved = await json<{ observations: ShelfEvidence[]; attempts: Attempt[] }>(checkpointPath);
-  for (const row of saved.observations) if (parseShelfEvidence(row) && selected.some((p) => p.id === row.productId)) rows.set(row.productId, row);
+  for (const row of saved.observations) {
+    const current = rows.get(row.productId);
+    if (parseShelfEvidence(row) && selected.some((p) => p.id === row.productId) &&
+      (!current || Date.parse(row.checkedAt) > Date.parse(current.checkedAt))) rows.set(row.productId, row);
+  }
   for (const attempt of saved.attempts) attempts.set(attempt.id, attempt);
 } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
 const jobs = reportOnly ? [] : pending.filter((p) => refresh || !attempts.has(p.id) || (retryFailed && !attempts.get(p.id)!.ok));

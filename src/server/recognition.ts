@@ -541,10 +541,13 @@ export async function resolveVisibleDetections(
     const canSearchExactIdentity = hasSearchableIdentityEvidence(detection, packSize);
     // Open Food Facts is the first internet fallback. A visual Barbora slug is
     // not enough to skip it when that exact SKU has no local nutrition record.
-    const externalCatalogCandidate = mode === "fast" || knownProduct
+    // These two resolvers read in-memory indexes only. Resolve exact multilingual
+    // identities before merging photo crops; otherwise known packages can be
+    // discarded as visual-only duplicates before background enrichment begins.
+    const externalCatalogCandidate = knownProduct
       ? null
       : dependencies.resolveExternalCatalog?.(lookupInput, detection.barcode) || null;
-    const externalCatalogIdentity = mode === "fast" || knownProduct || externalCatalogCandidate
+    const externalCatalogIdentity = knownProduct || externalCatalogCandidate
       ? null
       : dependencies.resolveExternalCatalogIdentity?.(lookupInput, detection.barcode) || null;
     const canonicalLookupInput = externalCatalogIdentity
@@ -571,7 +574,7 @@ export async function resolveVisibleDetections(
       ? null
       : await dependencies.resolveWebNutrition?.(webLookupInput, detection.confidence).catch(() => null) || null);
     const resolvedProduct = knownProduct || externalCatalogCandidate?.product || openFoodFactsCandidate?.product || webNutrition?.product || externalCatalogIdentity?.product || null;
-    const resolvedRetailerOffer = exactRetailerOffer || externalCatalogCandidate?.offer || retailerOffer;
+    const resolvedRetailerOffer = mode === "fast" ? null : exactRetailerOffer || externalCatalogCandidate?.offer || retailerOffer;
     const nutritionLinkConfidence =
       initialCatalogMatch?.confidence ??
       externalCatalogCandidate?.confidence ??
