@@ -316,13 +316,6 @@
   isolation: isolate;
   background: #111;
 }
-.cameraViewport.cameraViewportLive {
-  bottom: auto;
-  height: min(
-    calc(100% - 160px - env(safe-area-inset-top) - env(safe-area-inset-bottom)),
-    var(--camera-media-height, 133.333vw)
-  );
-}
 .video,
 .capturedCameraFrame,
 .uploadPreview,
@@ -335,6 +328,7 @@
 }
 .video,
 .capturedCameraFrame {
+  object-fit: cover;
   pointer-events: none;
 }
 .shelfScene,
@@ -1822,16 +1816,33 @@
 .cameraViewport.cameraViewportLive {
   left: 0;
   right: 0;
-  bottom: auto;
-  height: min(
-    calc(100% - 80px - env(safe-area-inset-top)),
-    var(--camera-media-height, 133.333vw)
-  );
-  border-radius: 0;
-}
-.cameraViewport.cameraViewportLive:has(.cameraError, .recoveryCard) {
   bottom: 0;
   height: auto;
+  border-radius: 0;
+}
+.liveCamera .cameraViewportLive {
+  top: 0;
+}
+.liveCamera .scannerHeader {
+  padding-left: max(24px, env(safe-area-inset-left));
+  background: transparent;
+}
+.liveCamera .scannerHeader .wordmark {
+  filter: none;
+  opacity: 1;
+}
+.liveCamera .stageActions > button,
+.liveCamera .stageStatus {
+  border: 1px solid #ffffff40;
+  background: #222228ed;
+  color: #fff;
+  backdrop-filter: blur(12px);
+}
+.liveCamera .stageStatus {
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  justify-content: center;
 }
 .resultsCollapsed .sheetChrome,
 .resultsCollapsed .sheetActions {

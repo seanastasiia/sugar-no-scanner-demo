@@ -989,7 +989,7 @@ test("scanner reflows with large text in light and dark themes", async ({ page }
   expect(accessibility.violations).toEqual([]);
 });
 
-test("live camera preserves full-resolution capture geometry and a stable untappable preview", async ({ page }) => {
+test("live camera fills the screen while preserving capture geometry and aligned overlays", async ({ page }) => {
   test.setTimeout(45_000);
   await mockLiveCamera(page);
   let capturedFrame: string | null = null;
@@ -1044,7 +1044,9 @@ test("live camera preserves full-resolution capture geometry and a stable untapp
     await expectInsideViewport(page, frame);
     const initialBox = await frame.boundingBox();
     expect(initialBox?.x).toBeLessThanOrEqual(1);
+    expect(initialBox?.y).toBe(0);
     expect(Math.abs((initialBox?.width ?? 0) - viewport.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs((initialBox?.height ?? 0) - viewport.height)).toBeLessThanOrEqual(1);
     await page.waitForTimeout(100);
     const stableBox = await frame.boundingBox();
     expect(Math.abs((initialBox?.width ?? 0) - (stableBox?.width ?? 0))).toBeLessThanOrEqual(1);
@@ -1055,22 +1057,101 @@ test("live camera preserves full-resolution capture geometry and a stable untapp
       if (!frame || !video) throw new Error("Live camera preview is unavailable");
       const rect = frame.getBoundingClientRect();
       const style = getComputedStyle(video);
+      const logo = document.querySelector<HTMLImageElement>('header img[alt="Sugar.no"]');
+      const captured = document.querySelector<HTMLElement>('[data-testid="captured-camera-frame"]');
+      const marker = document.querySelector<HTMLElement>('[data-testid="rated-detection-marker"]');
+      if (!logo || !captured || !marker) throw new Error("Camera overlays are unavailable");
+      const markerRect = marker.getBoundingClientRect();
+      const scale = Math.max(rect.width / video.videoWidth, rect.height / video.videoHeight);
+      const renderedWidth = video.videoWidth * scale;
+      const renderedHeight = video.videoHeight * scale;
+      const left = Math.max(0, (rect.width - renderedWidth) / 2 + .1 * renderedWidth);
+      const top = Math.max(0, (rect.height - renderedHeight) / 2 + .2 * renderedHeight);
+      const right = Math.min(rect.width, (rect.width - renderedWidth) / 2 + .4 * renderedWidth);
+      const bottom = Math.min(rect.height, (rect.height - renderedHeight) / 2 + .6 * renderedHeight);
       return {
-        frameRatio: rect.width / rect.height,
-        mediaRatio: video.videoWidth / video.videoHeight,
         objectFit: style.objectFit,
         pointerEvents: style.pointerEvents,
-        filter: style.filter
+        filter: style.filter,
+        controls: video.controls,
+        capturedFit: getComputedStyle(captured).objectFit,
+        logoFilter: getComputedStyle(logo).filter,
+        headerBackground: getComputedStyle(logo.closest("header")!).backgroundColor,
+        marker: { x: markerRect.x, y: markerRect.y, width: markerRect.width, height: markerRect.height },
+        expectedMarker: { x: left, y: top, width: right - left, height: bottom - top }
       };
     });
-    if (viewport.width / geometry.mediaRatio <= viewport.height - 80 + 1) {
-      expect(geometry.frameRatio).toBeCloseTo(geometry.mediaRatio, 2);
+    for (const key of ["x", "y", "width", "height"] as const) {
+      expect(Math.abs(geometry.marker[key] - geometry.expectedMarker[key])).toBeLessThanOrEqual(1);
     }
-    expect(geometry.objectFit).toBe("contain");
+    expect(geometry.objectFit).toBe("cover");
+    expect(geometry.capturedFit).toBe("cover");
+    expect(geometry.logoFilter).toBe("none");
+    expect(geometry.headerBackground).toBe("rgba(0, 0, 0, 0)");
+    expect(geometry.controls).toBe(false);
     expect(geometry.pointerEvents).toBe("none");
     expect(geometry.filter).toBe("none");
+    await expect(page.getByText(/The scan starts automatically/)).toHaveCount(0);
+    await expectInsideViewport(page, page.getByRole("button", { name: "Show demo" }));
+    await expectInsideViewport(page, page.getByRole("button", { name: "Leave feedback" }));
     await expectNoDocumentOverflow(page);
     await expectVisibleTouchTargets(page);
+    if (viewport.width === 402 || viewport.width === 874) {
+      await page.screenshot({ path: `test-results/fullscreen-camera-${viewport.width}.png` });
+    }
+  }
+});
+
+test("fullscreen camera keeps its overlay controls and reading status clear on small and rotated phones", async ({ page }) => {
+  await mockLiveCamera(page);
+  let releaseRecognition!: () => void;
+  const recognitionGate = new Promise<void>((resolve) => { releaseRecognition = resolve; });
+  await page.route("**/api/recognize", async (route) => {
+    await recognitionGate;
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ requestId: "layout-only", status: "not_sure", detections: [], latencyMs: 1, model: "qa-mock", imageStored: false })
+    });
+  });
+  await unlock(page);
+  await expect(page.getByTestId("captured-camera-frame")).toBeVisible();
+  try {
+    for (const viewport of [{ width: 320, height: 568 }, { width: 402, height: 874 }, { width: 874, height: 402 }]) {
+      await page.setViewportSize(viewport);
+      const status = page.getByRole("status").filter({ hasText: "Reading visible products" });
+      await expect(status).toBeVisible();
+      await expectInsideViewport(page, status);
+      const layout = await page.evaluate(() => {
+        const logo = document.querySelector('header img[alt="Sugar.no"]')!;
+        const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).filter(
+          (button) => ["Show demo", "Leave feedback"].includes(button.textContent!.trim())
+        );
+        const status = document.querySelector('[role="status"]')!;
+        const rects = [logo, ...buttons, status].map((element) => element.getBoundingClientRect());
+        return {
+          overlapping: rects.some((rect, index) => rects.slice(index + 1).some((other) =>
+            rect.left < other.right && rect.right > other.left && rect.top < other.bottom && rect.bottom > other.top
+          )),
+          obstructed: buttons.some((button) => {
+            const rect = button.getBoundingClientRect();
+            return !button.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+          }),
+          statusColor: getComputedStyle(status).color,
+          statusBackground: getComputedStyle(status).backgroundColor
+        };
+      });
+      expect(layout.overlapping).toBe(false);
+      expect(layout.obstructed).toBe(false);
+      expect(layout.statusColor).toBe("rgb(255, 255, 255)");
+      expect(layout.statusBackground).toBe("rgba(34, 34, 40, 0.93)");
+      await expect(page.getByText(/The scan starts automatically/)).toHaveCount(0);
+      await expectNoDocumentOverflow(page);
+      await page.screenshot({ path: `test-results/fullscreen-camera-reading-${viewport.width}.png` });
+    }
+    await page.getByRole("button", { name: "Show demo" }).click();
+    await expect(page.getByRole("dialog", { name: "See how a shelf scan works" })).toBeVisible();
+  } finally {
+    releaseRecognition();
   }
 });
 
@@ -1650,14 +1731,14 @@ test("live camera applies each online result without waiting for the slowest pro
     const viewportRect = viewport.getBoundingClientRect();
     return {
       viewportRatio: viewportRect.width / viewportRect.height,
-      mediaRatio: video.videoWidth / video.videoHeight,
+      screenRatio: window.innerWidth / window.innerHeight,
       objectFit: getComputedStyle(video).objectFit,
       pointerEvents: getComputedStyle(video).pointerEvents,
       borderRadius: parseFloat(getComputedStyle(viewport).borderRadius)
     };
   });
-  expect(previewGeometry.viewportRatio).toBeCloseTo(previewGeometry.mediaRatio, 2);
-  expect(previewGeometry.objectFit).toBe("contain");
+  expect(previewGeometry.viewportRatio).toBeCloseTo(previewGeometry.screenRatio, 2);
+  expect(previewGeometry.objectFit).toBe("cover");
   expect(previewGeometry.pointerEvents).toBe("none");
   expect(previewGeometry.borderRadius).toBe(0);
   const cameraConstraints = await page.evaluate(

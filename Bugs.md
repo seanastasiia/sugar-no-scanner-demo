@@ -21,6 +21,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: The live camera was boxed below a light header and repeated the automatic-scan explanation.** The feed now fills the viewport behind the white logo and dark controls. Preview and held frame share centered cover geometry; outlines follow that crop, while capture still uses the complete source frame. The redundant caption is removed, and photo/demo layouts remain contained.
+
 - **2026-09-03: Better alternatives lost their side gutters and clipped cards on iPhone.** The horizontal carousel had negative margins outside the comparison content. Alternatives now use a contained responsive grid: one column on phones, two where the result pane is wide enough. Names wrap, and every retailer button remains inside its card. Both ranked-list and product-detail placements are checked at narrow and wide widths.
 
 - **2026-09-03: The selected camera marker’s floating Great fit pill overflowed narrow product outlines on iPhone.** Removed floating text pills from every rated camera/photo marker, including selected markers. Colored outlines and icons remain; result-card labels and accessible marker names are preserved.
@@ -34,7 +36,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **2026-09-03: Saved-photo recovery had no effective retry action.** Retry now reuses the same prepared frames held only in memory, without reopening the camera; changing source releases them.
 
 - **2026-09-03: Scanner did not match the approved Pen flow.** Welcome, native chip rims, primary buttons, ranked cards, product detail, photo/demo, recovery and feedback now use the approved design. Nutrition and price gates are preserved.
-- **2026-09-03: Small and landscape screens hid actions during the transfer.** Welcome has a shorter photo on low-height phones; compact-result actions remain visible in landscape. Camera and uploaded-photo box mapping uses the same contain geometry as the displayed image.
+- **2026-09-03: Small and landscape screens hid actions during the transfer.** Welcome has a shorter photo on low-height phones; compact-result actions remain visible in landscape. Photo box mapping stays aligned with the contained image; live camera now follows the fullscreen correction above.
 - **2026-09-03: Feedback could lose keyboard focus and accept edits while saving.** The form is locked during send, failure preserves the answer, Tab stays in the dialog, and closing focuses its trigger.
 - **2026-09-03: Offline fallback still used the old visual language.** It now shares the approved light surface, rounded heading and primary button; the service worker caches the official wordmark for offline use.
 

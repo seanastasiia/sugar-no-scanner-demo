@@ -19,7 +19,7 @@ Source: the user's approved `/Users/anastasiia/Documents/untitled.pen`, saved 3 
 
 Headings, buttons, fit and short labels use `ui-rounded`, SF Pro Rounded where available, then the system fallback. Body uses `-apple-system`, BlinkMacSystemFont, Segoe UI, sans-serif. Apple Safari uses the intended system faces. No Apple font binaries are bundled. Other browsers may differ typographically. The approved light theme is stable across system themes. Increased-contrast mode darkens chip text and action blue; normal-mode source colors are not claimed to meet full AA contrast.
 
-Use the official SVG proportions. The existing white SVG is rendered in ink on the light header, without the old dark plate. Product packshots for the four approved demo SKUs are local; all other products use their source-backed identity/images and scene-crop fallback.
+Use the official SVG proportions. The existing white SVG stays white over the live feed and renders in ink on light headers elsewhere. Product packshots for the four approved demo SKUs are local; all other products use their source-backed identity/images and scene-crop fallback.
 
 ## Screen mapping
 
@@ -40,7 +40,9 @@ Use the official SVG proportions. The existing white SVG is rendered in ink on t
 
 The welcome distributes header, introduction, preview and actions with 24 px minimum gaps; short screens reduce the photo height. Compact packshots are 48 px (32 px at widths up to 360 px), and the detail packshot is square up to 290 px. The list includes verified protein and separates informational prices from the fit row. Feedback uses 8 px internal gaps, a fixed header/footer and scrollable body sized to the visual viewport; the success mark is green with a white check.
 
-Runtime content can be longer or use a different source/price than the static examples. Exact Carbs and eligible Better alternatives remain visible even when absent from a sample frame. The runtime uses actual packshots and verified per-100 nutrition; generic placeholder images and example numbers in Pen are not product evidence. A tablet uses a side result pane; phone landscape keeps the primary compact actions visible. All camera and photo overlays use object-contain mapping, and capture dimensions remain independent of CSS.
+Runtime content can be longer or use a different source/price than the static examples. Exact Carbs and eligible Better alternatives remain visible even when absent from a sample frame. The runtime uses actual packshots and verified per-100 nutrition; generic placeholder images and example numbers in Pen are not product evidence. A tablet uses a side result pane; phone landscape keeps the primary compact actions visible. Live camera and held frames fill the viewport with centered object-cover mapping; photo/demo overlays retain object-contain mapping. Capture dimensions remain independent of CSS.
+
+Owner camera correction, 3 September 2026: live video fills the browser content area behind a transparent header and white logo. Dark overlay pills keep feedback, Show demo and one bottom status readable, with safe-area insets. Remove the secondary “The scan starts…” caption. Recovery and expanded results retain the light theme.
 
 Owner correction, 3 September 2026: rated camera/photo overlays use colored outlines and icon discs only. Do not show a floating fit-text pill, even on the selected product. Keep the full fit label in the accessible marker name and result cards.
 

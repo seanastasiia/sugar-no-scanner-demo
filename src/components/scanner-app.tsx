@@ -21,7 +21,7 @@ import {
   X
 } from "lucide-react";
 import { ChangeEvent, type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { mapBoxToObjectContain, remapRecognitionFromCrop, type MediaDimensions } from "@/lib/camera-focus";
+import { mapBoxToObjectContain, mapBoxToObjectCover, remapRecognitionFromCrop, type MediaDimensions } from "@/lib/camera-focus";
 import {
   globalBestProductId,
   overlayMatchPresentation,
@@ -1371,7 +1371,7 @@ export function ScannerApp() {
   }
 
   return (
-    <main className={styles.app}>
+    <main className={`${styles.app} ${source === "camera" && !showRecovery ? styles.liveCamera : ""}`}>
       {!resultsAreExpanded && !demoOpen ? (
         <header className={`${styles.header} ${styles.scannerHeader}`} inert={feedbackOpen}>
           <Image
@@ -1425,15 +1425,6 @@ export function ScannerApp() {
             ref={stageRef}
             className={`${styles.cameraViewport} ${source === "camera" || source === "upload" ? styles.cameraViewportMediaRatio : ""} ${source === "camera" ? styles.cameraViewportLive : ""}`}
             data-testid="camera-viewport"
-            style={
-              source === "camera"
-                ? ({
-                    "--camera-media-height": mediaDimensions
-                      ? `${(mediaDimensions.height / mediaDimensions.width) * 100}vw`
-                      : "133.333vw"
-                  } as CSSProperties)
-                : undefined
-            }
           >
             {cameraState === "live" || cameraState === "requesting" ? (
               <video
@@ -1508,8 +1499,9 @@ export function ScannerApp() {
               ? candidateBoxes.map((box, index) => {
                   const mappedBox =
                     mediaDimensions && stageDimensions
-                      ? mapBoxToObjectContain(box, mediaDimensions, stageDimensions)
+                      ? mapBoxToObjectCover(box, mediaDimensions, stageDimensions)
                       : box;
+                  if (mappedBox.width <= 0 || mappedBox.height <= 0) return null;
                   return (
                     <span
                       aria-hidden="true"
@@ -1533,8 +1525,11 @@ export function ScannerApp() {
               const displayName = product?.name || detection.identity?.name || detection.observedText || "product";
               const mappedBox =
                 mediaDimensions && stageDimensions
-                  ? mapBoxToObjectContain(detection.box, mediaDimensions, stageDimensions)
+                  ? (source === "camera" ? mapBoxToObjectCover : mapBoxToObjectContain)(
+                      detection.box, mediaDimensions, stageDimensions
+                    )
                   : detection.box;
+              if (mappedBox.width <= 0 || mappedBox.height <= 0) return null;
               const isBest = bestId === detection.productId;
               return (
                 <button
@@ -1648,14 +1643,8 @@ export function ScannerApp() {
               </div>
             ) : null}
           </div>
-          {!showRecovery ? (
-            <p className={styles.stageGuidance}>
-              {source === "upload" || source === "sample-conveyor"
-                ? "Photos are not saved."
-                : recognitionState === "scanning"
-                  ? "Hold steady while we read this frame."
-                  : "The scan starts automatically when the shelf is clear."}
-            </p>
+          {!showRecovery && (source === "upload" || source === "sample-conveyor") ? (
+            <p className={styles.stageGuidance}>Photos are not saved.</p>
           ) : null}
         </div>
 
