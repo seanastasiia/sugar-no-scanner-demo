@@ -4,6 +4,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Open
 
+- **Shared internet-card coverage is conservative.** The new page-checked lane accepts reviewed retailer hosts and explicit supported nutrition formats, not arbitrary AI answers. Translation without a source-confirmed exact identity, an unsupported page, an invalid/truncated GTIN or a source conflict can still leave a product or nutrient unknown. Old web-cache entries are not silently upgraded into verified cards; existing source layers are not globally deduplicated.
+
 - **Two Livinn source tables are inconsistent.** GO Pure `03000011074` and NOMADIC `1AM180309678` exceed the per-100 g macronutrient consistency limit. Both remain identifiable but unrated until a reviewed source correction. The production import retains 1,853 eligible nutrition records, not all 1,855 raw tables.
 
 - **Historical catalog snapshots do not yet contain carbohydrates.** The app now supports exact source-backed carbohydrates per 100 g or 100 ml, but existing checked-in rows omit the field until their next retailer, Open Food Facts or grounded-source refresh. Sugar.no fit remains available from protein and total sugar and is not recalculated.
@@ -18,6 +20,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **Railway config-as-code needs migration before 1 December 2026.** The current `railway.json`/`railway.toml` deployment still works, but Railway now recommends `.railway/railway.ts` and prints a deprecation warning during deploys.
 
 ## Recently resolved
+
+- **2026-09-03: an internet result was reusable mainly under its original query and could not be reopened as an independent shared card.** An opt-in shared Supabase catalog now keeps exact canonical cards, proven aliases, per-field source evidence and immutable observations. Actual page values, not model numbers, cross the write boundary; nulls, conflicts, variants, per-100 basis, atomic updates and server-only permissions have dedicated regression tests. No UI or scoring change.
 
 - **2026-09-03: the Livinn expansion existed only in the isolated rating preview.** The release lane now contains just the multilingual catalog and protein display, without the new rating/demo. A Livinn-only, dry-run-by-default Supabase import preserves other retailers and excludes two already known contradictory tables.
 

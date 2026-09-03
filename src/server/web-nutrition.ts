@@ -6,6 +6,8 @@ import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
 import { normalizeRetailText, type BarboraLookupInput } from "./barbora-catalog";
 import { nutritionRevalidateAfter } from "./data-freshness";
 import { readPersistentWebNutrition, writePersistentWebNutrition } from "./web-nutrition-cache";
+import { fetchVerifiedWebProduct, webLookupKey, type WebProductLookup } from "./web-product-evidence";
+import { findSharedWebProduct, promoteSharedWebProduct, sharedRecordToProduct } from "./shared-web-catalog";
 
 const DEFAULT_MODEL = "gemini-3.7-flash";
 const MIN_GOOGLE_HTTP_TIMEOUT_MS = 10_000;
@@ -27,12 +29,13 @@ const groundedNutritionSchema = z.object({
   matchedBrand: z.string().max(120),
   matchedProductName: z.string().max(240),
   nutritionBasis: z.enum(["100g", "100ml", "unknown"]),
-  energyKcal: z.number().min(0).max(1_000),
-  proteinG: z.number().min(0).max(100),
-  totalSugarG: z.number().min(0).max(100),
+  energyKcal: z.number().min(0).max(1_000).nullable(),
+  proteinG: z.number().min(0).max(100).nullable(),
+  totalSugarG: z.number().min(0).max(100).nullable(),
   carbohydrateG: z.number().min(0).max(100).nullable().optional(),
   confidence: z.number().min(0).max(1),
-  evidence: z.string().max(500)
+  evidence: z.string().max(500),
+  sourceProductUrl: z.string().max(2000).nullable().optional()
 });
 
 interface WebNutritionSource {
@@ -50,12 +53,13 @@ export interface GroundedNutritionCandidate {
   matchedBrand: string;
   matchedProductName: string;
   nutritionBasis: "100g" | "100ml" | "unknown";
-  energyKcal: number;
-  proteinG: number;
-  totalSugarG: number;
+  energyKcal: number | null;
+  proteinG: number | null;
+  totalSugarG: number | null;
   carbohydrateG?: number | null;
   confidence: number;
   evidence: string;
+  sourceProductUrl?: string | null;
 }
 
 export function extractGroundedNutritionCandidate(text: string): GroundedNutritionCandidate | null {
@@ -99,7 +103,7 @@ function trustedSources(sources: WebNutritionSource[]): WebNutritionSource[] {
 function productSources(
   sources: WebNutritionSource[],
   checkedAt: string,
-  hasCarbohydrate: boolean
+  candidate: GroundedNutritionCandidate
 ): ProductSource[] {
   return sources.map((source) => ({
     label: `Web nutrition source · ${source.title || new URL(source.url).hostname}`.slice(0, 180),
@@ -107,9 +111,9 @@ function productSources(
     checkedAt,
     fields: [
       "identity",
-      "protein",
-      "totalSugar",
-      ...(hasCarbohydrate ? (["carbohydrate"] as const) : [])
+      ...(candidate.proteinG !== null ? (["protein"] as const) : []),
+      ...(candidate.totalSugarG !== null ? (["totalSugar"] as const) : []),
+      ...(candidate.carbohydrateG !== null && candidate.carbohydrateG !== undefined ? (["carbohydrate"] as const) : [])
     ],
     status: "secondary"
   }));
@@ -126,6 +130,7 @@ export function buildGroundedWebNutritionProduct(
     !candidate.exactProductMatch ||
     candidate.confidence < 0.9 ||
     candidate.nutritionBasis === "unknown" ||
+    candidate.energyKcal === null ||
     candidate.energyKcal <= 0 ||
     !sources.length
   ) {
@@ -162,7 +167,7 @@ export function buildGroundedWebNutritionProduct(
     noAddedSugarClaim: false,
     imageUrl: null,
     retailerUrl: sources[0].url,
-    sources: productSources(sources, checkedAt, candidate.carbohydrateG !== null && candidate.carbohydrateG !== undefined),
+    sources: productSources(sources, checkedAt, candidate),
     isGolden: false,
     accent: "coral"
   };
@@ -173,7 +178,7 @@ export function buildGroundedWebNutritionProduct(
 }
 
 async function lookupWebNutritionRemotely(input: {
-  lookup: BarboraLookupInput;
+  lookup: WebProductLookup;
   recognitionConfidence: number;
   cacheKey: string;
   apiKey: string;
@@ -198,10 +203,12 @@ async function lookupWebNutritionRemotely(input: {
         `Return exactProductMatch true only when brand, product, flavor/variant and visible pack identity refer to the same SKU. ` +
         `Return energy kcal, protein, total sugars and carbohydrates per 100 g or per 100 ml exactly as a source lists them. ` +
         `Do not estimate, convert serving values, borrow a similar flavor, or average conflicting sources. ` +
-        `If an exact per-100 table is not verifiable, return exactProductMatch false with zero nutrients and unknown basis. ` +
+        `exactProductMatch describes identity, not table completeness. If a nutrient is not verifiable, return null; if the basis is missing return unknown. Never substitute zero for missing data. ` +
         `Cite the supporting page in the answer. End with exactly one single-line JSON object prefixed NUTRITION_JSON:. ` +
         `The object must contain exactProductMatch, matchedBrand, matchedProductName, nutritionBasis as 100g/100ml/unknown, ` +
-        `numeric energyKcal, proteinG, totalSugarG, carbohydrateG (number or null when not listed) and confidence from 0 to 1, plus a short evidence string.`,
+        `energyKcal, proteinG, totalSugarG, carbohydrateG (each number or null when not listed) and confidence from 0 to 1, plus a short evidence string. ` +
+        `Include sourceProductUrl: the direct HTTPS product page, not a search/grounding redirect. ` +
+        (input.lookup.barcode ? `The observed barcode is ${input.lookup.barcode}; it must match the source product. ` : ""),
       config: {
         httpOptions: { timeout: webNutritionTimeoutMs() },
         thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
@@ -213,6 +220,21 @@ async function lookupWebNutritionRemotely(input: {
     const sources = (response.candidates?.[0]?.groundingMetadata?.groundingChunks || []).flatMap((chunk) =>
       chunk.web?.uri ? [{ title: chunk.web.title || "Web source", url: chunk.web.uri }] : []
     );
+    if (process.env.SHARED_WEB_CATALOG_ENABLED === "true") {
+      // Search discovers a page; its generated nutrient numbers are NEVER facts.
+      // Only the deterministic page verifier can cross the shared-write boundary.
+      const url = candidate?.sourceProductUrl || sources[0]?.url;
+      const observation = candidate?.exactProductMatch && candidate.confidence >= 0.9 && sources.length && url
+        ? await fetchVerifiedWebProduct(input.lookup, url) : null;
+      if (!observation) {
+        responseCache.set(input.cacheKey, { result: null, expiresAt: Date.now() + MISS_CACHE_TTL_MS });
+        return null;
+      }
+      const promoted = await promoteSharedWebProduct(input.lookup, observation);
+      if (promoted.status === "conflict") return null;
+      const product = promoted.status === "accepted" ? promoted.product : sharedRecordToProduct(observation.product);
+      return product ? { product, confidence: candidate!.confidence } : null;
+    }
     const result = candidate ? buildGroundedWebNutritionProduct(input.lookup, candidate, sources) : null;
     if (result) {
       const revalidateAfter = Date.parse(nutritionRevalidateAfter(Date.now(), "web"));
@@ -259,6 +281,7 @@ async function lookupWebNutritionRemotely(input: {
         error: error instanceof Error ? error.message : "unknown"
       })
     );
+    if (process.env.SHARED_WEB_CATALOG_ENABLED === "true") return null;
     if (input.fallbackResult) {
       responseCache.set(input.cacheKey, {
         result: input.fallbackResult,
@@ -288,7 +311,7 @@ async function lookupWebNutritionRemotely(input: {
 }
 
 function revalidateWebNutritionInBackground(input: {
-  lookup: BarboraLookupInput;
+  lookup: WebProductLookup;
   recognitionConfidence: number;
   cacheKey: string;
   apiKey: string;
@@ -300,10 +323,20 @@ function revalidateWebNutritionInBackground(input: {
 }
 
 export async function resolveWebNutritionProduct(
-  input: BarboraLookupInput,
+  input: WebProductLookup,
   recognitionConfidence: number
 ): Promise<WebNutritionResolution | null> {
   if (recognitionConfidence < 0.78 || !input.brand.trim() || !input.name.trim()) return null;
+  if (process.env.SHARED_WEB_CATALOG_ENABLED === "true") {
+    const shared = await resolveSharedWebNutritionProduct(input, recognitionConfidence);
+    if (shared) return shared;
+    const cacheKey = webLookupKey(input);
+    const miss = responseCache.get(cacheKey);
+    if (miss && miss.expiresAt > Date.now()) return null;
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
+    // Deliberately never promote/read legacy AI-only cache as page-checked facts.
+    return apiKey ? lookupWebNutritionRemotely({ lookup: input, recognitionConfidence, cacheKey, apiKey }) : null;
+  }
   const cacheKey = normalizeRetailText([input.brand, input.name, input.variant, input.packSize].filter(Boolean).join(" "));
   const cached = responseCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.result;
@@ -333,4 +366,20 @@ export async function resolveWebNutritionProduct(
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) return null;
   return lookupWebNutritionRemotely({ lookup: input, recognitionConfidence, cacheKey, apiKey });
+}
+
+const sharedRecheckAfter = new Map<string, number>();
+export async function resolveSharedWebNutritionProduct(input: WebProductLookup, recognitionConfidence: number): Promise<WebNutritionResolution | null> {
+  if (recognitionConfidence < 0.78 || !input.brand.trim() || !input.name.trim()) return null;
+  const shared = await findSharedWebProduct(input);
+  if (!shared) return null;
+  const result = { product: shared.product, confidence: 0.99 };
+  const cacheKey = webLookupKey(input);
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (apiKey && Date.parse(nutritionRevalidateAfter(Date.parse(shared.checkedAt), "web")) <= Date.now() &&
+    (sharedRecheckAfter.get(cacheKey) || 0) <= Date.now()) {
+    sharedRecheckAfter.set(cacheKey, Date.now() + STALE_MEMORY_TTL_MS);
+    revalidateWebNutritionInBackground({ lookup: input, recognitionConfidence, cacheKey, apiKey, fallbackResult: result });
+  }
+  return result;
 }

@@ -12,7 +12,7 @@ Use this page to locate a change without scanning the whole repository.
 6. `src/server/demo-scenes.ts` supplies the deterministic Shelf and Checkout fixtures. They prove the UX, not real-world CV accuracy.
 7. `src/app/api/barcode/route.ts` resolves a readable EAN/UPC against local connected-retailer and Open Food Facts layers without sending an image to Gemini.
 8. `src/app/api/resolve-products/route.ts` performs the image-free enrichment pass after the first identities appear. `src/lib/enrichment-priority.ts` orders barcode/catalog-ready products ahead of unknown identities, while independent responses update cards progressively.
-9. `src/server/web-nutrition-cache.ts` reads and writes the fail-open Supabase cache around the final cited-search fallback. The process cache remains the first lookup for repeated scans in one running instance.
+9. `src/server/web-product-evidence.ts` verifies a discovered page without trusting model-supplied nutrients. `src/server/shared-web-catalog.ts` reads/promotes shared canonical cards through an atomic server-only Supabase function. `web-nutrition.ts` orchestrates source discovery and due rechecks. The feature flag defaults off; `web-nutrition-cache.ts` is the legacy rollback lane, never an automatic shared-card backfill.
 10. `src/components/scanner-results.tsx` renders source-backed fit, per-card online purchase state and Better alternatives.
 
 ## Data resolution
@@ -24,8 +24,9 @@ The exact-match ladder is:
 3. strict Rimi or Livin Latvia nutrition snapshots;
 4. the Livinn Lithuania edible-identity index, which canonicalizes the exact SKU across Lithuanian, Latvian, Russian and Estonian source aliases before looking for nutrition;
 5. the nutrition-complete Livinn Lithuania snapshot;
-6. isolated Open Food Facts records;
-7. exact cited web nutrition.
+6. exact page-checked shared web aliases (when enabled);
+7. isolated Open Food Facts records;
+8. exact web discovery followed by independent product-page checks and shared promotion.
 
 An identity-only Livinn record can name and de-duplicate a product, provide its exact GTIN to later sources and remain visible as unrated. It cannot produce a Sugar.no fit. Only a record with source-backed energy, protein and total sugar enters scoring or the alternative pool.
 

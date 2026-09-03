@@ -1,10 +1,21 @@
 import type { ProductDetection, ScoredProduct } from "@/lib/types";
 import { getExternalCatalogIdentityByBarcode, getExternalCatalogProductByBarcode } from "./external-catalog";
 import { getOpenFoodFactsBulkProductByBarcode } from "./open-food-facts";
+import { findSharedWebProductByBarcode } from "./shared-web-catalog";
 
 export interface BarcodeResolution {
   detection: ProductDetection;
-  source: "catalog" | "retailer_catalog" | "open_food_facts";
+  source: "catalog" | "retailer_catalog" | "open_food_facts" | "web_search";
+}
+
+export async function resolveSharedWebBarcode(barcode: string): Promise<BarcodeResolution | null> {
+  const product = await findSharedWebProductByBarcode(barcode);
+  if (!product?.gtin) return null;
+  const result = resolveBarcodeFromKnownCatalogs(product.gtin, [product]);
+  if (!result) return null;
+  return { source: "web_search", detection: { ...result.detection, catalogProductId: null,
+    // The legacy generic mapper assumes grams; omit rather than mislabel ml.
+    identity: { ...result.detection.identity!, barcode, packSize: null, matchKind: "web_search" } } };
 }
 
 export function resolveBarcodeFromKnownCatalogs(

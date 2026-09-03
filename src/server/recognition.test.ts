@@ -615,6 +615,22 @@ describe("resolveVisibleDetections", () => {
     });
   });
 
+  it("reuses a shared exact card before either internet nutrition fallback", async () => {
+    const fallback = { ...getCatalog()[0], id: "web:shared:" + "a".repeat(24), ratingBasis: "web_search_reference" as const };
+    const resolveSharedWebNutrition = vi.fn(async () => ({ product: fallback, confidence: 0.99 }));
+    const resolveOpenFoodFacts = vi.fn(async () => null);
+    const resolveWebNutrition = vi.fn(async () => null);
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, { brand: "SELGA", productName: "Classic biscuits 180 g", barcode: "4006381333931" })], [],
+      { getOfferBySlug: async () => null, resolveOffer: async () => null, resolveIndexedCandidate: () => null,
+        resolveOpenFoodFacts, resolveWebNutrition, resolveSharedWebNutrition }
+    );
+    expect(resolveSharedWebNutrition).toHaveBeenCalledWith(expect.objectContaining({ barcode: "4006381333931" }), expect.any(Number));
+    expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
+    expect(resolveWebNutrition).not.toHaveBeenCalled();
+    expect(detections[0]).toMatchObject({ productId: fallback.id, inlineProduct: { id: fallback.id }, identity: { matchKind: "web_search" } });
+  });
+
   it("uses searchQuery details for an exact Open Food Facts lookup when the UI label is brand-only", async () => {
     const resolveOpenFoodFacts = vi.fn(async () => ({
       product: {

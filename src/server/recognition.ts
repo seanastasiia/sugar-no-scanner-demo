@@ -27,7 +27,7 @@ import {
 import { getIndexedBarboraProductWithAlternatives } from "./barbora-nutrition-index";
 import { resolveOpenFoodFactsProduct } from "./open-food-facts";
 import { resolveExternalCatalogIdentity, resolveExternalCatalogProduct } from "./external-catalog";
-import { resolveWebNutritionProduct } from "./web-nutrition";
+import { resolveSharedWebNutritionProduct, resolveWebNutritionProduct } from "./web-nutrition";
 import { sampleResponse } from "./demo-scenes";
 
 export const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
@@ -454,6 +454,7 @@ export interface DetectionResolutionDependencies {
   resolveIndexedCandidate?: typeof resolveIndexedBarboraCandidate;
   getIndexedProduct?: typeof getIndexedBarboraProductWithAlternatives;
   resolveWebNutrition?: typeof resolveWebNutritionProduct;
+  resolveSharedWebNutrition?: typeof resolveSharedWebNutritionProduct;
 }
 
 type DetectionResolutionMode = "fast" | "complete";
@@ -466,7 +467,8 @@ const defaultResolutionDependencies: DetectionResolutionDependencies = {
   resolveExternalCatalogIdentity,
   resolveIndexedCandidate: resolveIndexedBarboraCandidate,
   getIndexedProduct: getIndexedBarboraProductWithAlternatives,
-  resolveWebNutrition: resolveWebNutritionProduct
+  resolveWebNutrition: resolveWebNutritionProduct,
+  resolveSharedWebNutrition: resolveSharedWebNutritionProduct
 };
 
 async function mapWithConcurrency<T, R>(
@@ -558,12 +560,16 @@ export async function resolveVisibleDetections(
         }
       : lookupInput;
     const canonicalBarcode = detection.barcode || externalCatalogIdentity?.identity.gtin || "";
-    const openFoodFactsCandidate = mode === "fast" || knownProduct || externalCatalogCandidate || (!canSearchExactIdentity && !externalCatalogIdentity)
+    const webLookupInput = { ...canonicalLookupInput, ...(canonicalBarcode ? { barcode: canonicalBarcode } : {}) };
+    const sharedWebNutrition = mode === "fast" || knownProduct || externalCatalogCandidate || (!canSearchExactIdentity && !externalCatalogIdentity)
+      ? null
+      : await dependencies.resolveSharedWebNutrition?.(webLookupInput, detection.confidence).catch(() => null) || null;
+    const openFoodFactsCandidate = mode === "fast" || knownProduct || externalCatalogCandidate || sharedWebNutrition || (!canSearchExactIdentity && !externalCatalogIdentity)
       ? null
       : await dependencies.resolveOpenFoodFacts(canonicalLookupInput, canonicalBarcode).catch(() => null);
-    const webNutrition = mode === "fast" || knownProduct || externalCatalogCandidate || openFoodFactsCandidate || (!canSearchExactIdentity && !externalCatalogIdentity)
+    const webNutrition = sharedWebNutrition || (mode === "fast" || knownProduct || externalCatalogCandidate || openFoodFactsCandidate || (!canSearchExactIdentity && !externalCatalogIdentity)
       ? null
-      : await dependencies.resolveWebNutrition?.(canonicalLookupInput, detection.confidence).catch(() => null) || null;
+      : await dependencies.resolveWebNutrition?.(webLookupInput, detection.confidence).catch(() => null) || null);
     const resolvedProduct = knownProduct || externalCatalogCandidate?.product || openFoodFactsCandidate?.product || webNutrition?.product || externalCatalogIdentity?.product || null;
     const resolvedRetailerOffer = exactRetailerOffer || externalCatalogCandidate?.offer || retailerOffer;
     const nutritionLinkConfidence =

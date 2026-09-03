@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { resolveBarcodeFromKnownCatalogs } from "@/server/barcode-resolution";
+import { resolveBarcodeFromKnownCatalogs, resolveSharedWebBarcode } from "@/server/barcode-resolution";
 import { listProducts } from "@/server/catalog-repository";
 import { createRecognitionRateLimiter, recognitionClientKey } from "@/server/rate-limit";
 import { readBoundedJson } from "@/server/request-body";
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   }
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "invalid_request" }, { status: 400 });
-  const result = resolveBarcodeFromKnownCatalogs(parsed.data.barcode, await listProducts());
+  const result = resolveBarcodeFromKnownCatalogs(parsed.data.barcode, await listProducts()) || await resolveSharedWebBarcode(parsed.data.barcode);
   return NextResponse.json(
     result ? { status: "matched", ...result, imageStored: false } : { status: "not_found", imageStored: false },
     { headers: { "cache-control": "private, max-age=300" } }

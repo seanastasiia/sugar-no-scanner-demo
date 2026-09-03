@@ -6,6 +6,7 @@ import { getIndexedBarboraNutrition, indexedBarboraProductToScoredProduct, listI
 import { getExternalCatalogProductById, listExternalCatalogScoredProducts } from "./external-catalog";
 import { getOpenFoodFactsProductByBarcode, listOpenFoodFactsBulkProducts } from "./open-food-facts";
 import { getSupabaseAdmin } from "./supabase";
+import { getSharedWebProduct } from "./shared-web-catalog";
 
 interface ProductRow {
   id: string;
@@ -113,6 +114,7 @@ async function listVerifiedAlternativePool(): Promise<ScoredProduct[]> {
 }
 
 async function resolveProduct(id: string): Promise<ScoredProduct | null> {
+  if (id.startsWith("web:shared:")) return getSharedWebProduct(id);
   if (id.startsWith("off:")) {
     return getOpenFoodFactsProductByBarcode(id.slice("off:".length));
   }
