@@ -1,6 +1,6 @@
 import type { ProductRecord, ScoredProduct } from "./types";
 
-export const SHELF_MODEL_VERSION = "personal-shelf-v1.1-bounded";
+export const SHELF_MODEL_VERSION = "personal-shelf-v1.1.1-bounded";
 export type ShelfCategory = "chips" | "crackers" | "yogurt" | "dairy-dessert" | "bar" | "cookie";
 export type ShelfComponentKey = "sugar" | "protein" | "composition" | "balance";
 
@@ -106,12 +106,13 @@ export function splitIngredients(text: string): string[] {
 
 const word = (pattern: string) => new RegExp(`(?:^|[^\\p{L}])(?:${pattern})(?=$|[^\\p{L}])`, "u");
 const sugars = word("sugar|sugars|sucrose|glucose|fructose|dextrose|syrup|honey|cukurs|cukura|cukuri|cukrus|cukraus|sirupas|sirupo|sirups|sirupa|medus|medaus|сахар|сахара|сироп|сиропа|мед|меда|suhkur|suhkru|siirup|mesi");
-const sweeteners = word("sucralose|aspartame|acesulfame|stevia|steviol|sukraloze|sukraloze|aspartamas|steviolio|stevija|сукралоза|аспартам|стевия|e950|e951|e952|e954|e955|e960|erythritol|maltitol|sorbitol|ksilitols|eritritols|эритрит|мальтит|сорбит");
+const sweeteners = word("sucralose|aspartame|acesulfame|stevia|steviol|sukraloze|sukraloze|aspartamas|steviolio|stevija|сукралоза|аспартам|стевия|e950|e951|e952|e954|e955|e960|erythritol|maltitol|maltitols|maltits|maltita|sorbitol|ksilitols|eritritols|эритрит|мальтит|сорбит");
 const wholeBase = /whole[ -]?grain|whole[ -]?wheat|brown rice|pilngraud|pilnagrud|pilno grudo|viso grudo|цельнозер|taitera|chickpea|lentil|nut[sz]?\b|almond|oat flakes|avizu dribs|auzu parsl|avizirn|zirni|zirniu|lesiu|lesiai|migdol|lazdyn|riesut|riekst|миндал|нут\b|чечевиц|орех|kaerahelb/;
 const potatoCornBase = /potato|bulv|kartupel|картоф|kartul|corn|kukuruz|kukuruzu|kukuruzu|кукуруз|mais/;
 const dairyBase = /^(?:organic |ekologisk\p{L}* |bio )?(?:milk|skimmed milk|pasteuri[sz]ed milk|piens|piena|vajpiens|biezpiens|pienas|pieno|молоко|молока|piim|yogurt|jogurt|йогурт)/u;
 const refinedBase = /flour|starch|miltai|miltu|milti\b|krakmol|ciete|мука|муки|крахмал|jahu|tarklis|rice|ryz|risi|рис|riis|protein|olbaltum|baltym|белок/;
 const isolatedBase = /starch|krakmol|ciete|крахмал|tarklis|protein|olbaltum|baltym|белок/;
+const chocolateBase = /chocolate|sokola+d|шоколад/;
 const fatBase = /oil|butter|alieju|ella|sviests|sviestas|масло|масла|oli\b/;
 
 export function analyzeIngredients(text: string | null, language: string | null) {
@@ -120,7 +121,7 @@ export function analyzeIngredients(text: string | null, language: string | null)
   if (!parts.length) return null;
   const first = normalizeIngredientText(parts[0]).split(/[([]/)[0];
   // Score explicit positive/negative evidence only. Unrecognized base is unknown, not clean.
-  const base = sugars.test(first) ? 0 : fatBase.test(first) ? null : isolatedBase.test(first) ? 25 : wholeBase.test(first) ? 100 : dairyBase.test(first) ? 85 : potatoCornBase.test(first) ? 75 : refinedBase.test(first) ? 25 : null;
+  const base = sugars.test(first) ? 0 : fatBase.test(first) ? null : isolatedBase.test(first) || chocolateBase.test(first) ? 25 : wholeBase.test(first) ? 100 : dairyBase.test(first) ? 85 : potatoCornBase.test(first) ? 75 : refinedBase.test(first) ? 25 : null;
   const sugarNearStart = parts.slice(0, 3).some((part) => sugars.test(normalizeIngredientText(part)));
   return {
     firstIngredient: parts[0],

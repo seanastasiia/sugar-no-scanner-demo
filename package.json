@@ -22,6 +22,7 @@
     "verify": "npm run lint && npm run typecheck && npm test && npm run verify:catalog && npm run build",
     "catalog:sync": "tsx scripts/sync-barbora.ts",
     "catalog:sync:shelf-pilot": "tsx scripts/sync-personal-shelf-evidence.ts",
+    "catalog:sync:shelf-demo": "tsx scripts/sync-shelf-demo-evidence.ts",
     "catalog:sync:shelf-batch": "tsx scripts/sync-personal-shelf-batch.ts",
     "catalog:validate:shelf-pilot": "tsx scripts/validate-personal-shelf-evidence.ts",
     "supabase:seed:shelf-pilot": "tsx scripts/seed-personal-shelf-evidence.ts",

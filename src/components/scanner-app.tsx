@@ -50,6 +50,8 @@ import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from
 import { productDisplayName, productDisplayImage } from "@/lib/product-display";
 import { compactNutritionLabel } from "@/lib/nutrition-display";
 import { PersonalShelfResults, ShelfRankToggle } from "./personal-shelf-results";
+import { shelfDemoPersonalProduct } from "@/lib/shelf-demo-personal-rank";
+import { shelfDemoOriginalId } from "@/lib/shelf-demo-products";
 import { isExactOnlineSaving, retailerOfferKey } from "@/lib/online-offer";
 import {
   readOnboardingCompletion,
@@ -1812,9 +1814,13 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
                 ) : null}
                 {!productDetailsOpen && personalRankEnabled ? (
                   <PersonalShelfResults
-                    products={visibleTrayIds.flatMap((id) => products[id]?.product ? [products[id].product] : [])}
+                    context={source === "sample-shelf" ? "demo" : "scan"}
+                    products={visibleTrayIds.flatMap((id) => products[id]?.product ? [source === "sample-shelf" ? shelfDemoPersonalProduct(products[id].product) : products[id].product] : [])}
                     unidentifiedCount={visibleTrayIds.filter((id) => !products[id]?.product).length}
-                    thumbnail={(id) => <ProductThumbnail imageUrl={products[id]?.product.imageUrl} sceneImageUrl={sceneImageUrl} sceneDimensions={mediaDimensions} detection={detectionById[id]} sizes="48px" targetAspect={48 / 60} />}
+                    thumbnail={(id) => {
+                      const sourceId = source === "sample-shelf" ? shelfDemoOriginalId(id) : id;
+                      return <ProductThumbnail imageUrl={products[sourceId]?.product.imageUrl} sceneImageUrl={sceneImageUrl} sceneDimensions={mediaDimensions} detection={detectionById[sourceId]} sizes="48px" targetAspect={48 / 60} />;
+                    }}
                   />
                 ) : null}
                 {!productDetailsOpen && !personalRankEnabled && visibleTrayIds.length === 1 ? (

@@ -150,4 +150,19 @@ describe("bounded multilingual ingredient evidence", () => {
     expect(analyzeIngredients("Kokosriekstu eļļa, sāls", "lv")?.score).toBeNull();
     expect(analyzeIngredients("Wholegrain flour, salt", "en")?.score).toBe(100);
   });
+  it.each([
+    ["en", "Milk chocolate (maltitol, cocoa butter, milk powder), milk protein"],
+    ["lv", "PIENA šokolāde ar saldinātāju (maltīts, kakao sviests, piena pulveris), PIENA olbaltumvielas"],
+    ["lt", "Pieniškas šokoladas, pieno baltymai"],
+    ["ru", "Молочный шоколад, молочный белок"],
+    ["et", "Piimašokolaad, piimavalk"]
+  ])("treats a %s chocolate compound as a refined base, not plain milk", (language, text) => {
+    expect(analyzeIngredients(text, language)?.score).toBe(25);
+  });
+  it("recognizes the Latvian maltitol label without penalizing sweeteners as sugar", () => {
+    const result = analyzeIngredients("PIENA šokolāde (saldinātājs maltīts, kakao sviests), ūdens", "lv");
+    expect(result?.sweetenersDetected).toBe(true);
+    expect(result?.sugarNearStart).toBe(false);
+    expect(analyzeIngredients("Milk, chocolate", "en")?.score).toBe(85);
+  });
 });

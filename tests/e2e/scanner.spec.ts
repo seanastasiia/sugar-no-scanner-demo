@@ -834,6 +834,36 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
   });
 }
 
+test("ordinary Shelf demo rates all four bars in Personal Shelf without evidence requests", async ({ page }) => {
+  let evidenceRequests = 0;
+  await page.route("**/api/personal-shelf", async (route) => { evidenceRequests++; await route.abort(); });
+  await mockAlternativeOffers(page);
+  await unlock(page);
+  await openDemoScene(page, "Shelf demo");
+  await page.getByRole("button", { name: "View all", exact: true }).click();
+  const original = page.getByLabel("Products ranked by Sugar.no fit");
+  await expect(original.getByRole("button")).toHaveCount(4);
+  const originalNames = await original.getByRole("button").allTextContents();
+  await page.getByRole("switch", { name: "Personal Shelf Rank Pilot", exact: true }).click();
+  const personal = page.getByRole("region", { name: "Personal Shelf Rank results", exact: true });
+  await expect(personal.getByRole("heading", { name: "Snack bars", exact: true })).toBeVisible();
+  await expect(personal.getByRole("heading", { name: "Cookies & wafers", exact: true })).toHaveCount(0);
+  await expect(personal.locator("h4")).toHaveCount(4);
+  await expect(personal.locator("img")).toHaveCount(4);
+  await expect.poll(() => personal.locator("img").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
+  await expect(personal.getByText("Provisional #1 of 4 in snack bars", { exact: true })).toHaveCount(4);
+  await expect(personal.getByText("Provisional · fiber unknown", { exact: true })).toHaveCount(4);
+  await expect(personal.getByRole("img", { name: "Not scored", exact: true })).toHaveCount(0);
+  await expect(personal.locator("strong").filter({ hasText: "59/100" })).toHaveCount(4);
+  await personal.getByText("Why this score?", { exact: true }).first().click();
+  await expect(personal.getByText("Pilot ceiling 59/100: high saturated fat per 100 g. Protein cannot cancel this limit.").first()).toBeVisible();
+  await expectNoDocumentOverflow(page);
+  await page.screenshot({ path: test.info().outputPath("shelf-demo-personal-rank.png"), fullPage: true, animations: "disabled" });
+  expect(evidenceRequests).toBe(0);
+  await page.getByRole("switch", { name: "Personal Shelf Rank Pilot", exact: true }).click();
+  await expect(original.getByRole("button")).toHaveText(originalNames);
+});
+
 test("sample shelf photo highlights products and ranks two-factor Sugar.no fits", async ({ page }) => {
   await mockAlternativeOffers(page);
   await unlock(page);
