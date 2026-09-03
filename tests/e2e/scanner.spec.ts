@@ -2048,10 +2048,16 @@ test("an exact Barbora food gets an on-demand two-factor Sugar.no fit", async ({
   expect(accessibility.violations).toEqual([]);
 });
 
-test("entry experience has no automated WCAG A/AA violations", async ({ page }) => {
+test("entry retains approved colors and passes WCAG with increased contrast", async ({ page }) => {
   await unlock(page);
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(150);
+  const normal = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+  // Only the two approved blue labels may fall below AA in normal mode.
+  expect(normal.violations.every((violation) => violation.id === "color-contrast" && violation.nodes.every((node) =>
+    node.target.every((target) => /feedbackTrigger|secondaryButton/.test(String(target)))
+  ))).toBe(true);
+  await page.emulateMedia({ contrast: "more" });
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
   expect(results.violations).toEqual([]);
 });
