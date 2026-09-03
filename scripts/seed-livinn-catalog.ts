@@ -59,14 +59,17 @@ async function main() {
     ["retailer_catalog_food_identities", identityRows, "source_id,source_product_id"],
     ["retailer_catalog_products", productRows, "source_id,source_product_id"],
     ["retailer_catalog_product_versions", versionRows, "source_id,source_product_id,version_hash"]
-  ] as const) {
+  ] as Array<[string, Record<string, unknown>[], string]>) {
     for (let offset = 0; offset < rows.length; offset += 250) {
       const { error } = await db.from(table).upsert(rows.slice(offset, offset + 250), { onConflict });
       if (error) throw error;
     }
     const { count, error } = await db.from(table).select("source_product_id", { head: true, count: "exact" }).eq("source_id", "livinn_lt");
     if (error) throw error;
-    if (count !== rows.length) throw new Error(`${table}: expected ${rows.length} Livinn rows, found ${count}`);
+    const history = table === "retailer_catalog_product_versions";
+    if (count === null || (history ? count < rows.length : count !== rows.length)) {
+      throw new Error(`${table}: expected ${history ? "at least " : ""}${rows.length} Livinn rows, found ${count}`);
+    }
     console.log(JSON.stringify({ table, verifiedLivinnRows: count }));
   }
 }

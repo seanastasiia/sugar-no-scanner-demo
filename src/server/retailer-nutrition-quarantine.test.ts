@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getExternalCatalogProductById } from "./external-catalog";
+import { externalCatalogCounts, getExternalCatalogProductById } from "./external-catalog";
 import { resolveBarcodeFromKnownCatalogs } from "./barcode-resolution";
 import { isQuarantinedRetailerNutrition, quarantinedRetailerNutrition } from "./retailer-nutrition-quarantine";
 
@@ -22,6 +22,10 @@ describe("production Livinn nutrition quarantine", () => {
     const product = getExternalCatalogProductById("livinn_lt:1G1701009280");
     expect(product?.matchScore).not.toBeNull();
     expect(product?.nutrientsPer100g).toMatchObject({ proteinG: 8.1, totalSugarG: 1.8 });
+  });
+
+  it("reports only eligible nutrition records in runtime health counts", () => {
+    expect(externalCatalogCounts().livinn_lt).toBe(1853);
   });
 
   it("does not quarantine another retailer using the same local ID", () => {

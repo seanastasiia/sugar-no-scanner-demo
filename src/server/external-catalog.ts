@@ -467,7 +467,7 @@ export function getExternalCatalogOfferByKey(key: string): RetailerOffer | null 
 export function externalCatalogCounts() {
   return products.reduce(
     (counts, product) => {
-      if (product.source === "rimi_lv" || product.source === "livin_lv" || product.source === "livinn_lt") {
+      if (!isQuarantinedRetailerNutrition(product) && (product.source === "rimi_lv" || product.source === "livin_lv" || product.source === "livinn_lt")) {
         counts[product.source] += 1;
       }
       return counts;
