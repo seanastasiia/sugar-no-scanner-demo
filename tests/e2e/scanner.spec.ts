@@ -2,6 +2,8 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { shelfFixture } from "../fixtures/personal-shelf";
 import type { ScoredProduct } from "../../src/lib/types";
+import type { ShelfEvidence } from "../../src/lib/personal-shelf-rank";
+import type { ExternalCatalogProduct } from "../../src/server/external-catalog-types";
 
 async function authenticate(page: Page) {
   const response = await page.request.post("/api/auth", {
@@ -188,8 +190,16 @@ test("personal shelf pilot remains accessible on small phones, dark mode and enl
 });
 
 test("personal shelf pilot shows exact Livinn observations in the mobile comparison", async ({ page }, testInfo) => {
-  const { getExternalCatalogProductById } = await import("../../src/server/external-catalog");
-  const samples = ["livinn_lt:03000011072", "livinn_lt:03000011074"].map((id) => getExternalCatalogProductById(id)!);
+  const { readFile } = await import("node:fs/promises");
+  // Do not load Next's JSON module graph into the standalone Node/Playwright runner.
+  const observations: ShelfEvidence[] = JSON.parse(await readFile("data/personal-shelf-evidence.generated.json", "utf8"));
+  const catalog: ExternalCatalogProduct[] = JSON.parse(await readFile("data/livinn-catalog.generated.json", "utf8"));
+  const samples = ["03000011072", "03000011074"].map((sku) => {
+    const id = `livinn_lt:${sku}`;
+    const source = catalog.find((row) => row.sourceProductId === sku)!;
+    const evidence = observations.find((row) => row.productId === id)!;
+    return { ...shelfFixture(id, evidence), brand: source.brand, name: source.title, shortName: source.title, imageUrl: source.imageUrl, gtin: source.gtin };
+  });
   // Recognition is mocked; ingredient/nutrition evidence below is the real dated snapshot.
   await openPersonalShelfFixture(page, samples);
   await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
