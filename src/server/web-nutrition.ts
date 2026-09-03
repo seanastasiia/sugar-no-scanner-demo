@@ -7,7 +7,7 @@ import { normalizeRetailText, type BarboraLookupInput } from "./barbora-catalog"
 import { nutritionRevalidateAfter } from "./data-freshness";
 import { readPersistentWebNutrition, writePersistentWebNutrition } from "./web-nutrition-cache";
 import { fetchVerifiedWebProduct, webLookupKey, type WebProductLookup } from "./web-product-evidence";
-import { findSharedWebProduct, promoteSharedWebProduct, sharedRecordToProduct } from "./shared-web-catalog";
+import { findSharedWebProduct, promoteSharedWebProduct } from "./shared-web-catalog";
 
 const DEFAULT_MODEL = "gemini-3.7-flash";
 const MIN_GOOGLE_HTTP_TIMEOUT_MS = 10_000;
@@ -231,9 +231,9 @@ async function lookupWebNutritionRemotely(input: {
         return null;
       }
       const promoted = await promoteSharedWebProduct(input.lookup, observation);
-      if (promoted.status === "conflict") return null;
-      const product = promoted.status === "accepted" ? promoted.product : sharedRecordToProduct(observation.product);
-      return product ? { product, confidence: candidate!.confidence } : null;
+      // A timed-out write may already have quarantined a conflicting value.
+      // Do not bypass that decision with the raw page when the commit is unknown.
+      return promoted.status === "accepted" ? { product: promoted.product, confidence: candidate!.confidence } : null;
     }
     const result = candidate ? buildGroundedWebNutritionProduct(input.lookup, candidate, sources) : null;
     if (result) {

@@ -82,10 +82,10 @@ describe("shared web catalog end-to-end server flow", () => {
     expect(db.rpc).not.toHaveBeenCalled();
     expect(writeLegacy).not.toHaveBeenCalled();
   });
-  it("fails open to the just-verified page when Supabase is unavailable, without claiming it was saved", async () => {
+  it("keeps enrichment unknown if a write cannot be confirmed, never bypassing a possible conflict decision", async () => {
     getSupabaseAdmin.mockReturnValue({ from() { throw new Error("offline"); }, rpc() { throw new Error("offline"); } });
     const result = await (await import("./web-nutrition")).resolveWebNutritionProduct(lookup, 1);
-    expect(result?.product.nutrientsPer100g.proteinG).toBe(7.2);
+    expect(result).toBeNull();
     expect(writeLegacy).not.toHaveBeenCalled();
   });
   it("does not return a new claimed card after an identity-conflict decision", async () => {
