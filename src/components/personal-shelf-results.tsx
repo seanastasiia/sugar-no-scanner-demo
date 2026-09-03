@@ -17,7 +17,7 @@ export function ShelfRankToggle({ enabled, onChange }: { enabled: boolean; onCha
   );
 }
 
-export function PersonalShelfResults({ products, unidentifiedCount, thumbnail, context = "scan" }: {
+export function PersonalShelfResults({ products, thumbnail, context = "scan" }: {
   products: ProductRecord[];
   unidentifiedCount: number;
   thumbnail: (id: string) => ReactNode;
@@ -42,7 +42,7 @@ export function PersonalShelfResults({ products, unidentifiedCount, thumbnail, c
       .finally(() => clearTimeout(timeout));
     return () => { controller.abort(); clearTimeout(timeout); };
   }, [context, ids]);
-  const { groups, unsupported } = rankPersonalShelfProducts(products.map((product) => {
+  const { groups } = rankPersonalShelfProducts(products.map((product) => {
     const next = managed[product.id];
     const current = product.shelfEvidence;
     return next?.productId === product.id && (!current || Date.parse(next.checkedAt) > Date.parse(current.checkedAt))
@@ -50,12 +50,10 @@ export function PersonalShelfResults({ products, unidentifiedCount, thumbnail, c
   }));
   return (
     <section className={styles.results} aria-label="Personal Shelf Rank results">
-      <p className={styles.intro}>Within-type comparison · Pilot preferences, not a health rating.</p>
-      {!groups.length ? <p>No supported product types in this scan yet. This pilot covers chips, crackers, spoonable yogurts, dairy desserts, snack bars and cookies.</p> : null}
+      {!groups.length ? <p className={styles.empty}>No ratings for this shelf yet. Switch off Personal Shelf Rank to view all products.</p> : null}
       {groups.map((group) => (
         <section key={group.category} aria-labelledby={`shelf-group-${group.category}`}>
           <h3 id={`shelf-group-${group.category}`}>{group.label}</h3>
-          <p className={styles.groupNote}>{group.scoredCount} of {group.total} assessed in this {context}{group.provisionalCount ? ` · ${group.provisionalCount} provisional. Ranges use the lower bound; overlapping ranges do not establish a winner.` : group.scoredCount < 2 ? ". Need two for a relative rank." : ". Equal scores share a place."}</p>
           <ul className={styles.list}>
             {group.entries.map(({ product, assessment, rank, tied, rankProvisional }) => {
               const scoreLabel = shelfScoreLabel(assessment);
@@ -69,12 +67,12 @@ export function PersonalShelfResults({ products, unidentifiedCount, thumbnail, c
                     {scoreLabel !== null ? <>
                       <strong>{scoreLabel}<span>/100</span>{assessment.status === "provisional" ? <small> Provisional · fiber unknown</small> : null}</strong>
                       <span>{rank ? `${rankProvisional ? "Provisional " : tied ? "Tied " : ""}#${rank} of ${group.scoredCount} in ${group.label.toLowerCase()}` : `Score only · ${group.label}`}</span>
-                    </> : <strong className={styles.unknown}>{assessment.status === "unsupported" ? "Outside this pilot" : "Not enough verified data"}</strong>}
+                    </> : <span className={styles.unknown} role="img" aria-label="Not scored">—</span>}
                   </div>
                   {scoreLabel !== null ? <>
                     <ul className={styles.reasons}>{assessment.reasons.slice(0, 2).map((reason) => <li key={reason}>{reason}</li>)}</ul>
                     <p className={styles.tradeoff}><b>Consider:</b> {assessment.tradeoffs[0]}</p>
-                  </> : <p className={styles.tradeoff}>{assessment.status === "unsupported" ? "Only solid products with per-100 g evidence are compared in v1." : `Missing or unverified: ${assessment.missing.join(", ")}. No score or rank is assigned.`}</p>}
+                  </> : null}
                   {assessment.components.length ? <details className={styles.details}>
                     <summary>Why this score?</summary>
                     {assessment.status === "provisional" ? <p>Fiber is not listed. The range covers its possible point contribution, not estimated grams. Provisional places use the lower bound; overlapping ranges do not establish a winner.</p> : null}
@@ -87,12 +85,6 @@ export function PersonalShelfResults({ products, unidentifiedCount, thumbnail, c
           </ul>
         </section>
       ))}
-      {unsupported.length || unidentifiedCount ? <div className={styles.unranked}>
-        <h3>Not compared in this pilot</h3>
-        <ul>{unsupported.map(({ product }) => <li key={product.id}>{product.brand} {product.shortName}</li>)}</ul>
-        {unidentifiedCount ? <p>{unidentifiedCount} product(s) still need an exact identity or nutrient source.</p> : null}
-        <p>Use the original Fit mode to view available information.</p>
-      </div> : null}
     </section>
   );
 }
