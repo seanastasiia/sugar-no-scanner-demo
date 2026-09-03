@@ -1,6 +1,7 @@
-const CACHE_NAME = "sugar-scanner-shell-v2";
+const CACHE_NAME = "sugar-scanner-shell-v3";
 const APP_SHELL = [
   "/offline.html",
+  "/brand/sugar-no-logo-white.svg",
   "/manifest.webmanifest",
   "/icon.svg",
   "/icon-192.png",

@@ -4,6 +4,9 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Open
 
+- **Normal-mode contrast follows the approved Pen design.** White text on the colorful fit gradients and the original system-blue controls does not meet every AA text contrast threshold. Increased-contrast mode provides darker text/actions and is checked separately.
+- **Rounded typography is platform-dependent on the web.** Apple Safari resolves the system rounded face; browsers without it use a system fallback. Apple font binaries are not included in the repository.
+
 - **Historical catalog snapshots do not yet contain carbohydrates.** The app now supports exact source-backed carbohydrates per 100 g or 100 ml, but existing checked-in rows omit the field until their next retailer, Open Food Facts or grounded-source refresh. Sugar.no fit remains available from protein and total sugar and is not recalculated.
 - **Latvia coverage is not universal.** Private labels, unreadable variants and products without an exact cited per-100 table can remain unresolved. They must not receive a guessed fit.
 - **Physical-store accuracy is not validated.** Packaging glare, low light, distance and a moving checkout belt need a real-store benchmark.
@@ -17,6 +20,13 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **Amplitude Starter limits Funnel charts to two steps.** The saved activation chart measures `app_opened` to `scan_completed`; onboarding, camera-permission, scan-start and feedback events remain available in Live Events and can be explored in separate charts without upgrading.
 
 ## Recently resolved
+
+- **2026-09-03: Saved-photo recovery had no effective retry action.** Retry now reuses the same prepared frames held only in memory, without reopening the camera; changing source releases them.
+
+- **2026-09-03: Scanner did not match the approved Pen flow.** Welcome, native chip rims, primary buttons, ranked cards, product detail, photo/demo, recovery and feedback now use the approved design. Nutrition and price gates are preserved.
+- **2026-09-03: Small and landscape screens hid actions during the transfer.** Welcome has a shorter photo on low-height phones; compact-result actions remain visible in landscape. Camera and uploaded-photo box mapping uses the same contain geometry as the displayed image.
+- **2026-09-03: Feedback could lose keyboard focus and accept edits while saving.** The form is locked during send, failure preserves the answer, Tab stays in the dialog, and closing focuses its trigger.
+- **2026-09-03: Offline fallback still used the old visual language.** It now shares the approved light surface, rounded heading and primary button; the service worker caches the official wordmark for offline use.
 
 - **2026-09-03: demo source badges crowded the camera actions on mobile.** Removed the visible `Shelf photo` and `Checkout photo` pills in staging. Feedback and back-to-camera actions remain right-aligned, with their existing touch targets; scanner accessibility labels are preserved.
 - **2026-09-02: staging feedback competed with primary actions, the scan pass was easy to miss, and `Not sure — try again` still read like a status notification.** `Leave feedback` now uses the same restrained secondary camera pill as the demo action, the one-time onboarding scan pass lasts 3.2 seconds, and recovery uses a separate solid coral button on a transparent status container. Reduced motion and the 44 px target remain intact; production is unchanged.

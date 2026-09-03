@@ -1,86 +1,47 @@
-# Sugar.no Shelf Scanner design system
+# Sugar.no Scanner — approved Pen design
 
-This file records the verified visual language already used by Sugar.no. It replaces the generic generated recommendation and is the source of truth for onboarding, camera, demo, results, and feedback surfaces in this staging branch.
+Source: the user's approved `/Users/anastasiia/Documents/untitled.pen`, saved 3 September 2026 at 12:58 Riga time. Boards: `G9pVK`, `K9WJy`, `FfOrG`. Figma source: file `mY0Ihk460tvTRGLK1RyTmy`, scanner node `10883:59336`; outlined fit variants `15667:154340–154342`. This specification supersedes the previous coral/Inter staging skin.
 
-## Brand
+## Foundations
 
-- Use the official `/brand/sugar-no-logo-white.svg` asset. Do not recreate the wordmark with text, recolor it, or change its proportions.
-- Place the white wordmark only over the dark scanner surface or an ink-colored brand plate with clear space.
-- Product language is calm and factual. Avoid medical claims, judgmental labels, and decorative copy.
+| Role | Value |
+| --- | --- |
+| Canvas / tinted card | `#F2F2F7` |
+| Card | `#FFFFFF` |
+| Ink / muted | `#262626` / `#60606A` |
+| Action blue / retry coral | `#0A84FF` / `#F14E58` |
+| Primary button | 56 px minimum; pill; `#1A1A1A → #4D4D4D`; white → 2% white → white diagonal rim, 1.5 px; black 13% shadow, y 3.246 / blur 19.478 |
+| Secondary action | White pill, blue label, 44 px minimum |
+| Fit chip | 30 px, radius 24, padding 4/8, 15/22 semibold rounded; white gradient rim 1.25 px |
+| Great / Moderate / Low | `#50D671 → #2DBC51` / `#FFC917 → #FF7701` / `#F17E5B → #F93A00` |
+| Cards | Radius 32; 16–24 px content gutters; 8/12/16/24 spacing |
+| Text | Rounded headings 28/34, welcome 34/40; body 16/22 regular system face; small copy 12–14 |
 
-## Tokens
+Headings, buttons, fit and short labels use `ui-rounded`, SF Pro Rounded where available, then the system fallback. Body uses `-apple-system`, BlinkMacSystemFont, Segoe UI, sans-serif. Apple Safari uses the intended system faces. No Apple font binaries are bundled. Other browsers may differ typographically. The approved light theme is stable across system themes. Increased-contrast mode darkens chip text and action blue; normal-mode source colors are not claimed to meet full AA contrast.
 
-| Role | Token | Value |
-| --- | --- | --- |
-| Product canvas | `--canvas` | `#f3f4f8` |
-| Primary surface | `--surface` | `#ffffff` |
-| Tinted surface | `--surface-tinted` | `#f5f5f7` |
-| Scanner canvas | `--scanner-canvas` | `#11131f` |
-| Primary ink | `--ink` | `#11131f` |
-| Muted text | `--muted` | `#69696f` |
-| Primary action | local coral | `#c63f45` |
-| Primary action hover | local coral dark | `#b7373e` |
-| Primary action soft | local coral tint | `#fff0ed` |
-| Positive fit | local green | `#15804a` |
-| Divider | `--border` | `#e8e9ef` |
-| Focus | `--focus` | `#0a84ff` |
+Use the official SVG proportions. The existing white SVG is rendered in ink on the light header, without the old dark plate. Product packshots for the four approved demo SKUs are local; all other products use their source-backed identity/images and scene-crop fallback.
 
-The scanner's fit colors retain their existing semantic meaning. Price does not affect fit.
+## Screen mapping
 
-## Typography
+| Pen screen | Runtime surface |
+| --- | --- |
+| 01 `WWm4o` Welcome | `PilotOnboarding`; real clean shelf + native overlays; one 3.2 s sweep |
+| 02 `d6Pdh`, 03 `Hr0OH` Aim / reading | Live stream or held frame; neutral local candidate boxes before verified results |
+| 04 `BmBpL` Compact | Four leading results, 2×2 grid; Scan again / View all |
+| 05 `qMiRn`, 06 `WaJO0` List / detail | Ranked product cards; detail with fit, source nutrition, exact saving, source link |
+| 07 `KMksd` Demo chooser | Shelf, Checkout, saved photo; full-screen light surface |
+| 08 `qg85c`, 09 `Hvd7y` Saved photo / Checkout | Rounded adaptive media, contain geometry, back-to-live action |
+| 10 `d0Do2i`, 11 `w08Z4` Camera errors | Recovery panel and explicit camera retry |
+| 12 `L5Xuf1` Recognition retry | Neutral explanation + coral retry |
+| 13 `kMVPj`, 14 `JqIU1` Nutrition pending / unknown | Identity-first skeleton; unknown stays neutral and unscored |
+| 15 `b3qRd9`, 16 `B1rYl` Offline / unavailable | Recovery panel; matching offline navigation fallback |
+| 17 `EdasX`, 18 `qhp4K` Feedback / Needs work | White 370 px maximum dialog, rating, reasons and optional comment |
+| 19 `ZtBQ6`, 20 `C4x6dO`, 21 `UWwfO` Saving / error / success | Locked form; retained answer on retry; success + Done |
 
-- Use the existing local stack: `Inter` for body and controls, `Inter Tight` for display headings.
-- Headings use tight tracking without oversize marketing typography inside the scanner.
-- Body copy is at least 14 px, controls at least 12 px with strong weight, and supporting text at least 11 px.
+Runtime content can be longer or use a different source/price than the static examples. Exact Carbs and eligible Better alternatives remain visible even when absent from a sample frame. A tablet uses a side result pane; phone landscape keeps the primary compact actions visible. All camera and photo overlays use object-contain mapping, and capture dimensions remain independent of CSS.
 
-## Shape and spacing
+## Interaction and validation
 
-- Follow a 4/8 px rhythm. Standard gaps are 8, 12, 16, 20, and 24 px.
-- Primary actions are pill-shaped. Cards and bottom sheets use 18 to 30 px radii.
-- Every interactive target is at least 44 by 44 px. Adjacent targets have at least 8 px between them.
-- Camera overlays are dark translucent pills. Feedback is a labelled secondary pill, never an icon-only action. Coral is reserved for the primary action in each context.
-- Modal scrims use 52 to 56 percent black plus restrained blur. Modal content must not compete with the camera behind it.
+Use semantic buttons, 44 px touch targets, focus rings, modal focus trapping, Escape close and return focus. Unknown values stay unknown. A saving action requires exact identity and an online offer below the observed shelf price. Prices never affect fit. Reduced motion removes decorative animation. Do not force a device-mask border radius onto the live web viewport.
 
-## Components
-
-### Camera header
-
-- Official white logo at the top left.
-- `Leave feedback` and `Show demo` or `Back to live` are labelled secondary pills over the media.
-- `Not sure, try again` is a distinct coral retry button, not notification chrome.
-- The camera image remains primary. Controls must not obscure recognized packages or change capture geometry.
-
-### Demo chooser
-
-- Use the light product canvas and white option cards.
-- Each option has one Lucide outline icon inside a coral-soft tile, a short title, and one line of supporting copy.
-- `Back to live camera` is the coral primary action.
-
-### Results
-
-- Keep the light bottom-sheet hierarchy and existing exact-source nutrition presentation.
-- Preserve the compact ranking, product imagery, fit semantics, and clear expanded/collapsed behavior.
-- Primary actions may use coral; commercial retailer actions retain their existing green or ink treatment.
-
-### Feedback
-
-- Entry action reads `Leave feedback` and includes the existing Lucide message icon.
-- Helpful and Needs work are equal-width choices with at least 12 px between them.
-- Keep at least 20 px between the rating choices and the submit action or next form section.
-- Selected state uses a coral border and soft coral surface. Loading, success, error, disabled, and retry states remain explicit.
-
-## Motion
-
-- Use motion only to explain state or hierarchy.
-- Standard UI feedback is 150 to 300 ms with ease-out entry and ease-in exit.
-- The onboarding scan line makes one deliberately visible 3200 ms pass. It never loops.
-- Preserve `prefers-reduced-motion`: remove decorative motion and keep the product usable.
-- Loading spinners may loop only while work is actually in progress.
-
-## Responsive and accessibility contract
-
-- Verify 375 px portrait and phone landscape, plus one large-phone viewport.
-- No horizontal page overflow or controls under safe areas.
-- Keep visible focus treatment, semantic buttons and dialogs, focus trapping, Escape close, and meaningful image text.
-- Support enlarged text without hiding primary actions.
-- Maintain at least WCAG AA text contrast and do not rely on color alone for fit or control state.
+Check the full Mobile Safari suite, the small/large-phone + tablet matrix, source-backed nutrition and offer gates, progressively resolved identities, feedback failure/retry, and comparison screenshots against Pen. Real-store camera accuracy remains an owner/device check.

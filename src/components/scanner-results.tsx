@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { ArrowUpRight, Check, Info, LoaderCircle, ScanLine } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { productDisplayName, productDisplayImage } from "@/lib/product-display";
 import { rankAvailableBetterAlternatives } from "@/lib/better-alternatives";
 import { matchCriteria, overlayMatchPresentation, type MatchTone } from "@/lib/match-presentation";
 import { isExactOnlineSaving, retailerOfferKey } from "@/lib/online-offer";
@@ -32,7 +33,8 @@ export function ProductResult({
   scanDetections,
   showSummary,
   onAlternative,
-  onRetailer
+  onRetailer,
+  thumbnail
 }: {
   payload: ProductPayload;
   detection?: ProductDetection;
@@ -41,6 +43,7 @@ export function ProductResult({
   showSummary: boolean;
   onAlternative: (id: string) => void;
   onRetailer: (id: string) => void;
+  thumbnail?: React.ReactNode;
 }) {
   const { product, alternatives } = payload;
   const alternativeOfferKeys = useMemo(
@@ -89,42 +92,74 @@ export function ProductResult({
   return (
     <article className={styles.productResult}>
       {showSummary ? (
-        <div className={styles.productHeading}>
-          <div>
-            <p className={styles.productBrand}>{product.brand}</p>
-            <h2>{product.shortName}</h2>
-          </div>
-        </div>
-      ) : null}
-
-      {showSummary && product.ratingSignalCount > 0 ? <SugarNoBadge product={product} /> : null}
-
-      {showSummary ? (
         <>
-          <CompactProductPrice detection={detection} offer={offer} />
-          <OnlineOfferAction
-            productName={product.shortName}
+          <div className={styles.productSummary}>
+            {thumbnail ? (
+              <div className={styles.detailImage}>{thumbnail}</div>
+            ) : product.imageUrl ? (
+              <div className={styles.detailImage}>
+                <Image src={product.imageUrl} alt="" fill sizes="320px" />
+              </div>
+            ) : null}
+            <div className={styles.productHeading}>
+              <div>
+                <p className={styles.productBrand}>{product.brand}</p>
+                <h2>{productDisplayName(product)}</h2>
+              </div>
+            </div>
+            <div className={styles.detailTags}>
+              {product.ratingSignalCount > 0 ? (
+                <MatchPill product={product} />
+              ) : (
+                <span className={styles.recognizedBadge}>Nutrition not verified</span>
+              )}
+              {detection?.identity?.packSize || product.packSizeG > 0 ? (
+                <span className={styles.packSize}>{detection?.identity?.packSize || `${product.packSizeG} g`}</span>
+              ) : null}
+            </div>
+            {product.ratingSignalCount > 0 ? (
+              <SugarNoBadge product={product} />
+            ) : (
+              <div className={styles.pendingDataAction}>
+                <Info aria-hidden="true" size={18} />
+                <span>
+                  <strong>Nutrition not verified online</strong>We couldn’t confirm an exact source. Sugar and protein
+                  stay unknown.
+                </span>
+              </div>
+            )}
+            {product.noAddedSugarClaim ? (
+              <div className={styles.claimBadge}>
+                <Check aria-hidden="true" size={15} />
+                No added sugar claim on source label
+              </div>
+            ) : null}
+          </div>
+          <ProductDetailOffer
+            product={product}
             detection={detection}
             offer={offer}
             onRetailer={() => onRetailer(product.id)}
           />
+          {product.sources
+            .filter(
+              (source) =>
+                source.status !== "pending" &&
+                source.fields.some((field) => ["protein", "totalSugar", "carbohydrate"].includes(field))
+            )
+            .slice(0, 1)
+            .map((source) => (
+              <a
+                className={styles.nutritionSource}
+                key={source.url}
+                href={source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Nutrition source · {source.label.replace(/ (Latvia product page|product page)$/i, "")}
+              </a>
+            ))}
         </>
-      ) : null}
-
-      {showSummary && product.ratingStatus === "identity_only" ? (
-        <div className={styles.pendingDataAction}>
-          <Info aria-hidden="true" size={18} />
-          <span>
-            <strong>Nutrition not verified online</strong>
-            Sugar.no checked its catalog, connected Latvia retailers, Open Food Facts and cited web results, but will not invent a fit without an exact per-100 source.
-          </span>
-        </div>
-      ) : null}
-
-      {showSummary && product.noAddedSugarClaim ? (
-        <div className={styles.claimBadge}>
-          <Check aria-hidden="true" size={15} /> No added sugar claim on source label
-        </div>
       ) : null}
 
       {availableAlternatives.length ? (
@@ -152,12 +187,12 @@ export function ProductResult({
                   >
                     <div className={styles.alternativeThumb}>
                       {alternative.imageUrl ? (
-                        <Image src={alternative.imageUrl} alt="" fill sizes="58px" />
+                        <Image src={productDisplayImage(alternative)!} alt="" fill sizes="58px" />
                       ) : null}
                     </div>
                     <span>
                       <small>{alternative.brand}</small>
-                      <strong>{alternative.shortName}</strong>
+                      <strong>{productDisplayName(alternative)}</strong>
                       <MatchPill product={alternative} />
                     </span>
                   </button>
@@ -194,7 +229,7 @@ export function RecognizedProductResult({ detection }: { detection: ProductDetec
       ? identity.packSize
       : null;
   return (
-    <article className={styles.productResult}>
+    <article className={`${styles.productResult} ${styles.productSummary}`}>
       <div className={styles.productHeading}>
         <div>
           <p className={styles.productBrand}>{identity.brand || "Recognized package"}</p>
@@ -219,7 +254,7 @@ export function RecognizedProductResult({ detection }: { detection: ProductDetec
 export function LoadingProductResult({ detection }: { detection: ProductDetection }) {
   const identity = detection.identity!;
   return (
-    <article className={styles.productResult} aria-live="polite">
+    <article className={`${styles.productResult} ${styles.productSummary}`} aria-live="polite">
       <div className={styles.productHeading}>
         <div>
           <p className={styles.productBrand}>{identity.brand || "Recognized package"}</p>
@@ -230,9 +265,11 @@ export function LoadingProductResult({ detection }: { detection: ProductDetectio
         <LoaderCircle className={styles.spin} aria-hidden="true" size={18} />
         <span>
           <strong>Matching product…</strong>
-          Checking the Sugar.no catalog first, then trusted fallback sources only when needed.
+          Checking nutrition from an exact product source.
         </span>
       </div>
+      <div className={styles.resultSkeleton} aria-hidden="true" />
+      <div className={styles.resultSkeletonShort} aria-hidden="true" />
     </article>
   );
 }
@@ -253,11 +290,12 @@ export function CompactProductPrice({
   if (!shelfPrice && !offer) return null;
   const cheaperOnline = Boolean(offer && shelfPrice && offer.price < shelfPrice.amount);
   const shelfPriceLabel = shelfPrice?.observedText.startsWith("Demo shelf price") ? "Demo shelf price" : "Shelf price";
-  const accessibleLabel = cheaperOnline && offer
-    ? `${shelfPriceLabel} €${shelfPrice!.amount.toFixed(2)}, online price €${offer.price.toFixed(2)}, cheaper online`
-    : shelfPrice
-      ? `${shelfPriceLabel} €${shelfPrice.amount.toFixed(2)}`
-      : `Online price €${offer?.price.toFixed(2)}`;
+  const accessibleLabel =
+    cheaperOnline && offer
+      ? `${shelfPriceLabel} €${shelfPrice!.amount.toFixed(2)}, online price €${offer.price.toFixed(2)}, cheaper online`
+      : shelfPrice
+        ? `${shelfPriceLabel} €${shelfPrice.amount.toFixed(2)}`
+        : `Online price €${offer?.price.toFixed(2)}`;
 
   return (
     <div className={styles.compactProductPrice} role="group" aria-label={accessibleLabel}>
@@ -297,7 +335,7 @@ export function OnlineOfferAction({
   if (!offer || !isExactOnlineSaving(offer, shelfPrice)) return null;
   return (
     <a
-      className={`${styles.onlineOfferAction} ${styles.onlineOfferDeal}`}
+      className={styles.onlineOfferAction}
       href={offer.url}
       target="_blank"
       rel="noopener noreferrer"
@@ -306,63 +344,80 @@ export function OnlineOfferAction({
     >
       <strong>Buy cheaper online</strong>
       <span className={styles.onlineOfferPrice}>
-        €{offer.price.toFixed(2)}
-        <ArrowUpRight aria-hidden="true" size={15} />
+        {shelfPrice ? <s>€{shelfPrice.amount.toFixed(2)}</s> : null}€{offer.price.toFixed(2)}
       </span>
     </a>
   );
 }
 
+function ProductDetailOffer({
+  product,
+  detection,
+  offer: override,
+  onRetailer
+}: {
+  product: ScoredProduct;
+  detection?: ProductDetection;
+  offer?: RetailerOffer | null;
+  onRetailer: () => void;
+}) {
+  const offer = override?.exactSku ? override : detection?.retailerOffer?.exactSku ? detection.retailerOffer : null;
+  if (!offer && !detection?.shelfPrice) return null;
+  const cheaper = offer && isExactOnlineSaving(offer, detection?.shelfPrice);
+  return (
+    <section className={styles.offerSummary} aria-label="Product price">
+      <div className={styles.offerSummaryHeading}>
+        <span>{cheaper ? "Buy cheaper online" : offer ? "Online price" : "Shelf price"}</span>
+        <CompactProductPrice detection={detection} offer={offer} />
+      </div>
+      {cheaper && offer ? (
+        <a
+          className={styles.onlineOfferAction}
+          style={{ justifyContent: "center" }}
+          href={offer.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onRetailer}
+          aria-label={`Open retailer for ${productDisplayName(product)} at ${offer.retailer}`}
+        >
+          Open retailer
+        </a>
+      ) : null}
+    </section>
+  );
+}
+
 function SugarNoBadge({ product }: { product: ScoredProduct }) {
-  const presentation = overlayMatchPresentation(product);
   const criteria = matchCriteria(product);
-  const nutritionSourceLabel = product.ratingBasis.startsWith("catalog_")
-    ? "Sugar.no badge"
-      : product.ratingBasis.startsWith("barbora_")
-      ? "Exact Barbora nutrition"
-      : product.ratingBasis.startsWith("retailer_catalog_")
-        ? "Connected retailer nutrition"
-      : product.ratingBasis.startsWith("open_food_facts_")
-        ? "Open Food Facts nutrition"
-        : product.ratingBasis.startsWith("web_search_")
-          ? "Verified web nutrition"
-        : product.ratingBasis.startsWith("manufacturer_")
-          ? "Manufacturer nutrition"
-          : product.ratingBasis.startsWith("food_composition_")
-            ? "Food composition reference"
-            : "Source-backed nutrition";
-  const values = {
-    protein: product.nutrientsPer100g.proteinG,
-    sugar: product.nutrientsPer100g.totalSugarG
-  };
+  const values = { protein: product.nutrientsPer100g.proteinG, sugar: product.nutrientsPer100g.totalSugarG };
   const carbohydrate = product.nutrientsPer100g.carbohydrateG;
-  const carbohydrateLabel =
-    carbohydrate !== null && carbohydrate !== undefined ? ` · Carbs ${carbohydrate}g` : "";
   return (
     <section className={styles.sugarBadge} aria-label="Sugar.no badge">
-      <div className={styles.sugarBadgeHeading}>
-        <div>
-          <small>{nutritionSourceLabel}</small>
-          <strong>
-            {product.ratingStatus === "complete" ? "Sugar.no fit" : "Sugar.no limited view · 1/2"}
-          </strong>
-        </div>
-        <span className={toneClass(presentation.tone)}>{presentation.label}</span>
-      </div>
+      <p className={styles.comparisonContext}>
+        {product.ratingBasis === "catalog_percentile"
+          ? "Compared within protein snacks."
+          : product.ratingSignalCount === 2
+            ? "Sugar.no fit · exact product data"
+            : `Limited view · ${product.ratingSignalCount} of 2 signals verified`}
+      </p>
       <div className={styles.criteria}>
-        {criteria.map((criterion) => (
-          <div className={`${styles.criterion} ${toneClass(criterion.tone)}`} key={criterion.key}>
-            <i aria-hidden="true" />
-            <span>{criterion.label}</span>
-            <strong>{values[criterion.key] === null ? "—" : `${values[criterion.key]}g`}</strong>
-            <small>{criterion.status}</small>
+        {[...criteria].reverse().map((criterion) => (
+          <div className={styles.criterion} key={criterion.key}>
+            <span>{criterion.key === "sugar" ? "Sugar" : "Protein"}</span>
+            <strong>{values[criterion.key] === null ? "—" : `${values[criterion.key]} g`}</strong>
+            {values[criterion.key] === null ? <small>Not verified</small> : null}
           </div>
         ))}
+        {carbohydrate !== null && carbohydrate !== undefined ? (
+          <div className={styles.criterion}>
+            <span>Carbs</span>
+            <strong>{carbohydrate} g</strong>
+          </div>
+        ) : null}
       </div>
       <p className={styles.perHundred}>
-        {product.ratingBasis === "catalog_percentile" && product.ratingStatus === "complete"
-          ? `Values per 100 g${carbohydrateLabel} · Compared with protein snacks in this demo`
-          : `Values per ${product.nutritionBasis === "100ml" ? "100 ml" : "100 g"}${carbohydrateLabel} · ${product.ratingSignalCount} of 2 source-backed signals`}
+        Per {product.nutritionBasis === "100ml" ? "100 ml" : "100 g"} · {product.ratingSignalCount} of 2 source-backed
+        signals
       </p>
     </section>
   );

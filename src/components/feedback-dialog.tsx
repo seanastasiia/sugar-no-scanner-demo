@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, MessageSquareText, RefreshCw, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { Check, RefreshCw, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import type { ScanSource } from "@/lib/types";
 import styles from "./scanner-app.module.css";
@@ -44,6 +44,26 @@ export function FeedbackDialog({
     const frame = requestAnimationFrame(() => dialogRef.current?.focus());
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && stateRef.current !== "loading") onClose();
+      if (event.key === "Tab" && dialogRef.current) {
+        const items = Array.from(
+          dialogRef.current.querySelectorAll<HTMLElement>(
+            "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), a[href]"
+          )
+        );
+        const first = items[0];
+        const last = items.at(-1);
+        if (!first) {
+          event.preventDefault();
+          return;
+        }
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
@@ -84,51 +104,116 @@ export function FeedbackDialog({
   }
 
   return (
-    <div className={styles.feedbackBackdrop} role="presentation" onMouseDown={(event) => {
-      if (event.target === event.currentTarget && state !== "loading") closeDialog();
-    }}>
-      <div ref={dialogRef} className={styles.feedbackDialog} role="dialog" aria-modal="true" aria-labelledby="feedback-title" tabIndex={-1}>
-        <button className={styles.dialogClose} type="button" onClick={closeDialog} aria-label="Close feedback" disabled={state === "loading"}>
+    <div
+      className={styles.feedbackBackdrop}
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && state !== "loading") closeDialog();
+      }}
+    >
+      <div
+        ref={dialogRef}
+        className={styles.feedbackDialog}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="feedback-title"
+        tabIndex={-1}
+      >
+        <button
+          className={styles.dialogClose}
+          type="button"
+          onClick={closeDialog}
+          aria-label="Close feedback"
+          disabled={state === "loading"}
+        >
           <X aria-hidden="true" size={20} />
         </button>
         {state === "success" ? (
           <div className={styles.feedbackSuccess}>
-            <span><Check aria-hidden="true" size={28} /></span>
+            <span>
+              <Check aria-hidden="true" size={28} />
+            </span>
             <h2 id="feedback-title">Thank you</h2>
             <p>Your feedback was saved and will help us improve the pilot.</p>
-            <button className={styles.primaryButton} type="button" onClick={closeDialog}>Done</button>
+            <button className={styles.primaryButton} type="button" onClick={closeDialog}>
+              Done
+            </button>
           </div>
         ) : (
           <form onSubmit={submit}>
-            <MessageSquareText className={styles.feedbackHeadingIcon} aria-hidden="true" size={25} />
             <h2 id="feedback-title">Was this scan helpful?</h2>
             <p className={styles.feedbackIntro}>A quick answer helps us improve recognition.</p>
             <div className={styles.feedbackChoices} role="group" aria-label="Feedback rating">
-              <button className={helpful === true ? styles.feedbackChoiceActive : undefined} type="button" onClick={() => { setHelpful(true); setReason(""); }}>
+              <button
+                className={helpful === true ? styles.feedbackChoiceActive : undefined}
+                type="button"
+                aria-pressed={helpful === true}
+                disabled={state === "loading"}
+                onClick={() => {
+                  setHelpful(true);
+                  setReason("");
+                }}
+              >
                 <ThumbsUp aria-hidden="true" size={19} /> Helpful
               </button>
-              <button className={helpful === false ? styles.feedbackChoiceActive : undefined} type="button" onClick={() => setHelpful(false)}>
+              <button
+                className={helpful === false ? styles.feedbackChoiceActive : undefined}
+                type="button"
+                aria-pressed={helpful === false}
+                disabled={state === "loading"}
+                onClick={() => setHelpful(false)}
+              >
                 <ThumbsDown aria-hidden="true" size={19} /> Needs work
               </button>
             </div>
             {helpful === false ? (
-              <fieldset className={styles.feedbackReasons}>
+              <fieldset className={styles.feedbackReasons} disabled={state === "loading"}>
                 <legend>What went wrong?</legend>
                 {reasons.map(([value, label]) => (
-                  <label key={value}><input type="radio" name="reason" value={value} checked={reason === value} onChange={() => setReason(value)} /> {label}</label>
+                  <label key={value}>
+                    <input
+                      type="radio"
+                      name="reason"
+                      value={value}
+                      checked={reason === value}
+                      onChange={() => setReason(value)}
+                    />{" "}
+                    {label}
+                  </label>
                 ))}
               </fieldset>
             ) : null}
             {helpful !== null ? (
               <label className={styles.feedbackComment}>
                 Anything else? <span>Optional</span>
-                <textarea value={comment} onChange={(event) => setComment(event.target.value)} maxLength={300} rows={3} placeholder="Tell us what you noticed" />
+                <textarea
+                  disabled={state === "loading"}
+                  value={comment}
+                  onChange={(event) => setComment(event.target.value)}
+                  maxLength={300}
+                  rows={2}
+                  placeholder="Tell us what you noticed"
+                />
                 <small>Do not include personal information. {comment.length}/300</small>
               </label>
             ) : null}
-            {state === "error" ? <p className={styles.feedbackError} role="alert">Couldn’t save feedback. Please retry.</p> : null}
+            {state === "error" ? (
+              <p className={styles.feedbackError} role="alert">
+                Couldn’t save feedback. Please retry.
+              </p>
+            ) : null}
             <button className={styles.primaryButton} type="submit" disabled={!canSubmit || state === "loading"}>
-              {state === "loading" ? <><RefreshCw className={styles.spin} aria-hidden="true" size={18} /> Saving…</> : state === "error" ? <><RefreshCw aria-hidden="true" size={18} /> Retry</> : "Send feedback"}
+              {state === "loading" ? (
+                <>
+                  <RefreshCw className={styles.spin} aria-hidden="true" size={18} /> Saving…
+                </>
+              ) : state === "error" ? (
+                <>
+                  <RefreshCw aria-hidden="true" size={18} /> Retry
+                </>
+              ) : (
+                "Send feedback"
+              )}
             </button>
           </form>
         )}
