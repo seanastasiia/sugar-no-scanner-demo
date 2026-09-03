@@ -64,13 +64,14 @@ test("Pen screens remain readable and actionable across iPhone sizes and rotatio
           const viewport = element.getBoundingClientRect();
           const first = element.children[0].getBoundingClientRect();
           const second = element.children[1].getBoundingClientRect();
-          return { firstFits: first.top >= viewport.top - 1 && first.bottom <= viewport.bottom + 1,
-            nextVisible: Math.round((viewport.bottom - second.top) / second.height * 100) };
-        })).toEqual({ firstFits: true, nextVisible: 30 });
+          return { firstFits: first.left >= viewport.left - 1 && first.right <= viewport.right + 1,
+            nextVisible: Math.round((viewport.right - second.left) / second.width * 100),
+            noVerticalOverflow: element.scrollHeight <= element.clientHeight + 1 };
+        })).toEqual({ firstFits: true, nextVisible: 30, noVerticalOverflow: true });
         const actionsBefore = await page.getByRole("button", { name: "View all", exact: true }).boundingBox();
         await preview.focus();
-        await page.keyboard.press("ArrowDown");
-        await expect.poll(() => preview.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+        await page.keyboard.press("ArrowRight");
+        await expect.poll(() => preview.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
         for (const card of await cards.all()) {
           await card.scrollIntoViewIfNeeded();
           await unobstructed(card);
@@ -85,8 +86,8 @@ test("Pen screens remain readable and actionable across iPhone sizes and rotatio
         await page.keyboard.press("Escape");
         await expect(cards.last()).toBeFocused();
         await unobstructed(cards.last());
-        await preview.evaluate((element) => element.scrollTo({ top: 0, behavior: "instant" }));
-        await expect.poll(() => preview.evaluate((element) => element.scrollTop)).toBe(0);
+        await preview.evaluate((element) => element.scrollTo({ left: 0, behavior: "instant" }));
+        await expect.poll(() => preview.evaluate((element) => element.scrollLeft)).toBe(0);
       }
       await unobstructed(page.getByRole("button", { name: "View all", exact: true }));
       await unobstructed(page.getByRole("button", { name: "Scan again", exact: true }));

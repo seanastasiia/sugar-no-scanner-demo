@@ -285,7 +285,6 @@ export function ScannerApp() {
   const lastCaptureRef = useRef(0);
   const sessionIdRef = useRef<string | null>(null);
   const resultsSheetRef = useRef<HTMLElement>(null);
-  const resultsPreviewRef = useRef<HTMLDivElement>(null);
   const demoDialogRef = useRef<HTMLDivElement>(null);
   const demoTriggerRef = useRef<HTMLButtonElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -1281,20 +1280,6 @@ export function ScannerApp() {
     if (!manualSelectionRef.current && (bestId || firstRankedId)) setSelectedId(bestId || firstRankedId);
   }, [bestId, firstRankedId]);
 
-  useEffect(() => {
-    const preview = resultsPreviewRef.current;
-    const firstCard = preview?.firstElementChild;
-    if (!preview || !firstCard || resultsAreExpanded) return;
-    const measure = () => {
-      const height = firstCard.getBoundingClientRect().height;
-      if (height > 0) preview.style.setProperty("--preview-card-height", `${height}px`);
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(firstCard);
-    return () => observer.disconnect();
-  }, [firstRankedId, resultsAreExpanded]);
-
   const backToProductList = useCallback(() => {
     setProductDetailsOpen(false);
     resultsSheetRef.current?.scrollTo({ top: 0 });
@@ -1309,7 +1294,7 @@ export function ScannerApp() {
       const controls = Array.from(resultsSheetRef.current?.querySelectorAll<HTMLElement>("[data-result-trigger]") || []);
       const trigger = controls.find((control) => control.dataset.resultTrigger === resultReturnTriggerRef.current)
         || controls.find((control) => control.dataset.resultTrigger === "view-all");
-      // Native focus also reveals a returned-to card inside the vertical preview.
+      // Native focus also reveals a returned-to card inside the horizontal preview.
       (trigger || (previousFocusRef.current?.isConnected ? previousFocusRef.current : null))?.focus();
     });
   }, []);
@@ -1721,7 +1706,7 @@ export function ScannerApp() {
 
             {!resultsAreExpanded ? (
               <>
-                <div ref={resultsPreviewRef} className={styles.sheetPreview} role="group" aria-label="Product result preview" tabIndex={0}>
+                <div className={styles.sheetPreview} role="group" aria-label="Product result preview" tabIndex={0}>
                   {sheetPreviewIds.map((id) => {
                     const item = products[id]?.product;
                     const detection = detectionById[id];
