@@ -117,7 +117,7 @@ async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   await chooser.getByRole("button", { name: new RegExp(name) }).click();
   await expect(page.getByText(/^(Shelf photo|Checkout photo)$/)).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Leave feedback", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Back to live camera", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Back to live camera", exact: true })).toHaveCount(0);
 }
 
 async function mockSampleShelfRecognition(page: Page) {
@@ -860,8 +860,8 @@ test("demo chooser supports shelf, checkout and a clear return to live camera", 
   expect(await chooser.getByRole("button", { name: "Back to live camera" }).evaluate((element) => getComputedStyle(element).backgroundImage)).toContain("linear-gradient");
   await page.getByRole("button", { name: "Shelf demo" }).click();
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
-  await expect(page.getByRole("button", { name: "View all", exact: true })).toHaveCSS("color", "rgb(10, 132, 255)");
-  await page.getByRole("button", { name: "Back to live camera" }).click();
+  await expect(page.getByRole("button", { name: "View all", exact: true })).toHaveCSS("color", "rgb(255, 255, 255)");
+  await page.getByRole("button", { name: "Scan again", exact: true }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await openDemoScene(page, "Checkout demo");
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
@@ -870,7 +870,9 @@ test("demo chooser supports shelf, checkout and a clear return to live camera", 
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Saved options" })).toHaveCount(0);
   await page.getByRole("button", { name: "Collapse product results" }).click();
-  await expect(page.getByRole("button", { name: "Back to live camera" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Back to live camera" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Scan again", exact: true }).click();
+  await expect(page.getByLabel("Live camera scanner")).toBeVisible();
 });
 
 test("comparison remains usable with reduced motion, dark mode and enlarged text", async ({ page }) => {
@@ -930,7 +932,7 @@ test("scanner remains operable at narrow portrait and phone landscape sizes", as
   await expectOfficialSugarNoLogo(page);
   await expect(page.getByLabel("Products ranked by Sugar.no fit")).toBeVisible();
   await page.getByRole("button", { name: "Collapse product results" }).click();
-  await expect(page.getByRole("button", { name: "Back to live camera" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Scan again", exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
@@ -2141,7 +2143,7 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
 
   exactSku = false;
   await page.getByRole("button", { name: "Collapse product results" }).click();
-  await page.getByRole("button", { name: "Back to live camera" }).click();
+  await page.getByRole("button", { name: "Scan again", exact: true }).click();
   await chooseSavedPhoto(page, "possible-price-check.png");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
@@ -2151,7 +2153,7 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   exactSku = true;
   includeShelfPrice = false;
   await page.getByRole("button", { name: "Collapse product results" }).click();
-  await page.getByRole("button", { name: "Back to live camera" }).click();
+  await page.getByRole("button", { name: "Scan again", exact: true }).click();
   await chooseSavedPhoto(page, "package-without-shelf-label.png");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);

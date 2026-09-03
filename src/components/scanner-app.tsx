@@ -1405,20 +1405,16 @@ export function ScannerApp() {
               <button ref={feedbackFocusRef} className={styles.feedbackTrigger} type="button" onClick={openFeedback}>
                 <span>Leave feedback</span>
               </button>
-              {!showRecovery ? (
+              {source === "camera" && !showRecovery ? (
                 <button
-                  ref={source === "camera" ? demoTriggerRef : undefined}
+                  ref={demoTriggerRef}
                   className={styles.demoTrigger}
                   type="button"
-                  onClick={source === "camera" ? openDemo : startCamera}
-                  aria-label={source === "camera" ? "Show demo" : "Back to live camera"}
+                  onClick={openDemo}
+                  aria-label="Show demo"
                 >
-                  {source === "camera" ? (
-                    <Layers3 aria-hidden="true" size={17} />
-                  ) : (
-                    <Camera aria-hidden="true" size={17} />
-                  )}
-                  {source === "camera" ? "Show demo" : "Back to live"}
+                  <Layers3 aria-hidden="true" size={17} />
+                  Show demo
                 </button>
               ) : null}
             </div>

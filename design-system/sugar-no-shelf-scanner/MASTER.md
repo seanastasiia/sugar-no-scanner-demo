@@ -31,7 +31,7 @@ Use the official SVG proportions. The existing white SVG stays white over the li
 | 04 `BmBpL` Compact | Four leading results, 2×2 grid; Scan again / View all |
 | 05 `qMiRn`, 06 `WaJO0` List / detail | Ranked product cards; detail with fit, source nutrition, exact saving, source link |
 | 07 `KMksd` Demo chooser | Shelf, Checkout, saved photo; full-screen light surface |
-| 08 `qg85c`, 09 `Hvd7y` Saved photo / Checkout | Rounded adaptive media, contain geometry, back-to-live action |
+| 08 `qg85c`, 09 `Hvd7y` Saved photo / Checkout | Rounded adaptive media, contain geometry, Scan again below results; no floating Back to live |
 | 10 `d0Do2i`, 11 `w08Z4` Camera errors | Recovery panel and explicit camera retry |
 | 12 `L5Xuf1` Recognition retry | Neutral explanation + coral retry |
 | 13 `kMVPj`, 14 `JqIU1` Nutrition pending / unknown | Identity-first skeleton; unknown stays neutral and unscored |

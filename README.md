@@ -33,7 +33,7 @@ Stage 1 stays on `stage/onboarding-feedback` and must not merge into `main` or d
 - Live sampling starts after 340 ms, checks every 240 ms and sends one compact JPEG up to 960 px wide as soon as the scene is usable. A 1.25-second hard capture ceiling prevents the sharpness/stability gate from stalling indefinitely. The automatic loop pauses as soon as the frame is submitted, so one Gemini request is used per explicit scan and duplicate center/completion reads are not started.
 - When the browser exposes native `BarcodeDetector`, EAN/UPC is resolved locally before Gemini. On Safari, Gemini can still return a visible barcode for the same exact local lookup.
 - Live camera, saved shelf photo and checkout photo use the same recognition contract.
-- Live and saved-photo views omit the redundant source badge. The camera keeps `Show demo` and secondary feedback over the feed; saved photos keep only `Back to live` over their adaptive rounded media frame.
+- Live and saved-photo views omit the redundant source badge. The live camera keeps `Show demo` and secondary feedback over the feed. Shelf/checkout demos and saved photos have no `Back to live` overlay; use `Scan again` below the results to open the camera. The demo chooser and recovery screen retain their return action. To check, open both demos and confirm the photo is clear of the extra button, then tap `Scan again`.
 - A scan keeps at most ten distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
 - Rated products are ordered best fit first and use `Great fit`, `Moderate fit`, or `Low fit`.
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.
