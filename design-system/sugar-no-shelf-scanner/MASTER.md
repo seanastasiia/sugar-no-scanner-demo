@@ -51,7 +51,7 @@ Owner action correction, 3 September 2026: use the button finishes from Figma `1
 
 Owner price correction, 3 September 2026: every confirmed cheaper-online card uses one black-gradient button. Label on the left; old shelf price in white regular 13/18 with a strike-through and online price in white bold 17/22 on the right, aligned on the baseline with an 8 px gap (5 px on narrow phones). Keep the pair together. Reuse this action in details and eligible alternatives; do not separate the prices above an Open retailer action.
 
-Better alternatives stay inside the same content gutters as the surrounding cards. Use a single column on phones and two columns when at least 492 px is available; no negative side margins or horizontally clipped product cards. Wrap long names and headings.
+Owner carousel correction, 3 September 2026: Better alternatives scroll horizontally inside the same content gutters as surrounding cards. Show one full card plus 30% of the next with a 12 px gap; card width is (available width - 12 px) / 1.3. Use native overflow scrolling and proximity snapping, keyboard focus, and no negative side margins. The last card must scroll completely into view. Wrap long names and headings; only the next-card preview is intentionally clipped.
 
 ## Interaction and validation
 

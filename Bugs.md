@@ -21,13 +21,15 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: Better alternatives needed a visible sideways browsing cue.** Replaced the temporary vertical grid with a contained horizontal carousel showing one full card plus 30% of the next, without negative side margins. Native scrolling, gentle snapping and keyboard focus keep every card and its retailer action reachable.
+
 - **2026-09-03: Saving prices lacked the approved hierarchy and were separated from the detail action.** The shared cheaper-online button now places the small crossed-out shelf price and larger bold online price together on the right. Details and eligible alternatives reuse the ranked-card action. Exact-SKU and genuine-saving conditions are preserved.
 
 - **2026-09-03: Scan again and View all still used flat white secondary buttons.** Matched the supplied Figma action pair: blue gradient with a left refresh icon for Scan again, black gradient for View all, and the shared app rim. Removed the rule hiding icons in the compact action row; narrow-phone spacing stays contained.
 
 - **2026-09-03: The live camera was boxed below a light header and repeated the automatic-scan explanation.** The feed now fills the viewport behind the white logo and dark controls. Preview and held frame share centered cover geometry; outlines follow that crop, while capture still uses the complete source frame. The redundant caption is removed, and photo/demo layouts remain contained.
 
-- **2026-09-03: Better alternatives lost their side gutters and clipped cards on iPhone.** The horizontal carousel had negative margins outside the comparison content. Alternatives now use a contained responsive grid: one column on phones, two where the result pane is wide enough. Names wrap, and every retailer button remains inside its card. Both ranked-list and product-detail placements are checked at narrow and wide widths.
+- **2026-09-03: Better alternatives lost their side gutters and clipped cards on iPhone.** The horizontal carousel had negative margins outside the comparison content. The first fix used a contained responsive grid; the owner subsequently requested the contained carousel described above. Names wrap, and every retailer button remains inside its card. Both ranked-list and product-detail placements are checked at narrow and wide widths.
 
 - **2026-09-03: The selected camera marker’s floating Great fit pill overflowed narrow product outlines on iPhone.** Removed floating text pills from every rated camera/photo marker, including selected markers. Colored outlines and icons remain; result-card labels and accessible marker names are preserved.
 

@@ -170,7 +170,7 @@ export function ProductResult({
               <h3 id={`alternatives-${product.id}`}>Same product type · Great fit only</h3>
             </div>
           </div>
-          <div className={styles.alternativeList}>
+          <div className={styles.alternativeList} role="group" aria-label="Alternative products" tabIndex={0}>
             {availableAlternatives.map((alternative) => {
               const offerKey = retailerOfferKey(alternative);
               const offer = offerKey ? alternativeOffers[offerKey] : null;

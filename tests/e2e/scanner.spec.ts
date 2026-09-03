@@ -629,7 +629,7 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   expect(accessibility.violations).toEqual([]);
 });
 
-test("alternative cards keep their gutters and readable content on phones and wide screens", async ({ page }) => {
+test("alternative carousel shows one card and a preview while keeping every product reachable", async ({ page }) => {
   await mockAlternativeOffers(page);
   await unlock(page);
   await openDemoScene(page, "Shelf demo");
@@ -644,30 +644,46 @@ test("alternative cards keep their gutters and readable content on phones and wi
     }
     for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 667 }, { width: 402, height: 874 }, { width: 1080, height: 900 }]) {
       await page.setViewportSize(viewport);
-      const bounds = await alternatives.evaluate((section) => {
-        const rect = section.getBoundingClientRect();
-        return Array.from(section.querySelectorAll("article")).map((card) => {
-          const cardRect = card.getBoundingClientRect();
-          return {
-            left: cardRect.left - rect.left,
-            right: rect.right - cardRect.right,
+      const carousel = alternatives.getByRole("group", { name: "Alternative products" });
+      await carousel.scrollIntoViewIfNeeded();
+      await carousel.evaluate((el) => el.scrollTo({ left: 0, behavior: "instant" }));
+      await expect.poll(() => carousel.evaluate((el) => el.scrollLeft)).toBe(0);
+      const bounds = await carousel.evaluate((track) => {
+        const rect = track.getBoundingClientRect();
+        const cards = Array.from(track.querySelectorAll("article"));
+        const first = cards[0].getBoundingClientRect();
+        const next = cards[1].getBoundingClientRect();
+        return {
+          left: rect.left,
+          right: rect.right,
+          firstLeft: first.left - rect.left,
+          firstRight: rect.right - first.right,
+          nextVisible: (rect.right - next.left) / next.width,
+          scrolls: track.scrollWidth > track.clientWidth,
+          cards: cards.map((card) => ({
             overflow: card.scrollWidth > card.clientWidth + 1,
             overflowingContent: Array.from(card.querySelectorAll("button, a, strong, small")).some((child) => child.scrollWidth > child.clientWidth + 1)
-          };
-        });
+          }))
+        };
       });
-      expect(bounds).toHaveLength(4);
-      for (const card of bounds) {
-        expect(card.left).toBeGreaterThanOrEqual(-1);
-        expect(card.right).toBeGreaterThanOrEqual(-1);
+      expect(bounds.left).toBeGreaterThanOrEqual(12);
+      expect(bounds.right).toBeLessThanOrEqual(viewport.width - 12);
+      expect(Math.abs(bounds.firstLeft)).toBeLessThanOrEqual(1);
+      expect(bounds.firstRight).toBeGreaterThan(0);
+      expect(bounds.nextVisible).toBeGreaterThanOrEqual(.27);
+      expect(bounds.nextVisible).toBeLessThanOrEqual(.33);
+      expect(bounds.scrolls).toBe(true);
+      expect(bounds.cards).toHaveLength(4);
+      for (const card of bounds.cards) {
         expect(card.overflow).toBe(false);
         expect(card.overflowingContent).toBe(false);
       }
       const heading = alternatives.getByRole("heading");
       expect(await heading.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
-      const cards = alternatives.getByRole("article");
-      await cards.first().scrollIntoViewIfNeeded();
       await page.screenshot({ path: `test-results/alternatives-${mode}-${viewport.width}.png`, scale: "css" });
+      await carousel.focus();
+      await page.keyboard.press("ArrowRight");
+      await expect.poll(() => carousel.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
       for (const link of await alternatives.getByRole("link").all()) {
         await link.scrollIntoViewIfNeeded();
         await expectInsideViewport(page, link);
