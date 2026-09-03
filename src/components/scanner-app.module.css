@@ -1080,6 +1080,7 @@
   height: 18px;
 }
 .alternatives {
+  min-width: 0;
   margin-top: 24px;
 }
 .sectionHeading p {
@@ -1089,27 +1090,28 @@
 }
 .sectionHeading h3 {
   margin: 0;
+  overflow-wrap: anywhere;
   font: 600 20px/26px var(--font-display);
 }
 .alternativeList {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 12px;
-  margin: 12px -24px 0;
-  padding: 0 24px 8px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
+  min-width: 0;
+  margin-top: 12px;
+  padding-bottom: 8px;
 }
 .alternativeCard {
   display: grid;
-  min-width: 240px;
-  flex: 0 0 240px;
-  padding: 12px;
+  grid-template-rows: 1fr auto;
+  min-width: 0;
+  padding: 16px;
   border-radius: 28px;
   background: var(--surface);
-  scroll-snap-align: start;
 }
 .alternativeOpen {
   display: grid;
+  min-width: 0;
   gap: 8px;
   padding: 0 0 12px;
   border: 0;
@@ -1127,7 +1129,9 @@
 }
 .alternativeOpen > span {
   display: grid;
+  min-width: 0;
   gap: 4px;
+  overflow-wrap: anywhere;
 }
 .alternativeOpen small {
   color: var(--muted);

@@ -21,6 +21,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: Better alternatives lost their side gutters and clipped cards on iPhone.** The horizontal carousel had negative margins outside the comparison content. Alternatives now use a contained responsive grid: one column on phones, two where the result pane is wide enough. Names wrap, and every retailer button remains inside its card. Both ranked-list and product-detail placements are checked at narrow and wide widths.
+
 - **2026-09-03: The selected camera marker’s floating Great fit pill overflowed narrow product outlines on iPhone.** Removed floating text pills from every rated camera/photo marker, including selected markers. Colored outlines and icons remain; result-card labels and accessible marker names are preserved.
 
 - **2026-09-03: Final Pen details drifted during implementation.** Restored compact packshots, the square detail image, separate informational price rows and verified protein in comparison; aligned welcome spacing, demo navigation, service recovery and feedback styling with the current Pen file. Placeholder nutrition/photos in the design never replace exact product data.

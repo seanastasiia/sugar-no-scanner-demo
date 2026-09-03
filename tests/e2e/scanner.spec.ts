@@ -629,6 +629,59 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   expect(accessibility.violations).toEqual([]);
 });
 
+test("alternative cards keep their gutters and readable content on phones and wide screens", async ({ page }) => {
+  await mockAlternativeOffers(page);
+  await unlock(page);
+  await openDemoScene(page, "Shelf demo");
+  await page.getByRole("button", { name: "View all", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Products from this scan" });
+  const alternatives = dialog.getByRole("region", { name: "Same product type · Great fit only" });
+  await expect(alternatives.getByRole("link")).toHaveCount(4);
+  for (const mode of ["list", "detail"] as const) {
+    if (mode === "detail") {
+      await dialog.getByRole("button", { name: "Rank 1, BAREBELLS Salty Peanut, Great fit", exact: true }).click();
+      await expect(dialog.getByRole("heading", { name: "Salty Peanut", exact: true })).toBeVisible();
+    }
+    for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 667 }, { width: 402, height: 874 }, { width: 1080, height: 900 }]) {
+      await page.setViewportSize(viewport);
+      const bounds = await alternatives.evaluate((section) => {
+        const rect = section.getBoundingClientRect();
+        return Array.from(section.querySelectorAll("article")).map((card) => {
+          const cardRect = card.getBoundingClientRect();
+          return {
+            left: cardRect.left - rect.left,
+            right: rect.right - cardRect.right,
+            overflow: card.scrollWidth > card.clientWidth + 1,
+            overflowingContent: Array.from(card.querySelectorAll("button, a, strong, small")).some((child) => child.scrollWidth > child.clientWidth + 1)
+          };
+        });
+      });
+      expect(bounds).toHaveLength(4);
+      for (const card of bounds) {
+        expect(card.left).toBeGreaterThanOrEqual(-1);
+        expect(card.right).toBeGreaterThanOrEqual(-1);
+        expect(card.overflow).toBe(false);
+        expect(card.overflowingContent).toBe(false);
+      }
+      const heading = alternatives.getByRole("heading");
+      expect(await heading.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+      const cards = alternatives.getByRole("article");
+      await cards.first().scrollIntoViewIfNeeded();
+      await page.screenshot({ path: `test-results/alternatives-${mode}-${viewport.width}.png`, scale: "css" });
+      for (const link of await alternatives.getByRole("link").all()) {
+        await link.scrollIntoViewIfNeeded();
+        await expectInsideViewport(page, link);
+        expect(await link.evaluate((el) => {
+          const rect = el.getBoundingClientRect();
+          const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          return !!target && el.contains(target);
+        })).toBe(true);
+      }
+      await expectNoDocumentOverflow(page);
+    }
+  }
+});
+
 test("broken product packshot falls back to its crop from the scanned scene", async ({ page }) => {
   await page.route("**/_next/image?*", async (route) => {
     const source = new URL(route.request().url()).searchParams.get("url");

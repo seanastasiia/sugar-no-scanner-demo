@@ -187,7 +187,7 @@ export function ProductResult({
                   >
                     <div className={styles.alternativeThumb}>
                       {alternative.imageUrl ? (
-                        <Image src={productDisplayImage(alternative)!} alt="" fill sizes="58px" />
+                        <Image src={productDisplayImage(alternative)!} alt="" fill sizes="(max-width: 560px) calc(100vw - 80px), 250px" />
                       ) : null}
                     </div>
                     <span>

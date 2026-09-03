@@ -44,6 +44,8 @@ Runtime content can be longer or use a different source/price than the static ex
 
 Owner correction, 3 September 2026: rated camera/photo overlays use colored outlines and icon discs only. Do not show a floating fit-text pill, even on the selected product. Keep the full fit label in the accessible marker name and result cards.
 
+Better alternatives stay inside the same content gutters as the surrounding cards. Use a single column on phones and two columns when at least 492 px is available; no negative side margins or horizontally clipped product cards. Wrap long names and headings.
+
 ## Interaction and validation
 
 Use semantic buttons, 44 px touch targets, focus rings, modal focus trapping, Escape close and return focus. Unknown values stay unknown. A saving action requires exact identity and an online offer below the observed shelf price. Prices never affect fit. Reduced motion removes decorative animation. Do not force a device-mask border radius onto the live web viewport.
