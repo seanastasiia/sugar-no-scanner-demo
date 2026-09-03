@@ -1135,6 +1135,7 @@ export function ScannerApp() {
   }, [onboardingState, startCamera, stopActiveCapture]);
 
   useEffect(() => {
+    if (onboardingState !== "complete") return;
     const stage = stageRef.current;
     if (!stage) return;
     const update = () => setStageDimensions({ width: stage.clientWidth, height: stage.clientHeight });
@@ -1142,7 +1143,7 @@ export function ScannerApp() {
     const observer = new ResizeObserver(update);
     observer.observe(stage);
     return () => observer.disconnect();
-  }, []);
+  }, [onboardingState]);
 
   const detectionById = useMemo(
     () => Object.fromEntries(detections.map((detection) => [detection.productId, detection])),

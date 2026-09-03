@@ -458,6 +458,36 @@ test("sample shelf dismisses onboarding without requesting camera permission", a
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
 });
 
+test("sample overlays track the contained photo after onboarding and resizing", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/?onboarding=1");
+  await page.getByRole("button", { name: "Try a sample shelf", exact: true }).click();
+  await expect(page.getByTestId("rated-detection-marker")).toHaveCount(4);
+
+  for (const viewport of [{ width: 1280, height: 720 }, { width: 402, height: 874 }, { width: 1280, height: 720 }]) {
+    await page.setViewportSize(viewport);
+    await expect.poll(() => page.evaluate(() => {
+      const photo = document.querySelector<HTMLImageElement>('img[alt="Four protein bars on a supermarket shelf"]');
+      const marker = document.querySelector<HTMLElement>('[data-testid="rated-detection-marker"]');
+      if (!photo?.naturalWidth || !marker) return Infinity;
+      const bounds = photo.getBoundingClientRect();
+      const scale = Math.min(bounds.width / photo.naturalWidth, bounds.height / photo.naturalHeight);
+      const renderedWidth = photo.naturalWidth * scale;
+      const renderedHeight = photo.naturalHeight * scale;
+      const actual = marker.getBoundingClientRect();
+      const expectedLeft = bounds.left + (bounds.width - renderedWidth) / 2 + .01 * renderedWidth;
+      const expectedTop = bounds.top + (bounds.height - renderedHeight) / 2 + .27 * renderedHeight;
+      return Math.max(
+        Math.abs(actual.left - expectedLeft),
+        Math.abs(actual.top - expectedTop),
+        Math.abs(actual.width - .24 * renderedWidth),
+        Math.abs(actual.height - .28 * renderedHeight)
+      );
+    })).toBeLessThan(2);
+  }
+  await page.screenshot({ path: "test-results/pen-contained-photo-wide.png" });
+});
+
 test("onboarding motion is one-time and respects reduced motion", async ({ page }) => {
   await page.goto("/?onboarding=1");
   await expectOfficialSugarNoLogo(page);

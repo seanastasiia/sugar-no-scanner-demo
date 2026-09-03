@@ -21,6 +21,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: Product outlines could stretch into the photo's side margins after onboarding.** The resize observer now attaches when the scanner viewport actually mounts. A browser regression checks the welcome-to-sample transition and subsequent phone/desktop resizing against the rendered photo bounds.
+
 - **2026-09-03: Saved-photo recovery had no effective retry action.** Retry now reuses the same prepared frames held only in memory, without reopening the camera; changing source releases them.
 
 - **2026-09-03: Scanner did not match the approved Pen flow.** Welcome, native chip rims, primary buttons, ranked cards, product detail, photo/demo, recovery and feedback now use the approved design. Nutrition and price gates are preserved.
