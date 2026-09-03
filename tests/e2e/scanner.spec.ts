@@ -152,6 +152,7 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   await expect.poll(() => evidenceRequests).toBeGreaterThan(0);
   expect(evidenceRequests).toBeLessThanOrEqual(2);
   const results = page.getByLabel("Personal Shelf Rank results");
+  await expect(results).not.toContainText(/Within-type comparison|assessed in this|Need two for a relative rank|Not compared in this pilot|Missing or unverified/);
   const chips = results.getByRole("region", { name: "Chips", exact: true });
   await expect(chips.getByText("Provisional #1 of 3 in chips", { exact: true })).toHaveCount(2);
   await expect(chips.getByText("Not enough verified data", { exact: true })).toHaveCount(0);
@@ -205,7 +206,8 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await expect(chips.getByText("#1 of 2 in chips", { exact: true })).toBeVisible();
   await expect(chips.getByRole("heading", { level: 4 }).first()).toHaveText(samples[0].shortName);
   await expect(chips.getByText("64/100", { exact: true })).toBeVisible();
-  await expect(chips.getByText(/Missing or unverified: consistent nutrition totals/)).toBeVisible();
+  await expect(chips.getByLabel("Not scored", { exact: true })).toHaveText("—");
+  await expect(chips).not.toContainText(/Not enough verified data|Missing or unverified/);
   await expectNoDocumentOverflow(page);
   await expect.poll(() => chips.getByTestId("product-packshot").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete)), { timeout: 10_000 }).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn.png"), fullPage: true, animations: "disabled" });
@@ -215,6 +217,40 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await expect(chips.getByText("View available evidence", { exact: true })).toHaveCount(0);
   await expect(chips.getByRole("link", { includeHidden: true })).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn-expanded.png"), fullPage: true, animations: "disabled" });
+});
+
+test("personal shelf pilot keeps incomplete cards compact and unsupported products in original Fit", async ({ page }, testInfo) => {
+  const bar = { ...shelfFixture("barbora:qa-skriveru-bar", { category: "Snack bars" }), shelfEvidence: undefined };
+  const candy = shelfFixture("barbora:qa-raffaello", { category: "Confectionery" });
+  await openPersonalShelfFixture(page, [bar, candy]);
+  const original = page.getByLabel("Products ranked by Sugar.no fit");
+  const originalText = await original.innerText();
+  const toggle = page.getByRole("switch", { name: /Personal Shelf Rank/ });
+  await toggle.click();
+  const results = page.getByLabel("Personal Shelf Rank results");
+  await expect(results.getByRole("heading", { name: "Snack bars", exact: true })).toBeVisible();
+  await expect(results.getByRole("heading", { level: 4 })).toHaveCount(1);
+  await expect(results.getByLabel("Not scored", { exact: true })).toHaveText("—");
+  await expect(results.locator("details")).toHaveCount(0);
+  await expect(results).not.toContainText(/Within-type comparison|assessed in this|Not enough verified data|Missing or unverified|Not compared in this pilot|still need an exact identity/);
+  await expectNoDocumentOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath("personal-shelf-compact-unknown.png"), fullPage: true });
+  await toggle.click();
+  expect(await original.innerText()).toBe(originalText);
+  await expect(original.getByRole("button")).toHaveCount(2);
+});
+
+test("personal shelf pilot has a short empty state instead of the unsupported-product list", async ({ page }) => {
+  const samples = [shelfFixture("barbora:qa-candy-a", { category: "Confectionery" }), shelfFixture("barbora:qa-candy-b", { category: "Confectionery" })];
+  await openPersonalShelfFixture(page, samples);
+  const toggle = page.getByRole("switch", { name: /Personal Shelf Rank/ });
+  await toggle.click();
+  const results = page.getByLabel("Personal Shelf Rank results");
+  await expect(results.getByText("No ratings for this shelf yet. Switch off Personal Shelf Rank to view all products.", { exact: true })).toBeVisible();
+  await expect(results.locator("ul")).toHaveCount(0);
+  await expect(results).not.toContainText(/Not compared in this pilot|assessed in this|qa-candy/);
+  await toggle.click();
+  await expect(page.getByLabel("Products ranked by Sugar.no fit").getByRole("button")).toHaveCount(2);
 });
 
 async function mockSampleShelfRecognition(page: Page) {

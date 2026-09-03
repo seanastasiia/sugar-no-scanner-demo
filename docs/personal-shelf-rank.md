@@ -10,6 +10,8 @@ Expand a scan, turn on `Personal Shelf Rank`, compare products within one suppor
 
 There are two distinct numbers: a product preference score/range out of 100 and a relative place **among assessable products of the same type in this scan**. A single assessed product gets no place. Fully known exact ties share competition ranks (1, 1, 3). Provisional ranges sort by their lower bound; every provisional assessment and any full score overlapping a provisional range has a visibly provisional place, not a verified winner/tie. Essential-missing/unsupported products remain visible but excluded from rank denominators. Score is not a percentile and price cannot affect it.
 
+The compact presentation omits group counters, introductory boilerplate, verbose missing-data text and the separate unsupported/unidentified list. Supported incomplete cards show a neutral dash with `Not scored` accessibility text. Unsupported products stay in original Fit, not in a separate pilot block. When no categories remain, a short hint directs the user back to the existing mode switch. These are display rules, not wider scoring coverage or new evidence.
+
 ## Required evidence and language rules
 
 Each observation contains exact canonical product ID, optional matching GTIN, source URL/date, source category, original ingredients/language and explicit per-100 g nutrients. No mixing of two similar products or country-specific recipes is allowed. Product-name aliases resolve identity but never become nutrient or ingredient evidence. Original composition is preserved; rules normalize accents/case and use audited English, Latvian, Lithuanian, Russian and Estonian terms. Unknown wording/language remains unknown. This dictionary is bounded, not a universal translation or NOVA classifier.

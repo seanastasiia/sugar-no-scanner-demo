@@ -82,6 +82,10 @@ Try [New rating demo](https://sugar-no-scanner-demo-production.up.railway.app/de
 
 Owner check: compare a complete and provisional card, expand the component points, confirm the displayed protein/sugar match the package, then switch back to original Fit. A missing-salt or contradictory product must not look fully rated. Review a real shelf and a translated name/different-flavour pair; automated tests do not establish store-wide recognition accuracy.
 
+Personal Shelf results omit the introductory disclaimer, assessed-product counters, verbose missing-data paragraphs and the separate unsupported/unidentified-product list. A supported product without a score shows a neutral dash with an accessible `Not scored` label; the source data remains unknown, not zero. If no supported categories remain, a short empty state points back to the existing mode switch. All identified products remain available in original Fit. To check, compare a mixed shelf with an incomplete bar and candies, switch back to original Fit, and confirm no detected cards were deleted.
+
+Catalog identification and composition-rating coverage are separate. The reported Raffaello 150/230 g, Kinder Bueno Mini 108 g and Skrīveru Gotiņa 250 g have original Fit records, but confectionery is outside the six-category pilot. The Skrīveru salted-caramel protein bar has a basic Barbora nutrient record but no separate composition observation; its retailer's broad high-protein category is also not automatically classified as a bar by the batch. A recognized name or basic protein/sugar record does not guarantee a Personal Shelf score. Physical recognition failures still need the original shelf image to reproduce; a results screenshot cannot establish recall.
+
 Set `PERSONAL_SHELF_RANK_ENABLED=false` and redeploy to hide the switch, demo and evidence endpoint without deleting data or changing original Fit. Model/source details are in [the ranking contract](docs/personal-shelf-rank.md) and [missing-data policy](docs/personal-shelf-missing-data-proposal.md).
 
 - The demo chooser is a light full-screen surface with three white option cards, blue icons and a black primary return action.
