@@ -7,12 +7,12 @@ Source: the user's approved `/Users/anastasiia/Documents/untitled.pen`, saved 3 
 | Role | Value |
 | --- | --- |
 | Canvas / tinted card | `#F2F2F7` |
-| Card | `#FFFFFF` |
+| Card | `#FFFFFF → #FAFAFC`, white 1 px inset rim |
 | Ink / muted | `#262626` / `#60606A` |
 | Action blue / retry coral | `#0A84FF` / `#F14E58` |
 | Primary button | 56 px minimum; pill; `#1A1A1A → #4D4D4D`; white → 2% white → white diagonal rim, 1.5 px; black 13% shadow, y 3.246 / blur 19.478 |
 | Secondary action | White pill, blue label, 44 px minimum |
-| Fit chip | 30 px, radius 24, padding 4/8, 15/22 semibold rounded; white gradient rim 1.25 px |
+| Fit chip | Compact 24 px with 12 px label (`Moderate`); regular 30 px, radius 24, padding 4/8, 15/22 semibold rounded; white gradient rim 1.25 px |
 | Great / Moderate / Low | `#50D671 → #2DBC51` / `#FFC917 → #FF7701` / `#F17E5B → #F93A00` |
 | Cards | Radius 32; 16–24 px content gutters; 8/12/16/24 spacing |
 | Text | Rounded headings 28/34, welcome 34/40; body 16/22 regular system face; small copy 12–14 |
@@ -38,7 +38,9 @@ Use the official SVG proportions. The existing white SVG is rendered in ink on t
 | 17 `EdasX`, 18 `qhp4K` Feedback / Needs work | White 370 px maximum dialog, rating, reasons and optional comment |
 | 19 `ZtBQ6`, 20 `C4x6dO`, 21 `UWwfO` Saving / error / success | Locked form; retained answer on retry; success + Done |
 
-Runtime content can be longer or use a different source/price than the static examples. Exact Carbs and eligible Better alternatives remain visible even when absent from a sample frame. A tablet uses a side result pane; phone landscape keeps the primary compact actions visible. All camera and photo overlays use object-contain mapping, and capture dimensions remain independent of CSS.
+The welcome distributes header, introduction, preview and actions with 24 px minimum gaps; short screens reduce the photo height. Compact packshots are 48 px (32 px at widths up to 360 px), and the detail packshot is square up to 290 px. The list includes verified protein and separates informational prices from the fit row. Feedback uses 8 px internal gaps, a fixed header/footer and scrollable body sized to the visual viewport; the success mark is green with a white check.
+
+Runtime content can be longer or use a different source/price than the static examples. Exact Carbs and eligible Better alternatives remain visible even when absent from a sample frame. The runtime uses actual packshots and verified per-100 nutrition; generic placeholder images and example numbers in Pen are not product evidence. A tablet uses a side result pane; phone landscape keeps the primary compact actions visible. All camera and photo overlays use object-contain mapping, and capture dimensions remain independent of CSS.
 
 ## Interaction and validation
 

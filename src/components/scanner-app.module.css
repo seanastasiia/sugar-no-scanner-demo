@@ -16,10 +16,12 @@
   min-height: 100dvh;
   height: 100dvh;
   overflow: auto;
-  padding: max(24px, env(safe-area-inset-top))
+  justify-content: space-between;
+  gap: 24px;
+  padding: max(20px, env(safe-area-inset-top))
     max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom))
     max(24px, env(safe-area-inset-left));
-  background: linear-gradient(180deg, #cfeafd 0%, var(--canvas) 52%);
+  background: linear-gradient(180deg, #ceeafe 0%, #f1f7fc 40%, var(--canvas) 75%);
   color: var(--ink);
 }
 .onboardingHeader,
@@ -29,7 +31,8 @@
 }
 .onboardingHeader {
   display: flex;
-  min-height: 32px;
+  min-height: 44px;
+  flex: none;
   align-items: center;
 }
 .onboardingBrand {
@@ -44,13 +47,12 @@
   opacity: 0.85;
 }
 .onboardingContent {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 0;
+  display: contents;
 }
 .onboardingMain {
-  margin-top: clamp(36px, 8vh, 72px);
+  flex: none;
+  width: min(100%, 420px);
+  margin: 0 auto;
   text-align: center;
 }
 .onboarding h1 {
@@ -63,18 +65,19 @@
   max-width: 300px;
   margin: 12px auto 0;
   color: var(--muted);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 500;
   line-height: 22px;
 }
 .onboardingPreview {
   position: relative;
   flex: none;
-  margin: clamp(28px, 7vh, 60px) 0 0;
+  width: min(100%, 420px);
+  margin: 0 auto;
   padding: 6px;
   border-radius: 32px;
   background: var(--surface);
-  box-shadow: 0 12px 30px #26262608;
+  box-shadow: 0 8px 28px #26384e18;
 }
 .onboardingPreviewImage {
   position: relative;
@@ -129,24 +132,33 @@
   display: block;
 }
 .onboardingResultCopy strong {
-  font: 600 15px/20px var(--font-display);
+  font: 700 15px/20px var(--font-display);
 }
 .onboardingResultCopy small {
   margin-top: 2px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 17px;
 }
 .onboardingActions {
   display: grid;
-  gap: 8px;
-  margin-top: auto;
-  padding-top: 32px;
+  flex: none;
+  width: min(100%, 420px);
+  gap: 12px;
+  margin: 0 auto;
+}
+.onboardingActions .secondaryButton {
+  background: transparent;
+  font-size: 17px;
+  font-weight: 700;
+}
+.onboardingActions .onboardingPrimary {
+  font-weight: 700;
 }
 .onboardingNote {
-  margin: 10px 0 0;
+  margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 17px;
   text-align: center;
 }
@@ -580,7 +592,7 @@
   padding: 20px 16px max(24px, env(safe-area-inset-bottom));
   overflow: auto;
   border-radius: 36px 36px 0 0;
-  background: linear-gradient(#fff, var(--canvas));
+  background: linear-gradient(#fff, #fafafc);
 }
 .resultsExpanded {
   top: 0;
@@ -604,7 +616,7 @@
 }
 .sheetIconButton,
 .dialogClose,
-.demoHeading button {
+.demoNavigation button {
   display: grid;
   width: 44px;
   height: 44px;
@@ -621,11 +633,11 @@
   gap: 4px;
 }
 .sheetTitleStatic strong {
-  font: 700 20px/24px var(--font-display);
+  font: 700 21px/28px var(--font-display);
 }
 .sheetTitleStatic span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 17px;
 }
 .sheetActions {
@@ -646,21 +658,35 @@
 }
 .sheetPreviewCard {
   min-width: 0;
-  border-radius: 20px;
+  border-radius: 18px;
   background: var(--canvas);
 }
 .sheetPreviewOpen {
   position: relative;
-  display: block;
-  min-height: 78px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 84px;
   width: 100%;
-  padding: 8px 10px;
+  padding: 8px;
   border: 0;
   border-radius: inherit;
   background: transparent;
   color: var(--ink);
   cursor: pointer;
   text-align: left;
+}
+.sheetPreviewThumb {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.sheetPreviewThumb img {
+  object-fit: contain;
 }
 .sheetPreviewCopy {
   display: grid;
@@ -671,9 +697,7 @@
 }
 .sheetPreviewCopy > span {
   grid-column: 1 / -1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
   font: 600 12px/17px var(--font-display);
 }
 .sheetPreviewCopy > span b {
@@ -681,8 +705,14 @@
   font-weight: 500;
   margin-right: 4px;
 }
+.sheetPreview .matchPill {
+  min-height: 24px;
+  padding: 4px 6px;
+  font-size: 12px;
+  line-height: 16px;
+}
 .sheetPreviewSugar {
-  font-size: 11px;
+  font-size: 10px;
   line-height: 15px;
   text-align: right;
   overflow-wrap: anywhere;
@@ -815,13 +845,13 @@
 }
 .rankedIdentity > small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 15px;
   letter-spacing: 0.2px;
 }
 .rankedIdentity > strong {
   overflow-wrap: anywhere;
-  font: 700 17px/22px var(--font-display);
+  font: 700 18px/23px var(--font-display);
 }
 .rankedProductMeta {
   display: flex;
@@ -833,7 +863,23 @@
   gap: 8px;
 }
 .rankedProductMeta > small {
-  font: 600 14px/20px var(--font-display);
+  min-width: 0;
+  flex: 1 1 140px;
+  text-align: right;
+  overflow-wrap: anywhere;
+  font: 600 12px/16px var(--font-display);
+}
+.rankedPriceRow {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.rankedPriceRow > span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 18px;
 }
 .compactProductPrice {
   display: inline-flex;
@@ -889,14 +935,15 @@
 }
 .detailImage {
   position: relative;
-  height: 80px;
-  margin-bottom: 8px;
+  width: min(100%, 290px);
+  aspect-ratio: 1;
+  margin: 0 auto 8px;
   overflow: hidden;
   border-radius: 24px;
   background: var(--canvas);
 }
 .detailImage img {
-  padding: 10px;
+  padding: 36px;
 }
 .productHeading {
   display: flex;
@@ -986,6 +1033,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  flex-wrap: wrap;
   font: 600 17px/22px var(--font-display);
 }
 .offerSummaryHeading .compactProductPrice strong {
@@ -1130,12 +1178,17 @@
   width: min(100%, 450px);
   min-height: 100%;
   margin: 0 auto;
-  padding: calc(88px + env(safe-area-inset-top)) 24px
-    max(32px, env(safe-area-inset-bottom));
+  padding: calc(20px + env(safe-area-inset-top)) 24px
+    max(24px, env(safe-area-inset-bottom));
   outline: 0;
 }
-.demoHeading {
-  position: relative;
+.demoNavigation {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 .demoHeading h2 {
   max-width: 340px;
@@ -1150,14 +1203,9 @@
   font-weight: 500;
   line-height: 22px;
 }
-.demoHeading button {
-  position: absolute;
-  top: -68px;
-  right: 0;
-}
 .demoChoices {
   display: grid;
-  gap: 18px;
+  gap: 20px;
   margin-top: 20px;
 }
 .demoChoices button,
@@ -1201,7 +1249,7 @@
 }
 .demoChoices small {
   color: var(--muted);
-  font: 400 13px/18px var(--font-sans);
+  font: 400 14px/19px var(--font-sans);
 }
 .demoUpload input {
   position: absolute;
@@ -1218,48 +1266,92 @@
   margin-top: 20px;
 }
 .feedbackBackdrop {
+  --feedback-top: min(245px, calc(var(--feedback-viewport, 100dvh) * 0.28));
   position: fixed;
   z-index: 120;
-  inset: 0;
+  inset: var(--feedback-offset, 0px) 0 auto;
+  height: var(--feedback-viewport, 100dvh);
   display: grid;
-  place-items: center;
-  padding: max(16px, env(safe-area-inset-top))
+  justify-items: center;
+  align-items: start;
+  padding: max(var(--feedback-top), env(safe-area-inset-top))
     max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
     max(16px, env(safe-area-inset-left));
-  background: #17182066;
+  background: #171e2866;
+}
+.feedbackBackdrop[data-expanded="true"] {
+  --feedback-top: 16px;
+}
+.feedbackBackdrop[data-feedback-state="success"] {
+  --feedback-top: min(265px, calc(var(--feedback-viewport, 100dvh) * 0.3));
+}
+@media (max-height: 600px) {
+  .feedbackBackdrop[data-feedback-state="success"] {
+    --feedback-top: 16px;
+  }
 }
 .feedbackDialog {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   width: min(100%, 370px);
   max-height: calc(
-    100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    var(--feedback-viewport, 100dvh) - max(var(--feedback-top), env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom))
   );
   padding: 20px;
   border-radius: 32px;
-  overflow-y: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
   outline: 0;
-  background: var(--surface);
+  background: linear-gradient(#fff, #fafafc);
   color: var(--ink);
 }
-.dialogClose {
-  position: absolute;
-  right: 16px;
-  top: 16px;
+.feedbackHeader {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.feedbackHeader .dialogClose {
+  margin-left: auto;
+  background: transparent;
+}
+.feedbackDialog form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 8px;
+}
+.feedbackBody {
+  display: grid;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.feedbackFooter {
+  flex: none;
+}
+.feedbackFooter .secondaryButton:disabled {
+  color: var(--muted);
   background: var(--canvas);
+  cursor: default;
 }
 .feedbackDialog h2 {
-  max-width: 240px;
+  min-width: 0;
   margin: 0;
   font: 700 26px/30px var(--font-display);
   letter-spacing: -0.4px;
 }
 .feedbackIntro {
-  margin: 8px 0 16px;
+  margin: 0;
   color: var(--muted);
   font-size: 15px;
   font-weight: 500;
-  line-height: 21px;
+  line-height: 20px;
 }
 .feedbackChoices {
   display: grid;
@@ -1276,7 +1368,7 @@
   border-radius: 24px;
   background: var(--canvas);
   color: var(--ink);
-  font: 600 15px/20px var(--font-display);
+  font: 600 16px/21px var(--font-display);
   cursor: pointer;
 }
 .feedbackChoices .feedbackChoiceActive {
@@ -1287,13 +1379,14 @@
 .feedbackReasons {
   display: grid;
   gap: 0;
-  margin: 16px 0 0;
+  min-width: 0;
+  margin: 0;
   padding: 0;
   border: 0;
 }
 .feedbackReasons legend {
   margin-bottom: 8px;
-  font: 600 15px/20px var(--font-display);
+  font: 600 16px/21px var(--font-display);
 }
 .feedbackReasons label {
   display: flex;
@@ -1312,13 +1405,13 @@
 .feedbackComment {
   display: grid;
   gap: 8px;
-  margin: 16px 0 0;
-  font: 600 15px/20px var(--font-display);
+  margin: 0;
+  font: 500 14px/19px var(--font-sans);
 }
 .feedbackComment textarea {
   width: 100%;
   min-height: 70px;
-  resize: vertical;
+  resize: none;
   padding: 12px;
   border: 0;
   border-radius: 16px;
@@ -1326,32 +1419,36 @@
   color: var(--ink);
   font: 400 16px/21px var(--font-sans);
 }
-.feedbackComment > span,
+.feedbackComment textarea:focus-visible {
+  outline-offset: -3px;
+}
+.feedbackComment > span > span,
 .feedbackComment small {
   color: var(--muted);
   font: 400 11px/16px var(--font-sans);
 }
-.feedbackDialog form > .primaryButton {
-  margin-top: 20px;
-}
 .feedbackError {
-  margin: 12px 0 0;
+  margin: 0;
   color: #bb333c;
   font-size: 14px;
   line-height: 20px;
 }
 .feedbackSuccess {
-  text-align: center;
+  display: grid;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  text-align: left;
 }
 .feedbackSuccess > span {
   display: grid;
   width: 64px;
   height: 64px;
-  margin: 12px auto 16px;
+  margin: 0;
   place-items: center;
   border-radius: 50%;
-  background: #e7f9ec;
-  color: #2dbc51;
+  background: linear-gradient(90deg, #50d671, #2dbc51);
+  color: #fff;
 }
 .feedbackSuccess h2 {
   max-width: none;
@@ -1359,7 +1456,7 @@
   line-height: 34px;
 }
 .feedbackSuccess p {
-  margin: 8px 0 20px;
+  margin: 0;
   color: var(--muted);
   font-size: 16px;
   line-height: 22px;
@@ -1429,8 +1526,18 @@
     gap: 5px;
     font-size: 14px;
   }
+  .resultsCollapsed {
+    max-height: min(68dvh, 440px);
+  }
   .sheetPreviewOpen {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 6px;
     padding: 8px;
+  }
+  .sheetPreviewThumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
   }
   .sheetPreviewCopy {
     grid-template-columns: 1fr;
@@ -1449,17 +1556,8 @@
   }
 }
 @media (max-height: 740px) {
-  .onboardingMain {
-    margin-top: 28px;
-  }
-  .onboardingPreview {
-    margin-top: 24px;
-  }
   .onboardingPreviewImage {
     height: 210px;
-  }
-  .onboardingActions {
-    padding-top: 24px;
   }
 }
 @media (min-width: 760px) {
@@ -1493,6 +1591,8 @@
     display: grid;
     grid-template-rows: 32px 1fr;
     height: 100dvh;
+    gap: 8px;
+    padding-block: 12px;
   }
   .onboardingHeader,
   .onboardingContent {
@@ -1689,17 +1789,16 @@
 }
 @media (max-height: 700px) and (orientation: portrait) {
   .onboardingPreviewImage {
-    height: 150px;
+    height: 144px;
   }
-  .onboardingMain {
-    margin-top: 20px;
-  }
-  .onboardingPreview {
-    margin-top: 20px;
-  }
-  .onboardingActions {
-    padding-top: 16px;
-  }
+}
+@media (max-height: 620px) and (orientation: portrait) {
+  .onboarding { gap: 16px; }
+  .onboarding h1 { font-size: 28px; line-height: 34px; }
+  .onboardingCopy { font-size: 15px; line-height: 20px; }
+  .onboardingPreviewImage { height: 84px; }
+  .onboardingResult { min-height: 64px; padding: 8px; }
+  .onboardingNote { font-size: 11px; line-height: 16px; }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   .cameraError,
@@ -1763,4 +1862,15 @@
   .resultsCollapsed .sheetActions {
     margin-top: 8px;
   }
+}
+
+.productSummary,
+.offerSummary,
+.rankedProductCard,
+.demoChoices button,
+.demoUpload,
+.recoveryPanel,
+.feedbackDialog {
+  background-image: linear-gradient(#fff, #fafafc);
+  box-shadow: inset 0 0 0 1px #fff;
 }

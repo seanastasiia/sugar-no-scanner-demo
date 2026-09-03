@@ -524,7 +524,7 @@ test("anonymous feedback validates Needs work and shows success", async ({ page 
   const dialog = page.getByRole("dialog", { name: "Was this scan helpful?" });
   const ratingBox = await dialog.getByRole("group", { name: "Feedback rating" }).boundingBox();
   const submitBox = await dialog.getByRole("button", { name: "Send feedback" }).boundingBox();
-  expect((submitBox?.y ?? 0) - ((ratingBox?.y ?? 0) + (ratingBox?.height ?? 0))).toBeGreaterThanOrEqual(20);
+  expect((submitBox?.y ?? 0) - ((ratingBox?.y ?? 0) + (ratingBox?.height ?? 0))).toBeGreaterThanOrEqual(8);
   await dialog.getByRole("button", { name: "Needs work" }).click();
   await expect(dialog.getByRole("button", { name: "Send feedback" })).toBeDisabled();
   await dialog.getByLabel("Result was unclear").check();
@@ -679,7 +679,8 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Sugar.no badge")).toHaveCount(0);
   await expect(ranking.getByText(/^Sugar \d+(?:\.\d+)?g/)).toHaveCount(3);
-  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g|Carbs \d+(?:\.\d+)?g/)).toHaveCount(0);
+  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g/)).toHaveCount(3);
+  await expect(ranking.getByText(/Carbs \d+(?:\.\d+)?g/)).toHaveCount(0);
   await expect(page.getByText("Needs nutrition label", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await ranking.getByRole("button", { name: /STOCKMANN Fresh chanterelles/ }).click();
@@ -1069,7 +1070,7 @@ test("camera permission denial offers a clear retry state", async ({ page }) => 
 test("saved images are resized client-side and fail closed without a provider key", async ({ page }) => {
   await unlock(page);
   await chooseSavedPhoto(page, "unknown.png");
-  await expect(page.getByRole("status")).toContainText("Recognition unavailable");
+  await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
   await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
   await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
   await expect(page.getByText("Saved shelf or checkout photo", { exact: true })).toHaveCount(0);
@@ -1706,9 +1707,9 @@ test("provider unavailability pauses live recognition and offers manual recovery
   });
 
   await unlock(page);
-  const retryButton = page.getByRole("button", { name: "Try again", exact: true });
+  const retryButton = page.getByRole("button", { name: "Not sure — try again", exact: true });
   await expect(retryButton).toBeVisible({ timeout: 6_000 });
-  await expect(page.getByRole("status")).toContainText("Recognition unavailable");
+  await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
   await expectInsideViewport(page, retryButton);
   await page.screenshot({ path: "test-results/pen-service-unavailable.png" });
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
@@ -2067,7 +2068,7 @@ test("an exact Barbora food gets an on-demand two-factor Sugar.no fit", async ({
   await expect(badge.getByText("22 g", { exact: true })).toBeVisible();
   await expect(badge.getByText("14 g", { exact: true })).toBeVisible();
   await expect(badge.getByText("Fiber", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("Per 100 g · 2 of 2 source-backed signals", { exact: true })).toBeVisible();
+  await expect(page.getByText("Per 100 g · exact product data", { exact: true })).toBeVisible();
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
   await page.screenshot({ path: "test-results/barbora-quick-view-mobile.png" });
@@ -2147,8 +2148,8 @@ test("saved-photo recovery retries the same prepared image without reopening the
   });
   await unlock(page);
   await chooseSavedPhoto(page);
-  await expect(page.getByRole("status")).toContainText("Recognition unavailable");
-  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
+  await page.getByRole("button", { name: "Not sure — try again", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
   expect(submittedImages).toHaveLength(2);
   expect(submittedImages[1]).toBe(submittedImages[0]);

@@ -416,18 +416,19 @@ function SugarNoBadge({ product }: { product: ScoredProduct }) {
         ) : null}
       </div>
       <p className={styles.perHundred}>
-        Per {product.nutritionBasis === "100ml" ? "100 ml" : "100 g"} · {product.ratingSignalCount} of 2 source-backed
-        signals
+        Per {product.nutritionBasis === "100ml" ? "100 ml" : "100 g"} · {product.ratingSignalCount === 2
+          ? "exact product data"
+          : `${product.ratingSignalCount} of 2 signals verified`}
       </p>
     </section>
   );
 }
 
-export function MatchPill({ product }: { product: ScoredProduct }) {
+export function MatchPill({ product, compact = false }: { product: ScoredProduct; compact?: boolean }) {
   const presentation = overlayMatchPresentation(product);
   return (
-    <em className={`${styles.matchPill} ${toneClass(presentation.tone)}`}>
-      {presentation.label}
+    <em className={`${styles.matchPill} ${toneClass(presentation.tone)}`} aria-label={compact ? presentation.label : undefined}>
+      {compact && presentation.tone === "middle" ? "Moderate" : presentation.label}
       {product.ratingSignalCount > 0 && product.ratingSignalCount < 2 ? ` · ${product.ratingSignalCount}/2` : ""}
     </em>
   );

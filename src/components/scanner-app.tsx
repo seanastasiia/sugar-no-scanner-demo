@@ -6,7 +6,6 @@ import {
   CameraOff,
   Check,
   ChevronDown,
-  ArrowLeft,
   WifiOff,
   CircleAlert,
   FileImage,
@@ -1419,7 +1418,7 @@ export function ScannerApp() {
 
           {source === "upload" || source === "sample-conveyor" ? (
             <h1 className={styles.photoTitle}>
-              {source === "upload" ? "Read a saved photo" : "Reading checkout products"}
+              {source === "upload" ? "Read a saved photo" : "Checkout demo"}
             </h1>
           ) : null}
           <div
@@ -1607,14 +1606,14 @@ export function ScannerApp() {
                     {!networkOnline
                       ? "You’re offline"
                       : recognitionState === "unavailable"
-                        ? "Recognition unavailable"
+                        ? "We couldn’t finish this scan"
                         : "Let’s try another view"}
                   </strong>
                   <span>
                     {!networkOnline
                       ? "Check your connection, then try again."
                       : recognitionState === "unavailable"
-                        ? "We couldn’t read this frame right now. Please try again in a moment."
+                        ? "The service is temporarily unavailable. Please try again in a moment."
                         : recognitionState === "error"
                           ? statusMessage
                           : "Move a little closer and keep the product names in focus."}
@@ -1623,14 +1622,14 @@ export function ScannerApp() {
                 <div className={styles.recoveryActions}>
                   <button
                     className={
-                      showRecognitionRetry && recognitionState !== "unavailable"
+                      showRecognitionRetry || recognitionState === "unavailable"
                         ? styles.recognitionRetry
                         : styles.primaryButton
                     }
                     type="button"
                     onClick={retryCurrentScan}
                   >
-                    {showRecognitionRetry && recognitionState !== "unavailable" ? "Not sure — try again" : "Try again"}
+                    {showRecognitionRetry || recognitionState === "unavailable" ? "Not sure — try again" : "Try again"}
                   </button>
                   {source !== "camera" ? (
                     <button
@@ -1691,11 +1690,7 @@ export function ScannerApp() {
                         : "Collapse product results"
                     }
                   >
-                    {productDetailsOpen && visibleTrayIds.length > 1 ? (
-                      <ArrowLeft aria-hidden="true" size={20} />
-                    ) : (
-                      <ChevronDown aria-hidden="true" size={20} />
-                    )}
+                    <ChevronDown aria-hidden="true" size={20} />
                   </button>
                 </>
               ) : (
@@ -1746,6 +1741,16 @@ export function ScannerApp() {
                             track("result_opened", source, id);
                           }}
                         >
+                          <span className={styles.sheetPreviewThumb} aria-hidden="true">
+                            <ProductThumbnail
+                              imageUrl={item ? productDisplayImage(item) : undefined}
+                              sceneImageUrl={sceneImageUrl}
+                              sceneDimensions={mediaDimensions}
+                              detection={detection}
+                              sizes="48px"
+                              targetAspect={1}
+                            />
+                          </span>
                           <span className={styles.sheetPreviewCopy}>
                             <span>
                               <b>{rank ? `#${rank}` : "—"}</b>
@@ -1753,7 +1758,7 @@ export function ScannerApp() {
                             </span>
                             {isRated ? (
                               <>
-                                <MatchPill product={item} />
+                                <MatchPill product={item} compact />
                                 <small className={styles.sheetPreviewSugar}>
                                   {sugar === null ? "Sugar —" : `${sugar} g`}
                                   {carbohydrate == null ? "" : ` · Carbs ${carbohydrate} g`}
@@ -1879,6 +1884,7 @@ export function ScannerApp() {
                                       <MatchPill product={item} />
                                       <small>
                                         {nutritionLabel}
+                                        {item.nutrientsPer100g.proteinG == null ? "" : ` · Protein ${item.nutrientsPer100g.proteinG}g`}
                                         {visibleBases.size > 1
                                           ? ` / ${item?.nutritionBasis === "100ml" ? "100 ml" : "100 g"}`
                                           : ""}
@@ -1889,10 +1895,13 @@ export function ScannerApp() {
                                       {pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}
                                     </small>
                                   )}
-                                  {!isExactOnlineSaving(onlineOffer, detection?.shelfPrice) ? (
-                                    <CompactProductPrice detection={detection} offer={onlineOffer} />
-                                  ) : null}
                                 </div>
+                                {!isExactOnlineSaving(onlineOffer, detection?.shelfPrice) && (onlineOffer || detection?.shelfPrice) ? (
+                                  <div className={styles.rankedPriceRow}>
+                                    <span>{onlineOffer ? "Online price" : "Shelf price"}</span>
+                                    <CompactProductPrice detection={detection} offer={onlineOffer} />
+                                  </div>
+                                ) : null}
                               </div>
                             </button>
                             <OnlineOfferAction
@@ -1927,7 +1936,7 @@ export function ScannerApp() {
                         sceneDimensions={mediaDimensions}
                         detection={selectedDetection}
                         sizes="320px"
-                        targetAspect={314 / 80}
+                        targetAspect={1}
                       />
                     }
                     onAlternative={(id) => {
@@ -1961,14 +1970,17 @@ export function ScannerApp() {
             aria-labelledby="demo-title"
             tabIndex={-1}
           >
+            <div className={styles.demoNavigation}>
+              <Image className={styles.wordmark} src="/brand/sugar-no-logo-white.svg" alt="Sugar.no" width={137} height={26.07} unoptimized />
+              <button type="button" onClick={closeDemo} aria-label="Close demo chooser">
+                <X aria-hidden="true" size={20} />
+              </button>
+            </div>
             <div className={styles.demoHeading}>
               <div>
                 <h2 id="demo-title">See how a shelf scan works</h2>
                 <p>Compare the example products or try a saved photo.</p>
               </div>
-              <button type="button" onClick={closeDemo} aria-label="Close demo chooser">
-                <X aria-hidden="true" size={20} />
-              </button>
             </div>
             <div className={styles.demoChoices}>
               <button type="button" onClick={startShelf}>

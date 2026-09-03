@@ -28,6 +28,7 @@ export function FeedbackDialog({
   onClose: () => void;
   onSubmitted: (helpful: boolean) => void;
 }) {
+  const backdropRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef<State>("idle");
   const [helpful, setHelpful] = useState<boolean | null>(null);
@@ -38,6 +39,22 @@ export function FeedbackDialog({
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  useEffect(() => {
+    if (!open) return;
+    const viewport = window.visualViewport;
+    const resize = () => {
+      backdropRef.current?.style.setProperty("--feedback-viewport", `${viewport?.height || window.innerHeight}px`);
+      backdropRef.current?.style.setProperty("--feedback-offset", `${viewport?.offsetTop || 0}px`);
+    };
+    resize();
+    viewport?.addEventListener("resize", resize);
+    viewport?.addEventListener("scroll", resize);
+    return () => {
+      viewport?.removeEventListener("resize", resize);
+      viewport?.removeEventListener("scroll", resize);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -105,7 +122,10 @@ export function FeedbackDialog({
 
   return (
     <div
+      ref={backdropRef}
       className={styles.feedbackBackdrop}
+      data-expanded={helpful !== null && state !== "success"}
+      data-feedback-state={state}
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && state !== "loading") closeDialog();
@@ -119,102 +139,112 @@ export function FeedbackDialog({
         aria-labelledby="feedback-title"
         tabIndex={-1}
       >
-        <button
-          className={styles.dialogClose}
-          type="button"
-          onClick={closeDialog}
-          aria-label="Close feedback"
-          disabled={state === "loading"}
-        >
-          <X aria-hidden="true" size={20} />
-        </button>
+        <div className={styles.feedbackHeader}>
+          {state !== "success" ? <h2 id="feedback-title">Was this scan<br />helpful?</h2> : null}
+          <button
+            className={styles.dialogClose}
+            type="button"
+            onClick={closeDialog}
+            aria-label="Close feedback"
+            disabled={state === "loading"}
+          >
+            <X aria-hidden="true" size={20} />
+          </button>
+        </div>
         {state === "success" ? (
-          <div className={styles.feedbackSuccess}>
-            <span>
-              <Check aria-hidden="true" size={28} />
-            </span>
-            <h2 id="feedback-title">Thank you</h2>
-            <p>Your feedback was saved and will help us improve the pilot.</p>
-            <button className={styles.primaryButton} type="button" onClick={closeDialog}>
-              Done
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={submit}>
-            <h2 id="feedback-title">Was this scan helpful?</h2>
-            <p className={styles.feedbackIntro}>A quick answer helps us improve recognition.</p>
-            <div className={styles.feedbackChoices} role="group" aria-label="Feedback rating">
-              <button
-                className={helpful === true ? styles.feedbackChoiceActive : undefined}
-                type="button"
-                aria-pressed={helpful === true}
-                disabled={state === "loading"}
-                onClick={() => {
-                  setHelpful(true);
-                  setReason("");
-                }}
-              >
-                <ThumbsUp aria-hidden="true" size={19} /> Helpful
-              </button>
-              <button
-                className={helpful === false ? styles.feedbackChoiceActive : undefined}
-                type="button"
-                aria-pressed={helpful === false}
-                disabled={state === "loading"}
-                onClick={() => setHelpful(false)}
-              >
-                <ThumbsDown aria-hidden="true" size={19} /> Needs work
+          <>
+            <div className={styles.feedbackSuccess}>
+              <span>
+                <Check aria-hidden="true" size={30} />
+              </span>
+              <h2 id="feedback-title">Thank you</h2>
+              <p>Your feedback was saved and will help us improve the pilot.</p>
+            </div>
+            <div className={styles.feedbackFooter}>
+              <button className={styles.primaryButton} type="button" onClick={closeDialog}>
+                Done
               </button>
             </div>
-            {helpful === false ? (
-              <fieldset className={styles.feedbackReasons} disabled={state === "loading"}>
-                <legend>What went wrong?</legend>
-                {reasons.map(([value, label]) => (
-                  <label key={value}>
-                    <input
-                      type="radio"
-                      name="reason"
-                      value={value}
-                      checked={reason === value}
-                      onChange={() => setReason(value)}
-                    />{" "}
-                    {label}
-                  </label>
-                ))}
-              </fieldset>
-            ) : null}
-            {helpful !== null ? (
-              <label className={styles.feedbackComment}>
-                Anything else? <span>Optional</span>
-                <textarea
+          </>
+        ) : (
+          <form onSubmit={submit}>
+            <div className={styles.feedbackBody}>
+              <p className={styles.feedbackIntro}>A quick answer helps us improve recognition.</p>
+              <div className={styles.feedbackChoices} role="group" aria-label="Feedback rating">
+                <button
+                  className={helpful === true ? styles.feedbackChoiceActive : undefined}
+                  type="button"
+                  aria-pressed={helpful === true}
                   disabled={state === "loading"}
-                  value={comment}
-                  onChange={(event) => setComment(event.target.value)}
-                  maxLength={300}
-                  rows={2}
-                  placeholder="Tell us what you noticed"
-                />
-                <small>Do not include personal information. {comment.length}/300</small>
-              </label>
-            ) : null}
-            {state === "error" ? (
-              <p className={styles.feedbackError} role="alert">
-                Couldn’t save feedback. Please retry.
-              </p>
-            ) : null}
-            <button className={styles.primaryButton} type="submit" disabled={!canSubmit || state === "loading"}>
-              {state === "loading" ? (
-                <>
-                  <RefreshCw className={styles.spin} aria-hidden="true" size={18} /> Saving…
-                </>
-              ) : state === "error" ? (
-                <>
-                  <RefreshCw aria-hidden="true" size={18} /> Retry
-                </>
-              ) : (
-                "Send feedback"
-              )}
-            </button>
+                  onClick={() => {
+                    setHelpful(true);
+                    setReason("");
+                  }}
+                >
+                  <ThumbsUp aria-hidden="true" size={19} /> Helpful
+                </button>
+                <button
+                  className={helpful === false ? styles.feedbackChoiceActive : undefined}
+                  type="button"
+                  aria-pressed={helpful === false}
+                  disabled={state === "loading"}
+                  onClick={() => setHelpful(false)}
+                >
+                  <ThumbsDown aria-hidden="true" size={19} /> Needs work
+                </button>
+              </div>
+              {helpful === false ? (
+                <fieldset className={styles.feedbackReasons} disabled={state === "loading"}>
+                  <legend>What went wrong?</legend>
+                  {reasons.map(([value, label]) => (
+                    <label key={value}>
+                      <input
+                        type="radio"
+                        name="reason"
+                        value={value}
+                        checked={reason === value}
+                        onChange={() => setReason(value)}
+                      />{" "}
+                      {label}
+                    </label>
+                  ))}
+                </fieldset>
+              ) : null}
+              {helpful !== null ? (
+                <label className={styles.feedbackComment}>
+                  <span>Anything else? <span>Optional</span></span>
+                  <textarea
+                    disabled={state === "loading"}
+                    value={comment}
+                    onChange={(event) => setComment(event.target.value)}
+                    maxLength={300}
+                    rows={2}
+                    placeholder="Tell us what you noticed"
+                  />
+                  <small>Do not include personal information. {comment.length}/300</small>
+                </label>
+              ) : null}
+              {state === "error" ? (
+                <p className={styles.feedbackError} role="alert">
+                  Couldn’t save feedback. Please retry.
+                </p>
+              ) : null}
+            </div>
+            <div className={styles.feedbackFooter}>
+              <button className={helpful === null ? styles.secondaryButton : styles.primaryButton} type="submit" disabled={!canSubmit || state === "loading"}>
+                {state === "loading" ? (
+                  <>
+                    <RefreshCw className={styles.spin} aria-hidden="true" size={18} /> Saving…
+                  </>
+                ) : state === "error" ? (
+                  <>
+                    <RefreshCw aria-hidden="true" size={18} /> Retry
+                  </>
+                ) : (
+                  "Send feedback"
+                )}
+              </button>
+            </div>
           </form>
         )}
       </div>
