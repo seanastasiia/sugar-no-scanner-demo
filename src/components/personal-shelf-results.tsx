@@ -2,7 +2,9 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { rankPersonalShelfProducts, shelfScoreLabel, type ShelfEvidence } from "@/lib/personal-shelf-rank";
+import { personalShelfFit, PERSONAL_FIT_GUIDE } from "@/lib/personal-shelf-fit";
 import type { ProductRecord } from "@/lib/types";
+import { PersonalShelfFitBadge, personalFitCardClass } from "./personal-shelf-fit-badge";
 import styles from "./personal-shelf-results.module.css";
 
 export function ShelfRankToggle({ enabled, onChange }: { enabled: boolean; onChange: (enabled: boolean) => void }) {
@@ -57,8 +59,9 @@ export function PersonalShelfResults({ products, unresolved = [], thumbnail, con
           <ul className={styles.list}>
             {group.entries.map(({ product, assessment, rank, tied, rankProvisional }) => {
               const scoreLabel = shelfScoreLabel(assessment);
+              const fit = personalShelfFit(assessment);
               return (
-                <li className={styles.card} key={product.id}>
+                <li className={`${styles.card} ${personalFitCardClass(fit)}`} key={product.id} data-personal-fit={fit?.tone}>
                   <div className={styles.heading}>
                     <div className={styles.thumb} aria-hidden="true">{thumbnail(product.id)}</div>
                     <div><small>{product.brand}</small><h4>{product.shortName}</h4></div>
@@ -66,7 +69,8 @@ export function PersonalShelfResults({ products, unresolved = [], thumbnail, con
                   <div className={styles.scoreRow}>
                     {scoreLabel !== null ? <>
                       <strong>{scoreLabel}<span>/100</span>{assessment.status === "provisional" ? <small> Provisional · fiber unknown</small> : null}</strong>
-                      <span>{rank ? `${rankProvisional ? "Provisional " : tied ? "Tied " : ""}#${rank} of ${group.scoredCount} in ${group.label.toLowerCase()}` : `Score only · ${group.label}`}</span>
+                      <PersonalShelfFitBadge fit={fit} />
+                      <span className={styles.rankLabel}>{rank ? `${rankProvisional ? "Provisional " : tied ? "Tied " : ""}#${rank} of ${group.scoredCount} in ${group.label.toLowerCase()}` : `Score only · ${group.label}`}</span>
                     </> : <span className={styles.unknown} role="img" aria-label="Not scored">—</span>}
                   </div>
                   {scoreLabel !== null ? <>
@@ -78,6 +82,7 @@ export function PersonalShelfResults({ products, unresolved = [], thumbnail, con
                     {assessment.status === "provisional" ? <p>Fiber is not listed. The range covers its possible point contribution, not estimated grams. Provisional places use the lower bound; overlapping ranges do not establish a winner.</p> : null}
                     {assessment.components.length ? <dl className={styles.breakdown}>{assessment.components.map((part) => <div key={part.key}><dt>{part.label}</dt><dd>{part.points}{part.maxPoints !== undefined && part.maxPoints !== part.points ? `–${part.maxPoints}` : ""} / {part.weight} points</dd></div>)}</dl> : null}
                     {assessment.cap ? <p>{assessment.cap}</p> : null}
+                    {fit ? <p>{PERSONAL_FIT_GUIDE}</p> : null}
                   </details> : null}
                 </li>
               );

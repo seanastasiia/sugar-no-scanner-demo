@@ -168,6 +168,8 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   await expect(chips.getByText("Not enough verified data", { exact: true })).toHaveCount(0);
   await expect(chips.getByText("Provisional · fiber unknown", { exact: true })).toBeVisible();
   await expect(chips.getByText(/71–81/)).toBeVisible();
+  await expect(chips.getByTestId("personal-fit-badge")).toHaveText(["Great fit", "Great fit", "Moderate to Great fit"]);
+  await expect(chips.locator('li[data-personal-fit="uncertain"]')).toHaveCount(1);
   await expect(results.getByText("Score only · Spoonable yogurts", { exact: true })).toBeVisible();
   await chips.getByText("Why this score?", { exact: true }).first().click();
   const details = chips.locator("details[open]");
@@ -243,6 +245,7 @@ test("personal shelf pilot keeps incomplete and unsupported products visible wit
   await expect(results.getByText("Personal score unavailable", { exact: true })).toBeVisible();
   await expect(results.getByLabel("Not scored", { exact: true })).toHaveText("—");
   await expect(results.locator("details")).toHaveCount(0);
+  await expect(results.getByTestId("personal-fit-badge")).toHaveCount(0);
   await expect(results).not.toContainText(/Within-type comparison|assessed in this|Not enough verified data|Missing or unverified|Not compared in this pilot|still need an exact identity/);
   await expectNoDocumentOverflow(page);
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-compact-unknown.png"), fullPage: true });
@@ -275,6 +278,7 @@ test("personal shelf pilot preserves a visual-only name without inventing nutrit
   const results = page.getByLabel("Personal Shelf Rank results");
   await expect(results.getByRole("heading", { name: "Unknown cereal", exact: true })).toBeVisible();
   await expect(results.getByText("Nutrition not verified", { exact: true })).toBeVisible();
+  await expect(results.getByTestId("personal-fit-badge")).toHaveCount(0);
   await expect(results).not.toContainText(/\/100|No ratings for this shelf|0 g/);
   await expectNoDocumentOverflow(page);
 });
@@ -301,6 +305,13 @@ test("personal shelf pilot displays all eight real Turtle cereal records and lea
   await expect(group.getByText("79/100", { exact: true })).toBeVisible();
   await expect(group.getByRole("heading", { level: 4 }).first()).toHaveText(samples[5].shortName);
   await expect(group).not.toContainText(/No ratings for this shelf|Personal score unavailable/);
+  await expect(group.getByTestId("personal-fit-badge")).toHaveText(["Great fit", "Great fit", "Moderate fit", "Moderate fit", "Moderate fit", "Moderate fit", "Low fit", "Low fit"]);
+  for (const tone of ["great", "moderate", "low"]) {
+    const card = group.locator(`li[data-personal-fit="${tone}"]`).first();
+    await expect(card).toHaveCSS("background-image", /linear-gradient/);
+  }
+  const accessibility = await new AxeBuilder({ page }).include('[aria-label="Personal Shelf Rank results"]').withTags(["wcag2a", "wcag2aa"]).analyze();
+  expect(accessibility.violations).toEqual([]);
   await expectNoDocumentOverflow(page);
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-turtle.png"), fullPage: true, animations: "disabled" });
   await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();

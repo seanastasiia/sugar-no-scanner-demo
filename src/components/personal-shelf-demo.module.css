@@ -22,6 +22,7 @@
 .title { font-size: .9375rem; font-weight: 750; letter-spacing: -.025em; line-height: 1.25; }
 .score { display: inline-flex; align-items: baseline; padding: 3px 8px; border-radius: 9px; background: var(--surface-accent); font-size: .875rem; font-weight: 800; line-height: 1.35; }
 .score > span { font-size: .6875rem; font-weight: 600; }
+.scoreRow { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; max-width: 100%; }
 .nutrition { color: var(--muted); font-size: .6875rem; font-weight: 650; line-height: 1.5; }
 .nutrition > span { white-space: nowrap; font-weight: 500; }
 .unknown { color: var(--muted); font-size: .75rem; font-weight: 650; }

@@ -21,7 +21,7 @@
 .scoreRow > strong { font-size: 1.75rem; line-height: 1.1; }
 .scoreRow strong > span { font-size: .9375rem; font-weight: 500; }
 .scoreRow strong > small { display: block; margin-top: 6px; font-size: .8125rem; font-weight: 500; line-height: 1.4; color: var(--muted); }
-.scoreRow > span { font-size: .875rem; font-weight: 600; }
+.scoreRow > .rankLabel { flex-basis: 100%; font-size: .875rem; font-weight: 600; }
 .scoreRow > .unknown { font-size: 1rem; line-height: 1.4; }
 .reasons { padding-left: 18px; margin: 12px 0 8px; font-size: .875rem; line-height: 1.5; }
 .tradeoff { font-size: .875rem; line-height: 1.5; margin: 8px 0; }
