@@ -1754,7 +1754,7 @@ export function ScannerApp() {
                               <>
                                 <MatchPill product={item} compact />
                                 <small className={styles.sheetPreviewSugar}>
-                                  {sugar === null ? "Sugar —" : `${sugar} g`}
+                                  {sugar === null ? "Sugar —" : `Sugar ${sugar}\u00a0g`}
                                   {carbohydrate == null ? "" : ` · Carbs ${carbohydrate} g`}
                                 </small>
                               </>

@@ -631,7 +631,7 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   const preview = page.getByLabel("Product result preview");
   await expect(preview.getByRole("button")).toHaveCount(4);
   await expect(preview.getByRole("button").first()).toHaveAccessibleName("Rank 1, BAREBELLS Salty Peanut, Great fit, Sugar 2.3 grams per 100 grams");
-  await expect(preview.getByText(/^[0-9.]+ g$/)).toHaveCount(4);
+  await expect(preview.getByText(/^Sugar [0-9.]+\s+g$/)).toHaveCount(4);
   const markers = page.getByTestId("rated-detection-marker");
   await expect(markers).toHaveCount(4);
   await expect(page.locator('svg[data-fit-icon="great"]')).toHaveCount(2);

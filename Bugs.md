@@ -21,6 +21,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: Compact cards showed grams without naming the nutrient.** Added `Sugar` before each known sugar value, for example `Sugar 2.3 g`. A flexible nutrient column prevents overlap with the fit badge on narrow cards; the number and unit stay together.
+
 - **2026-09-03: The compact result cards needed horizontal browsing.** Corrected the scroll direction to match the owner’s clarification: one full card plus about 30% of the next on the right. All displayed scan products are reachable, with fixed bottom actions and equal card heights that fit their content. Single-result and short-landscape fallbacks remain usable.
 
 - **2026-09-03: Show demo and Leave feedback used a separate flat camera style.** Both now reuse the shared black gradient/rim/shadow and rounded semibold type, with compact sizing for the top bar. Removed the live-camera fill override; demo/photo feedback and recovery's Show demo follow the same black finish.

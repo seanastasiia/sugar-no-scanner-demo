@@ -668,7 +668,7 @@
 .sheetPreviewCopy {
   display: grid;
   min-width: 0;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: max-content minmax(0, 1fr);
   align-items: center;
   gap: 5px 4px;
 }
