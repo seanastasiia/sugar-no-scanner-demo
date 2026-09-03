@@ -4,6 +4,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Open
 
+- **Existing viewport E2E failure after results collapse.** The `camera and results fit iPhone 17 Pro and adjacent iPhone viewports` scenario measures sheet bottom 980 against a 957 bound after resize/collapse. Reproduced on unchanged Pen baseline `c151e92` and on the feedback-email branch. This notification-only change does not alter the UI; investigate layout versus animation timing separately. An alternative-carousel keyboard test also required one retry in the full run.
+
 - **Feedback email is best-effort.** The staging notification retries one transient failure, but does not have a durable delivery queue. A process restart or exhausted Resend quota can prevent the email; feedback remains in Supabase and metadata-only delivery logs identify failures.
 
 - **Normal-mode contrast follows the approved Pen design.** White text on the colorful fit gradients and the original system-blue controls does not meet every AA text contrast threshold. Increased-contrast mode provides darker text/actions and is checked separately.
