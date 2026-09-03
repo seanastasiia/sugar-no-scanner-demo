@@ -4,6 +4,7 @@ import bulkSnapshot from "../../data/open-food-facts-lv.generated.json";
 import regionalBulkSnapshot from "../../data/open-food-facts-regional.generated.json";
 import type { ExternalCatalogProduct } from "./external-catalog-types";
 import { openFoodFactsProductNames } from "./open-food-facts-bulk";
+import { offShelfEvidence } from "./personal-shelf-parser";
 import {
   normalizeRetailQuantityText,
   normalizeRetailText,
@@ -19,6 +20,9 @@ interface OpenFoodFactsNutriments {
   sugars_100g?: number;
   carbohydrates_100g?: number;
   fiber_100g?: number;
+  salt_100g?: number;
+  sodium_100g?: number;
+  "saturated-fat_100g"?: number;
 }
 
 export interface OpenFoodFactsProduct {
@@ -115,6 +119,8 @@ function bulkProductToOpenFoodFactsProduct(source: ExternalCatalogProduct): Open
     code: source.gtin || source.sourceProductId,
     product_name: source.title,
     product_names: [source.title, ...(source.aliases || [])],
+    ingredients_text: source.shelfEvidence?.ingredientsText,
+    ingredients_lc: source.shelfEvidence?.ingredientsLanguage,
     brands: source.brand,
     quantity: source.packSize,
     nutrition_data_per: source.nutritionBasis,
@@ -122,7 +128,10 @@ function bulkProductToOpenFoodFactsProduct(source: ExternalCatalogProduct): Open
       "energy-kcal_100g": source.energyKcal,
       proteins_100g: source.proteinG,
       sugars_100g: source.totalSugarG,
-      carbohydrates_100g: source.carbohydrateG ?? undefined
+      carbohydrates_100g: source.carbohydrateG ?? undefined,
+      fiber_100g: source.shelfEvidence?.fiberG ?? undefined,
+      salt_100g: source.shelfEvidence?.saltG ?? undefined,
+      "saturated-fat_100g": source.shelfEvidence?.saturatedFatG ?? undefined
     },
     image_front_url: source.imageUrl,
     categories: source.category
@@ -321,6 +330,7 @@ export function openFoodFactsToScoredProduct(
   const sourceUrl = `https://world.openfoodfacts.org/product/${product.code}`;
   const record: ProductRecord = {
     id: `off:${product.code}`,
+    shelfEvidence: offShelfEvidence(product, checkedAt),
     retailerProductId: product.code,
     brand: brandText(product) || "Open Food Facts",
     name,
@@ -360,7 +370,7 @@ export function openFoodFactsToScoredProduct(
 
 async function fetchByBarcode(barcode: string): Promise<OpenFoodFactsProduct | null> {
   if (!/^\d{8,14}$/.test(barcode)) return null;
-  const fields = ["code", ...productNameFields, "brands", "quantity", "nutriments", "image_front_url", "categories", "nutrition_data_per"].join(",");
+  const fields = ["code", ...productNameFields, "brands", "quantity", "nutriments", "image_front_url", "categories", "nutrition_data_per", "ingredients_text", "ingredients_lc", "lang", "ingredients_text_en", "ingredients_text_lv", "ingredients_text_lt", "ingredients_text_ru", "ingredients_text_et"].join(",");
   const response = await fetch(`${PRODUCT_URL}/${barcode}?fields=${fields}`, {
     headers: { "user-agent": USER_AGENT },
     signal: AbortSignal.timeout(4_000)
@@ -386,7 +396,9 @@ async function searchProducts(input: BarboraLookupInput): Promise<OpenFoodFactsP
         "nutriments",
         "image_front_url",
         "categories",
-        "nutrition_data_per"
+        "nutrition_data_per",
+        "ingredients_text", "ingredients_lc", "lang",
+        "ingredients_text_en", "ingredients_text_lv", "ingredients_text_lt", "ingredients_text_ru", "ingredients_text_et"
       ]
     }),
     signal: AbortSignal.timeout(4_000)

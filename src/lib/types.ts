@@ -59,6 +59,8 @@ export interface ProductRecord {
   sources: ProductSource[];
   isGolden: boolean;
   accent: string;
+  /** Independent, exact-source evidence for the opt-in pilot. Never alters legacy Fit. */
+  shelfEvidence?: import("./personal-shelf-rank").ShelfEvidence | null;
 }
 
 export interface ScoredProduct extends ProductRecord {

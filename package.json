@@ -21,6 +21,8 @@
     "verify:catalog": "npm run catalog:validate && npm run catalog:validate:barbora-coverage",
     "verify": "npm run lint && npm run typecheck && npm test && npm run verify:catalog && npm run build",
     "catalog:sync": "tsx scripts/sync-barbora.ts",
+    "catalog:sync:shelf-pilot": "tsx scripts/sync-personal-shelf-evidence.ts",
+    "supabase:seed:shelf-pilot": "tsx scripts/seed-personal-shelf-evidence.ts",
     "catalog:sync:barbora-index": "tsx scripts/sync-barbora-index.ts",
     "catalog:sync:barbora-nutrition": "tsx scripts/sync-barbora-nutrition-index.ts",
     "catalog:sync:rimi": "RETAILER_SYNC_SOURCE=rimi tsx scripts/sync-retailer-catalog.ts",

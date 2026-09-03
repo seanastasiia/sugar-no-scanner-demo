@@ -1,6 +1,7 @@
 export type ExternalCatalogSource = "barbora_lv" | "rimi_lv" | "livin_lv" | "livinn_lt" | "open_food_facts";
 
 export interface ExternalCatalogProduct {
+  shelfEvidence?: import("@/lib/personal-shelf-rank").ShelfEvidence | null;
   source: ExternalCatalogSource;
   sourceProductId: string;
   retailer: "Barbora" | "Rimi" | "Livin" | null;

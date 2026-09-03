@@ -1,5 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { shelfFixture } from "../fixtures/personal-shelf";
+import type { ScoredProduct } from "../../src/lib/types";
 
 async function authenticate(page: Page) {
   const response = await page.request.post("/api/auth", {
@@ -112,6 +114,95 @@ async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   await expect(chooser).toBeVisible();
   await chooser.getByRole("button", { name: new RegExp(name) }).click();
 }
+
+async function openPersonalShelfFixture(page: Page, samples?: ScoredProduct[]) {
+  const products = samples || [
+    shelfFixture("qa-chips-a"), shelfFixture("qa-chips-b"),
+    shelfFixture("qa-chips-c", { fiberG: null }),
+    shelfFixture("qa-yogurt", { category: "Yogurt", ingredientsText: "Milk, cultures", fiberG: null, energyKcal: 100 }),
+    shelfFixture("qa-cookie", { category: "Cookies", ingredientsText: "Wholegrain oats, sugar, butter", totalSugarG: 30 })
+  ].map((product) => ({ ...product, id: `barbora:${product.id}`, shelfEvidence: { ...product.shelfEvidence!, productId: `barbora:${product.id}` } }));
+  await page.route("**/api/recognize", (route) => route.fulfill({ contentType: "application/json", body: JSON.stringify({
+    requestId: "personal-shelf-qa", status: "matched", latencyMs: 1, model: "qa-fixture", imageStored: false,
+    detections: products.map((product, index) => ({
+      productId: product.id, catalogProductId: product.id, confidence: .99,
+      box: { x: .02 + index * .19, y: .1, width: .16, height: .6 }, observedText: product.name,
+      identity: { brand: product.brand, name: product.name, variant: null, packSize: "100g", category: product.category, matchKind: "barbora" },
+      inlineProduct: product, shelfPrice: null, retailerOffer: null
+    }))
+  }) }));
+  await page.route("**/api/offers", (route) => route.fulfill({ contentType: "application/json", body: '{"offers":{}}' }));
+  await page.route("**/api/personal-shelf", (route) => route.fulfill({ contentType: "application/json", body: '{"evidence":{}}' }));
+  await unlock(page);
+  await chooseSavedPhoto(page, "synthetic-personal-shelf-qa.png");
+  await expect(page.getByRole("dialog", { name: "Products from this scan" })).toBeVisible();
+}
+
+test("personal shelf pilot is opt-in, category-local, transparent and leaves original Fit unchanged", async ({ page }, testInfo) => {
+  let evidenceRequests = 0;
+  page.on("request", (request) => { if (request.url().endsWith("/api/personal-shelf")) evidenceRequests++; });
+  await openPersonalShelfFixture(page);
+  expect(evidenceRequests).toBe(0);
+  const original = page.getByLabel("Products ranked by Sugar.no fit");
+  await expect(original.getByRole("button")).toHaveCount(5);
+  const originalText = await original.innerText();
+  const toggle = page.getByRole("switch", { name: /Personal Shelf Rank/ });
+  await expect(toggle).toHaveAttribute("aria-checked", "false");
+  await toggle.click();
+  // Development Strict Mode can start then cancel the first effect. Neither read runs before opt-in.
+  await expect.poll(() => evidenceRequests).toBeGreaterThan(0);
+  expect(evidenceRequests).toBeLessThanOrEqual(2);
+  const results = page.getByLabel("Personal Shelf Rank results");
+  const chips = results.getByRole("region", { name: "Chips", exact: true });
+  await expect(chips.getByText("Tied #1 of 2 in chips", { exact: true })).toHaveCount(2);
+  await expect(chips.getByText("Not enough verified data", { exact: true })).toHaveCount(1);
+  await expect(chips.getByText(/Missing or unverified: fiber/)).toBeVisible();
+  await expect(results.getByText("Score only · Spoonable yogurts", { exact: true })).toBeVisible();
+  await chips.getByText("Why this score?", { exact: true }).first().click();
+  const details = chips.locator("details[open]");
+  await expect(details.getByText("Original ingredients (en)", { exact: true })).toBeVisible();
+  await expect(details.getByText("Potatoes, sunflower oil, salt", { exact: true })).toBeVisible();
+  await expect(details.getByRole("link", { name: "Open exact source" })).toHaveAttribute("href", "https://barbora.lv/produkti/qa-chips-a");
+  await expectNoDocumentOverflow(page);
+  await expectVisibleTouchTargets(page);
+  await page.screenshot({ path: testInfo.outputPath("personal-shelf-pilot.png"), fullPage: true });
+  await toggle.click();
+  await expect(original).toBeVisible();
+  expect(await original.innerText()).toBe(originalText);
+});
+
+test("personal shelf pilot remains accessible on small phones, dark mode and enlarged text", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+  await openPersonalShelfFixture(page);
+  await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
+  await expectNoDocumentOverflow(page);
+  const results = await new AxeBuilder({ page }).include('[aria-label="Products from this scan"]').withTags(["wcag2a", "wcag2aa"]).analyze();
+  expect(results.violations).toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath("personal-shelf-dark.png"), fullPage: true });
+  await page.addStyleTag({ content: "html { font-size: 200% !important; }" });
+  await expectNoDocumentOverflow(page);
+  await page.setViewportSize({ width: 844, height: 390 });
+  await expectNoDocumentOverflow(page);
+  await expect(page.getByRole("button", { name: "Collapse product results" })).toBeVisible();
+});
+
+test("personal shelf pilot shows exact Livinn observations in the mobile comparison", async ({ page }, testInfo) => {
+  const { getExternalCatalogProductById } = await import("../../src/server/external-catalog");
+  const samples = ["livinn_lt:03000011072", "livinn_lt:03000011074"].map((id) => getExternalCatalogProductById(id)!);
+  // Recognition is mocked; ingredient/nutrition evidence below is the real dated snapshot.
+  await openPersonalShelfFixture(page, samples);
+  await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
+  const chips = page.getByRole("region", { name: "Chips", exact: true });
+  await expect(chips.getByText("#1 of 2 in chips", { exact: true })).toBeVisible();
+  await expect(chips.getByRole("heading", { level: 4 }).first()).toHaveText(samples[1].shortName);
+  await expect(chips.getByText("71/100", { exact: true })).toBeVisible();
+  await expectNoDocumentOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn.png"), fullPage: true });
+  await chips.getByText("Why this score?", { exact: true }).first().click();
+  await expect(chips.locator("details[open]").getByText("Original ingredients (lt)", { exact: true })).toBeVisible();
+  await expect(chips.locator("details[open]").getByRole("link", { name: "Open exact source" })).toHaveAttribute("href", samples[1].shelfEvidence!.sourceUrl);
+});
 
 async function mockSampleShelfRecognition(page: Page) {
   await authenticate(page);

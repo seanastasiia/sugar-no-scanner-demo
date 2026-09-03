@@ -12,6 +12,7 @@ import {
   type BarboraLookupInput
 } from "./barbora-catalog";
 import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "./external-catalog-types";
+import { getShelfEvidence } from "./personal-shelf-evidence";
 
 interface RankedExternalCatalogCandidate {
   product: ExternalCatalogProduct;
@@ -266,6 +267,7 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
   const pack = canonicalPack(product.packSize);
   const record: ProductRecord = {
     id: `${product.source}:${product.sourceProductId}`,
+    shelfEvidence: product.shelfEvidence || getShelfEvidence(`${product.source}:${product.sourceProductId}`),
     retailerProductId: product.sourceProductId,
     brand: product.brand,
     name: product.title,

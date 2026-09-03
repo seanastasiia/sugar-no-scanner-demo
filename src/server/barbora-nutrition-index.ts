@@ -3,6 +3,7 @@ import activeFoodSnapshot from "../../data/barbora-food-product-index.generated.
 import { areInterchangeable, hasGreatFit } from "@/lib/better-alternatives";
 import { scoreBarboraProduct } from "@/lib/scoring";
 import type { ScoredProduct } from "@/lib/types";
+import { getShelfEvidence } from "./personal-shelf-evidence";
 
 export interface BarboraNutritionIndexProduct {
   slug: string;
@@ -50,6 +51,7 @@ export function indexedBarboraProductToScoredProduct(product: BarboraNutritionIn
   const retailerUrl = `https://barbora.lv/produkti/${product.slug}`;
   const scored = scoreBarboraProduct({
     id: `barbora:${product.slug}`,
+    shelfEvidence: getShelfEvidence(`barbora:${product.slug}`),
     retailerProductId: product.slug,
     brand: product.brand,
     name: product.title,

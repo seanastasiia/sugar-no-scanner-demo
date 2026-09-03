@@ -1,5 +1,6 @@
 import { scoreBarboraProduct } from "@/lib/scoring";
 import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
+import { barboraShelfEvidence } from "./personal-shelf-parser";
 import {
   getBarboraProductBySlug,
   normalizeRetailText,
@@ -81,6 +82,7 @@ export function barboraPageToScoredProduct(
   const retailerUrl = `https://barbora.lv/produkti/${product.Url}`;
   const record: ProductRecord = {
     id: `barbora:${product.Url}`,
+    shelfEvidence: barboraShelfEvidence(product, checkedAt),
     retailerProductId: product.Url,
     brand: product.brand_name || "Barbora",
     name: product.title,

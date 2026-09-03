@@ -1,0 +1,108 @@
+import { describe, expect, it } from "vitest";
+import { analyzeIngredients, assessPersonalShelfProduct, rankPersonalShelfProducts, shelfCategory, splitIngredients, SHELF_CATEGORIES } from "./personal-shelf-rank";
+import { scoreBarboraProduct } from "./scoring";
+import { shelfFixture } from "../../tests/fixtures/personal-shelf";
+
+describe("Personal Shelf Rank, independent pilot", () => {
+  it("uses normalized category weights totaling 100", () => {
+    for (const config of Object.values(SHELF_CATEGORIES)) {
+      expect(Object.values(config.weights).reduce((a, b) => a + b, 0)).toBe(100);
+      expect(Object.values(config.balance).reduce((a, b) => a + b, 0)).toBeCloseTo(1);
+    }
+  });
+  it("produces a fixed score with transparent points, without changing legacy Fit", () => {
+    const product = shelfFixture();
+    const before = structuredClone(product);
+    const assessment = assessPersonalShelfProduct(product);
+    expect(assessment.score).toBe(77);
+    expect(assessment.components.reduce((n, p) => n + p.points, 0)).toBeCloseTo(77.4);
+    expect(product).toEqual(before);
+    expect(scoreBarboraProduct(product).matchScore).toBe(scoreBarboraProduct({ ...product, shelfEvidence: null }).matchScore);
+  });
+  it.each(["energyKcal", "proteinG", "totalSugarG", "fiberG", "saltG", "saturatedFatG", "ingredientsText"] as const)("does not score missing %s", (key) => {
+    const result = assessPersonalShelfProduct(shelfFixture("qa", { [key]: null }));
+    expect(result.status).toBe("missing_data");
+    expect(result.score).toBeNull();
+  });
+  it.each([NaN, Infinity, -1, 101])("rejects invalid nutrient %s", (saltG) => {
+    expect(assessPersonalShelfProduct(shelfFixture("qa", { saltG })).score).toBeNull();
+  });
+  it("does not require or award optional fiber in yogurt", () => {
+    const p = shelfFixture("qa", { category: "Yogurt", ingredientsText: "Milk, cultures", fiberG: null, energyKcal: 100 });
+    const a = assessPersonalShelfProduct(p);
+    const b = assessPersonalShelfProduct({ ...p, shelfEvidence: { ...p.shelfEvidence!, fiberG: 20 } });
+    expect(a.status).toBe("scored");
+    expect(a.score).toBe(b.score);
+  });
+  it("keeps zero distinct from missing and rejects inconsistent energy", () => {
+    expect(assessPersonalShelfProduct(shelfFixture("qa", { saltG: 0, saturatedFatG: 0, totalSugarG: 0 })).status).toBe("scored");
+    expect(assessPersonalShelfProduct(shelfFixture("qa", { proteinG: 90, energyKcal: 10 })).score).toBeNull();
+  });
+  it.each([{ totalSugarG: 30 }, { saltG: 2 }, { saturatedFatG: 6 }])("protein does not cancel a high limiting nutrient", (overrides) => {
+    const a = assessPersonalShelfProduct(shelfFixture("qa", { ...overrides, proteinG: 50, fiberG: 10, ingredientsText: "Wholegrain oats, salt" }));
+    expect(a.score).toBeLessThanOrEqual(59);
+    expect(a.cap).toContain("59/100");
+  });
+  it("recognizes source categories and refuses ambiguous/drink/unknown categories", () => {
+    expect(shelfCategory("Maistas > Užkandžiai > Traškučiai")).toBe("chips");
+    expect(shelfCategory("Piena produkti/Jogurti un deserti/Jogurts ar piedevām")).toBe("yogurt");
+    expect(shelfCategory("Snack bars and cookies")).toBeNull();
+    expect(shelfCategory("Dzeramais jogurts")).toBeNull();
+    expect(shelfCategory("Grocery")).toBeNull();
+  });
+  it("separates categories, excludes missing values from denominator and shares ties", () => {
+    const a = shelfFixture("a"); const b = shelfFixture("b");
+    const c = shelfFixture("c", { saltG: 1 });
+    const missing = shelfFixture("d", { saltG: null });
+    const yogurt = shelfFixture("y", { category: "Yogurt", ingredientsText: "Milk, cultures" });
+    const input = [a, b, c, missing, yogurt];
+    const ranked = rankPersonalShelfProducts(input);
+    const chips = ranked.groups.find((g) => g.category === "chips")!;
+    expect(chips.scoredCount).toBe(3);
+    expect(chips.total).toBe(4);
+    expect(chips.entries.map((e) => e.rank)).toEqual([1, 1, 3, null]);
+    expect(chips.entries[0].tied).toBe(true);
+    expect(ranked.groups.find((g) => g.category === "yogurt")!.entries[0].rank).toBeNull();
+    expect(rankPersonalShelfProducts([...input].reverse())).toEqual(ranked);
+  });
+  it("deduplicates the same SKU and never uses translated marketing names as scoring input", () => {
+    const p = shelfFixture();
+    const translated = { ...p, name: "Картофельные чипсы", shortName: "Чипсы", aliases: ["Bulvių traškučiai"] };
+    expect(assessPersonalShelfProduct(translated)).toEqual(assessPersonalShelfProduct(p));
+    expect(rankPersonalShelfProducts([p, translated]).groups[0].total).toBe(1);
+  });
+  it("requires the exact product and a supported language", () => {
+    expect(assessPersonalShelfProduct(shelfFixture("a", { productId: "b" })).score).toBeNull();
+    expect(assessPersonalShelfProduct(shelfFixture("a", { ingredientsLanguage: "xx" })).score).toBeNull();
+    expect(assessPersonalShelfProduct(shelfFixture("a", { nutritionBasis: "100ml" })).score).toBeNull();
+    expect(assessPersonalShelfProduct(shelfFixture("a", { sourceUrl: "https://barbora.lv.evil.example/qa" })).score).toBeNull();
+    expect(assessPersonalShelfProduct(shelfFixture("a", { sourceUrl: "javascript:alert(1)" })).score).toBeNull();
+    expect(assessPersonalShelfProduct(shelfFixture("a", { category: "Yogurt", ingredientsText: "BIEZPIENS, jogurts", ingredientsLanguage: "lv" })).missing).toContain("unambiguous product type");
+  });
+  it("does not change with price, no-added-sugar marketing or extra E-numbers", () => {
+    const p = shelfFixture();
+    const changed = { ...p, price: 999, noAddedSugarClaim: true, shelfEvidence: { ...p.shelfEvidence!, ingredientsText: "Potatoes, sunflower oil, salt, E300, E440" } };
+    expect(assessPersonalShelfProduct(changed).score).toBe(assessPersonalShelfProduct(p).score);
+  });
+});
+
+describe("bounded multilingual ingredient evidence", () => {
+  it.each([["en", "Potatoes, sunflower oil, salt"], ["lv", "Kartupeļi, saulespuķu eļļa, sāls"], ["lt", "Sudedamosios dalys: bulvės, saulėgrąžų aliejus, druska"], ["ru", "Состав: картофель, подсолнечное масло, соль"], ["et", "Koostisosad: kartul, päevalilleõli, sool"]])("matches equivalent %s ingredient bases", (language, text) => {
+    expect(analyzeIngredients(text, language)?.score).toBe(75);
+  });
+  it("does not split percentages or compound ingredient lists", () => {
+    expect(splitIngredients("Milk, fruit 12,5% (fruit, sugar), cultures")).toHaveLength(3);
+    expect(analyzeIngredients("Milk, fruit (sugar, raspberries), cultures", "en")?.score).toBe(40);
+  });
+  it("unknown first ingredient stays unknown, absence of sugar does not prove no added sugar", () => {
+    expect(analyzeIngredients("Mystery base, salt", "en")?.score).toBeNull();
+    expect(analyzeIngredients("Milk, cultures", "en")).not.toHaveProperty("noAddedSugar");
+  });
+  it("does not confuse extracted starch, protein or oil with the whole food", () => {
+    expect(analyzeIngredients("Potato starch, salt", "en")?.score).toBe(25);
+    expect(analyzeIngredients("Chickpea protein, salt", "en")?.score).toBe(25);
+    expect(analyzeIngredients("Milk protein, cultures", "en")?.score).toBe(25);
+    expect(analyzeIngredients("Kokosriekstu eļļa, sāls", "lv")?.score).toBeNull();
+    expect(analyzeIngredients("Wholegrain flour, salt", "en")?.score).toBe(100);
+  });
+});
