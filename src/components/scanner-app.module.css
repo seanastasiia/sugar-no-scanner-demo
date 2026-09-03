@@ -162,9 +162,9 @@
   line-height: 17px;
   text-align: center;
 }
-/* Shared app buttons: the white gradient rim is a masked border, so the fill
-   underneath remains the same black gradient all the way to the outer edge. */
+/* Shared app buttons: a masked white gradient rim preserves the fill beneath. */
 .primaryButton,
+.scanAgainButton,
 .onboardingPrimary,
 .backToLive,
 .onlineOfferAction,
@@ -190,6 +190,7 @@
     transform 160ms ease;
 }
 .primaryButton::before,
+.scanAgainButton::before,
 .onboardingPrimary::before,
 .backToLive::before,
 .onlineOfferAction::before,
@@ -215,14 +216,13 @@
   opacity: 0.45;
 }
 .primaryButton:active,
+.scanAgainButton:active,
 .onboardingPrimary:active,
 .backToLive:active,
 .onlineOfferAction:active {
   transform: scale(0.985);
 }
 .secondaryButton,
-.scanAgainButton,
-.sheetActions button,
 .nutritionSource {
   display: inline-flex;
   min-height: 44px;
@@ -622,13 +622,19 @@
 }
 .sheetActions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   order: 3;
   margin-top: 12px;
 }
+.sheetActions button {
+  min-width: 0;
+  padding-inline: 16px;
+  white-space: nowrap;
+  letter-spacing: 0.25px;
+}
 .sheetActions button svg {
-  display: none;
+  flex: none;
 }
 .sheetPreview {
   display: grid;
@@ -738,6 +744,8 @@
 .scanAgainButton {
   width: auto;
   flex: none;
+  background: linear-gradient(180deg, var(--accent), #9bc7f5);
+  box-shadow: none;
 }
 .rankingSection {
   margin-bottom: 16px;
@@ -1481,17 +1489,21 @@
 }
 @media (hover: hover) {
   .primaryButton:hover,
+  .scanAgainButton:hover,
   .onboardingPrimary:hover,
   .backToLive:hover,
   .onlineOfferAction:hover {
     opacity: 0.9;
   }
-  .secondaryButton:hover,
-  .sheetActions button:hover {
+  .secondaryButton:hover {
     background: #e4f2ff;
   }
 }
 @media (max-width: 360px) {
+  .sheetActions button {
+    padding-inline: 12px;
+    font-size: 15px;
+  }
   .onboarding,
   .sheetContent {
     padding-inline: 16px;

@@ -21,6 +21,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: Scan again and View all still used flat white secondary buttons.** Matched the supplied Figma action pair: blue gradient with a left refresh icon for Scan again, black gradient for View all, and the shared app rim. Removed the rule hiding icons in the compact action row; narrow-phone spacing stays contained.
+
 - **2026-09-03: The live camera was boxed below a light header and repeated the automatic-scan explanation.** The feed now fills the viewport behind the white logo and dark controls. Preview and held frame share centered cover geometry; outlines follow that crop, while capture still uses the complete source frame. The redundant caption is removed, and photo/demo layouts remain contained.
 
 - **2026-09-03: Better alternatives lost their side gutters and clipped cards on iPhone.** The horizontal carousel had negative margins outside the comparison content. Alternatives now use a contained responsive grid: one column on phones, two where the result pane is wide enough. Names wrap, and every retailer button remains inside its card. Both ranked-list and product-detail placements are checked at narrow and wide widths.

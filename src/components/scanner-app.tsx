@@ -1764,10 +1764,11 @@ export function ScannerApp() {
                   })}
                 </div>
                 <div className={styles.sheetActions}>
-                  <button type="button" onClick={source === "camera" ? scanAgain : startCamera} aria-label="Scan again">
+                  <button className={styles.scanAgainButton} type="button" onClick={source === "camera" ? scanAgain : startCamera} aria-label="Scan again">
+                    <RefreshCw aria-hidden="true" size={20} />
                     <span>Scan again</span>
                   </button>
-                  <button type="button" onClick={openResults} aria-controls="scan-results-content">
+                  <button className={styles.primaryButton} type="button" onClick={openResults} aria-controls="scan-results-content">
                     <span>View all</span>
                   </button>
                 </div>
@@ -1791,7 +1792,7 @@ export function ScannerApp() {
                       type="button"
                       onClick={source === "camera" ? scanAgain : startCamera}
                     >
-                      <RefreshCw aria-hidden="true" size={16} /> Scan again
+                      <RefreshCw aria-hidden="true" size={20} /> Scan again
                     </button>
                   </div>
                 ) : null}

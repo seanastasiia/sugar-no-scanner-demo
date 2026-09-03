@@ -11,6 +11,7 @@ Source: the user's approved `/Users/anastasiia/Documents/untitled.pen`, saved 3 
 | Ink / muted | `#262626` / `#60606A` |
 | Action blue / retry coral | `#0A84FF` / `#F14E58` |
 | Primary button | 56 px minimum; pill; `#1A1A1A → #4D4D4D`; white → 2% white → white diagonal rim, 1.5 px; black 13% shadow, y 3.246 / blur 19.478 |
+| Scan again | `#0A84FF → #9BC7F5`; shared 1.5 px white gradient rim; 20 px white refresh icon on the left; 56 px minimum height |
 | Secondary action | White pill, blue label, 44 px minimum |
 | Fit chip | Compact 24 px with 12 px label (`Moderate`); regular 30 px, radius 24, padding 4/8, 15/22 semibold rounded; white gradient rim 1.25 px |
 | Great / Moderate / Low | `#50D671 → #2DBC51` / `#FFC917 → #FF7701` / `#F17E5B → #F93A00` |
@@ -45,6 +46,8 @@ Runtime content can be longer or use a different source/price than the static ex
 Owner camera correction, 3 September 2026: live video fills the browser content area behind a transparent header and white logo. Dark overlay pills keep feedback, Show demo and one bottom status readable, with safe-area insets. Remove the secondary “The scan starts…” caption. Recovery and expanded results retain the light theme.
 
 Owner correction, 3 September 2026: rated camera/photo overlays use colored outlines and icon discs only. Do not show a floating fit-text pill, even on the selected product. Keep the full fit label in the accessible marker name and result cards.
+
+Owner action correction, 3 September 2026: use the button finishes from Figma `15128:89227` (meal details footer). Compact Scan again is blue with a refresh icon; View all uses the black primary gradient. Keep both labels white, a 12 px gap and equal flexible columns so Scan again fits. At widths up to 360 px use 15 px labels and 12 px horizontal padding.
 
 Better alternatives stay inside the same content gutters as the surrounding cards. Use a single column on phones and two columns when at least 492 px is available; no negative side margins or horizontally clipped product cards. Wrap long names and headings.
 
