@@ -13,6 +13,7 @@ describe("ordinary Shelf demo personal ranking", () => {
   it("covers exactly the four existing scene products with whole exact observations", () => {
     expect(sampleResponse("sample-shelf")?.map((d) => d.productId).sort()).toEqual(demo.map((p) => p.id).sort());
     expect(observations).toHaveLength(4);
+    expect(demo.map((p) => shelfDemoPersonalProduct(p).shortName)).toEqual(["Salty Peanut", "Lemon Cheesecake", "Cookie Bliss", "Coco Choco"]);
     for (const product of demo) {
       const prepared = shelfDemoPersonalProduct(product);
       expect(prepared.id).toBe(`barbora:${product.id}`);

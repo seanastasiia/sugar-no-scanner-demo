@@ -1,4 +1,4 @@
-import { writeFile } from "node:fs/promises";
+import { mkdir, rename, writeFile } from "node:fs/promises";
 import { SHELF_DEMO_PRODUCTS } from "../src/lib/shelf-demo-products";
 import { assessPersonalShelfProduct, normalizeIngredientText, type ShelfEvidence } from "../src/lib/personal-shelf-rank";
 import { parseBarboraProductPage } from "../src/server/barbora-catalog";
@@ -33,5 +33,8 @@ for (const spec of SHELF_DEMO_PRODUCTS) {
   await new Promise((done) => setTimeout(done, 700));
 }
 // All-or-nothing: a failed source never replaces the last complete demo snapshot.
-await writeFile("data/shelf-demo-evidence.generated.json", JSON.stringify(rows, null, 2) + "\n");
+await mkdir(".catalog-sync", { recursive: true });
+const pendingFile = `.catalog-sync/shelf-demo-evidence-${process.pid}.json`;
+await writeFile(pendingFile, JSON.stringify(rows, null, 2) + "\n");
+await rename(pendingFile, "data/shelf-demo-evidence.generated.json");
 console.log(JSON.stringify({ written: rows.length }));

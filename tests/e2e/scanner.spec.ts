@@ -850,7 +850,13 @@ test("ordinary Shelf demo rates all four bars in Personal Shelf without evidence
   await expect(personal.getByRole("heading", { name: "Cookies & wafers", exact: true })).toHaveCount(0);
   await expect(personal.locator("h4")).toHaveCount(4);
   await expect(personal.locator("img")).toHaveCount(4);
-  await expect.poll(() => personal.locator("img").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
+  for (const image of await personal.locator("img").all()) {
+    // Off-screen cards use native lazy loading; inspect each when it enters view.
+    await image.scrollIntoViewIfNeeded();
+    await expect(image).toHaveAttribute("src", /demo-products/);
+    await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).complete && (element as HTMLImageElement).naturalWidth > 0)).toBe(true);
+  }
+  await personal.getByRole("heading", { name: "Snack bars", exact: true }).scrollIntoViewIfNeeded();
   await expect(personal.getByText("Provisional #1 of 4 in snack bars", { exact: true })).toHaveCount(4);
   await expect(personal.getByText("Provisional · fiber unknown", { exact: true })).toHaveCount(4);
   await expect(personal.getByRole("img", { name: "Not scored", exact: true })).toHaveCount(0);
@@ -2604,7 +2610,8 @@ test("saved-photo recovery retries the same prepared image without reopening the
   await unlock(page);
   await chooseSavedPhoto(page);
   await expect(page.getByRole("heading", { name: "Read a saved photo", exact: true })).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("Reading the full image and close-up sections");
+  // This one-pixel fixture submits one image, not the tiled large-photo path.
+  await expect(page.getByRole("status")).toContainText("Reading visible products");
   await expect(page.getByText("Photos are not saved.", { exact: true })).toHaveCount(0);
   await expect.poll(() => Boolean(finishFirstRead)).toBe(true);
   await page.screenshot({ path: test.info().outputPath("saved-photo-without-footer.png"), animations: "disabled" });

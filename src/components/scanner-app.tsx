@@ -1819,7 +1819,8 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
                     unidentifiedCount={visibleTrayIds.filter((id) => !products[id]?.product).length}
                     thumbnail={(id) => {
                       const sourceId = source === "sample-shelf" ? shelfDemoOriginalId(id) : id;
-                      return <ProductThumbnail imageUrl={products[sourceId]?.product.imageUrl} sceneImageUrl={sceneImageUrl} sceneDimensions={mediaDimensions} detection={detectionById[sourceId]} sizes="48px" targetAspect={48 / 60} />;
+                      const item = products[sourceId]?.product;
+                      return <ProductThumbnail imageUrl={source === "sample-shelf" && item ? productDisplayImage(item) : item?.imageUrl} sceneImageUrl={sceneImageUrl} sceneDimensions={mediaDimensions} detection={detectionById[sourceId]} sizes="48px" targetAspect={48 / 60} />;
                     }}
                   />
                 ) : null}
