@@ -81,6 +81,7 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
 test("rating demo is reachable from Show demo and can return to the unchanged scanner", async ({ page }) => {
   await observeCamera(page);
   await page.goto("/");
+  await page.getByRole("button", { name: "Open camera", exact: true }).click();
   await expect(page.getByRole("button", { name: "Enable camera", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Show demo", exact: true }).click();
   const entry = page.getByRole("link", { name: "New rating demo 6 real products with scores and ingredients", exact: true });
@@ -94,7 +95,7 @@ test("rating demo is reachable from Show demo and can return to the unchanged sc
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expect(page.getByRole("button", { name: "Enable camera", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Show demo", exact: true }).click();
-  await page.getByRole("button", { name: "Shelf demo Compare several products at once", exact: true }).click();
+  await page.getByRole("button", { name: /^Shelf demo/ }).click();
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("switch", { name: "Personal Shelf Rank Pilot", exact: true })).not.toBeChecked();
   await expect(page.getByRole("heading", { name: "Best fit first", exact: true })).toBeVisible();

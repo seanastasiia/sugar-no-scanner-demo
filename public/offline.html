@@ -2,22 +2,123 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f2ede4" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f2f2f7" />
     <title>Sugar.no Scanner is offline</title>
     <style>
-      body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; box-sizing: border-box; background: #f2ede4; color: #111; font: 16px/1.5 system-ui, sans-serif; }
-      main { width: min(100%, 420px); padding: 28px; border-radius: 24px; background: #fffdf8; }
-      h1 { margin: 12px 0; font-size: 36px; line-height: 1; }
-      p { color: #655d55; }
-      button { min-height: 48px; padding: 10px 18px; border: 0; border-radius: 13px; background: #111; color: #fff; font: inherit; font-weight: 700; }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        min-height: 100vh;
+        min-height: 100dvh;
+        margin: 0;
+        padding: max(24px, env(safe-area-inset-top)) 24px
+          max(24px, env(safe-area-inset-bottom));
+        background: #f2f2f7;
+        color: #262626;
+        font:
+          500 16px/22px -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+      main {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        min-height: calc(100dvh - 48px);
+        width: min(100%, 402px);
+        margin: auto;
+      }
+      .logo {
+        width: 137px;
+        height: auto;
+        filter: brightness(0);
+        opacity: 0.85;
+      }
+      section {
+        margin-block: auto;
+        padding: 28px 20px;
+        border-radius: 32px;
+        background: #fff;
+        text-align: center;
+      }
+      .icon {
+        display: grid;
+        place-items: center;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        border-radius: 28px;
+        background: #e4f2ff;
+        color: #0a84ff;
+      }
+      h1 {
+        margin: 0;
+        font:
+          700 28px/32px ui-rounded,
+          system-ui,
+          sans-serif;
+      }
+      p {
+        margin: 20px 0 0;
+        color: #60606a;
+      }
+      button {
+        position: relative;
+        flex: none;
+        min-height: 56px;
+        width: 100%;
+        padding: 12px 20px;
+        border: 1.5px solid #ffffff9a;
+        border-radius: 999px;
+        background: linear-gradient(#1a1a1a, #4d4d4d);
+        box-shadow: 0 3px 19px #00000021;
+        color: #fff;
+        font:
+          600 17px/22px ui-rounded,
+          system-ui,
+          sans-serif;
+        cursor: pointer;
+      }
+      button:focus-visible {
+        outline: 3px solid #0064c8;
+        outline-offset: 3px;
+      }
     </style>
   </head>
   <body>
     <main>
-      <strong>Sugar<span style="color:#e8614a">.no</span></strong>
-      <h1>Recognition is paused.</h1>
-      <p>The camera can stay private, but product matching needs a connection.</p>
+      <img
+        class="logo"
+        src="/brand/sugar-no-logo-white.svg"
+        alt="Sugar.no"
+        width="137"
+        height="26"
+      />
+      <section>
+        <span class="icon" aria-hidden="true"
+          ><svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="m2 2 20 20M8.5 16.5a5 5 0 0 1 7 0M12 20h.01M5 12.5a10 10 0 0 1 5.5-2.4M2 8.5A16 16 0 0 1 6 6M9.5 4.5A16 16 0 0 1 22 8.5M14 10a10 10 0 0 1 5 2.5"
+            /></svg
+        ></span>
+        <h1>You’re offline</h1>
+        <p>Check your connection, then try again.</p>
+      </section>
       <button onclick="location.reload()">Try again</button>
     </main>
   </body>

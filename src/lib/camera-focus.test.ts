@@ -69,6 +69,19 @@ describe("camera focus crop", () => {
     expect(mapBoxToObjectCover(box, { width: 750, height: 1624 }, { width: 375, height: 812 })).toEqual(box);
   });
 
+  it("collapses fully cropped boxes so the camera can omit off-screen markers", () => {
+    const left = mapBoxToObjectCover(
+      { x: 0, y: 0.2, width: 0.1, height: 0.4 },
+      { width: 1920, height: 1080 }, { width: 375, height: 812 }
+    );
+    expect(left.width).toBe(0);
+    const top = mapBoxToObjectCover(
+      { x: 0.3, y: 0, width: 0.4, height: 0.1 },
+      { width: 640, height: 960 }, { width: 874, height: 402 }
+    );
+    expect(top.height).toBe(0);
+  });
+
   it("keeps a complete landscape camera frame visible inside a portrait stage", () => {
     const mapped = mapBoxToObjectContain(
       { x: 0.25, y: 0.2, width: 0.5, height: 0.4 },

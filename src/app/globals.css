@@ -1,13 +1,13 @@
 :root {
-  /* Sugar.no app surfaces, matched to the supplied iOS product screenshots on 2026-08-26. */
-  --canvas: #f3f4f8;
+  /* Approved Pen tokens. Apple fonts are resolved on-device, never redistributed. */
+  --canvas: #f2f2f7;
   --surface: #ffffff;
-  --surface-tinted: #f5f5f7;
+  --surface-tinted: #f2f2f7;
   --surface-accent: #eceef3;
   --scanner-canvas: #11131f;
-  --ink: #11131f;
-  --ink-strong: #14151e;
-  --muted: #69696f;
+  --ink: #262626;
+  --ink-strong: #262626;
+  --muted: #60606a;
   --muted-subtle: #8e8e93;
   --accent: #0a84ff;
   --action-primary: #0066cc;
@@ -19,8 +19,8 @@
   --border: #e8e9ef;
   --focus: #0a84ff;
   --shadow: 0 18px 48px rgb(17 19 31 / 8%);
-  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: "Inter Tight", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
 
   /* Backwards-compatible aliases while the proof of concept is still CSS-module based. */
   --cream: var(--canvas);
@@ -43,7 +43,7 @@ body {
   min-width: 320px;
   min-height: 100dvh;
   margin: 0;
-  background: linear-gradient(180deg, #fbfcff 0%, var(--canvas) 34%, var(--canvas) 100%);
+  background: var(--canvas);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 16px;
@@ -53,7 +53,8 @@ body {
 
 button,
 a,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -74,8 +75,9 @@ a {
   justify-content: center;
   gap: 9px;
   border: 0;
-  border-radius: 14px;
-  font-weight: 800;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -198,47 +200,6 @@ a {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --canvas: #16171c;
-    --surface: #232429;
-    --surface-tinted: #2b2c32;
-    --surface-accent: #232429;
-    --scanner-canvas: #101116;
-    --ink: #ffffff;
-    --ink-strong: #ffffff;
-    --muted: #b1b1b6;
-    --muted-subtle: #8e8e93;
-    --accent: #409cff;
-    --accent-deep: #ffffff;
-    --accent-soft: #252a31;
-    --border: rgb(255 255 255 / 12%);
-    --focus: #409cff;
-    --cream: var(--canvas);
-    --cream-raised: var(--surface);
-  }
-
-  html {
-    background: var(--canvas);
-    color-scheme: dark;
-  }
-
-  body {
-    background: var(--canvas);
-    color: var(--ink);
-  }
-
-  .button-primary {
-    background: var(--surface);
-    color: var(--ink-strong);
-  }
-
-  .eyebrow {
-    background: var(--surface-accent);
-    color: var(--accent-deep);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -248,4 +209,9 @@ a {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Keep the approved normal palette and respect the OS accessibility setting. */
+@media (prefers-contrast: more) {
+  :root { --accent: #0064c8; --focus: #0064c8; }
 }

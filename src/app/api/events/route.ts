@@ -1,17 +1,27 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { sendAmplitudeEvent } from "@/server/amplitude";
 import { classifyUserAgent, metadataIsSafe } from "@/server/event-privacy";
 import { readBoundedJson } from "@/server/request-body";
 import { hasTrustedBrowserOrigin } from "@/server/request-origin";
 import { createRecognitionRateLimiter, recognitionClientKey } from "@/server/rate-limit";
 import { getSupabaseAdmin } from "@/server/supabase";
 
-const eventsRateLimiter = createRecognitionRateLimiter({ RECOGNITION_RATE_LIMIT: "120" });
+const eventsRateLimiter = createRecognitionRateLimiter({ RECOGNITION_RATE_LIMIT: "300" });
 
 const eventSchema = z.object({
   sessionId: z.uuid(),
   name: z.enum([
+    "app_opened",
+    "onboarding_started",
+    "onboarding_step_viewed",
+    "onboarding_completed",
+    "onboarding_skipped",
+    "camera_permission_requested",
+    "camera_permission_granted",
+    "feedback_opened",
+    "feedback_submitted",
     "scan_started",
     "scan_completed",
     "result_opened",
@@ -55,13 +65,19 @@ export async function POST(request: Request) {
       { status: 400, headers: { "cache-control": "no-store" } }
     );
   }
+  const eventMetadata = parsed.data.productId
+    ? { ...parsed.data.metadata, observedProductId: parsed.data.productId }
+    : parsed.data.metadata;
   const row = {
     id: randomUUID(),
     session_id: parsed.data.sessionId,
     event_name: parsed.data.name,
     source: parsed.data.source,
-    product_id: parsed.data.productId || null,
-    metadata: parsed.data.metadata
+    // This column references the managed products table. Visual, retailer and
+    // deterministic demo identities are valid analytics context but are not
+    // guaranteed to be managed-product IDs, so keep them in bounded metadata.
+    product_id: null,
+    metadata: eventMetadata
   };
   const supabase = getSupabaseAdmin();
   if (supabase) {
@@ -92,11 +108,34 @@ export async function POST(request: Request) {
         .update({ completed_at: new Date().toISOString() })
         .eq("id", parsed.data.sessionId);
     }
-    return NextResponse.json({ ok: true, storage: "supabase" }, { headers: { "cache-control": "no-store" } });
+    const amplitude = await sendAmplitudeEvent({
+      id: row.id,
+      sessionId: row.session_id,
+      name: row.event_name,
+      source: row.source,
+      metadata: row.metadata
+    });
+    if (amplitude === "failed") {
+      console.warn(JSON.stringify({ event: "amplitude_delivery_failed", eventName: row.event_name }));
+    }
+    return NextResponse.json(
+      { ok: true, storage: "supabase", analytics: amplitude },
+      { headers: { "cache-control": "no-store" } }
+    );
   }
   console.info(JSON.stringify({ event: "scan_event", ...row }));
+  const amplitude = await sendAmplitudeEvent({
+    id: row.id,
+    sessionId: row.session_id,
+    name: row.event_name,
+    source: row.source,
+    metadata: row.metadata
+  });
+  if (amplitude === "failed") {
+    console.warn(JSON.stringify({ event: "amplitude_delivery_failed", eventName: row.event_name }));
+  }
   return NextResponse.json(
-    { ok: true, storage: "structured_log" },
+    { ok: true, storage: "structured_log", analytics: amplitude },
     { headers: { "cache-control": "no-store" } }
   );
 }

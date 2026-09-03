@@ -3,17 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowUpRight,
   Camera,
+  CameraOff,
   Check,
   ChevronDown,
+  WifiOff,
   CircleAlert,
   FileImage,
   Hand,
   Info,
   Layers3,
-  LoaderCircle,
   List,
+  LoaderCircle,
   RefreshCw,
   ScanLine,
   ShoppingBasket,
@@ -22,12 +23,7 @@ import {
   X
 } from "lucide-react";
 import { ChangeEvent, type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  mapBoxToObjectCover,
-  mapBoxToObjectContain,
-  remapRecognitionFromCrop,
-  type MediaDimensions
-} from "@/lib/camera-focus";
+import { mapBoxToObjectContain, mapBoxToObjectCover, remapRecognitionFromCrop, type MediaDimensions } from "@/lib/camera-focus";
 import {
   globalBestProductId,
   overlayMatchPresentation,
@@ -51,9 +47,16 @@ import {
 } from "@/lib/live-camera-tracking";
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
+import { productDisplayName, productDisplayImage } from "@/lib/product-display";
 import { compactNutritionLabel } from "@/lib/nutrition-display";
 import { PersonalShelfResults, ShelfRankToggle } from "./personal-shelf-results";
-import { retailerOfferKey } from "@/lib/online-offer";
+import { isExactOnlineSaving, retailerOfferKey } from "@/lib/online-offer";
+import {
+  readOnboardingCompletion,
+  readPilotSession,
+  saveOnboardingCompletion,
+  savePilotSession
+} from "@/lib/pilot-session";
 import { mapWithConcurrency, mergeProgressiveEnrichment } from "@/lib/product-enrichment";
 import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import { compareFairCohorts } from "@/lib/scoring";
@@ -77,10 +80,38 @@ import {
   type ProductPayload
 } from "./scanner-results";
 import { CheckoutScene, ShelfScene } from "./scanner-scenes";
+import { FeedbackDialog } from "./feedback-dialog";
+import { PilotOnboarding } from "./pilot-onboarding";
 import styles from "./scanner-app.module.css";
 
 type CameraState = "idle" | "requesting" | "live" | "denied" | "error";
-type RecognitionState = "idle" | "scanning" | "matched" | "retained" | "not_sure" | "unavailable" | "rate_limited" | "error";
+type RecognitionState =
+  | "idle"
+  | "scanning"
+  | "matched"
+  | "retained"
+  | "not_sure"
+  | "unavailable"
+  | "rate_limited"
+  | "error";
+type OnboardingState = "loading" | "showing" | "complete";
+type PilotEventName =
+  | "app_opened"
+  | "onboarding_started"
+  | "onboarding_step_viewed"
+  | "onboarding_completed"
+  | "onboarding_skipped"
+  | "camera_permission_requested"
+  | "camera_permission_granted"
+  | "feedback_opened"
+  | "feedback_submitted"
+  | "scan_started"
+  | "scan_completed"
+  | "result_opened"
+  | "alternative_viewed"
+  | "retailer_link_clicked"
+  | "permission_denied"
+  | "recognition_failed";
 
 const CAMERA_AUTOFOCUS_SETTLE_MS = 320;
 const CAMERA_INITIAL_SCAN_DELAY_MS = 1_500;
@@ -91,6 +122,7 @@ const CAMERA_FORCE_CAPTURE_MS = 1_250;
 const CAMERA_MIN_EDGE_SCORE = 4.1;
 const CAMERA_SAMPLE_WIDTH = 96;
 const CAMERA_SAMPLE_HEIGHT = 72;
+const ONBOARDING_VERSION = 4;
 
 interface NativeBarcodeDetector {
   detect(source: ImageBitmapSource): Promise<Array<{ rawValue?: string }>>;
@@ -213,9 +245,11 @@ function ProductThumbnail({
 
 function trapFocus(event: KeyboardEvent, container: HTMLElement) {
   if (event.key !== "Tab") return;
-  const focusable = [...container.querySelectorAll<HTMLElement>(
-    'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-  )].filter((element) => !element.hasAttribute("inert") && element.offsetParent !== null);
+  const focusable = [
+    ...container.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+  ].filter((element) => !element.hasAttribute("inert") && element.offsetParent !== null);
   if (!focusable.length) {
     event.preventDefault();
     container.focus();
@@ -235,6 +269,7 @@ function trapFocus(event: KeyboardEvent, container: HTMLElement) {
 export function ScannerApp({ personalRankAvailable = true }: { personalRankAvailable?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const uploadFramesRef = useRef<PreparedUploadFrame[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const scanTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scanKickoffRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -258,8 +293,10 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   const demoDialogRef = useRef<HTMLDivElement>(null);
   const demoTriggerRef = useRef<HTMLButtonElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const resultReturnTriggerRef = useRef("view-all");
   const manualSelectionRef = useRef(false);
   const cameraRequestRef = useRef(0);
+  const cameraStartedFromOnboardingRef = useRef(false);
   const productFetchesRef = useRef(new Set<string>());
   const barcodeDetectorRef = useRef<NativeBarcodeDetector | null | undefined>(undefined);
 
@@ -279,28 +316,29 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   const [statusMessage, setStatusMessage] = useState("Ready when you are");
   const [resultLocked, setResultLocked] = useState(false);
   const [resultsExpanded, setResultsExpanded] = useState(false);
+  const [productDetailsOpen, setProductDetailsOpen] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
   const [stageDimensions, setStageDimensions] = useState<MediaDimensions | null>(null);
   const [mediaDimensions, setMediaDimensions] = useState<MediaDimensions | null>(null);
   const [networkOnline, setNetworkOnline] = useState(true);
   const [trackingTranslation, setTrackingTranslation] = useState<FrameTranslation | null>(null);
   const [candidateBoxes, setCandidateBoxes] = useState<CameraCandidateBox[]>([]);
+  const [onboardingState, setOnboardingState] = useState<OnboardingState>("loading");
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const feedbackFocusRef = useRef<HTMLButtonElement>(null);
+  const [pilotSessionId, setPilotSessionId] = useState("");
 
   const ensureSession = useCallback(() => {
-    if (!sessionIdRef.current) sessionIdRef.current = makeSessionId();
+    if (!sessionIdRef.current) {
+      sessionIdRef.current = readPilotSession(window.sessionStorage) || makeSessionId();
+      savePilotSession(window.sessionStorage, sessionIdRef.current);
+    }
     return sessionIdRef.current;
   }, []);
 
   const track = useCallback(
     (
-      name:
-        | "scan_started"
-        | "scan_completed"
-        | "result_opened"
-        | "alternative_viewed"
-        | "retailer_link_clicked"
-        | "permission_denied"
-        | "recognition_failed",
+      name: PilotEventName,
       eventSource: ScanSource,
       productId?: string,
       metadata: Record<string, string | number | boolean | null> = {}
@@ -362,7 +400,8 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
             });
             if (!response.ok || controller.signal.aborted || requestRevision !== cameraRequestRef.current) return;
             const result = (await response.json()) as RecognitionEnrichmentResponse;
-            if (controller.signal.aborted || requestRevision !== cameraRequestRef.current || !result.detections.length) return;
+            if (controller.signal.aborted || requestRevision !== cameraRequestRef.current || !result.detections.length)
+              return;
             const enrichedDetection = mergeEnrichedDetections([initialDetection], result.detections)[0];
             if (!enrichedDetection) return;
             if (enrichedDetection.inlineProduct) {
@@ -380,11 +419,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
               ).slice(0, MAX_SCAN_PRODUCTS)
             );
             setTray((current) => [
-              ...new Set(
-                current.map((id) =>
-                  id === initialDetection.productId ? enrichedDetection.productId : id
-                )
-              )
+              ...new Set(current.map((id) => (id === initialDetection.productId ? enrichedDetection.productId : id)))
             ]);
             setSelectedId((current) =>
               current === initialDetection.productId ? enrichedDetection.productId : current
@@ -396,9 +431,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
                 : null);
             if (catalogId) void hydrateProducts([catalogId]);
           } finally {
-            setEnrichingProductIds((current) =>
-              current.filter((id) => id !== initialDetection.productId)
-            );
+            setEnrichingProductIds((current) => current.filter((id) => id !== initialDetection.productId));
           }
         });
       } catch (error) {
@@ -485,8 +518,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
         model: result.model,
         minConfidence: Math.min(...uniqueDetections.map((detection) => detection.confidence)),
         meanConfidence:
-          uniqueDetections.reduce((sum, detection) => sum + detection.confidence, 0) /
-          uniqueDetections.length
+          uniqueDetections.reduce((sum, detection) => sum + detection.confidence, 0) / uniqueDetections.length
       });
       if (["camera", "upload"].includes(eventSource)) {
         void enrichRecognizedProducts(uniqueDetections, cameraRequestRef.current);
@@ -496,12 +528,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   );
 
   const recognize = useCallback(
-    async (payload: {
-      source: ScanSource;
-      imageDataUrl?: string;
-      sampleFrame?: number;
-      focusMode?: boolean;
-    }) => {
+    async (payload: { source: ScanSource; imageDataUrl?: string; sampleFrame?: number; focusMode?: boolean }) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       const controller = new AbortController();
@@ -532,9 +559,10 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
         const result = (await response.json()) as RecognitionResponse;
         if (controller.signal.aborted) return;
         if (payload.source === "camera") {
-          const liveTranslation = recognitionFrameRef.current && latestCameraFrameRef.current
-            ? estimateFrameTranslation(recognitionFrameRef.current, latestCameraFrameRef.current)
-            : null;
+          const liveTranslation =
+            recognitionFrameRef.current && latestCameraFrameRef.current
+              ? estimateFrameTranslation(recognitionFrameRef.current, latestCameraFrameRef.current)
+              : null;
           if (!isSameCameraScene(liveTranslation)) {
             trackingActiveRef.current = false;
             recognitionFrameRef.current = null;
@@ -547,10 +575,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
           trackingTranslationRef.current = liveTranslation;
           setTrackingTranslation(liveTranslation);
         }
-        applyRecognition(
-          payload.focusMode ? remapRecognitionFromCrop(result) : result,
-          payload.source
-        );
+        applyRecognition(payload.focusMode ? remapRecognitionFromCrop(result) : result, payload.source);
       } catch (error) {
         if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
         pauseRecognitionLoop();
@@ -630,10 +655,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
           return;
         }
         const merged = mergeUploadScanResults(successful);
-        applyRecognition(
-          { ...merged, latencyMs: Math.round(performance.now() - startedAt) },
-          "upload"
-        );
+        applyRecognition({ ...merged, latencyMs: Math.round(performance.now() - startedAt) }, "upload");
       } finally {
         if (recognitionAbortRef.current === controller) {
           recognitionAbortRef.current = null;
@@ -645,6 +667,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   );
 
   const stopActiveCapture = useCallback(() => {
+    uploadFramesRef.current = [];
     cameraRequestRef.current += 1;
     recognitionAbortRef.current?.abort();
     recognitionAbortRef.current = null;
@@ -678,7 +701,8 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     async (canvas: HTMLCanvasElement, imageDataUrl: string, focusMode: boolean) => {
       if (inFlightRef.current) return;
       if (barcodeDetectorRef.current === undefined) {
-        const constructor = (window as unknown as { BarcodeDetector?: NativeBarcodeDetectorConstructor }).BarcodeDetector;
+        const constructor = (window as unknown as { BarcodeDetector?: NativeBarcodeDetectorConstructor })
+          .BarcodeDetector;
         barcodeDetectorRef.current = constructor
           ? new constructor({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"] })
           : null;
@@ -784,6 +808,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
         setSelectedId(null);
         setResultLocked(false);
         setResultsExpanded(false);
+        setProductDetailsOpen(false);
         setRecognitionState("idle");
         setStatusMessage("Scene changed — reading the new shelf…");
       }
@@ -792,7 +817,10 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     if (inFlightRef.current || now < retryRecognitionAtRef.current) return;
     if (!captureWaitStartedRef.current) captureWaitStartedRef.current = now;
     const forceCapture = now - captureWaitStartedRef.current >= CAMERA_FORCE_CAPTURE_MS;
-    if (luminanceEdgeScore(current, CAMERA_SAMPLE_WIDTH, CAMERA_SAMPLE_HEIGHT) < CAMERA_MIN_EDGE_SCORE && !forceCapture) {
+    if (
+      luminanceEdgeScore(current, CAMERA_SAMPLE_WIDTH, CAMERA_SAMPLE_HEIGHT) < CAMERA_MIN_EDGE_SCORE &&
+      !forceCapture
+    ) {
       stableFrameCountRef.current = 0;
       return;
     }
@@ -851,7 +879,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   }, [pauseRecognitionLoop, recognizeCameraFrame]);
 
   const requestCamera = useCallback(async () => {
-    sessionIdRef.current = makeSessionId();
+    ensureSession();
     stopActiveCapture();
     const requestId = cameraRequestRef.current;
     setSource("camera");
@@ -865,8 +893,10 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     manualSelectionRef.current = false;
     setResultLocked(false);
     setResultsExpanded(false);
+    setProductDetailsOpen(false);
     setMediaDimensions(null);
     setStatusMessage("Waiting for camera permission…");
+    track("camera_permission_requested", "camera");
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera API unavailable");
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -908,6 +938,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
       setCameraState("live");
       setRecognitionState("idle");
       setStatusMessage("Point at several products and hold steady");
+      track("camera_permission_granted", "camera");
       track("scan_started", "camera");
       lastCaptureRef.current = 0;
       cameraReadyAtRef.current = Date.now();
@@ -927,7 +958,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
       );
       if (denied) track("permission_denied", "camera");
     }
-  }, [captureStableFrame, stopActiveCapture, track]);
+  }, [captureStableFrame, ensureSession, stopActiveCapture, track]);
 
   const startCamera = useCallback(() => requestCamera(), [requestCamera]);
 
@@ -965,6 +996,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     setRecognitionState("idle");
     setResultLocked(false);
     setResultsExpanded(false);
+    setProductDetailsOpen(false);
     setStatusMessage("Point at several products and hold steady");
     const video = videoRef.current;
     if (!video || !streamRef.current) {
@@ -996,6 +1028,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     manualSelectionRef.current = false;
     setResultLocked(false);
     setResultsExpanded(false);
+    setProductDetailsOpen(false);
     setDemoOpen(false);
     track("scan_started", "sample-shelf");
     void hydrateProducts(shelfIds);
@@ -1017,6 +1050,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     manualSelectionRef.current = false;
     setResultLocked(false);
     setResultsExpanded(false);
+    setProductDetailsOpen(false);
     setDemoOpen(false);
     track("scan_started", "sample-conveyor");
     void recognize({ source: "sample-conveyor" });
@@ -1044,11 +1078,13 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     manualSelectionRef.current = false;
     setResultLocked(false);
     setResultsExpanded(false);
+    setProductDetailsOpen(false);
     setDemoOpen(false);
     setRecognitionState("scanning");
     setStatusMessage("Preparing image privately on this device…");
     try {
       const frames = await imageFileToScanFrames(file);
+      uploadFramesRef.current = frames;
       setPreviewUrl(frames[0]?.imageDataUrl || null);
       track("scan_started", "upload");
       void recognizeUploadFrames(frames);
@@ -1057,6 +1093,16 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
       setStatusMessage("This image could not be prepared. Try a JPEG or PNG.");
     }
   }
+
+  const retryCurrentScan = useCallback(() => {
+    if (!navigator.onLine) return;
+    if (source === "upload" && uploadFramesRef.current.length) {
+      track("scan_started", "upload");
+      void recognizeUploadFrames(uploadFramesRef.current);
+    } else if (source === "sample-shelf") startShelf();
+    else if (source === "sample-conveyor") startCheckout();
+    else scanAgain();
+  }, [recognizeUploadFrames, scanAgain, source, startCheckout, startShelf, track]);
 
   useEffect(() => {
     const online = () => {
@@ -1076,14 +1122,36 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   }, []);
 
   useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setPilotSessionId(ensureSession());
+      track("app_opened", "camera", undefined, { onboardingVersion: ONBOARDING_VERSION });
+      const forceOnboarding = new URLSearchParams(window.location.search).get("onboarding") === "1";
+      if (forceOnboarding || !readOnboardingCompletion(window.localStorage)) {
+        setOnboardingState("showing");
+        track("onboarding_started", "camera", undefined, { onboardingVersion: ONBOARDING_VERSION });
+        track("onboarding_step_viewed", "camera", undefined, { onboardingVersion: ONBOARDING_VERSION, step: 1 });
+      } else {
+        setOnboardingState("complete");
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [ensureSession, track]);
+
+  useEffect(() => {
+    if (onboardingState !== "complete") return;
+    if (cameraStartedFromOnboardingRef.current) {
+      cameraStartedFromOnboardingRef.current = false;
+      return;
+    }
     const timer = window.setTimeout(() => void startCamera(), 0);
     return () => {
       window.clearTimeout(timer);
       stopActiveCapture();
     };
-  }, [startCamera, stopActiveCapture]);
+  }, [onboardingState, startCamera, stopActiveCapture]);
 
   useEffect(() => {
+    if (onboardingState !== "complete") return;
     const stage = stageRef.current;
     if (!stage) return;
     const update = () => setStageDimensions({ width: stage.clientWidth, height: stage.clientHeight });
@@ -1091,7 +1159,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     const observer = new ResizeObserver(update);
     observer.observe(stage);
     return () => observer.disconnect();
-  }, []);
+  }, [onboardingState]);
 
   const detectionById = useMemo(
     () => Object.fromEntries(detections.map((detection) => [detection.productId, detection])),
@@ -1105,10 +1173,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     () => new Set([...loadingProductIds, ...enrichingProductIds]),
     [enrichingProductIds, loadingProductIds]
   );
-  const ratedTrayIds = useMemo(
-    () => ratedScanProductIds(tray, productById),
-    [productById, tray]
-  );
+  const ratedTrayIds = useMemo(() => ratedScanProductIds(tray, productById), [productById, tray]);
   const visibleTrayIds = useMemo(
     () => displayableScanProductIds(tray, productById, pendingProductIds, detectionById),
     [detectionById, pendingProductIds, productById, tray]
@@ -1131,10 +1196,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   const bestId = globalBestProductId(fairComparison);
   const ratedCount = ratedDetections.length;
   const compactSheetTitle = `${visibleTrayIds.length} ${visibleTrayIds.length === 1 ? "product" : "products"}`;
-  const rankedTrayIds = useMemo(
-    () => rankScanProductIds(visibleTrayIds, productById),
-    [productById, visibleTrayIds]
-  );
+  const rankedTrayIds = useMemo(() => rankScanProductIds(visibleTrayIds, productById), [productById, visibleTrayIds]);
   const rankedRatedIds = useMemo(
     () => rankedTrayIds.filter((id) => hasSugarNoRating(productById[id])),
     [productById, rankedTrayIds]
@@ -1190,13 +1252,16 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
           ? previewUrl
           : scanFrameUrl;
   const firstRankedId = rankedRatedIds[0] || rankedTrayIds[0];
-  const effectiveSelectedId = selectedId && visibleTrayIdSet.has(selectedId)
-    ? selectedId
-    : bestId || firstRankedId || null;
+  const effectiveSelectedId =
+    selectedId && visibleTrayIdSet.has(selectedId) ? selectedId : bestId || firstRankedId || null;
   const selectedPayload = effectiveSelectedId ? products[effectiveSelectedId] : undefined;
   const selectedDetection = effectiveSelectedId ? detectionById[effectiveSelectedId] : undefined;
   const resultsAreExpanded = resultsExpanded && visibleTrayIds.length > 0;
-  const sheetPreviewIds = rankedTrayIds.slice(0, 4);
+  const sheetPreviewIds = rankedTrayIds;
+  const visibleBases = new Set(
+    visibleTrayIds.flatMap((id) => (products[id] ? [products[id].product.nutritionBasis || "100g"] : []))
+  );
+  const resultsBasis = visibleBases.size > 1 ? "100 g / 100 ml" : visibleBases.has("100ml") ? "100 ml" : "100 g";
   const scanHasNoRatedResults =
     recognitionState === "matched" && tray.length > 0 && visibleTrayIds.length === 0 && pendingProductIds.size === 0;
   const showRecognitionRetry =
@@ -1206,6 +1271,12 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
       recognitionState === "unavailable" ||
       recognitionState === "rate_limited" ||
       scanHasNoRatedResults);
+  const showRecovery =
+    cameraState === "denied" ||
+    cameraState === "error" ||
+    !networkOnline ||
+    ["unavailable", "not_sure", "rate_limited", "error"].includes(recognitionState) ||
+    showRecognitionRetry;
   const displayedStatusMessage =
     recognitionState === "matched" && visibleTrayIds.length > 0 && pendingProductIds.size === 0
       ? `${visibleTrayIds.length} ${visibleTrayIds.length === 1 ? "product" : "products"} · ${ratedCount} with Sugar.no fit`
@@ -1225,13 +1296,28 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     if (!manualSelectionRef.current && (bestId || firstRankedId)) setSelectedId(bestId || firstRankedId);
   }, [bestId, firstRankedId]);
 
-  const closeResults = useCallback(() => {
-    setResultsExpanded(false);
-    window.requestAnimationFrame(() => previousFocusRef.current?.focus());
+  const backToProductList = useCallback(() => {
+    setProductDetailsOpen(false);
+    resultsSheetRef.current?.scrollTo({ top: 0 });
+    window.requestAnimationFrame(() => resultsSheetRef.current?.focus());
   }, []);
 
-  const openResults = useCallback(() => {
+  const closeResults = useCallback(() => {
+    setResultsExpanded(false);
+    setProductDetailsOpen(false);
+    window.requestAnimationFrame(() => {
+      // Compact controls remount when the full results close.
+      const controls = Array.from(resultsSheetRef.current?.querySelectorAll<HTMLElement>("[data-result-trigger]") || []);
+      const trigger = controls.find((control) => control.dataset.resultTrigger === resultReturnTriggerRef.current)
+        || controls.find((control) => control.dataset.resultTrigger === "view-all");
+      // Native focus also reveals a returned-to card inside the horizontal preview.
+      (trigger || (previousFocusRef.current?.isConnected ? previousFocusRef.current : null))?.focus();
+    });
+  }, []);
+
+  const openResults = useCallback((trigger = "view-all") => {
     previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    resultReturnTriggerRef.current = trigger;
     setResultsExpanded(true);
   }, []);
 
@@ -1243,6 +1329,32 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   const openDemo = useCallback(() => {
     demoTriggerRef.current = document.activeElement instanceof HTMLButtonElement ? document.activeElement : null;
     setDemoOpen(true);
+  }, []);
+
+  const finishOnboarding = useCallback(
+    (destination: "camera" | "sample") => {
+      saveOnboardingCompletion(window.localStorage, "completed");
+      track("onboarding_completed", destination === "sample" ? "sample-shelf" : "camera", undefined, {
+        onboardingVersion: ONBOARDING_VERSION,
+        step: 1
+      });
+      cameraStartedFromOnboardingRef.current = true;
+      setOnboardingState("complete");
+      if (destination === "sample") startShelf();
+      else void startCamera();
+    },
+    [startCamera, startShelf, track]
+  );
+
+  const openFeedback = useCallback(() => {
+    setPilotSessionId(ensureSession());
+    setFeedbackOpen(true);
+    track("feedback_opened", source, undefined, { placement: "scanner_topbar" });
+  }, [ensureSession, source, track]);
+
+  const closeFeedback = useCallback(() => {
+    setFeedbackOpen(false);
+    window.requestAnimationFrame(() => feedbackFocusRef.current?.focus());
   }, []);
 
   useEffect(() => {
@@ -1273,54 +1385,68 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     };
   }, [closeDemo, demoOpen]);
 
+  if (onboardingState === "loading") {
+    return <main className={styles.onboardingLoading} aria-label="Loading Sugar.no" />;
+  }
+
+  if (onboardingState === "showing") {
+    return (
+      <PilotOnboarding onComplete={() => finishOnboarding("camera")} onTrySample={() => finishOnboarding("sample")} />
+    );
+  }
+
   return (
-    <main className={styles.app}>
-      <header className={`${styles.header} ${styles.scannerHeader}`}>
-        <Image
-          className={styles.wordmark}
-          src="/brand/sugar-no-logo-white.svg"
-          alt="Sugar.no"
-          width={137}
-          height={26.07}
-          priority
-          unoptimized
-        />
-      </header>
+    <main className={`${styles.app} ${source === "camera" && !showRecovery ? styles.liveCamera : ""}`}>
+      {!resultsAreExpanded && !demoOpen ? (
+        <header className={`${styles.header} ${styles.scannerHeader}`} inert={feedbackOpen}>
+          <Image
+            className={styles.wordmark}
+            src="/brand/sugar-no-logo-white.svg"
+            alt="Sugar.no"
+            width={137}
+            height={26.07}
+            priority
+            unoptimized
+          />
+        </header>
+      ) : null}
 
-      <section className={styles.experience} aria-label={`${sourceLabel(source)} scanner`}>
-          <div
-            className={`${styles.stage} ${visibleTrayIds.length ? styles.stageWithResults : ""}`}
-            inert={resultsAreExpanded || demoOpen}
-            aria-hidden={resultsAreExpanded || demoOpen || undefined}
-          >
-            <div
-              className={`${styles.stageTopbar} ${source === "camera" || source === "upload" ? styles.stageTopbarEnd : ""}`}
-            >
-              {source === "sample-shelf" || source === "sample-conveyor" ? <span>{sourceLabel(source)}</span> : null}
-              <button
-                ref={source === "camera" ? demoTriggerRef : undefined}
-                className={styles.demoTrigger}
-                type="button"
-                onClick={source === "camera" ? openDemo : startCamera}
-                aria-label={source === "camera" ? "Show demo" : "Back to live camera"}
-              >
-                {source === "camera" ? <Layers3 aria-hidden="true" size={17} /> : <Camera aria-hidden="true" size={17} />}
-                {source === "camera" ? "Show demo" : "Back to live"}
+      <section className={styles.experience} inert={feedbackOpen} aria-label={`${sourceLabel(source)} scanner`}>
+        <div
+          className={`${styles.stage} ${visibleTrayIds.length ? styles.stageWithResults : ""} ${source === "upload" || source === "sample-conveyor" ? styles.photoStage : ""}`}
+          inert={resultsAreExpanded || demoOpen}
+          aria-hidden={resultsAreExpanded || demoOpen || undefined}
+        >
+          <div className={styles.stageTopbar}>
+            <div className={styles.stageActions}>
+              <button ref={feedbackFocusRef} className={styles.feedbackTrigger} type="button" onClick={openFeedback}>
+                <span>Leave feedback</span>
               </button>
+              {source === "camera" && !showRecovery ? (
+                <button
+                  ref={demoTriggerRef}
+                  className={styles.demoTrigger}
+                  type="button"
+                  onClick={openDemo}
+                  aria-label="Show demo"
+                >
+                  <Layers3 aria-hidden="true" size={20} />
+                  Show demo
+                </button>
+              ) : null}
             </div>
+          </div>
 
-            <div
-              ref={stageRef}
-              className={`${styles.cameraViewport} ${source === "camera" || source === "upload" ? styles.cameraViewportMediaRatio : ""} ${source === "camera" ? styles.cameraViewportLive : ""}`}
-              data-testid="camera-viewport"
-              style={source === "camera"
-                ? ({
-                    "--camera-media-height": mediaDimensions
-                      ? `${(mediaDimensions.height / mediaDimensions.width) * 100}vw`
-                      : "133.333vw"
-                  } as CSSProperties)
-                : undefined}
-            >
+          {source === "upload" || source === "sample-conveyor" ? (
+            <h1 className={styles.photoTitle}>
+              {source === "upload" ? "Read a saved photo" : "Checkout demo"}
+            </h1>
+          ) : null}
+          <div
+            ref={stageRef}
+            className={`${styles.cameraViewport} ${source === "camera" || source === "upload" ? styles.cameraViewportMediaRatio : ""} ${source === "camera" ? styles.cameraViewportLive : ""}`}
+            data-testid="camera-viewport"
+          >
             {cameraState === "live" || cameraState === "requesting" ? (
               <video
                 ref={videoRef}
@@ -1363,28 +1489,40 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
                 sizes="100vw"
                 unoptimized
                 onLoad={(event) =>
-                  setMediaDimensions({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })
+                  setMediaDimensions({
+                    width: event.currentTarget.naturalWidth,
+                    height: event.currentTarget.naturalHeight
+                  })
                 }
               />
             ) : null}
 
             {cameraState === "denied" || cameraState === "error" ? (
               <div className={styles.cameraError} role="alert">
-                <CircleAlert aria-hidden="true" size={30} />
-                <strong>{cameraState === "denied" ? "Camera permission is off" : "Camera unavailable"}</strong>
-                <span>{statusMessage}</span>
-                <button type="button" onClick={startCamera}>
-                  <Camera aria-hidden="true" size={17} />
-                  {cameraState === "denied" ? "Enable camera" : "Try again"}
-                </button>
+                <div className={styles.recoveryPanel}>
+                  <CameraOff aria-hidden="true" size={32} />
+                  <strong>{cameraState === "denied" ? "Camera permission is off" : "Camera unavailable"}</strong>
+                  <span>{statusMessage}</span>
+                </div>
+                <div className={styles.recoveryActions}>
+                  <button className={styles.primaryButton} type="button" onClick={startCamera}>
+                    <Camera aria-hidden="true" size={17} />
+                    {cameraState === "denied" ? "Enable camera" : "Try again"}
+                  </button>
+                  <button ref={demoTriggerRef} className={styles.primaryButton} type="button" onClick={openDemo}>
+                    Show demo
+                  </button>
+                </div>
               </div>
             ) : null}
 
             {source === "camera" && candidateBoxes.length > 0 && displayedRatedDetections.length === 0
               ? candidateBoxes.map((box, index) => {
-                  const mappedBox = mediaDimensions && stageDimensions
-                    ? mapBoxToObjectContain(box, mediaDimensions, stageDimensions)
-                    : box;
+                  const mappedBox =
+                    mediaDimensions && stageDimensions
+                      ? mapBoxToObjectCover(box, mediaDimensions, stageDimensions)
+                      : box;
+                  if (mappedBox.width <= 0 || mappedBox.height <= 0) return null;
                   return (
                     <span
                       aria-hidden="true"
@@ -1406,11 +1544,13 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
               const product = products[detection.productId]?.product;
               const presentation = overlayMatchPresentation(product);
               const displayName = product?.name || detection.identity?.name || detection.observedText || "product";
-              const mappedBox = mediaDimensions && stageDimensions
-                ? source === "camera"
-                  ? mapBoxToObjectContain(detection.box, mediaDimensions, stageDimensions)
-                  : mapBoxToObjectCover(detection.box, mediaDimensions, stageDimensions)
-                : detection.box;
+              const mappedBox =
+                mediaDimensions && stageDimensions
+                  ? (source === "camera" ? mapBoxToObjectCover : mapBoxToObjectContain)(
+                      detection.box, mediaDimensions, stageDimensions
+                    )
+                  : detection.box;
+              if (mappedBox.width <= 0 || mappedBox.height <= 0) return null;
               const isBest = bestId === detection.productId;
               return (
                 <button
@@ -1433,318 +1573,416 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
                 >
                   <span>
                     <OverlayToneIcon tone={presentation.tone} />
-                    <strong>{presentation.label}</strong>
                   </span>
                 </button>
               );
             })}
 
-            <div
-              className={`${styles.stageStatus} ${showRecognitionRetry ? styles.stageStatusRetry : ""} ${visibleTrayIds.length > 0 && ["matched", "retained"].includes(recognitionState) ? styles.stageStatusResultHidden : ""}`}
-              role="status"
-              aria-live="polite"
-            >
-              {showRecognitionRetry ? (
-                <button className={styles.recognitionRetry} type="button" onClick={scanAgain}>
-                  <RefreshCw aria-hidden="true" size={17} />
-                  <span>Not sure — try again</span>
-                </button>
-              ) : (
-                <>
-                  {recognitionState === "scanning" ? (
-                    <LoaderCircle className={styles.spin} aria-hidden="true" size={17} />
-                  ) : recognitionState === "matched" || recognitionState === "retained" ? (
-                    <Check aria-hidden="true" size={17} />
-                  ) : recognitionState === "not_sure" || recognitionState === "error" || recognitionState === "unavailable" || recognitionState === "rate_limited" ? (
-                    <Info aria-hidden="true" size={17} />
-                  ) : (
-                    <ScanLine aria-hidden="true" size={17} />
-                  )}
-                  <span>{networkOnline ? displayedStatusMessage : "Offline — recognition paused"}</span>
-                </>
-              )}
-            </div>
-            </div>
-          </div>
-
-          {visibleTrayIds.length ? (
-            <aside
-              ref={resultsSheetRef}
-              className={`${styles.resultsSheet} ${resultsAreExpanded ? styles.resultsExpanded : styles.resultsCollapsed}`}
-              role={resultsAreExpanded ? "dialog" : undefined}
-              aria-modal={resultsAreExpanded ? "true" : undefined}
-              aria-label="Products from this scan"
-              tabIndex={resultsAreExpanded ? -1 : undefined}
-            >
-              <div className={styles.sheetChrome}>
-                {resultsAreExpanded ? (
-                  <>
-                    {visibleTrayIds.length > 1 ? (
-                      <h2 className={styles.expandedSheetTitle} id="scan-ranking-title">
-                        {personalRankEnabled ? "Personal Shelf Rank" : ratedCount > 0 ? "Best fit first" : pendingProductIds.size ? "Matching products" : "Products identified"}
-                      </h2>
-                    ) : (
-                      <span aria-hidden="true" />
-                    )}
-                    <button
-                      className={styles.sheetIconButton}
-                      type="button"
-                      onClick={closeResults}
-                      aria-label="Collapse product results"
-                    >
-                      <ChevronDown aria-hidden="true" size={20} />
-                    </button>
-                  </>
+            {!showRecovery ? (
+              <div
+                className={`${styles.stageStatus} ${showRecognitionRetry ? styles.stageStatusRetry : ""} ${visibleTrayIds.length > 0 && ["matched", "retained"].includes(recognitionState) ? styles.stageStatusResultHidden : ""}`}
+                role="status"
+                aria-live="polite"
+              >
+                {showRecognitionRetry ? (
+                  <button className={styles.recognitionRetry} type="button" onClick={scanAgain}>
+                    <RefreshCw aria-hidden="true" size={17} />
+                    <span>Not sure — try again</span>
+                  </button>
                 ) : (
                   <>
-                    <div className={styles.sheetTitleStatic}>
-                      <strong>{compactSheetTitle}</strong>
-                      <span>
-                        {ratedCount > 0
-                          ? pendingProductIds.size
-                            ? `${ratedCount} rated · Checking the rest…`
-                            : `${ratedCount} rated · Best fit first`
-                          : pendingProductIds.size
-                            ? "Matching products…"
-                            : "Products identified · No verified nutrition"}
-                      </span>
-                    </div>
-                    <div className={styles.sheetActions}>
-                      <button
-                        type="button"
-                        onClick={source === "camera" ? scanAgain : startCamera}
-                        aria-label="Scan again"
-                      >
-                        <RefreshCw aria-hidden="true" size={17} /> <span>Scan again</span>
-                      </button>
-                      <button type="button" onClick={openResults} aria-controls="scan-results-content">
-                        <List aria-hidden="true" size={17} /> <span>View all</span>
-                      </button>
-                    </div>
+                    {recognitionState === "scanning" ? (
+                      <LoaderCircle className={styles.spin} aria-hidden="true" size={17} />
+                    ) : recognitionState === "matched" || recognitionState === "retained" ? (
+                      <Check aria-hidden="true" size={17} />
+                    ) : recognitionState === "not_sure" ||
+                      recognitionState === "error" ||
+                      recognitionState === "rate_limited" ? (
+                      <Info aria-hidden="true" size={17} />
+                    ) : (
+                      <ScanLine aria-hidden="true" size={17} />
+                    )}
+                    <span>{networkOnline ? displayedStatusMessage : "Offline — recognition paused"}</span>
                   </>
                 )}
               </div>
+            ) : null}
+            {cameraState !== "denied" && cameraState !== "error" && showRecovery ? (
+              <div className={styles.recoveryCard} role="status">
+                <div className={styles.recoveryPanel}>
+                  {!networkOnline ? (
+                    <WifiOff aria-hidden="true" size={32} />
+                  ) : recognitionState === "unavailable" ? (
+                    <CircleAlert aria-hidden="true" size={32} />
+                  ) : (
+                    <ScanLine aria-hidden="true" size={32} />
+                  )}
+                  <strong>
+                    {!networkOnline
+                      ? "You’re offline"
+                      : recognitionState === "unavailable"
+                        ? "We couldn’t finish this scan"
+                        : "Let’s try another view"}
+                  </strong>
+                  <span>
+                    {!networkOnline
+                      ? "Check your connection, then try again."
+                      : recognitionState === "unavailable"
+                        ? "The service is temporarily unavailable. Please try again in a moment."
+                        : recognitionState === "error"
+                          ? statusMessage
+                          : "Move a little closer and keep the product names in focus."}
+                  </span>
+                </div>
+                <div className={styles.recoveryActions}>
+                  <button
+                    className={
+                      showRecognitionRetry || recognitionState === "unavailable"
+                        ? styles.recognitionRetry
+                        : styles.primaryButton
+                    }
+                    type="button"
+                    onClick={retryCurrentScan}
+                  >
+                    {showRecognitionRetry || recognitionState === "unavailable" ? "Not sure — try again" : "Try again"}
+                  </button>
+                  {source !== "camera" ? (
+                    <button
+                      className={styles.secondaryButton}
+                      type="button"
+                      onClick={startCamera}
+                      aria-label="Back to live camera"
+                    >
+                      Back to live camera
+                    </button>
+                  ) : networkOnline ? (
+                    <button ref={demoTriggerRef} className={styles.primaryButton} type="button" onClick={openDemo}>
+                      Show demo
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+          </div>
+          {!showRecovery && (source === "upload" || source === "sample-conveyor") ? (
+            <p className={styles.stageGuidance}>Photos are not saved.</p>
+          ) : null}
+        </div>
 
-              {resultsAreExpanded && personalRankAvailable ? <ShelfRankToggle enabled={personalRankEnabled} onChange={setPersonalRankEnabled} /> : null}
+        {visibleTrayIds.length ? (
+          <aside
+            ref={resultsSheetRef}
+            className={`${styles.resultsSheet} ${resultsAreExpanded ? styles.resultsExpanded : styles.resultsCollapsed}`}
+            role={resultsAreExpanded ? "dialog" : undefined}
+            aria-modal={resultsAreExpanded ? "true" : undefined}
+            aria-label="Products from this scan"
+            tabIndex={resultsAreExpanded ? -1 : undefined}
+          >
+            <div className={styles.sheetChrome}>
+              {resultsAreExpanded ? (
+                <>
+                  <Image
+                    className={styles.wordmark}
+                    src="/brand/sugar-no-logo-white.svg"
+                    alt="Sugar.no"
+                    width={137}
+                    height={26.07}
+                    unoptimized
+                  />
+                  <button
+                    className={styles.sheetIconButton}
+                    type="button"
+                    onClick={productDetailsOpen && visibleTrayIds.length > 1 ? backToProductList : closeResults}
+                    aria-label={
+                      productDetailsOpen && visibleTrayIds.length > 1
+                        ? "Back to all results"
+                        : "Collapse product results"
+                    }
+                  >
+                    <ChevronDown aria-hidden="true" size={20} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className={styles.sheetTitleStatic}>
+                    <strong>{compactSheetTitle}</strong>
+                    <span>
+                      {ratedCount > 0
+                        ? pendingProductIds.size
+                          ? `${ratedCount} rated · Checking the rest…`
+                          : `Sugar per ${resultsBasis} · best fit first`
+                        : pendingProductIds.size
+                          ? "Matching products…"
+                          : "Products identified · No verified nutrition"}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
 
-              {!resultsAreExpanded ? (
-                <div className={styles.sheetPreview} aria-label="Product result preview">
+            {!resultsAreExpanded ? (
+              <>
+                <div className={styles.sheetPreview} role="group" aria-label="Product result preview" tabIndex={0}>
                   {sheetPreviewIds.map((id) => {
                     const item = products[id]?.product;
                     const detection = detectionById[id];
                     const isRated = hasSugarNoRating(item);
                     const rank = isRated ? rankedRatedIds.indexOf(id) + 1 : null;
-                    const previewPresentation = isRated ? overlayMatchPresentation(item) : null;
-                    const protein = item?.nutrientsPer100g.proteinG;
+
                     const sugar = item?.nutrientsPer100g.totalSugarG;
                     const carbohydrate = item?.nutrientsPer100g.carbohydrateG;
-                    const nutritionLabel = item ? compactNutritionLabel(item.nutrientsPer100g) : null;
-                    const previewBasisLabel = item?.nutritionBasis === "100ml" ? "100 milliliters" : "100 grams";
-                    const retailerOffer = detection?.retailerOffer?.exactSku
-                      ? detection.retailerOffer
-                      : null;
-                    const cheaperOffer =
-                      detection?.shelfPrice &&
-                      retailerOffer &&
-                      retailerOffer.price < detection.shelfPrice.amount
-                        ? retailerOffer
-                        : null;
+                    const basis = item?.nutritionBasis === "100ml" ? "100 milliliters" : "100 grams";
+                    const name = item ? productDisplayName(item) : detection?.identity?.name || "Identified product";
                     return (
-                      <article
-                        className={`${styles.sheetPreviewCard} ${cheaperOffer ? styles.sheetPreviewCardDeal : ""}`}
-                        key={id}
-                      >
+                      <article className={styles.sheetPreviewCard} key={id}>
                         <button
                           className={styles.sheetPreviewOpen}
+                          data-result-trigger={id}
                           type="button"
                           aria-label={
-                            isRated && previewPresentation
-                              ? `Rank ${rank}, ${item.brand} ${item.shortName}, ${previewPresentation.label}, Protein ${protein} grams, Sugar ${sugar} grams${carbohydrate === null || carbohydrate === undefined ? "" : `, Carbs ${carbohydrate} grams`} per ${previewBasisLabel}`
-                              : `${item?.brand || detection?.identity?.brand || "Product"} ${item?.shortName || detection?.identity?.name || "identified product"}, nutrition not verified online`
+                            isRated
+                              ? `Rank ${rank}, ${item.brand} ${name}, ${overlayMatchPresentation(item).label}, Sugar ${sugar} grams${carbohydrate == null ? "" : `, Carbs ${carbohydrate} grams`} per ${basis}`
+                              : `${name}, nutrition not verified online`
                           }
                           onClick={() => {
                             manualSelectionRef.current = true;
                             setSelectedId(id);
-                            openResults();
+                            openResults(id);
+                            setProductDetailsOpen(true);
                             track("result_opened", source, id);
                           }}
                         >
-                          <span
-                            className={`${styles.sheetPreviewRank} ${isRated ? "" : styles.rankPending}`}
-                            aria-hidden="true"
-                          >
-                            {rank ? `#${rank}` : "—"}
-                          </span>
-                          <div className={styles.sheetPreviewThumb} aria-hidden="true">
+                          <span className={styles.sheetPreviewThumb} aria-hidden="true">
                             <ProductThumbnail
-                              imageUrl={item?.imageUrl || scanOfferForId(id)?.imageUrl}
+                              imageUrl={item ? productDisplayImage(item) : undefined}
                               sceneImageUrl={sceneImageUrl}
                               sceneDimensions={mediaDimensions}
                               detection={detection}
-                              sizes="42px"
-                              targetAspect={42 / 54}
+                              sizes="56px"
+                              targetAspect={1}
                             />
-                          </div>
-                          <div className={styles.sheetPreviewCopy}>
-                            <span>{item?.brand || detection?.identity?.brand || "Product"}</span>
-                            {item && hasSugarNoRating(item) ? (
+                          </span>
+                          <span className={styles.sheetPreviewCopy}>
+                            <span>
+                              <b>{rank ? `#${rank}` : "—"}</b>
+                              {name}
+                            </span>
+                            {isRated ? (
                               <>
-                                <MatchPill product={item} />
+                                <MatchPill product={item} compact />
                                 <small className={styles.sheetPreviewSugar}>
-                                  {nutritionLabel}
+                                  {sugar === null ? "Sugar —" : `Sugar ${sugar}\u00a0g`}
+                                  {carbohydrate == null ? "" : ` · Carbs ${carbohydrate} g`}
                                 </small>
                               </>
                             ) : (
-                              <small>{pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}</small>
+                              <small>
+                                {pendingProductIds.has(id) ? "Checking nutrition…" : "Nutrition not verified"}
+                              </small>
                             )}
-                            <CompactProductPrice detection={detection} offer={scanOfferForId(id)} />
-                          </div>
+                          </span>
                         </button>
-                        {cheaperOffer ? (
-                          <a
-                            className={styles.sheetPreviewBuy}
-                            href={cheaperOffer.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`Buy ${item?.shortName || detection?.identity?.name || "product"} cheaper at ${cheaperOffer.retailer} for €${cheaperOffer.price.toFixed(2)}`}
-                            onClick={() =>
-                              track("retailer_link_clicked", source, id, { placement: "compact_price_cta" })
-                            }
-                          >
-                            <span>Buy cheaper</span>
-                            <strong>€{cheaperOffer.price.toFixed(2)}</strong>
-                            <ArrowUpRight aria-hidden="true" size={15} />
-                          </a>
-                        ) : null}
                       </article>
                     );
                   })}
                 </div>
-              ) : (
-                <div className={styles.sheetContent} id="scan-results-content">
-                  {visibleTrayIds.length === 1 ? (
-                    <div className={styles.scanSummary}>
-                      <div>
-                        <strong>
-                          {ratedCount > 0
-                            ? "Ready to compare"
-                            : pendingProductIds.size
-                              ? "Matching product…"
-                              : "Product identified"}
-                        </strong>
-                        <span>{resultLocked ? "Result held while you read" : "Product result"}</span>
-                      </div>
-                      <button
-                        className={styles.scanAgainButton}
-                        type="button"
-                        onClick={source === "camera" ? scanAgain : startCamera}
-                      >
-                          <RefreshCw aria-hidden="true" size={16} /> Scan again
-                      </button>
-                    </div>
-                  ) : null}
-
-                  {personalRankEnabled ? <PersonalShelfResults
+                <div className={styles.sheetActions}>
+                  <button className={styles.scanAgainButton} type="button" onClick={source === "camera" ? scanAgain : startCamera} aria-label="Scan again">
+                    <RefreshCw aria-hidden="true" size={20} />
+                    <span>Scan again</span>
+                  </button>
+                  <button className={styles.primaryButton} type="button" onClick={() => openResults()} data-result-trigger="view-all" aria-controls="scan-results-content">
+                    <span>View all</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div
+                className={styles.sheetContent}
+                id="scan-results-content"
+                data-view={productDetailsOpen ? "detail" : "list"}
+              >
+                {!productDetailsOpen && personalRankAvailable ? (
+                  <ShelfRankToggle enabled={personalRankEnabled} onChange={setPersonalRankEnabled} />
+                ) : null}
+                {!productDetailsOpen && personalRankEnabled ? (
+                  <PersonalShelfResults
                     products={visibleTrayIds.flatMap((id) => products[id]?.product ? [products[id].product] : [])}
                     unidentifiedCount={visibleTrayIds.filter((id) => !products[id]?.product).length}
                     thumbnail={(id) => <ProductThumbnail imageUrl={products[id]?.product.imageUrl} sceneImageUrl={sceneImageUrl} sceneDimensions={mediaDimensions} detection={detectionById[id]} sizes="48px" targetAspect={48 / 60} />}
-                  /> : null}
+                  />
+                ) : null}
+                {!productDetailsOpen && !personalRankEnabled && visibleTrayIds.length === 1 ? (
+                  <div className={styles.scanSummary}>
+                    <div>
+                      <strong>
+                        {ratedCount > 0
+                          ? "Ready to compare"
+                          : pendingProductIds.size
+                            ? "Matching product…"
+                            : "Product identified"}
+                      </strong>
+                      <span>{resultLocked ? "Result held while you read" : "Product result"}</span>
+                    </div>
+                    <button
+                      className={styles.scanAgainButton}
+                      type="button"
+                      onClick={source === "camera" ? scanAgain : startCamera}
+                    >
+                      <RefreshCw aria-hidden="true" size={20} /> Scan again
+                    </button>
+                  </div>
+                ) : null}
 
-                  {!personalRankEnabled && visibleTrayIds.length > 1 ? (
-                    <section className={styles.rankingSection} aria-labelledby="scan-ranking-title">
-                      <ol className={styles.rankedList} aria-label="Products ranked by Sugar.no fit">
-                        {rankedTrayIds.map((id) => {
-                          const item = products[id]?.product;
-                          const detection = detectionById[id];
-                          const itemBrand = item?.brand || detection?.identity?.brand || "Product";
-                          const itemName = item?.shortName || detection?.identity?.name || "Identified product";
-                          const isRated = hasSugarNoRating(item);
-                          const rank = isRated ? rankedRatedIds.indexOf(id) + 1 : null;
-                          const presentation = isRated ? overlayMatchPresentation(item) : null;
-                          const onlineOffer = scanOfferForId(id);
-                          const nutritionLabel = item ? compactNutritionLabel(item.nutrientsPer100g) : null;
-                          return (
-                            <li className={`${styles.rankedProductCard} ${effectiveSelectedId === id ? styles.activeRankedProductCard : ""}`} key={id}>
-                              <button
-                                type="button"
-                                aria-label={
-                                  isRated && presentation
-                                    ? `Rank ${rank}, ${itemBrand} ${itemName}, ${presentation.label}, ${nutritionLabel} per ${item.nutritionBasis === "100ml" ? "100 milliliters" : "100 grams"}`
-                                    : `${itemBrand} ${itemName}, nutrition not verified online`
-                                }
-                                className={`${styles.rankedProduct} ${effectiveSelectedId === id ? styles.activeRankedProduct : ""}`}
-                                onClick={() => {
-                                  manualSelectionRef.current = true;
-                                  setSelectedId(id);
-                                  track("result_opened", source, id);
-                                }}
+                {visibleTrayIds.length > 1 && !productDetailsOpen && !personalRankEnabled ? (
+                  <section className={styles.rankingSection} aria-labelledby="scan-ranking-title">
+                    <h2 className={styles.expandedSheetTitle} id="scan-ranking-title">
+                      {ratedCount > 0
+                        ? "Best fit first"
+                        : pendingProductIds.size
+                          ? "Matching products"
+                          : "Products identified"}
+                    </h2>
+                    <p className={styles.resultsSubtitle}>
+                      {source === "sample-shelf"
+                        ? "Sample shelf"
+                        : source === "sample-conveyor"
+                          ? "Checkout demo"
+                          : "Your scan"}{" "}
+                      · Sugar per {resultsBasis}
+                    </p>
+                    <ol className={styles.rankedList} aria-label="Products ranked by Sugar.no fit">
+                      {rankedTrayIds.map((id) => {
+                        const item = products[id]?.product;
+                        const detection = detectionById[id];
+                        const itemBrand = item?.brand || detection?.identity?.brand || "Product";
+                        const itemName = item
+                          ? productDisplayName(item)
+                          : detection?.identity?.name || "Identified product";
+                        const isRated = hasSugarNoRating(item);
+                        const rank = isRated ? rankedRatedIds.indexOf(id) + 1 : null;
+                        const presentation = isRated ? overlayMatchPresentation(item) : null;
+                        const onlineOffer = scanOfferForId(id);
+                        const nutritionLabel = item ? compactNutritionLabel(item.nutrientsPer100g) : null;
+                        return (
+                          <li className={`${styles.rankedProductCard}`} key={id}>
+                            <button
+                              type="button"
+                              aria-label={
+                                isRated && presentation
+                                  ? `Rank ${rank}, ${itemBrand} ${itemName}, ${presentation.label}`
+                                  : `${itemBrand} ${itemName}, nutrition not verified online`
+                              }
+                              className={`${styles.rankedProduct}`}
+                              onClick={() => {
+                                manualSelectionRef.current = true;
+                                setSelectedId(id);
+                                setProductDetailsOpen(true);
+                                resultsSheetRef.current?.scrollTo({ top: 0 });
+                                window.requestAnimationFrame(() => resultsSheetRef.current?.focus());
+                                track("result_opened", source, id);
+                              }}
+                            >
+                              <span
+                                className={`${styles.rankPosition} ${isRated ? "" : styles.rankPending}`}
+                                aria-hidden="true"
                               >
-                                <span className={`${styles.rankPosition} ${isRated ? "" : styles.rankPending}`} aria-hidden="true">
-                                  {rank ? `#${rank}` : "—"}
-                                </span>
-                                <span className={styles.rankedProductThumb} aria-hidden="true">
-                                  <ProductThumbnail
-                                    imageUrl={item?.imageUrl || onlineOffer?.imageUrl}
-                                    sceneImageUrl={sceneImageUrl}
-                                    sceneDimensions={mediaDimensions}
-                                    detection={detection}
-                                    sizes="48px"
-                                    targetAspect={48 / 60}
-                                  />
-                                </span>
-                                <div className={styles.rankedProductCopy}>
+                                {rank ? `#${rank}` : "—"}
+                              </span>
+                              <span className={styles.rankedProductThumb} aria-hidden="true">
+                                <ProductThumbnail
+                                  imageUrl={(item ? productDisplayImage(item) : null) || onlineOffer?.imageUrl}
+                                  sceneImageUrl={sceneImageUrl}
+                                  sceneDimensions={mediaDimensions}
+                                  detection={detection}
+                                  sizes="66px"
+                                  targetAspect={66 / 46}
+                                />
+                              </span>
+                              <div className={styles.rankedProductCopy}>
+                                <span className={styles.rankedIdentity}>
                                   <small>{itemBrand}</small>
                                   <strong>{itemName}</strong>
-                                  <div className={styles.rankedProductMeta}>
-                                    {isRated ? (
-                                      <>
-                                        <MatchPill product={item} />
-                                        <small>{nutritionLabel}</small>
-                                      </>
-                                    ) : (
-                                      <small>{pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}</small>
-                                    )}
-                                  </div>
-                                  <CompactProductPrice detection={detection} offer={onlineOffer} />
+                                </span>
+                                <div className={styles.rankedProductMeta}>
+                                  {isRated ? (
+                                    <>
+                                      <MatchPill product={item} />
+                                      <small>
+                                        {nutritionLabel}
+                                        {visibleBases.size > 1
+                                          ? ` / ${item?.nutritionBasis === "100ml" ? "100 ml" : "100 g"}`
+                                          : ""}
+                                      </small>
+                                    </>
+                                  ) : (
+                                    <small>
+                                      {pendingProductIds.has(id) ? "Checking online…" : "Nutrition not verified online"}
+                                    </small>
+                                  )}
                                 </div>
-                              </button>
-                              <OnlineOfferAction
-                                productName={itemName}
-                                detection={detection}
-                                offer={onlineOffer}
-                                onRetailer={() => track("retailer_link_clicked", source, id, { placement: "ranked_product" })}
-                              />
-                            </li>
-                          );
-                        })}
-                      </ol>
-                    </section>
-                  ) : null}
+                                {!isExactOnlineSaving(onlineOffer, detection?.shelfPrice) && (onlineOffer || detection?.shelfPrice) ? (
+                                  <div className={styles.rankedPriceRow}>
+                                    <span>{onlineOffer ? "Online price" : "Shelf price"}</span>
+                                    <CompactProductPrice detection={detection} offer={onlineOffer} />
+                                  </div>
+                                ) : null}
+                              </div>
+                            </button>
+                            <OnlineOfferAction
+                              productName={itemName}
+                              detection={detection}
+                              offer={onlineOffer}
+                              onRetailer={() =>
+                                track("retailer_link_clicked", source, id, { placement: "ranked_product" })
+                              }
+                            />
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </section>
+                ) : null}
 
-                  {personalRankEnabled ? null : selectedPayload ? (
-                    <ProductResult
-                      payload={selectedPayload}
-                      detection={selectedDetection}
-                      offer={effectiveSelectedId ? scanOfferForId(effectiveSelectedId) : null}
-                      scanDetections={detectionById}
-                      showSummary={visibleTrayIds.length === 1}
-                      onAlternative={(id) => {
-                        manualSelectionRef.current = true;
-                        setSelectedId(id);
-                        if (!products[id]) void hydrateProducts([id]);
-                        track("alternative_viewed", source, id);
-                      }}
-                      onRetailer={(id) => track("retailer_link_clicked", source, id)}
-                    />
-                  ) : selectedDetection?.identity && effectiveSelectedId && pendingProductIds.has(effectiveSelectedId) ? (
-                    <LoadingProductResult detection={selectedDetection} />
-                  ) : selectedDetection?.identity ? (
-                    <RecognizedProductResult detection={selectedDetection} />
-                  ) : null}
-                </div>
-              )}
-            </aside>
-          ) : null}
+                {personalRankEnabled && !productDetailsOpen ? null : selectedPayload ? (
+                  <ProductResult
+                    payload={selectedPayload}
+                    detection={selectedDetection}
+                    offer={effectiveSelectedId ? scanOfferForId(effectiveSelectedId) : null}
+                    scanDetections={detectionById}
+                    showSummary={visibleTrayIds.length === 1 || productDetailsOpen}
+                    thumbnail={
+                      <ProductThumbnail
+                        imageUrl={
+                          productDisplayImage(selectedPayload.product) ||
+                          (effectiveSelectedId ? scanOfferForId(effectiveSelectedId)?.imageUrl : null)
+                        }
+                        sceneImageUrl={sceneImageUrl}
+                        sceneDimensions={mediaDimensions}
+                        detection={selectedDetection}
+                        sizes="320px"
+                        targetAspect={1}
+                      />
+                    }
+                    onAlternative={(id) => {
+                      manualSelectionRef.current = true;
+                      setSelectedId(id);
+                      setProductDetailsOpen(true);
+                      resultsSheetRef.current?.scrollTo({ top: 0 });
+                      if (!products[id]) void hydrateProducts([id]);
+                      track("alternative_viewed", source, id);
+                    }}
+                    onRetailer={(id) => track("retailer_link_clicked", source, id)}
+                  />
+                ) : selectedDetection?.identity && effectiveSelectedId && pendingProductIds.has(effectiveSelectedId) ? (
+                  <LoadingProductResult detection={selectedDetection} />
+                ) : selectedDetection?.identity ? (
+                  <RecognizedProductResult detection={selectedDetection} />
+                ) : null}
+              </div>
+            )}
+          </aside>
+        ) : null}
       </section>
 
       {demoOpen ? (
@@ -1757,14 +1995,17 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
             aria-labelledby="demo-title"
             tabIndex={-1}
           >
-            <div className={styles.demoHeading}>
-              <div>
-                <p>Guided preview</p>
-                <h2 id="demo-title">See how a shelf scan works</h2>
-              </div>
+            <div className={styles.demoNavigation}>
+              <Image className={styles.wordmark} src="/brand/sugar-no-logo-white.svg" alt="Sugar.no" width={137} height={26.07} unoptimized />
               <button type="button" onClick={closeDemo} aria-label="Close demo chooser">
                 <X aria-hidden="true" size={20} />
               </button>
+            </div>
+            <div className={styles.demoHeading}>
+              <div>
+                <h2 id="demo-title">See how a shelf scan works</h2>
+                <p>Compare the example products or try a saved photo.</p>
+              </div>
             </div>
             <div className={styles.demoChoices}>
               {personalRankAvailable ? <Link href="/demo/personal-shelf" prefetch={false} className={styles.ratingDemoLink}>
@@ -1773,23 +2014,41 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
               </Link> : null}
               <button type="button" onClick={startShelf}>
                 <Layers3 aria-hidden="true" size={22} />
-                <span><strong>Shelf demo</strong><small>Compare several products at once</small></span>
+                <span>
+                  <strong>Shelf demo</strong>
+                  <small>Compare several products at once</small>
+                </span>
               </button>
               <button type="button" onClick={startCheckout}>
                 <ShoppingBasket aria-hidden="true" size={22} />
-                <span><strong>Checkout demo</strong><small>Read products on a checkout belt</small></span>
+                <span>
+                  <strong>Checkout demo</strong>
+                  <small>Read products on a checkout belt</small>
+                </span>
               </button>
               <label className={styles.demoUpload}>
                 <FileImage aria-hidden="true" size={22} />
-                <span><strong>Use saved photo</strong><small>Choose a shelf or checkout image</small></span>
+                <span>
+                  <strong>Use saved photo</strong>
+                  <small>Choose a shelf or checkout image</small>
+                </span>
                 <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} />
               </label>
             </div>
             <button className={styles.backToLive} type="button" onClick={closeDemo}>
-              <Camera aria-hidden="true" size={18} /> Back to live camera
+              Back to live camera
             </button>
           </div>
         </div>
+      ) : null}
+      {feedbackOpen ? (
+        <FeedbackDialog
+          open
+          sessionId={pilotSessionId}
+          source={source}
+          onClose={closeFeedback}
+          onSubmitted={(helpful) => track("feedback_submitted", source, undefined, { helpful })}
+        />
       ) : null}
     </main>
   );

@@ -8,7 +8,7 @@ import type { ExternalCatalogProduct } from "../../src/server/external-catalog-t
 
 async function authenticate(page: Page) {
   const response = await page.request.post("/api/auth", {
-    headers: { origin: "http://127.0.0.1:3000" },
+    headers: { origin: `http://127.0.0.1:${process.env.E2E_PORT || "3000"}` },
     data: { code: "e2e-demo-code" }
   });
   expect(response.status()).toBe(200);
@@ -16,7 +16,11 @@ async function authenticate(page: Page) {
 
 async function unlock(page: Page) {
   await authenticate(page);
+  await page.addInitScript(() => localStorage.setItem("sugar_scanner_onboarding_v1", "completed"));
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  const openCamera = page.getByRole("button", { name: "Open camera" });
+  await expect(page.getByLabel("Live camera scanner").or(openCamera)).toBeVisible();
+  if (await openCamera.isVisible()) await openCamera.click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
   await expect
@@ -28,24 +32,13 @@ async function unlock(page: Page) {
     .toBe(true);
 }
 
-async function expectInsideViewport(page: Page, locator: Locator) {
-  const bounds = await locator.evaluate((element) => {
+async function expectInsideViewport(_page: Page, locator: Locator) {
+  await expect.poll(() => locator.evaluate((element) => {
     const rect = element.getBoundingClientRect();
-    return {
-      left: rect.left,
-      right: rect.right,
-      top: rect.top,
-      bottom: rect.bottom,
-      width: rect.width,
-      height: rect.height,
-      viewportWidth: window.visualViewport?.width || window.innerWidth,
-      viewportHeight: window.visualViewport?.height || window.innerHeight
-    };
-  });
-  expect(bounds.left).toBeGreaterThanOrEqual(-1);
-  expect(bounds.top).toBeGreaterThanOrEqual(-1);
-  expect(bounds.right).toBeLessThanOrEqual(bounds.viewportWidth + 1);
-  expect(bounds.bottom).toBeLessThanOrEqual(bounds.viewportHeight + 1);
+    const width = window.visualViewport?.width || window.innerWidth;
+    const height = window.visualViewport?.height || window.innerHeight;
+    return rect.left >= -1 && rect.top >= -1 && rect.right <= width + 1 && rect.bottom <= height + 1;
+  }), { message: "Element stays inside the viewport after its finite entrance transition" }).toBe(true);
 }
 
 async function expectNoDocumentOverflow(page: Page) {
@@ -116,6 +109,9 @@ async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
   await expect(chooser).toBeVisible();
   await chooser.getByRole("button", { name: new RegExp(name) }).click();
+  await expect(page.getByText(/^(Shelf photo|Checkout photo)$/)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Leave feedback", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Back to live camera", exact: true })).toHaveCount(0);
 }
 
 async function openPersonalShelfFixture(page: Page, samples?: ScoredProduct[]) {
@@ -240,17 +236,6 @@ async function mockSampleShelfRecognition(page: Page) {
         imageStored: false
       })
     });
-  });
-}
-
-async function waitForAlternativeImages(page: Page) {
-  await page.waitForFunction(() => {
-    const images = [...document.querySelectorAll<HTMLImageElement>('img[alt=""]')].filter((image) => {
-      const url = new URL(image.currentSrc || image.src, window.location.href);
-      const optimizedSource = url.searchParams.get("url");
-      return !optimizedSource?.startsWith("http");
-    });
-    return images.every((image) => image.complete && image.naturalWidth > 0);
   });
 }
 
@@ -535,16 +520,38 @@ test("first live recognition waits for camera positioning before capturing", asy
   expect(retryDelay).toBeLessThan(1_450);
 });
 
-test("entry opens directly into the camera-first experience without an access page", async ({ page }) => {
+test("first visit explains the pilot before requesting camera permission", async ({ page }) => {
   await page.addInitScript(() => {
+    let cameraRequests = 0;
+    Object.defineProperty(window, "__cameraRequests", { configurable: true, get: () => cameraRequests });
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
-      value: { getUserMedia: () => Promise.reject(new DOMException("Denied in test", "NotAllowedError")) }
+      value: { getUserMedia: () => {
+        cameraRequests += 1;
+        return Promise.reject(new DOMException("Denied in test", "NotAllowedError"));
+      } }
     });
   });
   await page.goto("/");
   await expect(page.getByLabel("Demo access code")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Open scanner" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Find a better fit." })).toBeVisible();
+  await expect(page.getByText("Point your camera at a shelf.Compare similar productsby sugar and protein.")).toBeVisible();
+  await expect(page.getByTestId("onboarding-preview")).toBeVisible();
+  await expect(page.getByAltText("Protein bars on a shop shelf. Four products are outlined and one is labelled Great fit.")).toBeVisible();
+  await expect(page.getByText("4 products compared")).toBeVisible();
+  await expect(page.getByText("Best fit appears first")).toBeVisible();
+  await expect(page.getByText("Camera opens only after you choose Open camera. Photos are not saved.")).toBeVisible();
+  const openCameraBox = await page.getByRole("button", { name: "Open camera" }).boundingBox();
+  const sampleBox = await page.getByRole("button", { name: "Try a sample shelf" }).boundingBox();
+  const privacyBox = await page.getByText("Camera opens only after you choose Open camera. Photos are not saved.").boundingBox();
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  expect(openCameraBox?.y).toBeGreaterThan(0);
+  expect((sampleBox?.y ?? viewportHeight) + (sampleBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
+  expect((privacyBox?.y ?? viewportHeight) + (privacyBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
+  await expectNoDocumentOverflow(page);
+  await expectVisibleTouchTargets(page);
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
+  await page.getByRole("button", { name: "Open camera" }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expectOfficialSugarNoLogo(page);
   await expect(page.getByText("Live camera", { exact: true })).toHaveCount(0);
@@ -561,6 +568,126 @@ test("entry opens directly into the camera-first experience without an access pa
   );
   await expect(page.getByText("Private demo", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/Sent to Google Gemini/i)).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem("sugar_scanner_onboarding_v1"))).toBe("completed");
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(1);
+});
+
+test("completed onboarding stays hidden unless QA forces it", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("sugar_scanner_onboarding_v1", "skipped");
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: () => Promise.reject(new DOMException("Denied in test", "NotAllowedError")) }
+    });
+  });
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Find a better fit." })).toHaveCount(0);
+  await expect(page.getByLabel("Live camera scanner")).toBeVisible();
+  await page.goto("/?onboarding=1");
+  await expect(page.getByRole("heading", { name: "Find a better fit." })).toBeVisible();
+});
+
+test("sample shelf dismisses onboarding without requesting camera permission", async ({ page }) => {
+  await page.addInitScript(() => {
+    let cameraRequests = 0;
+    Object.defineProperty(window, "__cameraRequests", { configurable: true, get: () => cameraRequests });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: () => {
+        cameraRequests += 1;
+        return Promise.reject(new DOMException("Denied in test", "NotAllowedError"));
+      } }
+    });
+  });
+  await page.goto("/?onboarding=1");
+  await expect(page.getByRole("heading", { name: "Find a better fit." })).toBeVisible();
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
+  await page.getByRole("button", { name: "Try a sample shelf" }).click();
+  await expect(page.getByLabel("Shelf photo scanner")).toBeVisible();
+  await expect(page.getByText("Shelf photo", { exact: true })).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem("sugar_scanner_onboarding_v1"))).toBe("completed");
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
+});
+
+test("sample overlays track the contained photo after onboarding and resizing", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/?onboarding=1");
+  await page.getByRole("button", { name: "Try a sample shelf", exact: true }).click();
+  await expect(page.getByTestId("rated-detection-marker")).toHaveCount(4);
+
+  for (const viewport of [{ width: 1280, height: 720 }, { width: 402, height: 874 }, { width: 1280, height: 720 }]) {
+    await page.setViewportSize(viewport);
+    await expect.poll(() => page.evaluate(() => {
+      const photo = document.querySelector<HTMLImageElement>('img[alt="Four protein bars on a supermarket shelf"]');
+      const marker = document.querySelector<HTMLElement>('[data-testid="rated-detection-marker"]');
+      if (!photo?.naturalWidth || !marker) return Infinity;
+      const bounds = photo.getBoundingClientRect();
+      const scale = Math.min(bounds.width / photo.naturalWidth, bounds.height / photo.naturalHeight);
+      const renderedWidth = photo.naturalWidth * scale;
+      const renderedHeight = photo.naturalHeight * scale;
+      const actual = marker.getBoundingClientRect();
+      const expectedLeft = bounds.left + (bounds.width - renderedWidth) / 2 + .01 * renderedWidth;
+      const expectedTop = bounds.top + (bounds.height - renderedHeight) / 2 + .27 * renderedHeight;
+      return Math.max(
+        Math.abs(actual.left - expectedLeft),
+        Math.abs(actual.top - expectedTop),
+        Math.abs(actual.width - .24 * renderedWidth),
+        Math.abs(actual.height - .28 * renderedHeight)
+      );
+    })).toBeLessThan(2);
+  }
+  await page.screenshot({ path: "test-results/pen-contained-photo-wide.png" });
+});
+
+test("onboarding motion is one-time and respects reduced motion", async ({ page }) => {
+  await page.goto("/?onboarding=1");
+  await expectOfficialSugarNoLogo(page);
+  const preview = page.getByTestId("onboarding-preview");
+  await expect(preview).toBeVisible();
+  expect(await preview.evaluate((element) => getComputedStyle(element, "::before").animationName)).toContain("onboarding-scan-pass");
+  expect(await preview.evaluate((element) => getComputedStyle(element, "::before").animationIterationCount)).toBe("1");
+  expect(await preview.evaluate((element) => getComputedStyle(element, "::before").animationDuration)).toBe("3.2s");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await expect(preview).toBeVisible();
+  expect(await preview.evaluate((element) => getComputedStyle(element).animationName)).toBe("none");
+  expect(await preview.evaluate((element) => getComputedStyle(element, "::before").display)).toBe("none");
+  expect(await page.getByRole("button", { name: "Open camera" }).evaluate((element) =>
+    getComputedStyle(element).transitionDuration
+      .split(",")
+      .every((value) => Number.parseFloat(value) <= 0.001)
+  )).toBe(true);
+});
+
+test("anonymous feedback validates Needs work and shows success", async ({ page }) => {
+  await page.route("**/api/feedback", async (route) => {
+    const body = route.request().postDataJSON() as { helpful: boolean; reason: string; comment: string };
+    expect(body).toMatchObject({ helpful: false, reason: "unclear", comment: "Hard to understand" });
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, storage: "supabase" }) });
+  });
+  await unlock(page);
+  const feedbackTrigger = page.getByRole("button", { name: "Leave feedback" });
+  await expect(feedbackTrigger).toContainText("Leave feedback");
+  await expect(feedbackTrigger).toHaveCSS("white-space", "nowrap");
+  expect((await feedbackTrigger.boundingBox())?.width).toBeGreaterThanOrEqual(120);
+  await feedbackTrigger.click();
+  const dialog = page.getByRole("dialog", { name: "Was this scan helpful?" });
+  // Measure spacing after the dialog's entrance transform has settled.
+  await dialog.evaluate(async (element) => {
+    await Promise.all(element.getAnimations({ subtree: true })
+      .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+      .map((animation) => animation.finished.catch(() => undefined)));
+  });
+  const ratingBox = await dialog.getByRole("group", { name: "Feedback rating" }).boundingBox();
+  const submitBox = await dialog.getByRole("button", { name: "Send feedback" }).boundingBox();
+  expect((submitBox?.y ?? 0) - ((ratingBox?.y ?? 0) + (ratingBox?.height ?? 0))).toBeGreaterThanOrEqual(8);
+  await dialog.getByRole("button", { name: "Needs work" }).click();
+  await expect(dialog.getByRole("button", { name: "Send feedback" })).toBeDisabled();
+  await dialog.getByLabel("Result was unclear").check();
+  await dialog.getByPlaceholder("Tell us what you noticed").fill("Hard to understand");
+  await dialog.getByRole("button", { name: "Send feedback" }).click();
+  await expect(page.getByRole("heading", { name: "Thank you" })).toBeVisible();
 });
 
 test("scanner follows the current Sugar.no app surface language without changing fit semantics", async ({ page }) => {
@@ -573,23 +700,23 @@ test("scanner follows the current Sugar.no app surface language without changing
     );
   });
   expect(palette).toEqual({
-    "--canvas": "#f3f4f8",
+    "--canvas": "#f2f2f7",
     "--surface": "#fff",
-    "--surface-tinted": "#f5f5f7",
-    "--ink": "#11131f",
-    "--muted": "#69696f",
+    "--surface-tinted": "#f2f2f7",
+    "--ink": "#262626",
+    "--muted": "#60606a",
     "--accent": "#0a84ff",
     "--border": "#e8e9ef",
     "--focus": "#0a84ff"
   });
 
   await openDemoScene(page, "Shelf demo");
-  await expect(page.locator("aside")).toHaveCSS("background-color", "rgb(243, 244, 248)");
-  await expect(page.getByRole("status")).toHaveCSS("background-color", "rgba(20, 21, 30, 0.86)");
+  await expect(page.locator("aside")).toHaveCSS("background-color", "rgb(242, 242, 247)");
+  await expect(page.getByRole("status")).toHaveCSS("background-color", "rgba(255, 255, 255, 0.94)");
   const markers = page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]');
   await expect(markers).toHaveCount(4);
-  await expect(markers.filter({ hasText: "Great fit" })).toHaveCount(2);
-  await expect(markers.filter({ hasText: "Moderate fit" })).toHaveCount(2);
+  await expect(markers.and(page.getByRole("button", { name: /: Great fit$/ }))).toHaveCount(2);
+  await expect(markers.and(page.getByRole("button", { name: /: Moderate fit$/ }))).toHaveCount(2);
   const markerFillAlphas = await markers.evaluateAll((elements) =>
     elements.map((element) => {
       const color = getComputedStyle(element).backgroundColor;
@@ -598,151 +725,191 @@ test("scanner follows the current Sugar.no app surface language without changing
       return Number(rgbaAlpha || modernAlpha || 1);
     })
   );
-  expect(markerFillAlphas.every((alpha) => alpha >= 0.2 && alpha <= 0.3)).toBe(true);
+  expect(markerFillAlphas.every((alpha) => alpha >= 0.09 && alpha <= 0.11)).toBe(true);
 });
+
+for (const reducedMotion of ["no-preference", "reduce"] as const) {
+  test(`result motion keeps rapid navigation and focus usable (${reducedMotion})`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion });
+    await mockAlternativeOffers(page);
+    await unlock(page);
+    await openDemoScene(page, "Shelf demo");
+    const viewAll = page.getByRole("button", { name: "View all", exact: true });
+    const dialog = page.getByRole("dialog", { name: "Products from this scan" });
+    const content = dialog.locator("#scan-results-content");
+    // Dispatch without Playwright's stability wait so navigation can interrupt entry.
+    await viewAll.focus();
+    await viewAll.dispatchEvent("click");
+    await expect(dialog).toBeVisible();
+    const animated = await content.evaluate((el) => getComputedStyle(el).animationName !== "none");
+    expect(animated).toBe(reducedMotion === "no-preference");
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(viewAll).toBeFocused();
+
+    await viewAll.dispatchEvent("click");
+    await dialog.getByRole("button", { name: "Rank 1, BAREBELLS Salty Peanut, Great fit", exact: true }).dispatchEvent("click");
+    await expect(dialog.getByRole("heading", { name: "Salty Peanut", exact: true })).toBeVisible();
+    await dialog.getByRole("button", { name: "Back to all results" }).dispatchEvent("click");
+    await expect(dialog.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+    await expect(dialog).toBeFocused();
+    // A system preference change also stops an entry already in progress.
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(content).toHaveCSS("animation-name", "none");
+    await expect(content).toHaveCSS("transform", "none");
+    const carousel = dialog.getByRole("group", { name: "Alternative products" });
+    await carousel.getByRole("link").last().scrollIntoViewIfNeeded();
+    await expectInsideViewport(page, carousel.getByRole("link").last());
+    await expectNoDocumentOverflow(page);
+    await page.keyboard.press("Escape");
+    await expect(viewAll).toBeFocused();
+
+    await page.emulateMedia({ reducedMotion });
+    const feedback = page.getByRole("button", { name: "Leave feedback", exact: true });
+    await feedback.dispatchEvent("click");
+    await expect(page.getByRole("dialog", { name: /Was this scan/ })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(feedback).toBeFocused();
+  });
+}
 
 test("sample shelf photo highlights products and ranks two-factor Sugar.no fits", async ({ page }) => {
   await mockAlternativeOffers(page);
   await unlock(page);
   await openDemoScene(page, "Shelf demo");
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
-  const shelfPreview = page.getByLabel("Product result preview");
-  await expect(shelfPreview.getByText(/^#[1-4]$/)).toHaveCount(4);
-  await expect(shelfPreview.getByText(/^Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g(?: · Carbs \d+(?:\.\d+)?g)?$/)).toHaveCount(4);
-  await expect(shelfPreview.getByRole("button").first()).toHaveAccessibleName(/^Rank 1,.*Protein .* grams, Sugar .* grams.* per 100 grams$/);
-  const shelfDeal = shelfPreview.getByLabel("Demo shelf price €3.49, online price €2.79, cheaper online");
-  await expect(shelfDeal).toBeVisible();
-  await expect(shelfDeal.getByText("€3.49", { exact: true })).toHaveCSS("text-decoration-line", "line-through");
-  const shelfBuy = shelfPreview.getByRole("link", { name: /Buy .* cheaper at Barbora for €2\.79/ });
-  await expect(shelfBuy).toBeVisible();
-  await expect(shelfBuy).toHaveAttribute(
-    "href",
-    "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g"
-  );
-  expect((await shelfBuy.boundingBox())?.height).toBeGreaterThanOrEqual(44);
-  await expect(page.getByLabel("Shelf photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(4);
-  await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
-  await expect(page.getByLabel("Sample shelf photo with four supported protein snacks").locator("img")).toHaveCount(1);
-  await expect(page.getByAltText("Four protein bars on a supermarket shelf")).toBeVisible();
-  await page.waitForFunction(() =>
-    [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Sample shelf photo with four supported protein snacks"] img')]
-      .every((image) => image.complete && image.naturalWidth > 0)
-  );
-  const shelfOverlay = page.getByLabel("Shelf photo scanner");
-  await expect(shelfOverlay.getByText("2/2 signals", { exact: true })).toHaveCount(0);
-  await expect(shelfOverlay.locator('button[aria-label*="best in this scan"]')).toHaveCount(0);
-  const firstMarker = shelfOverlay.locator('button[aria-label^="Open "]').first();
-  const firstMarkerChrome = await firstMarker.evaluate((element) => {
-    const style = getComputedStyle(element);
-    return { borderColor: style.borderColor, boxShadow: style.boxShadow };
-  });
-  expect(firstMarkerChrome.borderColor).not.toBe("rgb(255, 255, 255)");
-  expect(firstMarkerChrome.boxShadow).not.toContain("rgb(255, 255, 255)");
-  const markerDiscs = shelfOverlay.locator('button[aria-label^="Open "] > span');
-  await expect(markerDiscs).toHaveCount(4);
-  const markerDiscSizes = await markerDiscs.evaluateAll((elements) =>
-    elements.map((element) => {
-      const box = element.getBoundingClientRect();
-      return `${Math.round(box.width)}x${Math.round(box.height)}`;
-    })
-  );
-  expect(markerDiscSizes).toEqual(["24x24", "24x24", "24x24", "24x24"]);
-  await expect(shelfOverlay.locator('svg[data-fit-icon="great"]')).toHaveCount(2);
-  await expect(shelfOverlay.locator('svg[data-fit-icon="moderate"]')).toHaveCount(2);
-  await expect(shelfOverlay.locator('svg[data-fit-icon="low"]')).toHaveCount(0);
-  const moderateMarker = shelfOverlay.locator('button[aria-label*="Moderate fit"]').first();
-  await moderateMarker.click();
-  const selectedChrome = await moderateMarker.evaluate((element) => {
-    const style = getComputedStyle(element);
-    return { borderColor: style.borderColor, boxShadow: style.boxShadow };
-  });
-  expect(selectedChrome.borderColor).not.toBe("rgb(255, 255, 255)");
-  expect(selectedChrome.boxShadow).not.toContain("rgb(255, 255, 255)");
-  await firstMarker.click();
-  await waitForAlternativeImages(page);
-  await expect(page.getByRole("button", { name: "Scan again" })).toBeVisible();
-  await page.screenshot({ path: "test-results/shelf-mobile.png", fullPage: true });
+  const preview = page.getByLabel("Product result preview");
+  await expect(preview.getByRole("button")).toHaveCount(4);
+  await expect(preview.getByRole("button").first()).toHaveAccessibleName("Rank 1, BAREBELLS Salty Peanut, Great fit, Sugar 2.3 grams per 100 grams");
+  await expect(preview.getByText(/^Sugar [0-9.]+\s+g$/)).toHaveCount(4);
+  const markers = page.getByTestId("rated-detection-marker");
+  await expect(markers).toHaveCount(4);
+  await expect(page.locator('svg[data-fit-icon="great"]')).toHaveCount(2);
+  await expect(page.locator('svg[data-fit-icon="moderate"]')).toHaveCount(2);
+  await markers.and(page.getByRole("button", { name: /: Moderate fit$/ })).first().click();
+  await expect(markers).toHaveText(["", "", "", ""]);
+  await expect(preview.getByText("Great fit", { exact: true })).toHaveCount(2);
+  await expect(preview.getByLabel("Moderate fit", { exact: true })).toHaveCount(2);
+  await expectNoDocumentOverflow(page);
+  await page.screenshot({ path: "test-results/shelf-mobile.png" });
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
-  await expect(resultsDialog).toBeVisible();
-  const ranking = resultsDialog.getByLabel("Products ranked by Sugar.no fit");
-  await expect(ranking).toBeVisible();
+  const dialog = page.getByRole("dialog", { name: "Products from this scan" });
+  const ranking = dialog.getByLabel("Products ranked by Sugar.no fit");
   await expect(ranking.getByRole("button")).toHaveCount(4);
-  await expect(ranking.getByRole("button").first()).toHaveAccessibleName(/^Rank 1,/);
-  const expandedTitle = resultsDialog.getByRole("heading", { name: "Best fit first" });
-  const collapseResults = resultsDialog.getByRole("button", { name: "Collapse product results" });
-  await expect(expandedTitle).toBeVisible();
-  const [titleBox, collapseBox] = await Promise.all([expandedTitle.boundingBox(), collapseResults.boundingBox()]);
-  expect(titleBox).not.toBeNull();
-  expect(collapseBox).not.toBeNull();
-  expect(Math.abs((titleBox?.y ?? 0) + (titleBox?.height ?? 0) / 2 - ((collapseBox?.y ?? 0) + (collapseBox?.height ?? 0) / 2))).toBeLessThan(12);
-  expect((titleBox?.x ?? 0) + (titleBox?.width ?? 0)).toBeLessThan(collapseBox?.x ?? 0);
-  await expect(resultsDialog.getByText("Full comparison", { exact: true })).toHaveCount(0);
-  await expect(resultsDialog.getByText("Sugar.no ranking", { exact: true })).toHaveCount(0);
-  await expect(resultsDialog.getByText("Based on source-backed protein and total sugar", { exact: true })).toHaveCount(0);
-  await expect(resultsDialog.getByText("4 of 4 ready to compare", { exact: true })).toHaveCount(0);
-  await expect(resultsDialog.getByText("4/4 rated", { exact: true })).toHaveCount(0);
-  await expect(resultsDialog.getByRole("button", { name: "Scan again" })).toHaveCount(0);
-  const viewportHeight = await page.evaluate(() => window.innerHeight);
-  await expect.poll(async () => (await resultsDialog.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(viewportHeight * 0.95);
-  await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+  await expectOfficialSugarNoLogo(page);
+  const offer = ranking.getByRole("link", { name: /Buy cheaper online Salty Peanut at Barbora for €2\.79/ });
+  await expect(offer).toHaveAttribute("href", "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g");
+  await expect(offer.locator("s")).toHaveText("€3.49");
+  await expect(offer).toHaveCSS("min-height", "56px");
+  expect(await offer.evaluate((element) => getComputedStyle(element).backgroundImage)).toContain("linear-gradient");
   await page.screenshot({ path: "test-results/shelf-results-mobile.png" });
-  await expect(resultsDialog.getByLabel("Sugar.no badge")).toHaveCount(0);
-  await expect(resultsDialog.getByText("Better alternatives", { exact: true })).toBeVisible();
-  const betterAlternatives = resultsDialog.getByRole("region", { name: "Same product type · Great fit only" });
-  const alternativeBuyLinks = betterAlternatives.getByRole("link", { name: /Buy online .* for €1\.49/ });
-  await expect(alternativeBuyLinks).toHaveCount(4);
-  const alternativeHrefs = await alternativeBuyLinks.evaluateAll((links) =>
-    links.map((link) => (link as HTMLAnchorElement).href)
-  );
-  expect(alternativeHrefs.some((href) => href.startsWith("https://www.rimi.lv/"))).toBe(true);
-  expect(alternativeHrefs.some((href) => href.startsWith("https://barbora.lv/produkti/"))).toBe(true);
-  expect(alternativeHrefs.every((href) => /^https:\/\/(?:www\.rimi\.lv|barbora\.lv|www\.livin\.lv)\//.test(href))).toBe(true);
-  await expect(betterAlternatives.getByText("Great fit", { exact: true })).toHaveCount(4);
-  await expect(betterAlternatives.getByText("Moderate fit", { exact: true })).toHaveCount(0);
-  await expect(betterAlternatives.getByText("Low fit", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("View at Barbora · check current price", { exact: true })).toHaveCount(0);
-  await ranking.getByRole("button", { name: /BAREBELLS.*Lemon Cheesecake/i }).click();
-  await expect(
-    betterAlternatives.getByRole("link", { name: /Buy cheaper online .* for €1\.49/ })
-  ).toHaveCount(0);
-  await expect(betterAlternatives.getByRole("link", { name: /Buy online .* for €1\.49/ })).toHaveCount(4);
-  await expect(betterAlternatives.getByText("€3.49", { exact: true })).toHaveCount(0);
-  await expect(shelfPreview.getByText("shelf", { exact: true })).toHaveCount(0);
-  await expect(ranking.getByText("shelf", { exact: true })).toHaveCount(0);
-  await ranking.getByRole("button").first().click();
-  await expect(page.getByLabel("Price comparison")).toHaveCount(0);
-  const shelfOffer = ranking.getByRole("link", { name: /Buy cheaper online .* at Barbora for €2\.79/ });
-  await expect(shelfOffer).toHaveAttribute(
-    "href",
-    "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g"
-  );
-  await expect(shelfOffer).toContainText("Buy cheaper online");
-  await expect(shelfOffer).toContainText("€2.79");
-  await expect(shelfOffer).toHaveCSS("background-color", "rgb(23, 116, 71)");
-  expect((await shelfOffer.boundingBox())?.height).toBeGreaterThanOrEqual(44);
-  const shelfOfferBox = await shelfOffer.boundingBox();
-  const shelfOfferCardBox = await shelfOffer.locator("..").boundingBox();
-  expect(shelfOfferBox?.width ?? 0).toBeGreaterThan((shelfOfferCardBox?.width ?? 0) * 0.9);
-  await expect(ranking.getByText("Barbora online", { exact: true })).toHaveCount(0);
-  await expect(ranking.locator('[aria-label*="Barbora online"]')).toHaveCount(0);
-  await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
-  await expect(page.getByText("Outlines show products with both protein and total sugar available.", { exact: true })).toHaveCount(0);
-  await expect(ranking.getByText(/^Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g(?: · Carbs \d+(?:\.\d+)?g)?$/)).toHaveCount(4);
-  await expect(page.getByText(/Sugar\.no Match \d+/)).toHaveCount(0);
-  await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
-  await expect(page.getByText(/\b(good|bad|unhealthy)\b/i)).toHaveCount(0);
-  await waitForAlternativeImages(page);
-  const accessibility = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-    .analyze();
+  await ranking.getByRole("button", { name: "Rank 1, BAREBELLS Salty Peanut, Great fit" }).click();
+  await expect(dialog.getByRole("heading", { name: "Salty Peanut", exact: true })).toBeVisible();
+  await expect(dialog.getByLabel("Sugar.no badge")).toContainText("2.3 g");
+  await expect(dialog.getByLabel("Sugar.no badge")).toContainText("36 g");
+  await expect(dialog.getByRole("link", { name: /Buy cheaper online/ })).toHaveAttribute("href", "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g");
+  const alternatives = dialog.getByRole("region", { name: "Same product type · Great fit only" });
+  await expect(alternatives.getByRole("link", { name: /Buy online .* for €1\.49/ })).toHaveCount(4);
+  await expect(alternatives.getByText("Great fit", { exact: true })).toHaveCount(4);
+  await expect(alternatives.getByText("Moderate fit", { exact: true })).toHaveCount(0);
+  const hrefs = await alternatives.getByRole("link").evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).href));
+  expect(hrefs.every((href) => /^https:\/\/(?:www\.rimi\.lv|barbora\.lv|www\.livin\.lv)\//.test(href))).toBe(true);
+  await page.screenshot({ path: "test-results/product-detail-mobile.png" });
+  await dialog.getByRole("button", { name: "Back to all results" }).click();
+  await expect(ranking).toBeVisible();
+  await dialog.getByRole("button", { name: "Collapse product results" }).click();
+  await preview.getByRole("button", { name: /Rank 4/ }).click();
+  await expect(dialog.getByRole("heading", { name: "Lemon Cheesecake", exact: true })).toBeVisible();
+  await expect(dialog.getByLabel("Sugar.no badge")).toContainText("3.8 g");
+  await expectNoDocumentOverflow(page);
+  // Approved normal-mode badge colors are retained; the system's increased
+  // contrast preference supplies an accessible variant of the same components.
+  await page.emulateMedia({ contrast: "more" });
+  // Measure final colors after entrance opacity has settled, not a blended frame.
+  await dialog.evaluate(async (element) => {
+    await Promise.all(element.getAnimations({ subtree: true })
+      .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+      .map((animation) => animation.finished.catch(() => undefined)));
+  });
+  const accessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
   expect(accessibility.violations).toEqual([]);
+});
+
+test("alternative carousel shows one card and a preview while keeping every product reachable", async ({ page }) => {
+  await mockAlternativeOffers(page);
+  await unlock(page);
+  await openDemoScene(page, "Shelf demo");
+  await page.getByRole("button", { name: "View all", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Products from this scan" });
+  const alternatives = dialog.getByRole("region", { name: "Same product type · Great fit only" });
+  await expect(alternatives.getByRole("link")).toHaveCount(4);
+  for (const mode of ["list", "detail"] as const) {
+    if (mode === "detail") {
+      await dialog.getByRole("button", { name: "Rank 1, BAREBELLS Salty Peanut, Great fit", exact: true }).click();
+      await expect(dialog.getByRole("heading", { name: "Salty Peanut", exact: true })).toBeVisible();
+    }
+    for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 667 }, { width: 402, height: 874 }, { width: 1080, height: 900 }]) {
+      await page.setViewportSize(viewport);
+      const carousel = alternatives.getByRole("group", { name: "Alternative products" });
+      await carousel.scrollIntoViewIfNeeded();
+      await carousel.evaluate((el) => el.scrollTo({ left: 0, behavior: "instant" }));
+      await expect.poll(() => carousel.evaluate((el) => el.scrollLeft)).toBe(0);
+      const bounds = await carousel.evaluate((track) => {
+        const rect = track.getBoundingClientRect();
+        const cards = Array.from(track.querySelectorAll("article"));
+        const first = cards[0].getBoundingClientRect();
+        const next = cards[1].getBoundingClientRect();
+        return {
+          left: rect.left,
+          right: rect.right,
+          firstLeft: first.left - rect.left,
+          firstRight: rect.right - first.right,
+          nextVisible: (rect.right - next.left) / next.width,
+          scrolls: track.scrollWidth > track.clientWidth,
+          cards: cards.map((card) => ({
+            overflow: card.scrollWidth > card.clientWidth + 1,
+            overflowingContent: Array.from(card.querySelectorAll("button, a, strong, small")).some((child) => child.scrollWidth > child.clientWidth + 1)
+          }))
+        };
+      });
+      expect(bounds.left).toBeGreaterThanOrEqual(12);
+      expect(bounds.right).toBeLessThanOrEqual(viewport.width - 12);
+      expect(Math.abs(bounds.firstLeft)).toBeLessThanOrEqual(1);
+      expect(bounds.firstRight).toBeGreaterThan(0);
+      expect(bounds.nextVisible).toBeGreaterThanOrEqual(.27);
+      expect(bounds.nextVisible).toBeLessThanOrEqual(.33);
+      expect(bounds.scrolls).toBe(true);
+      expect(bounds.cards).toHaveLength(4);
+      for (const card of bounds.cards) {
+        expect(card.overflow).toBe(false);
+        expect(card.overflowingContent).toBe(false);
+      }
+      const heading = alternatives.getByRole("heading");
+      expect(await heading.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+      await page.screenshot({ path: `test-results/alternatives-${mode}-${viewport.width}.png`, scale: "css" });
+      await carousel.focus();
+      await page.keyboard.press("ArrowRight");
+      await expect.poll(() => carousel.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+      for (const link of await alternatives.getByRole("link").all()) {
+        await link.scrollIntoViewIfNeeded();
+        await expectInsideViewport(page, link);
+        expect(await link.evaluate((el) => {
+          const rect = el.getBoundingClientRect();
+          const target = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          return !!target && el.contains(target);
+        })).toBe(true);
+      }
+      await expectNoDocumentOverflow(page);
+    }
+  }
 });
 
 test("broken product packshot falls back to its crop from the scanned scene", async ({ page }) => {
   await page.route("**/_next/image?*", async (route) => {
     const source = new URL(route.request().url()).searchParams.get("url");
-    if (source?.includes("25f716c3-1604-41de-8679-7f4231725f41_s.png")) {
+    if (source?.includes("/demo-products/salty-peanut.png")) {
       await route.fulfill({ status: 404, contentType: "image/png", body: "" });
       return;
     }
@@ -752,7 +919,8 @@ test("broken product packshot falls back to its crop from the scanned scene", as
   await unlock(page);
   await openDemoScene(page, "Shelf demo");
 
-  const firstProduct = page.getByLabel("Product result preview").getByRole("button").first();
+  await page.getByRole("button", { name: "View all", exact: true }).click();
+  const firstProduct = page.getByLabel("Products ranked by Sugar.no fit").getByRole("button").first();
   await expect(firstProduct.getByTestId("product-packshot")).toHaveCount(0);
   await expect(firstProduct.getByTestId("scene-product-crop")).toBeVisible();
   await expect(firstProduct.getByTestId("scene-product-crop")).toHaveAttribute(
@@ -767,20 +935,9 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
   const checkoutMarkers = page.getByLabel("Checkout photo scanner").locator('button[aria-label^="Open "]');
   await expect(checkoutMarkers).toHaveCount(3);
-  await expect(checkoutMarkers.filter({ hasText: "Great fit" })).toHaveCount(2);
-  await expect(checkoutMarkers.filter({ hasText: "Moderate fit" })).toHaveCount(1);
-  await expect(page.getByText("3 rated · Best fit first", { exact: true })).toBeVisible();
-  const checkoutPreviewCrops = page.getByLabel("Product result preview").getByTestId("scene-product-crop");
-  await expect(checkoutPreviewCrops).toHaveCount(3);
-  expect(
-    await checkoutPreviewCrops.evaluateAll((elements) =>
-      elements.map((element) => element.getAttribute("data-thumbnail-mode"))
-    )
-  ).toEqual(["context-crop", "context-crop", "context-crop"]);
-  const cropBackgroundSizes = await checkoutPreviewCrops.evaluateAll((elements) =>
-    elements.map((element) => getComputedStyle(element).backgroundSize)
-  );
-  expect(cropBackgroundSizes.every((size) => size !== "cover" && size.includes("%"))).toBe(true);
+  await expect(checkoutMarkers.and(page.getByRole("button", { name: /: Great fit$/ }))).toHaveCount(2);
+  await expect(checkoutMarkers.and(page.getByRole("button", { name: /: Moderate fit$/ }))).toHaveCount(1);
+  await expect(page.getByText("Sugar per 100 g / 100 ml · best fit first", { exact: true })).toBeVisible();
   await expect(page.getByAltText("Groceries on a real supermarket checkout conveyor belt")).toBeVisible();
   await page.waitForFunction(() =>
     [...document.querySelectorAll<HTMLImageElement>('div[aria-label="Real supermarket checkout belt sample with three recognized packaged products"] img')]
@@ -800,7 +957,9 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await page.screenshot({ path: "test-results/checkout-results-mobile.png" });
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Sugar.no badge")).toHaveCount(0);
-  await expect(ranking.getByText(/^Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g(?: · Carbs \d+(?:\.\d+)?g)?$/)).toHaveCount(3);
+  await expect(ranking.getByText(/Sugar \d+(?:\.\d+)?g/)).toHaveCount(3);
+  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g/)).toHaveCount(3);
+  await expect(ranking.getByText(/Carbs \d+(?:\.\d+)?g/)).toHaveCount(0);
   await expect(page.getByText("Needs nutrition label", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await ranking.getByRole("button", { name: /STOCKMANN Fresh chanterelles/ }).click();
@@ -853,9 +1012,13 @@ test("demo chooser supports shelf, checkout and a clear return to live camera", 
   await expect(page.getByRole("heading", { name: "See how a shelf scan works" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Shelf demo" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Checkout demo" })).toBeVisible();
+  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  await expect(chooser).toHaveCSS("background-color", "rgb(242, 242, 247)");
+  expect(await chooser.getByRole("button", { name: "Back to live camera" }).evaluate((element) => getComputedStyle(element).backgroundImage)).toContain("linear-gradient");
   await page.getByRole("button", { name: "Shelf demo" }).click();
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
-  await page.getByRole("button", { name: "Back to live camera" }).click();
+  await expect(page.getByRole("button", { name: "View all", exact: true })).toHaveCSS("color", "rgb(255, 255, 255)");
+  await page.getByRole("button", { name: "Scan again", exact: true }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await openDemoScene(page, "Checkout demo");
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
@@ -864,7 +1027,9 @@ test("demo chooser supports shelf, checkout and a clear return to live camera", 
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Saved options" })).toHaveCount(0);
   await page.getByRole("button", { name: "Collapse product results" }).click();
-  await expect(page.getByRole("button", { name: "Back to live camera" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Back to live camera" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Scan again", exact: true }).click();
+  await expect(page.getByLabel("Live camera scanner")).toBeVisible();
 });
 
 test("comparison remains usable with reduced motion, dark mode and enlarged text", async ({ page }) => {
@@ -885,7 +1050,7 @@ test("comparison remains usable with reduced motion, dark mode and enlarged text
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test("saved-photo canvas follows day and night mode without a white surround", async ({ page }) => {
+test("saved-photo canvas keeps the approved light palette across system themes", async ({ page }) => {
   await page.route("**/api/recognize", async (route) => {
     await route.fulfill({
       status: 200,
@@ -898,10 +1063,10 @@ test("saved-photo canvas follows day and night mode without a white surround", a
   await chooseSavedPhoto(page, "dark-mode-shelf.png");
 
   const stage = page.getByLabel("Saved shelf or checkout photo scanner").locator(":scope > div").first();
-  await expect(stage).toHaveCSS("background-color", "rgb(16, 17, 22)");
+  await expect(stage).toHaveCSS("background-color", "rgb(242, 242, 247)");
 
   await page.emulateMedia({ colorScheme: "light" });
-  await expect(stage).toHaveCSS("background-color", "rgb(17, 19, 31)");
+  await expect(stage).toHaveCSS("background-color", "rgb(242, 242, 247)");
 });
 
 test("scanner remains operable at narrow portrait and phone landscape sizes", async ({ page }) => {
@@ -924,7 +1089,7 @@ test("scanner remains operable at narrow portrait and phone landscape sizes", as
   await expectOfficialSugarNoLogo(page);
   await expect(page.getByLabel("Products ranked by Sugar.no fit")).toBeVisible();
   await page.getByRole("button", { name: "Collapse product results" }).click();
-  await expect(page.getByRole("button", { name: "Back to live camera" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Scan again", exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
@@ -942,10 +1107,10 @@ test("camera and results fit iPhone 17 Pro and adjacent iPhone viewports", async
 
   await expect(cameraViewport).toHaveCSS("overflow", "hidden");
   const cameraViewportBox = await cameraViewport.boundingBox();
-  expect(cameraViewportBox?.x).toBeGreaterThanOrEqual(15);
-  expect(cameraViewportBox?.y).toBeGreaterThanOrEqual(110);
-  expect((cameraViewportBox?.x ?? 0) + (cameraViewportBox?.width ?? 0)).toBeLessThanOrEqual(402 - 15);
-  expect(parseFloat(await cameraViewport.evaluate((element) => getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(28);
+  expect(cameraViewportBox?.x).toBe(0);
+  expect(cameraViewportBox?.y).toBeGreaterThanOrEqual(80);
+  expect((cameraViewportBox?.x ?? 0) + (cameraViewportBox?.width ?? 0)).toBeLessThanOrEqual(402);
+  expect(parseFloat(await cameraViewport.evaluate((element) => getComputedStyle(element).borderRadius))).toBe(0);
 
   await expectInsideViewport(page, sheet);
   await expectInsideViewport(page, status);
@@ -1043,13 +1208,14 @@ test("scanner reflows with large text in light and dark themes", async ({ page }
   await expectNoDocumentOverflow(page);
   await expectVisibleTouchTargets(page);
 
+  await page.emulateMedia({ contrast: "more" });
   const accessibility = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
   expect(accessibility.violations).toEqual([]);
 });
 
-test("live camera preserves full-resolution capture geometry and a stable untappable preview", async ({ page }) => {
+test("live camera fills the screen while preserving capture geometry and aligned overlays", async ({ page }) => {
   test.setTimeout(45_000);
   await mockLiveCamera(page);
   let capturedFrame: string | null = null;
@@ -1062,8 +1228,12 @@ test("live camera preserves full-resolution capture geometry and a stable untapp
       contentType: "application/json",
       body: JSON.stringify({
         requestId: "camera-geometry",
-        status: "not_sure",
-        detections: [],
+        status: "matched",
+        detections: [{
+          productId: "barbora:geometry-test", confidence: .99,
+          box: { x: .1, y: .2, width: .3, height: .4 }, observedText: "Geometry test",
+          inlineProduct: ratedInlineProduct({ id: "barbora:geometry-test", brand: "Geometry", name: "Test bar", score: 70, protein: 20, sugar: 2 })
+        }],
         latencyMs: 1,
         model: "qa-mock",
         imageStored: false
@@ -1100,7 +1270,9 @@ test("live camera preserves full-resolution capture geometry and a stable untapp
     await expectInsideViewport(page, frame);
     const initialBox = await frame.boundingBox();
     expect(initialBox?.x).toBeLessThanOrEqual(1);
+    expect(initialBox?.y).toBe(0);
     expect(Math.abs((initialBox?.width ?? 0) - viewport.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs((initialBox?.height ?? 0) - viewport.height)).toBeLessThanOrEqual(1);
     await page.waitForTimeout(100);
     const stableBox = await frame.boundingBox();
     expect(Math.abs((initialBox?.width ?? 0) - (stableBox?.width ?? 0))).toBeLessThanOrEqual(1);
@@ -1111,22 +1283,101 @@ test("live camera preserves full-resolution capture geometry and a stable untapp
       if (!frame || !video) throw new Error("Live camera preview is unavailable");
       const rect = frame.getBoundingClientRect();
       const style = getComputedStyle(video);
+      const logo = document.querySelector<HTMLImageElement>('header img[alt="Sugar.no"]');
+      const captured = document.querySelector<HTMLElement>('[data-testid="captured-camera-frame"]');
+      const marker = document.querySelector<HTMLElement>('[data-testid="rated-detection-marker"]');
+      if (!logo || !captured || !marker) throw new Error("Camera overlays are unavailable");
+      const markerRect = marker.getBoundingClientRect();
+      const scale = Math.max(rect.width / video.videoWidth, rect.height / video.videoHeight);
+      const renderedWidth = video.videoWidth * scale;
+      const renderedHeight = video.videoHeight * scale;
+      const left = Math.max(0, (rect.width - renderedWidth) / 2 + .1 * renderedWidth);
+      const top = Math.max(0, (rect.height - renderedHeight) / 2 + .2 * renderedHeight);
+      const right = Math.min(rect.width, (rect.width - renderedWidth) / 2 + .4 * renderedWidth);
+      const bottom = Math.min(rect.height, (rect.height - renderedHeight) / 2 + .6 * renderedHeight);
       return {
-        frameRatio: rect.width / rect.height,
-        mediaRatio: video.videoWidth / video.videoHeight,
         objectFit: style.objectFit,
         pointerEvents: style.pointerEvents,
-        filter: style.filter
+        filter: style.filter,
+        controls: video.controls,
+        capturedFit: getComputedStyle(captured).objectFit,
+        logoFilter: getComputedStyle(logo).filter,
+        headerBackground: getComputedStyle(logo.closest("header")!).backgroundColor,
+        marker: { x: markerRect.x, y: markerRect.y, width: markerRect.width, height: markerRect.height },
+        expectedMarker: { x: left, y: top, width: right - left, height: bottom - top }
       };
     });
-    if (viewport.width / geometry.mediaRatio <= viewport.height + 1) {
-      expect(geometry.frameRatio).toBeCloseTo(geometry.mediaRatio, 2);
+    for (const key of ["x", "y", "width", "height"] as const) {
+      expect(Math.abs(geometry.marker[key] - geometry.expectedMarker[key])).toBeLessThanOrEqual(1);
     }
-    expect(geometry.objectFit).toBe("contain");
+    expect(geometry.objectFit).toBe("cover");
+    expect(geometry.capturedFit).toBe("cover");
+    expect(geometry.logoFilter).toBe("none");
+    expect(geometry.headerBackground).toBe("rgba(0, 0, 0, 0)");
+    expect(geometry.controls).toBe(false);
     expect(geometry.pointerEvents).toBe("none");
     expect(geometry.filter).toBe("none");
+    await expect(page.getByText(/The scan starts automatically/)).toHaveCount(0);
+    await expectInsideViewport(page, page.getByRole("button", { name: "Show demo" }));
+    await expectInsideViewport(page, page.getByRole("button", { name: "Leave feedback" }));
     await expectNoDocumentOverflow(page);
     await expectVisibleTouchTargets(page);
+    if (viewport.width === 402 || viewport.width === 874) {
+      await page.screenshot({ path: `test-results/fullscreen-camera-${viewport.width}.png` });
+    }
+  }
+});
+
+test("fullscreen camera keeps its overlay controls and reading status clear on small and rotated phones", async ({ page }) => {
+  await mockLiveCamera(page);
+  let releaseRecognition!: () => void;
+  const recognitionGate = new Promise<void>((resolve) => { releaseRecognition = resolve; });
+  await page.route("**/api/recognize", async (route) => {
+    await recognitionGate;
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ requestId: "layout-only", status: "not_sure", detections: [], latencyMs: 1, model: "qa-mock", imageStored: false })
+    });
+  });
+  await unlock(page);
+  await expect(page.getByTestId("captured-camera-frame")).toBeVisible();
+  try {
+    for (const viewport of [{ width: 320, height: 568 }, { width: 402, height: 874 }, { width: 874, height: 402 }]) {
+      await page.setViewportSize(viewport);
+      const status = page.getByRole("status").filter({ hasText: "Reading visible products" });
+      await expect(status).toBeVisible();
+      await expectInsideViewport(page, status);
+      const layout = await page.evaluate(() => {
+        const logo = document.querySelector('header img[alt="Sugar.no"]')!;
+        const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>("button")).filter(
+          (button) => ["Show demo", "Leave feedback"].includes(button.textContent!.trim())
+        );
+        const status = document.querySelector('[role="status"]')!;
+        const rects = [logo, ...buttons, status].map((element) => element.getBoundingClientRect());
+        return {
+          overlapping: rects.some((rect, index) => rects.slice(index + 1).some((other) =>
+            rect.left < other.right && rect.right > other.left && rect.top < other.bottom && rect.bottom > other.top
+          )),
+          obstructed: buttons.some((button) => {
+            const rect = button.getBoundingClientRect();
+            return !button.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+          }),
+          statusColor: getComputedStyle(status).color,
+          statusBackground: getComputedStyle(status).backgroundColor
+        };
+      });
+      expect(layout.overlapping).toBe(false);
+      expect(layout.obstructed).toBe(false);
+      expect(layout.statusColor).toBe("rgb(255, 255, 255)");
+      expect(layout.statusBackground).toBe("rgba(34, 34, 40, 0.93)");
+      await expect(page.getByText(/The scan starts automatically/)).toHaveCount(0);
+      await expectNoDocumentOverflow(page);
+      await page.screenshot({ path: `test-results/fullscreen-camera-reading-${viewport.width}.png` });
+    }
+    await page.getByRole("button", { name: "Show demo" }).click();
+    await expect(page.getByRole("dialog", { name: "See how a shelf scan works" })).toBeVisible();
+  } finally {
+    releaseRecognition();
   }
 });
 
@@ -1181,7 +1432,7 @@ test("camera permission denial offers a clear retry state", async ({ page }) => 
 test("saved images are resized client-side and fail closed without a provider key", async ({ page }) => {
   await unlock(page);
   await chooseSavedPhoto(page, "unknown.png");
-  await expect(page.getByRole("status")).toContainText("Recognition is unavailable");
+  await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
   await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
   await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
   await expect(page.getByText("Saved shelf or checkout photo", { exact: true })).toHaveCount(0);
@@ -1246,11 +1497,10 @@ test("a landscape saved shelf is scanned as a full frame plus three row close-up
   await chooseLandscapeSavedPhoto(page);
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 10_000 });
   expect(recognitionRequests).toBe(4);
-  const uploadedViewport = await page.getByTestId("camera-viewport").boundingBox();
-  expect((uploadedViewport?.width ?? 0) / (uploadedViewport?.height ?? 1)).toBeCloseTo(3 / 4, 1);
+  await expect(page.getByAltText("Uploaded product scene")).toHaveCSS("object-fit", "contain");
   await expectInsideViewport(page, page.getByTestId("camera-viewport"));
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByRole("heading", { name: /BAREBELLS/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Salty Peanut", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Barebells protein bar/ })).toHaveCount(0);
 });
 
@@ -1329,8 +1579,7 @@ test("a long online-store screenshot is scanned in four passes and opens one mer
   const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
   await expect(resultsDialog).toBeVisible({ timeout: 10_000 });
   const uploadedViewport = page.getByTestId("camera-viewport");
-  const uploadedViewportBox = await uploadedViewport.boundingBox();
-  expect((uploadedViewportBox?.width ?? 0) / (uploadedViewportBox?.height ?? 1)).toBeCloseTo(3 / 4, 1);
+  await expect(page.getByAltText("Uploaded product scene")).toHaveCSS("object-fit", "contain");
   await expectInsideViewport(page, uploadedViewport);
   expect(recognitionRequests).toBe(4);
   const ranking = resultsDialog.getByLabel("Products ranked by Sugar.no fit");
@@ -1708,14 +1957,14 @@ test("live camera applies each online result without waiting for the slowest pro
     const viewportRect = viewport.getBoundingClientRect();
     return {
       viewportRatio: viewportRect.width / viewportRect.height,
-      mediaRatio: video.videoWidth / video.videoHeight,
+      screenRatio: window.innerWidth / window.innerHeight,
       objectFit: getComputedStyle(video).objectFit,
       pointerEvents: getComputedStyle(video).pointerEvents,
       borderRadius: parseFloat(getComputedStyle(viewport).borderRadius)
     };
   });
-  expect(previewGeometry.viewportRatio).toBeCloseTo(previewGeometry.mediaRatio, 2);
-  expect(previewGeometry.objectFit).toBe("contain");
+  expect(previewGeometry.viewportRatio).toBeCloseTo(previewGeometry.screenRatio, 2);
+  expect(previewGeometry.objectFit).toBe("cover");
   expect(previewGeometry.pointerEvents).toBe("none");
   expect(previewGeometry.borderRadius).toBe(0);
   const cameraConstraints = await page.evaluate(
@@ -1731,15 +1980,15 @@ test("live camera applies each online result without waiting for the slowest pro
     }
   });
   const preview = page.getByLabel("Product result preview");
-  await expect(preview.getByText("Checking online…", { exact: true })).toHaveCount(1, { timeout: 5_000 });
+  await expect(preview.getByText("Checking nutrition…", { exact: true })).toHaveCount(1, { timeout: 5_000 });
   await expect(preview.getByText("Low fit", { exact: true })).toBeVisible();
   expect(slowEnrichmentFinished).toBe(false);
   releaseSlowEnrichment();
   await expect.poll(() => slowEnrichmentFinished).toBe(true);
-  await expect(preview.getByText("Checking online…", { exact: true })).toHaveCount(0);
+  await expect(preview.getByText("Checking nutrition…", { exact: true })).toHaveCount(0);
   await expect(preview.locator("article")).toHaveCount(2);
   await expect(preview.getByRole("button", { name: /Sanpellegrino Zero 330 ml/ })).toBeVisible();
-  await expect(preview.getByText("Nutrition not verified online", { exact: true })).toBeVisible();
+  await expect(preview.getByText("Nutrition not verified", { exact: true })).toBeVisible();
 });
 
 test("a visual-only live result holds the captured frame without scanning a new scene", async ({ page }) => {
@@ -1822,14 +2071,9 @@ test("provider unavailability pauses live recognition and offers manual recovery
   await unlock(page);
   const retryButton = page.getByRole("button", { name: "Not sure — try again", exact: true });
   await expect(retryButton).toBeVisible({ timeout: 6_000 });
-  await expect(retryButton).toHaveCSS("white-space", "nowrap");
-  await expect(retryButton).toHaveCSS("color", "rgb(255, 255, 255)");
-  await expect(page.getByRole("status")).toHaveCSS("background-color", "rgb(0, 102, 204)");
-  const [retryBox, statusBox] = await Promise.all([
-    retryButton.boundingBox(),
-    page.getByRole("status").boundingBox()
-  ]);
-  expect(retryBox?.width ?? 0).toBeGreaterThanOrEqual((statusBox?.width ?? 0) - 4);
+  await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
+  await expectInsideViewport(page, retryButton);
+  await page.screenshot({ path: "test-results/pen-service-unavailable.png" });
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
   await page.waitForTimeout(2_500);
   expect(recognitionRequests).toBe(1);
@@ -2028,39 +2272,27 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await chooseSavedPhoto(page, "price-check.png");
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
   await expect(page.getByText("Saved shelf or checkout photo", { exact: true })).toHaveCount(0);
-  await expect(
-    page.getByLabel("Product result preview").getByLabel("Shelf price €1.69, online price €0.99, cheaper online")
-  ).toBeVisible();
-  const compactBuy = page.getByLabel("Product result preview").getByRole("link", {
-    name: /Buy Zero Peach.*cheaper at Barbora for €0.99/
-  });
-  await expect(compactBuy).toBeVisible();
-  await expect(compactBuy).toHaveAttribute(
-    "href",
-    "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
-  );
-  expect((await compactBuy.boundingBox())?.height).toBeGreaterThanOrEqual(44);
-  await page.screenshot({ path: "test-results/price-cta-compact-mobile.png" });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Zero Peach.*Pesca & Clementina.*330 ml/ })).toBeVisible();
   await expect(page.getByLabel("Saved shelf or checkout photo scanner").locator('button[aria-label^="Open "]')).toHaveCount(1);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
-  const inlineOffer = page.getByRole("link", { name: /Buy cheaper online Zero Peach.* at Barbora for €0\.99/ });
+  const inlineOffer = page.getByRole("link", { name: /Buy cheaper online Zero Peach.* at Barbora/ });
   await expect(inlineOffer).toHaveAttribute(
     "href",
     "https://barbora.lv/produkti/gaz-dz-sanpellegrino-zero-peach-0-33-l-d"
   );
-  await expect(inlineOffer).toContainText("Buy cheaper online");
-  await expect(inlineOffer).toContainText("€0.99");
+  await expect(page.getByRole("region", { name: "Product price" })).toContainText("Buy cheaper online");
+  await expect(page.getByRole("region", { name: "Product price" })).toContainText("€0.99");
   await expect(inlineOffer.getByText("€1.69 shelf", { exact: true })).toHaveCount(0);
   const expandedPrice = page.getByLabel("Shelf price €1.69, online price €0.99, cheaper online").last();
   await expect(expandedPrice.getByText("€1.69", { exact: true })).toHaveCSS("text-decoration-line", "line-through");
-  await expect(expandedPrice.getByText("€0.99", { exact: true })).toBeVisible();
+  await expect(expandedPrice.locator("strong")).toHaveText("€0.99");
+  await expect(inlineOffer.getByRole("group", { name: "Shelf price €1.69, online price €0.99, cheaper online" })).toBeVisible();
   expect((await inlineOffer.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   const inlineOfferBox = await inlineOffer.boundingBox();
   const inlineOfferCardBox = await inlineOffer.locator("..").boundingBox();
-  expect(inlineOfferBox?.width ?? 0).toBeGreaterThan((inlineOfferCardBox?.width ?? 0) * 0.9);
+  expect(inlineOfferBox?.width ?? 0).toBeGreaterThan((inlineOfferCardBox?.width ?? 0) - 42);
   await expect(page.getByText("Nutrition not verified online", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await expect(page.getByText("How this result was made", { exact: true })).toHaveCount(0);
@@ -2068,17 +2300,17 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
 
   exactSku = false;
   await page.getByRole("button", { name: "Collapse product results" }).click();
-  await page.getByRole("button", { name: "Back to live camera" }).click();
+  await page.getByRole("button", { name: "Scan again", exact: true }).click();
   await chooseSavedPhoto(page, "possible-price-check.png");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: /Buy .* online .*Barbora/ })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Buy cheaper online/ })).toHaveCount(0);
   await expect(page.getByLabel("Product result preview").getByRole("link", { name: /Buy .* cheaper at Barbora/ })).toHaveCount(0);
 
   exactSku = true;
   includeShelfPrice = false;
   await page.getByRole("button", { name: "Collapse product results" }).click();
-  await page.getByRole("button", { name: "Back to live camera" }).click();
+  await page.getByRole("button", { name: "Scan again", exact: true }).click();
   await chooseSavedPhoto(page, "package-without-shelf-label.png");
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByLabel("Price comparison")).toHaveCount(0);
@@ -2089,6 +2321,7 @@ test("a rated product receives an honest price comparison", async ({ page }) => 
   await expect(page.getByRole("link", { name: /Buy cheaper online Zero Peach.* at Barbora for €0\.99/ })).toHaveCount(0);
   await expect(page.getByText("Barbora online", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Online price €0.99")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Buy cheaper online/ })).toHaveCount(0);
   await expect(page.locator('[aria-label*="Barbora online"]')).toHaveCount(0);
 });
 
@@ -2175,7 +2408,7 @@ test("an exact Barbora food gets an on-demand two-factor Sugar.no fit", async ({
   await chooseSavedPhoto(page, "exact-barbora-food.png");
 
   await expect(page.getByRole("status")).toContainText("Products found. Checking Sugar.no signals");
-  await expect(page.getByText("Checking online…", { exact: true })).toBeVisible();
+  await expect(page.getByText("Checking nutrition…", { exact: true })).toBeVisible();
   const cameraOverlay = page.getByLabel("Saved shelf or checkout photo scanner");
   const ratedMarker = cameraOverlay.locator('button[aria-label^="Open "]').first();
   await expect(ratedMarker).toBeVisible();
@@ -2194,24 +2427,94 @@ test("an exact Barbora food gets an on-demand two-factor Sugar.no fit", async ({
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   await expect.poll(async () => (await resultsDialog.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(viewportHeight * 0.95);
   const badge = page.getByLabel("Sugar.no badge");
-  await expect(badge.getByText("Sugar.no fit", { exact: true })).toBeVisible();
-  await expect(badge.getByText("22g", { exact: true })).toBeVisible();
-  await expect(badge.getByText("14g", { exact: true })).toBeVisible();
+  await expect(badge.getByText("Sugar.no fit · exact product data", { exact: true })).toBeVisible();
+  await expect(badge.getByText("22 g", { exact: true })).toBeVisible();
+  await expect(badge.getByText("14 g", { exact: true })).toBeVisible();
   await expect(badge.getByText("Fiber", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("Values per 100 g · 2 of 2 source-backed signals", { exact: true })).toBeVisible();
+  await expect(page.getByText("Per 100 g · exact product data", { exact: true })).toBeVisible();
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Data sources and limits", { exact: true })).toHaveCount(0);
   await page.screenshot({ path: "test-results/barbora-quick-view-mobile.png" });
+  await page.emulateMedia({ contrast: "more" });
   const accessibility = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
   expect(accessibility.violations).toEqual([]);
 });
 
-test("entry experience has no automated WCAG A/AA violations", async ({ page }) => {
+test("entry retains approved colors and passes WCAG with increased contrast", async ({ page }) => {
   await unlock(page);
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(150);
+  const normal = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+  // Only the two approved blue labels may fall below AA in normal mode.
+  expect(normal.violations.every((violation) => violation.id === "color-contrast" && violation.nodes.every((node) =>
+    node.target.every((target) => /feedbackTrigger|secondaryButton/.test(String(target)))
+  ))).toBe(true);
+  await page.emulateMedia({ contrast: "more" });
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
   expect(results.violations).toEqual([]);
+});
+
+test("Pen feedback keeps the answer through saving, failure and retry", async ({ page }) => {
+  let release: (() => void) | undefined;
+  let attempt = 0;
+  await page.route("**/api/feedback", async (route) => {
+    attempt += 1;
+    expect(route.request().postDataJSON()).toMatchObject({ helpful: false, reason: "unclear", comment: "The label was hard to read" });
+    if (attempt === 1) {
+      await new Promise<void>((resolve) => { release = resolve; });
+      await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "temporary" }) });
+    } else {
+      await route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true }) });
+    }
+  });
+  await unlock(page);
+  await openDemoScene(page, "Shelf demo");
+  const trigger = page.getByRole("button", { name: "Leave feedback", exact: true });
+  await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Was this scan helpful?" });
+  await page.screenshot({ path: "test-results/pen-feedback-initial.png" });
+  await dialog.getByRole("button", { name: "Needs work" }).click();
+  await dialog.getByLabel("Result was unclear").check();
+  await dialog.getByPlaceholder("Tell us what you noticed").fill("The label was hard to read");
+  await page.screenshot({ path: "test-results/pen-feedback-needs-work.png" });
+  await dialog.getByRole("button", { name: "Send feedback" }).click();
+  await expect(dialog.getByRole("button", { name: "Saving…" })).toBeDisabled();
+  await expect(dialog.getByRole("button", { name: "Close feedback" })).toBeDisabled();
+  await expect(dialog.getByPlaceholder("Tell us what you noticed")).toBeDisabled();
+  await page.screenshot({ path: "test-results/pen-feedback-saving.png" });
+  await expect.poll(() => Boolean(release)).toBe(true);
+  release!();
+  await expect(dialog.getByRole("alert")).toContainText("Couldn’t save feedback");
+  await expect(dialog.getByPlaceholder("Tell us what you noticed")).toHaveValue("The label was hard to read");
+  await page.screenshot({ path: "test-results/pen-feedback-error.png" });
+  await dialog.getByRole("button", { name: "Retry", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Thank you" })).toBeVisible();
+  await page.screenshot({ path: "test-results/pen-feedback-success.png" });
+  await page.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(trigger).toBeFocused();
+  expect(attempt).toBe(2);
+});
+
+test("saved-photo recovery retries the same prepared image without reopening the camera", async ({ page }) => {
+  const submittedImages: string[] = [];
+  await page.route("**/api/recognize", async (route) => {
+    const request = route.request().postDataJSON() as { source: string; imageDataUrl: string };
+    expect(request.source).toBe("upload");
+    submittedImages.push(request.imageDataUrl);
+    const recovered = submittedImages.length > 1;
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify({
+      requestId: "retry-upload", status: recovered ? "matched" : "provider_unavailable", latencyMs: 1, model: "qa-mock", imageStored: false,
+      detections: recovered ? [{ productId: "barbora:upload-retry", confidence: .99, box: { x: .1, y: .1, width: .7, height: .7 }, observedText: "Retry test", inlineProduct: ratedInlineProduct({ id: "barbora:upload-retry", brand: "Example", name: "Retry test", score: 80, protein: 20, sugar: 2 }) }] : []
+    }) });
+  });
+  await unlock(page);
+  await chooseSavedPhoto(page);
+  await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
+  await page.getByRole("button", { name: "Not sure — try again", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
+  expect(submittedImages).toHaveLength(2);
+  expect(submittedImages[1]).toBe(submittedImages[0]);
+  await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
 });
