@@ -18,6 +18,7 @@ describe("feedback email", () => {
     vi.stubGlobal("fetch", fetchMock);
     vi.stubEnv("FEEDBACK_EMAIL_ENABLED", "true");
     vi.stubEnv("RAILWAY_ENVIRONMENT_NAME", "staging");
+    vi.stubEnv("FEEDBACK_EMAIL_ENVIRONMENT", "");
     vi.stubEnv("RESEND_API_KEY", "re_private-test-key");
     vi.stubEnv("FEEDBACK_EMAIL_FROM", "scanner@verified.example");
     vi.stubEnv("FEEDBACK_EMAIL_TO", "owner@example.com");
@@ -38,6 +39,32 @@ describe("feedback email", () => {
 
   it("does not send when explicitly disabled", async () => {
     vi.stubEnv("FEEDBACK_EMAIL_ENABLED", "false");
+    expect(await sendFeedbackEmail(feedback)).toBe("disabled");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("sends production mail only with an explicitly matching target", async () => {
+    vi.stubEnv("RAILWAY_ENVIRONMENT_NAME", "production");
+    vi.stubEnv("FEEDBACK_EMAIL_ENVIRONMENT", "production");
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ id: "production-email" }), { status: 200 }));
+    expect(await sendFeedbackEmail(feedback)).toBe("sent");
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.subject).toBe("[Sugar.no production] Новый отзыв: Нужно улучшить");
+    expect(body.text).toContain("основной версии");
+    expect(body.text).toContain("Supabase production");
+    expect(body.text).not.toContain("staging");
+  });
+
+  it.each(["staging", "personal-rank-preview", "local", ""]) ("never leaks a production mail config into %s", async (environment) => {
+    vi.stubEnv("RAILWAY_ENVIRONMENT_NAME", environment);
+    vi.stubEnv("FEEDBACK_EMAIL_ENVIRONMENT", "production");
+    expect(await sendFeedbackEmail(feedback)).toBe("disabled");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsupported environments even when both values match", async () => {
+    vi.stubEnv("RAILWAY_ENVIRONMENT_NAME", "personal-rank-preview");
+    vi.stubEnv("FEEDBACK_EMAIL_ENVIRONMENT", "personal-rank-preview");
     expect(await sendFeedbackEmail(feedback)).toBe("disabled");
     expect(fetchMock).not.toHaveBeenCalled();
   });

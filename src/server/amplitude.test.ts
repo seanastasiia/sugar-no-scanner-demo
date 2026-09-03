@@ -80,6 +80,14 @@ describe("Amplitude analytics", () => {
     await expect(sendAmplitudeEvent(event)).resolves.toBe("failed");
   });
 
+  it("labels production separately without forwarding feedback or product identity", () => {
+    process.env.AMPLITUDE_ENVIRONMENT = "production";
+    const properties = amplitudeEventProperties(event);
+    expect(properties.environment).toBe("production");
+    expect(properties).not.toHaveProperty("comment");
+    expect(properties).not.toHaveProperty("productId");
+  });
+
   it("keeps only the approved property allowlist", () => {
     expect(amplitudeEventProperties(event)).toEqual({
       source: "camera",

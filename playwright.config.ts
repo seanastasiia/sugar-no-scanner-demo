@@ -27,6 +27,7 @@ export default defineConfig({
       GEMINI_API_KEY: "",
       FEEDBACK_EMAIL_ENABLED: "false",
       RESEND_API_KEY: "",
+      AMPLITUDE_API_KEY: "",
       DEMO_ACCESS_CODE: "e2e-demo-code",
       DEMO_SESSION_SECRET: "e2e-session-secret",
       DEMO_AUTH_RATE_LIMIT: "1000",

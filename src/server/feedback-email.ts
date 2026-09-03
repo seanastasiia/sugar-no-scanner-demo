@@ -25,9 +25,12 @@ const contexts: Record<string, string> = {
   permission_error: "Доступ к камере"
 };
 
-// This integration is intentionally unavailable in production, even if a key is copied there.
+// Require an explicit target matching Railway. Staging remains the safe legacy default.
 export async function sendFeedbackEmail(feedback: FeedbackEmail): Promise<FeedbackEmailDelivery> {
-  if (process.env.FEEDBACK_EMAIL_ENABLED !== "true" || process.env.RAILWAY_ENVIRONMENT_NAME !== "staging") {
+  const environment = process.env.FEEDBACK_EMAIL_ENVIRONMENT?.trim() || "staging";
+  if (process.env.FEEDBACK_EMAIL_ENABLED !== "true"
+    || !["staging", "production"].includes(environment)
+    || process.env.RAILWAY_ENVIRONMENT_NAME !== environment) {
     return "disabled";
   }
 
@@ -45,9 +48,9 @@ export async function sendFeedbackEmail(feedback: FeedbackEmail): Promise<Feedba
   const body = JSON.stringify({
     from: `Sugar.no Scanner <${from}>`,
     to: [to],
-    subject: `[Sugar.no staging] Новый отзыв: ${rating}`,
+    subject: `[Sugar.no ${environment}] Новый отзыв: ${rating}`,
     text: [
-      "Новый отзыв в тестовой версии Sugar.no Scanner",
+      environment === "production" ? "Новый отзыв в основной версии Sugar.no Scanner" : "Новый отзыв в тестовой версии Sugar.no Scanner",
       "",
       `Оценка: ${rating}`,
       `Причина: ${feedback.reason ? reasons[feedback.reason] || "Другое" : "Не указана"}`,
@@ -58,7 +61,7 @@ export async function sendFeedbackEmail(feedback: FeedbackEmail): Promise<Feedba
       "Комментарий пользователя:",
       feedback.comment || "Без комментария",
       "",
-      "Отзыв сохранён в Supabase staging, таблица pilot_feedback.",
+      `Отзыв сохранён в Supabase ${environment}, таблица pilot_feedback.`,
       "Это автоматическое уведомление. Пользователь анонимен; ответ на письмо ему не отправится."
     ].join("\n")
   });
