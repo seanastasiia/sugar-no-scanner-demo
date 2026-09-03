@@ -147,6 +147,8 @@ Use the project change lanes in `AGENTS.md`:
 - local logic: related tests plus `check:fast`;
 - recognition/scoring/privacy/auth/schema/dependency/release: `verify`, full browser suite, Railway deploy and production smoke.
 
+The standard Mobile Safari suite starts the development server over local HTTP. `E2E_PRODUCTION=1` is not a complete acceptance path on this HTTP harness: Safari does not send production's Secure session cookie, so protected demo APIs return 401. Keep the security flag intact; verify built deployment/session behavior over Railway HTTPS instead.
+
 ## API
 
 - `POST /api/recognize`: image data URL plus source type, returns bounded detections.
