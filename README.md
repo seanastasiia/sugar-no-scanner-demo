@@ -43,7 +43,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
 - The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
 
-## Personal Shelf Rank — local opt-in pilot
+## Personal Shelf Rank — isolated opt-in preview
 
 The expanded result sheet now has an independent preference model for sugar, protein, food base and nutrient balance. The default Fit, camera overlays, compact preview, prices and Better alternatives are unchanged. The pilot compares only products of the same supported type in the current scan, shares equal places (1, 1, 3), and shows a score without a relative rank when only one product is scorable. Unknown ingredients, required nutrients or conflicting categories produce no score. Its neutral `/100` is a transparent product hypothesis, **not a validated health or safety rating**.
 
@@ -53,7 +53,11 @@ Source consistency is a shared trust gate, not a new Fit formula. Exact carbohyd
 
 The checked-in evidence pilot contains **198 exact retailer observations, 64 scorable** with `personal-shelf-v1.0-pilot`; 134 remain unscored. Supported types are chips, crackers/crispbreads, spoonable yogurts, dairy desserts, bars and cookies. The current batch has no dairy-dessert group. This is a coverage/calibration pilot, not the entire catalog. Source records retain Lithuanian/Latvian originals; deterministic ingredient rules also support English/Russian/Estonian, and unknown wording remains unknown. Category errors in retailer data still need auditing.
 
-See [model, evidence and calibration rules](docs/personal-shelf-rank.md) for the full formula, scientific anchors versus product choices, reproducible sync/seed steps and owner checks. The pilot and preceding multilingual catalog batch are local/unpublished; production remains gated by the owner's explicit `ПУБЛИКУЙ`.
+See [model, evidence and calibration rules](docs/personal-shelf-rank.md) for the full formula, scientific anchors versus product choices, reproducible sync/seed steps and owner checks. The pilot and preceding multilingual catalog batch are confined to the separate [owner preview](https://sugar-no-personal-rank-personal-rank-preview.up.railway.app), branch `codex/personal-rank-preview`. Production remains gated by the owner's explicit `ПУБЛИКУЙ`.
+
+To try it, scan or upload a shelf photo, open `View all`, then enable `Personal Shelf Rank · Pilot`. Open `Why this score?` on a scored card; switch the pilot off to return to the original Fit. The existing Shelf/Checkout demos do not guarantee ingredient coverage for this new model. An unscored result is expected for products outside the 64 complete pilot records; it is not a low score.
+
+The preview uses a new Railway environment and service, its own session signing inputs, and the checked-in catalog/evidence. It has no Supabase or Amplitude credentials and cannot write production catalog, cache or analytics data. Live recognition uses the existing Gemini account, so normal provider usage still applies; online results are cached only in this preview process and may be fetched again after a restart. The production and existing onboarding staging services are not changed.
 
 ## Trust rules
 
@@ -182,6 +186,26 @@ For the separate shelf pilot, additionally apply `supabase/migrations/2026090300
 
 ## Railway release
 
+### Isolated Personal Shelf Rank preview
+
+This owner-approved preview is an exception to the normal `main` release lane: **do not push it to `main` or deploy it to either existing scanner service**. Its empty environment was created without duplicating production variables. Target project `9e2a4887-0e19-4ca7-ae99-d68816542558`, environment `personal-rank-preview` (`f83202e1-6a66-4311-b16d-c7ec3fe95541`), service `sugar-no-personal-rank` (`37730464-07ba-482d-9c59-74c04ecdf6db`).
+
+After verification, upload only a clean, GitHub-backed preview commit. Always pass these explicit selectors:
+
+```bash
+git push origin HEAD:codex/personal-rank-preview
+npx @railway/cli variable set COMMIT_SHA=$(git rev-parse HEAD) --skip-deploys \
+  --project 9e2a4887-0e19-4ca7-ae99-d68816542558 \
+  --service 37730464-07ba-482d-9c59-74c04ecdf6db --environment personal-rank-preview
+npx @railway/cli up --detach \
+  --project 9e2a4887-0e19-4ca7-ae99-d68816542558 \
+  --service 37730464-07ba-482d-9c59-74c04ecdf6db --environment personal-rank-preview
+```
+
+Wait for deployment `SUCCESS`, verify preview `/api/health` matches the uploaded commit, test direct entry, protected API boundaries and the pilot toggle, and recheck both existing URLs against their pre-deploy SHAs. Do not seed/migrate a database for this preview. A preview rollback redeploys an earlier preview commit to this same service only; it must not use the production rollback lane.
+
+### Production — requires separate approval
+
 Normal releases are pushed once, after the requested batch is complete:
 
 ```bash
@@ -206,7 +230,7 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 6. Open Shelf and Checkout demos and expand `View all`.
 7. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
 7a. Confirm every rated card visibly shows `Protein …g · Sugar …g` and adds `Carbs …g` only when the exact source provides carbohydrates; the numbers are per 100 g or 100 ml and protein remains part of the unchanged two-signal fit.
-7b. In the local pilot, enable `Personal Shelf Rank`. Check within-category places, a neutral unscored card for missing fields, and `Why this score?` with original ingredients/source. Switch it off: the original order and Fit values must return unchanged. Follow the dedicated [pilot product checklist](docs/personal-shelf-rank.md#owner-product-check) before approving publication.
+7b. In the isolated preview, enable `Personal Shelf Rank`. Check within-category places, a neutral unscored card for missing fields, and `Why this score?` with original ingredients/source. Switch it off: the original order and Fit values must return unchanged. Follow the dedicated [pilot product checklist](docs/personal-shelf-rank.md#owner-product-check) before approving production publication.
 8. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
 9. Confirm each overlay tightly follows its package rather than a nearby shelf label.
 10. Wait until `Reading visible products…` appears, then move the phone or close the shelf/fridge. Confirm the submitted frame remains frozen and every box stays attached to the product that was analyzed. Confirm no new scene is read until the explicit retry/new-scan action is used.
