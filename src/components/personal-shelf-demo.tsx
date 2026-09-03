@@ -68,7 +68,6 @@ export function PersonalShelfDemo({ products }: { products: ScoredProduct[] }) {
         <span className={styles.demoBadge}><span aria-hidden="true">Demo</span><span className={styles.srOnly}>Catalog demo, not a live scan</span></span>
         <Link className={styles.back} href="/" prefetch={false} aria-label="Back to scanner"><ChevronDown aria-hidden="true" size={22} /></Link>
       </header>
-      <h2 className={styles.category}>Chips</h2>
       {selected ? <section key={selected.category} aria-label={selected.label}>
         <ul className={styles.list}>{selected.entries.map((entry) => <DemoCard key={entry.product.id} entry={entry} />)}</ul>
       </section> : null}

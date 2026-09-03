@@ -1672,9 +1672,6 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
               </div>
             ) : null}
           </div>
-          {!showRecovery && (source === "upload" || source === "sample-conveyor") ? (
-            <p className={styles.stageGuidance}>Photos are not saved.</p>
-          ) : null}
         </div>
 
         {visibleTrayIds.length ? (

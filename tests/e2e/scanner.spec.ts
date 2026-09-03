@@ -2559,11 +2559,13 @@ test("Pen feedback keeps the answer through saving, failure and retry", async ({
 
 test("saved-photo recovery retries the same prepared image without reopening the camera", async ({ page }) => {
   const submittedImages: string[] = [];
+  let finishFirstRead: (() => void) | undefined;
   await page.route("**/api/recognize", async (route) => {
     const request = route.request().postDataJSON() as { source: string; imageDataUrl: string };
     expect(request.source).toBe("upload");
     submittedImages.push(request.imageDataUrl);
     const recovered = submittedImages.length > 1;
+    if (!recovered) await new Promise<void>((resolve) => { finishFirstRead = resolve; });
     await route.fulfill({ contentType: "application/json", body: JSON.stringify({
       requestId: "retry-upload", status: recovered ? "matched" : "provider_unavailable", latencyMs: 1, model: "qa-mock", imageStored: false,
       detections: recovered ? [{ productId: "barbora:upload-retry", confidence: .99, box: { x: .1, y: .1, width: .7, height: .7 }, observedText: "Retry test", inlineProduct: ratedInlineProduct({ id: "barbora:upload-retry", brand: "Example", name: "Retry test", score: 80, protein: 20, sugar: 2 }) }] : []
@@ -2571,10 +2573,17 @@ test("saved-photo recovery retries the same prepared image without reopening the
   });
   await unlock(page);
   await chooseSavedPhoto(page);
+  await expect(page.getByRole("heading", { name: "Read a saved photo", exact: true })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("Reading the full image and close-up sections");
+  await expect(page.getByText("Photos are not saved.", { exact: true })).toHaveCount(0);
+  await expect.poll(() => Boolean(finishFirstRead)).toBe(true);
+  await page.screenshot({ path: test.info().outputPath("saved-photo-without-footer.png"), animations: "disabled" });
+  finishFirstRead!();
   await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
   await page.getByRole("button", { name: "Not sure — try again", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
   expect(submittedImages).toHaveLength(2);
   expect(submittedImages[1]).toBe(submittedImages[0]);
   await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
+  await expect(page.getByText("Photos are not saved.", { exact: true })).toHaveCount(0);
 });

@@ -35,6 +35,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: two unwanted labels remained on photo/demo screens.** Removed the standalone photo privacy footer and the demo's Chips capsule, including their unused styles. Loading/retry feedback, onboarding privacy copy, accessible chip-section name, the four products and their scores are unchanged.
 - **2026-09-03: production feedback had no enabled email delivery or Amplitude project.** Added explicit matching production/staging email targets with separate subject labels and production-isolation tests. Production has separate integration keys; local/preview mail stays disabled and E2E clears both provider keys. Existing staging configuration remains compatible.
 - **2026-09-03: new scans broke anonymous onboarding funnels.** Amplitude previously used the rotating scan ID as device ID. It now uses a separate anonymous tab-visit UUID across onboarding, sample/upload/repeat scans and reloads; Supabase retains individual scan IDs and the validated visit link. Old clients remain accepted. This is not cross-day unique-person or retention tracking.
 - **2026-09-03: the experimental rating appeared in AR (Launch).** A separate main-page entry flag hides the switch and New rating demo link only in launch. Direct rating demo/API, independent preview, evidence and scoring code are retained. Test the launch entry flag false and the preview/default true independently.

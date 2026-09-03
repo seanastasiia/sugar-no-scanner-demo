@@ -35,7 +35,8 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
   await expect(page.locator("footer")).toHaveCount(0);
   await expect(page.locator("video")).toHaveCount(0);
   const chips = page.getByRole("region", { name: "Chips", exact: true });
-  await expect(page.getByRole("heading", { name: "Chips", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Chips", exact: true })).toHaveCount(0);
+  await expect(page.getByText("Chips", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("radio")).toHaveCount(0);
   await expect(page.getByText("Yogurts", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Spoonable yogurts", exact: true })).toHaveCount(0);

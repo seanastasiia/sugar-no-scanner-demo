@@ -375,20 +375,6 @@
   font: 600 15px/20px var(--font-display);
   cursor: pointer;
 }
-.stageGuidance {
-  position: absolute;
-  left: 24px;
-  right: 24px;
-  bottom: max(24px, env(safe-area-inset-bottom));
-  margin: 0;
-  text-align: center;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 18px;
-}
-.stageWithResults .stageGuidance {
-  display: none;
-}
 .toneStrong {
   --tone: #2dbc51;
   --tone-gradient: linear-gradient(180deg, #50d671, #2dbc51);
@@ -1681,9 +1667,6 @@
     width: min(560px, 54vw);
     box-shadow: -16px 0 48px #0000001a;
   }
-  .stageGuidance {
-    bottom: 4px;
-  }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   .onboarding {
@@ -1803,9 +1786,6 @@
   bottom: 16px;
   left: 16px;
   right: 16px;
-}
-.photoStage .stageGuidance {
-  bottom: max(60px, env(safe-area-inset-bottom));
 }
 @media (prefers-reduced-motion: reduce) {
   .onboardingPreview::before {
