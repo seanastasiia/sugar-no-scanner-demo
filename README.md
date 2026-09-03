@@ -51,6 +51,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Camera frames are sent to Google Gemini for recognition. Sugar.no does not write them to analytics, logs or Supabase. This processing boundary is documented here and in the privacy contract rather than repeated as persistent camera chrome.
 - The investor link opens the scanner directly. Its first same-origin page request receives a 12-hour HTTP-only, same-site session cookie so protected APIs remain unavailable to bare cross-origin calls. Recognition, enrichment, offer and analytics POST endpoints also reject cross-origin browser requests, bound request bodies and apply rate limits. This is request hardening, not viewer access control. The limiter key is a one-way hash of the client address and does not retain the address itself.
 - Commercial availability never changes Sugar.no ranking.
+- Two exact Livinn source tables with contradictory nutrition (`03000011074`, `1AM180309678`) are quarantined: their identities remain available but their nutrition and Fit are hidden. Of 1,855 collected nutrition tables, 1,853 are eligible for the original Fit; 636 of the 2,489 identities remain unrated. This production catalog release does not enable Personal Shelf Rank or its preview/demo.
 
 ## Stack
 
@@ -166,6 +167,10 @@ Connected-retailer resolution runs before Open Food Facts and grounded web looku
 The managed `products` table is optional in this proof of concept. If it has not been migrated and seeded, or is empty, product recognition and barcode lookup continue from the checked-in scored catalog while `web_nutrition_cache` still uses Supabase independently.
 
 ## Railway release
+
+For the Livinn-only release, apply the additive multilingual migrations through `202609020001_livinn_multilingual_catalog.sql` in the approved Supabase project. Run `npm run supabase:seed:livinn` for a dry run, then `npm run supabase:seed:livinn -- --apply` with server-only credentials. This scoped import upserts only the Livinn source, 2,489 identities, 1,853 eligible nutrition records and their immutable versions; it never prunes data or rewrites Barbora, Rimi, Livin Latvia, Open Food Facts or web caches. Quarantined raw observations remain in the versioned local snapshot, not in the verified Supabase nutrition layer.
+
+Release checks and owner acceptance: [Livinn production release](docs/test-runs/2026-09-03-livinn-production-release.md).
 
 Normal releases are pushed once, after the requested batch is complete:
 

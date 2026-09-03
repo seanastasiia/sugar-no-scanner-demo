@@ -4,6 +4,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Open
 
+- **Two Livinn source tables are inconsistent.** GO Pure `03000011074` and NOMADIC `1AM180309678` exceed the per-100 g macronutrient consistency limit. Both remain identifiable but unrated until a reviewed source correction. The production import retains 1,853 eligible nutrition records, not all 1,855 raw tables.
+
 - **Historical catalog snapshots do not yet contain carbohydrates.** The app now supports exact source-backed carbohydrates per 100 g or 100 ml, but existing checked-in rows omit the field until their next retailer, Open Food Facts or grounded-source refresh. Sugar.no fit remains available from protein and total sugar and is not recalculated.
 - **Latvia coverage is not universal.** Private labels, unreadable variants and products without an exact cited per-100 table can remain unresolved. They must not receive a guessed fit.
 - **Physical-store accuracy is not validated.** Packaging glare, low light, distance and a moving checkout belt need a real-store benchmark.
@@ -16,6 +18,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **Railway config-as-code needs migration before 1 December 2026.** The current `railway.json`/`railway.toml` deployment still works, but Railway now recommends `.railway/railway.ts` and prints a deprecation warning during deploys.
 
 ## Recently resolved
+
+- **2026-09-03: the Livinn expansion existed only in the isolated rating preview.** The release lane now contains just the multilingual catalog and protein display, without the new rating/demo. A Livinn-only, dry-run-by-default Supabase import preserves other retailers and excludes two already known contradictory tables.
 
 - **2026-09-02: ranked cards hid the protein quantity even though protein still contributed to Sugar.no fit.** Every rated compact and expanded card now shows source-backed `Protein`, `Sugar` and optional `Carbs` per 100 g or 100 ml; the established protein-plus-sugar scoring and ranking are unchanged.
 - **2026-09-02: the same package could appear twice when the camera read different languages, and online screenshots could mix text from neighboring cards.** Exact resolved SKU IDs now de-duplicate across languages, strongly overlapping same-brand/pack detections merge even before both resolve, and the saved-image instruction forbids combining brand/title/size/image across cards. Brand, variant, pack and ambiguity checks remain fail-closed.

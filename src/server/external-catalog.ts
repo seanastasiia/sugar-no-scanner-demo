@@ -12,6 +12,7 @@ import {
   type BarboraLookupInput
 } from "./barbora-catalog";
 import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "./external-catalog-types";
+import { isQuarantinedRetailerNutrition } from "./retailer-nutrition-quarantine";
 
 interface RankedExternalCatalogCandidate {
   product: ExternalCatalogProduct;
@@ -308,7 +309,18 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
     isGolden: false,
     accent: "coral"
   };
-  return scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial");
+  const scored = scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial");
+  if (!isQuarantinedRetailerNutrition(product)) return scored;
+  return {
+    ...scored,
+    matchScore: null,
+    matchReason: "missing_nutrition",
+    ratingStatus: "identity_only",
+    ratingSignalCount: 0,
+    ratingSignalMask: [],
+    criterionScores: null,
+    nutrientsPer100g: { proteinG: null, totalSugarG: null, fiberG: null, carbohydrateG: null }
+  };
 }
 
 export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogIdentity): ScoredProduct {

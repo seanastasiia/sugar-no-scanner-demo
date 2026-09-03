@@ -37,6 +37,7 @@
     "benchmark:models": "tsx scripts/benchmark-recognition-models.ts",
     "supabase:seed": "tsx scripts/seed-supabase.ts",
     "supabase:seed:external": "tsx scripts/seed-external-catalog.ts",
+    "supabase:seed:livinn": "tsx scripts/seed-livinn-catalog.ts",
     "supabase:seed:external:dry-run": "tsx scripts/seed-external-catalog.ts --dry-run",
     "supabase:verify:external": "tsx scripts/verify-external-catalog.ts"
   },

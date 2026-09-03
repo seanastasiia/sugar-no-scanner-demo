@@ -36,5 +36,8 @@ create index if not exists retailer_food_identity_aliases_idx
 
 alter table public.retailer_catalog_food_identities enable row level security;
 
+revoke all on table public.retailer_catalog_food_identities from anon, authenticated;
+grant select, insert, update, delete on table public.retailer_catalog_food_identities to service_role;
+
 comment on table public.retailer_catalog_food_identities is
   'Non-redistributable edible retailer identities used for exact multilingual SKU matching. Missing nutrition stays null by design in the separate rated-product layer.';

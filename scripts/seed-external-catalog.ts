@@ -12,6 +12,7 @@ import { buildBarboraCatalogSnapshot } from "../src/server/barbora-supabase-cata
 import type { BarboraNutritionIndexProduct } from "../src/server/barbora-nutrition-index";
 import { nutritionRevalidateAfter, priceRevalidateAfter } from "../src/server/data-freshness";
 import type { CatalogSourceManifest, ExternalCatalogIdentity, ExternalCatalogProduct } from "../src/server/external-catalog-types";
+import { isQuarantinedRetailerNutrition } from "../src/server/retailer-nutrition-quarantine";
 
 const BATCH_SIZE = 500;
 
@@ -145,7 +146,7 @@ async function main() {
     const externalRetailerProducts = [
       ...(rimiProducts as ExternalCatalogProduct[]),
       ...(livinProducts as ExternalCatalogProduct[]),
-      ...(livinnProducts as ExternalCatalogProduct[])
+      ...(livinnProducts as ExternalCatalogProduct[]).filter((product) => !isQuarantinedRetailerNutrition(product))
     ];
     const livinnIdentityRows = (livinnFoodIdentities as ExternalCatalogIdentity[]).map((product) => ({
       source_id: product.source,
