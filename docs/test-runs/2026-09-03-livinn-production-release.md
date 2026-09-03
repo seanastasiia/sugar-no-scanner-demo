@@ -21,4 +21,14 @@
 
 ## Results
 
-Pending. No production completion is claimed until all required checks finish.
+- Tested application commit: `6e366f10f1e811ead30c1ffd69493154b857d7d6`.
+- `npm ci`: passed, 0 reported vulnerabilities.
+- First candidate `70f3c3a` stopped at a TypeScript union-inference error in the scoped import. Corrected before publication; no application deploy used that candidate.
+- `npm run verify`: PASS, ESLint, TypeScript, 46 Vitest files / 256 tests, catalog validators and production build. Raw snapshot validation reports 1,855 collected Livinn tables; runtime health and scoped verified import exclude the two quarantines and report 1,853.
+- `CI=1 npm run test:e2e`: PASS, 31/31 Mobile Safari scenarios in 1.4 minutes. Cancellation scenarios produced non-failing dev-server ECONNRESET messages; no failed/retried acceptance tests.
+- Supabase project `gkivwusbobnwzrisbkle`: both additive multilingual migrations applied through the authenticated SQL Editor. Identity-table RLS enabled; anon/authenticated SELECT false, service-role access true.
+- `npm run supabase:seed:livinn` dry run: 2,489 identities, 1,853 nutrition records, 2 quarantines.
+- Scoped `--apply` import: PASS, verified readback 2,489 identity rows, 1,853 current nutrition rows and 1,853 immutable versions. No deletion or unrelated-source import.
+- Before/after source counts unchanged: Barbora 7,433, Rimi 6,822 stored rows, Livin Latvia 6. Bett'r exact sample readback: protein 8.1 g, sugar 1.8 g, three alternate-language names. Both quarantined SKUs absent from the verified Supabase nutrition layer.
+- Browser evidence is in ignored `playwright-report/` and `test-results/`; no camera images are stored in the catalog.
+- GitHub / Railway publication and live smoke: pending. No production application completion is claimed yet.
