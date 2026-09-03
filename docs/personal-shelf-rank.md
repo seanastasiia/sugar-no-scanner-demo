@@ -1,6 +1,6 @@
 # Personal Shelf Rank v1 — pilot contract
 
-Status: local opt-in implementation, 3 September 2026. Not published or clinically validated. Model ID: `personal-shelf-v1.0-pilot`.
+Status: isolated owner preview, 3 September 2026; not in production and not clinically validated. Model ID: `personal-shelf-v1.0-pilot`. [Try the preview](https://sugar-no-personal-rank-personal-rank-preview.up.railway.app). [Release verification](test-runs/2026-09-03-personal-shelf-preview-release.md).
 
 ## What the user gets
 

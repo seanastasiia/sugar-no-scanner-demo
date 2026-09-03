@@ -204,6 +204,8 @@ npx @railway/cli up --detach \
 
 Wait for deployment `SUCCESS`, verify preview `/api/health` matches the uploaded commit, test direct entry, protected API boundaries and the pilot toggle, and recheck both existing URLs against their pre-deploy SHAs. Do not seed/migrate a database for this preview. A preview rollback redeploys an earlier preview commit to this same service only; it must not use the production rollback lane.
 
+The initial preview was released from clean GitHub-backed commit `a6ce77e` using direct CLI upload (no automatic source connection). See [live release checks](docs/test-runs/2026-09-03-personal-shelf-preview-release.md). Later documentation-only commits do not change the running application or trigger a deployment.
+
 ### Production — requires separate approval
 
 Normal releases are pushed once, after the requested batch is complete:
