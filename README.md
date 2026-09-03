@@ -152,6 +152,8 @@ Use the project change lanes in `AGENTS.md`:
 
 Owner acceptance after enabling: scan a newly found exact SKU, open its source, then scan the same SKU in a second session/device and confirm the same card/nutrients return. Scan a different size/flavour and confirm it cannot borrow that card. A missing nutrient must stay hidden/unknown; a confirmed product without enough nutrition must remain neutral. Source-format coverage is intentionally conservative and real-store performance still needs owner testing.
 
+Technical and migration evidence: [shared web catalog checks](docs/test-runs/2026-09-03-shared-web-catalog.md).
+
 Checked-in generated snapshots make the investor demo reproducible and fast:
 
 - `data/catalog.generated.json`: curated comparison catalog.
