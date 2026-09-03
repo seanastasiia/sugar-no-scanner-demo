@@ -1,4 +1,5 @@
 import type { ExternalCatalogProduct } from "./external-catalog-types";
+import { offShelfEvidence } from "./personal-shelf-parser";
 
 export interface OpenFoodFactsBulkRecord {
   [key: string]: unknown;
@@ -108,6 +109,7 @@ export function openFoodFactsBulkRecordToProduct(
   if (!/^\d{8,14}$/.test(code) || !title || protein === null || sugar === null || energy === null) return null;
   return {
     source: "open_food_facts",
+    shelfEvidence: offShelfEvidence(record, checkedAt),
     sourceProductId: code,
     retailer: null,
     url: `https://world.openfoodfacts.org/product/${code}`,

@@ -1,5 +1,7 @@
 import { scoreBarboraProduct } from "@/lib/scoring";
 import type { ProductRecord, ProductSource, ScoredProduct } from "@/lib/types";
+import { barboraShelfEvidence } from "./personal-shelf-parser";
+import { applyShelfNutritionTrustGuard } from "@/lib/personal-shelf-rank";
 import {
   getBarboraProductBySlug,
   normalizeRetailText,
@@ -81,6 +83,7 @@ export function barboraPageToScoredProduct(
   const retailerUrl = `https://barbora.lv/produkti/${product.Url}`;
   const record: ProductRecord = {
     id: `barbora:${product.Url}`,
+    shelfEvidence: barboraShelfEvidence(product, checkedAt),
     retailerProductId: product.Url,
     brand: product.brand_name || "Barbora",
     name: product.title,
@@ -114,7 +117,7 @@ export function barboraPageToScoredProduct(
     }
   ];
 
-  const scored = scoreBarboraProduct(record);
+  const scored = applyShelfNutritionTrustGuard(scoreBarboraProduct(record));
   if (!product.is_adult) return scored;
   return {
     ...scored,

@@ -1,5 +1,10 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { shelfFixture } from "../fixtures/personal-shelf";
+import type { ScoredProduct } from "../../src/lib/types";
+import type { ShelfEvidence } from "../../src/lib/personal-shelf-rank";
+import { applyShelfNutritionTrustGuard } from "../../src/lib/personal-shelf-rank";
+import type { ExternalCatalogProduct } from "../../src/server/external-catalog-types";
 
 async function authenticate(page: Page) {
   const response = await page.request.post("/api/auth", {
@@ -112,6 +117,106 @@ async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   await expect(chooser).toBeVisible();
   await chooser.getByRole("button", { name: new RegExp(name) }).click();
 }
+
+async function openPersonalShelfFixture(page: Page, samples?: ScoredProduct[]) {
+  const products = samples || [
+    shelfFixture("qa-chips-a"), shelfFixture("qa-chips-b"),
+    shelfFixture("qa-chips-c", { fiberG: null }),
+    shelfFixture("qa-yogurt", { category: "Yogurt", ingredientsText: "Milk, cultures", fiberG: null, energyKcal: 100 }),
+    shelfFixture("qa-cookie", { category: "Cookies", ingredientsText: "Wholegrain oats, sugar, butter", totalSugarG: 30 })
+  ].map((product) => ({ ...product, id: `barbora:${product.id}`, shelfEvidence: { ...product.shelfEvidence!, productId: `barbora:${product.id}` } }));
+  await page.route("**/api/recognize", (route) => route.fulfill({ contentType: "application/json", body: JSON.stringify({
+    requestId: "personal-shelf-qa", status: "matched", latencyMs: 1, model: "qa-fixture", imageStored: false,
+    detections: products.map((product, index) => ({
+      productId: product.id, catalogProductId: product.id, confidence: .99,
+      box: { x: .02 + index * .19, y: .1, width: .16, height: .6 }, observedText: product.name,
+      identity: { brand: product.brand, name: product.name, variant: null, packSize: "100g", category: product.category, matchKind: "barbora" },
+      inlineProduct: product, shelfPrice: null, retailerOffer: null
+    }))
+  }) }));
+  await page.route("**/api/offers", (route) => route.fulfill({ contentType: "application/json", body: '{"offers":{}}' }));
+  await page.route("**/api/personal-shelf", (route) => route.fulfill({ contentType: "application/json", body: '{"evidence":{}}' }));
+  await unlock(page);
+  await chooseSavedPhoto(page, "synthetic-personal-shelf-qa.png");
+  await expect(page.getByRole("dialog", { name: "Products from this scan" })).toBeVisible();
+}
+
+test("personal shelf pilot is opt-in, category-local, transparent and leaves original Fit unchanged", async ({ page }, testInfo) => {
+  let evidenceRequests = 0;
+  page.on("request", (request) => { if (request.url().endsWith("/api/personal-shelf")) evidenceRequests++; });
+  await openPersonalShelfFixture(page);
+  expect(evidenceRequests).toBe(0);
+  const original = page.getByLabel("Products ranked by Sugar.no fit");
+  await expect(original.getByRole("button")).toHaveCount(5);
+  const originalText = await original.innerText();
+  const toggle = page.getByRole("switch", { name: /Personal Shelf Rank/ });
+  await expect(toggle).toHaveAttribute("aria-checked", "false");
+  await toggle.click();
+  // Development Strict Mode can start then cancel the first effect. Neither read runs before opt-in.
+  await expect.poll(() => evidenceRequests).toBeGreaterThan(0);
+  expect(evidenceRequests).toBeLessThanOrEqual(2);
+  const results = page.getByLabel("Personal Shelf Rank results");
+  const chips = results.getByRole("region", { name: "Chips", exact: true });
+  await expect(chips.getByText("Provisional #1 of 3 in chips", { exact: true })).toHaveCount(2);
+  await expect(chips.getByText("Not enough verified data", { exact: true })).toHaveCount(0);
+  await expect(chips.getByText("Provisional · fiber unknown", { exact: true })).toBeVisible();
+  await expect(chips.getByText(/71–81/)).toBeVisible();
+  await expect(results.getByText("Score only · Spoonable yogurts", { exact: true })).toBeVisible();
+  await chips.getByText("Why this score?", { exact: true }).first().click();
+  const details = chips.locator("details[open]");
+  await expect(details.getByText("Original ingredients (en)", { exact: true })).toBeVisible();
+  await expect(details.getByText("Potatoes, sunflower oil, salt", { exact: true })).toBeVisible();
+  await expect(details.getByRole("link", { name: "Open exact source" })).toHaveAttribute("href", "https://barbora.lv/produkti/qa-chips-a");
+  await expectNoDocumentOverflow(page);
+  await expectVisibleTouchTargets(page);
+  await page.screenshot({ path: testInfo.outputPath("personal-shelf-pilot.png"), fullPage: true });
+  await toggle.click();
+  await expect(original).toBeVisible();
+  expect(await original.innerText()).toBe(originalText);
+});
+
+test("personal shelf pilot remains accessible on small phones, dark mode and enlarged text", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+  await openPersonalShelfFixture(page);
+  await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
+  await expectNoDocumentOverflow(page);
+  const results = await new AxeBuilder({ page }).include('[aria-label="Products from this scan"]').withTags(["wcag2a", "wcag2aa"]).analyze();
+  expect(results.violations).toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath("personal-shelf-dark.png"), fullPage: true });
+  await page.addStyleTag({ content: "html { font-size: 200% !important; }" });
+  await expectNoDocumentOverflow(page);
+  await page.setViewportSize({ width: 844, height: 390 });
+  await expectNoDocumentOverflow(page);
+  await expect(page.getByRole("button", { name: "Collapse product results" })).toBeVisible();
+});
+
+test("personal shelf pilot shows exact Livinn observations in the mobile comparison", async ({ page }, testInfo) => {
+  const { readFile } = await import("node:fs/promises");
+  // Do not load Next's JSON module graph into the standalone Node/Playwright runner.
+  const observations: ShelfEvidence[] = JSON.parse(await readFile("data/personal-shelf-evidence.generated.json", "utf8"));
+  const catalog: ExternalCatalogProduct[] = JSON.parse(await readFile("data/livinn-catalog.generated.json", "utf8"));
+  const samples = ["03000011072", "03000011075", "03000011074"].map((sku) => {
+    const id = `livinn_lt:${sku}`;
+    const source = catalog.find((row) => row.sourceProductId === sku)!;
+    const evidence = observations.find((row) => row.productId === id)!;
+    return applyShelfNutritionTrustGuard({ ...shelfFixture(id, evidence), brand: source.brand, name: source.title, shortName: source.title, imageUrl: source.imageUrl, gtin: source.gtin });
+  });
+  // Recognition is mocked; ingredient/nutrition evidence below is the real dated snapshot.
+  await openPersonalShelfFixture(page, samples);
+  await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
+  const chips = page.getByRole("region", { name: "Chips", exact: true });
+  await expect(chips.getByText("#1 of 2 in chips", { exact: true })).toBeVisible();
+  await expect(chips.getByRole("heading", { level: 4 }).first()).toHaveText(samples[0].shortName);
+  await expect(chips.getByText("64/100", { exact: true })).toBeVisible();
+  await expect(chips.getByText(/Missing or unverified: consistent nutrition totals/)).toBeVisible();
+  await expectNoDocumentOverflow(page);
+  await expect.poll(() => chips.getByTestId("product-packshot").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete)), { timeout: 10_000 }).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn.png"), fullPage: true, animations: "disabled" });
+  await chips.getByText("Why this score?", { exact: true }).first().click();
+  await expect(chips.locator("details[open]").getByText("Original ingredients (lt)", { exact: true })).toBeVisible();
+  await expect(chips.locator("details[open]").getByRole("link", { name: "Open exact source" })).toHaveAttribute("href", samples[0].shelfEvidence!.sourceUrl);
+});
 
 async function mockSampleShelfRecognition(page: Page) {
   await authenticate(page);

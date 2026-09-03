@@ -5,7 +5,7 @@ export default function HomePage() {
   return (
     <>
       <PwaRegistration />
-      <ScannerApp />
+      <ScannerApp personalRankAvailable={process.env.PERSONAL_SHELF_RANK_ENABLED !== "false"} />
     </>
   );
 }

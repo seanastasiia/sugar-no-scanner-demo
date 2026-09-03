@@ -24,6 +24,7 @@ The Rimi/Livin/Livinn counts are source-backed snapshot counts, not visual-recog
 - `retailer_catalog_food_identities` contains exact Livinn edible identities and source-provided language aliases without pretending that missing nutrition is zero.
 - `open_food_facts_products` contains the attributed ODbL-derived subset only. Its `aliases` array stores source-provided multilingual names for the same GTIN.
 - `catalog_sources` stores terms, attribution and redistribution metadata.
+- Personal Shelf Rank adds `retailer_shelf_evidence` and `open_food_facts_shelf_evidence` as separate RLS/server-role-only tables. Ingredients and extra nutrients retain one exact source, date and language; they are not merged across markets or recipes. The original 198-row pilot is expanded by the resumable supported-category batch, with separate OFF exact-barcode output. No OFF ingredients are synthesized from the old ingredient-free snapshot. Missing fiber can produce a bounded provisional assessment; missing essential or contradictory data cannot. Current counts and source limitations are in the [rollout log](test-runs/2026-09-03-personal-shelf-batch-rollout.md); see [ingestion rules](personal-shelf-rank.md).
 - Never publish a mixed retailer/OFF derived dump. Do not copy retailer rows into the ODbL table.
 - Product images remain source URLs. Bulk image reuse needs a separate rights review.
 

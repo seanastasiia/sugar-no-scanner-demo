@@ -20,14 +20,14 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - A scan keeps at most ten distinct, highest-confidence readable products. Repeated facings of one SKU are grouped.
 - Rated products are ordered best fit first and use `Great fit`, `Moderate fit`, or `Low fit`.
 - Expanded multi-product results use the ranked list as the single comparison view; they do not repeat the leading product in a second `Best fit in this scan` card.
-- Expanded multi-product results show only the collapse control, `Best fit first` and the ranked product cards; duplicate summaries, counters and scan-again controls are omitted.
+- Expanded multi-product results keep `Best fit first` and the original ranked cards by default. An opt-in `Personal Shelf Rank · Pilot` switch opens the independent category comparison described below; duplicate scan-again controls remain omitted.
 - The compact camera preview mirrors that ranking with `#1`, `#2`, `#3…` badges and shows the protein and total sugar used by Sugar.no fit per 100 g or 100 ml. When an exact source also lists total carbohydrates, the same row adds `Carbs`; missing carbohydrate data is simply omitted.
 - Product thumbnails preserve the source photo proportions. When no exact retailer packshot exists, or a supplied packshot URL fails to load, the card falls back to the matching crop from the submitted scene. The crop keeps a little neighboring shelf context instead of stretching a tight detection box, and a broken-image icon is never left in the result.
 - The compact sheet keeps `Scan again` beside `View all`. `Scan again` clears the captured result and starts a fresh live read; expanded comparison does not duplicate that control.
 - When recognition cannot confidently return a result or the provider is temporarily unavailable, the camera shows one full-width blue `Not sure — try again` action instead of reusing the dark status-pill surface. White text, a visible border and pressed/focus feedback make it read as a button; the label stays on one line and starts a new explicit scan.
 - `Great fit`, `Moderate fit` and `Low fit` camera markers use the same compact 24 px visual disc with thumbs-up, raised-hand and thumbs-down icons; the full detected-product outline remains the larger touch target. The outlined package also receives a transparent semantic tint (20% green/red, 22% yellow and 28% for the selected result), keeping the product visible while making the marker easier to read.
 - The expanded comparison uses one downward-chevron control to return to the camera view.
-- Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Carbohydrates are an optional informational value and never enter the fit formula, thresholds or ranking. Fiber is not required or displayed.
+- Original Sugar.no fit uses verified protein and total sugar per 100 g or 100 ml. Carbohydrates are informational and do not enter that formula. Fiber is not required or displayed in original Fit; the separate Personal Shelf model uses it where supported.
 - Nutrition resolution order is: curated catalog, exact Barbora snapshot, strict Rimi/Livin Latvia snapshot, multilingual Livinn Lithuania SKU identity and nutrition snapshot, a previously page-checked shared web card (when enabled), isolated Open Food Facts bulk/API match, then exact Google Search-grounded web discovery.
 - Internet enrichment runs after the first identity result and never receives or stores the camera image. Known barcode/catalog identities are enriched first, with up to five independent requests, so one slow unknown product does not hold the rest. A readable barcode or pack size is preferred, but a distinctive brand + product/variant identity may also use the exact fallback when Gemini preserves those details in its search query. Truly brand-only identities still fail fast. The final grounded-search fallback defaults to 12 seconds and is never configured below Google's 10-second minimum.
 - With `SHARED_WEB_CATALOG_ENABLED=true`, internet findings become shared cards only after deterministic checks of the actual product page. Repeat exact identities use Supabase before another internet nutrition lookup; aliases and barcode reads work across users/server restarts. The older `web_nutrition_cache` remains available only in the flag-off rollback lane: its AI-only entries are not automatically imported or presented as page-checked shared facts. Misses are retried after six hours; shared cards become due for a non-blocking recheck after 30 days.
@@ -41,7 +41,27 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - `Better alternatives` are fail-closed and selected from the complete verified nutrition pool: the managed/local Sugar.no catalog, Barbora, Rimi, Livin and the isolated Open Food Facts layer. They must share the same exact product type and form, have `Great fit` that is no worse than the scanned product, and resolve to a current exact offer from a connected retailer. Open Food Facts rows without an exact connected-retailer offer can strengthen recognition and nutrition coverage but cannot become purchasable alternatives. Equal-fit candidates are ordered by lower exact offer price and then the closest known pack size. `Moderate fit`, `Low fit` and unrated products are excluded; if no true substitute is available, the section is hidden.
 - Offer lookup is retailer-neutral: exact Barbora, Rimi and Livin offer keys use one API contract. Every displayed price and destination belongs to that exact retailer SKU. The app never compares or labels fuzzy title matches as cheaper. `Buy cheaper online` and a crossed-out shelf price appear only when the exact current online offer is strictly below the observed shelf price; otherwise no saving claim is shown.
 - Deterministic Shelf and Checkout demo scenes work without Gemini credentials.
-- The demo chooser goes directly to Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
+- The demo chooser offers `New rating demo`, Shelf demo, Checkout demo and saved-photo actions without a separate investor-coverage card.
+
+## Personal Shelf Rank — opt-in, bounded evidence
+
+The independent `personal-shelf-v1.1-bounded` model compares sugar, protein, food base and nutrient balance within supported product types. Original Sugar + Protein Fit remains the default; camera overlays, compact results, prices and Better alternatives retain their existing formula. In `View all`, enable `Personal Shelf Rank` to inspect the new comparison; disable it to return to original Fit. Missing ingredients, essential nutrients, unsupported types and contradictory tables remain unscored, not low-scored. This is a preference model, **not a validated health or safety rating**.
+
+The 3 September batch contains **1,248 source observations: 242 complete scores, 716 provisional ranges and 290 unscored records**, including 19 contradictory tables. The 958 assessments are source/SKU records, not globally deduplicated products or recognition accuracy. Of 1,728 supported-category candidates, 104 attempts failed and 376 were left unattempted when Barbora/OFF rate-limited; Rimi/Livinn queues finished. See [verified source accounting and release checks](docs/test-runs/2026-09-03-personal-shelf-batch-rollout.md). No background continuation is running after this batch.
+
+Only absent fiber is optional in chips, crackers, bars and cookies: the UI shows a provisional range, with both endpoints subject to the original nutrient ceilings. Values remain null; weights are not redistributed. Ranges sort by their lower bound. Any overlapping comparison has provisional places, even on a fully documented product; it is not a verified winner. A capped 59–59 interval displays `59/100` with an explicit provisional label. Dairy ignores fiber. Integer-tenths summation fixes half-point rounding; all 64 complete baseline scores were unchanged, and 82 previously fiber-only missing records gained provisional assessments.
+
+Source-backed composition is collected in resumable batches from existing supported-category URLs, not through per-product AI search. Rimi uses source-category breadcrumbs without the product-title slug, so a dip “for chips” is not classified as chips; its exact `sālie cepumi` leaf maps to crackers. The ingredient dictionary now includes Latvian `milti` (flour), a missing alias that had blocked many otherwise interpretable records. Exact SKU and known-GTIN mismatches are rejected, including changed retailer redirects. Original-language ingredients stay intact; the bounded EN/LV/LT/RU/ET rules do not infer nutrition from translated names. Cross-retailer canonical merging is not part of this release.
+
+Use `npm run catalog:sync:shelf-batch` for a read-only request plan. Add `-- --apply` to fetch missing observations from independent rate-limited source queues. Each source has one worker; checkpoints prevent restarting successful work. HTTP 429 stops only that source. Inspect the report before an explicit `--retry-failed`; do not retry before the source's cooling period. `SHELF_BATCH_LIMIT_PER_SOURCE=2` gives a small source-format probe. No job is scheduled automatically and no enrichment crawl runs during a scan.
+
+Retailer observations and OFF observations live in separate generated files and separate private Supabase tables. `npm run catalog:validate:shelf-pilot` reports complete/provisional/unscored counts and checks bounds against complete scores. `/api/health` exposes the shipped evidence counts, not unique-product or visual-recognition coverage. Runtime reads at most ten exact IDs after opt-in, with a bounded local fallback; it never delays the camera, searches the internet or stores a photograph.
+
+Try [New rating demo](https://sugar-no-scanner-demo-production.up.railway.app/demo/personal-shelf), also under `Show demo`. Six exact examples use the same scorer: chips 64/61, a real fiber-missing chip at 57–59, a contradictory chip without a score, and yogurts 97/54. The compact layout is unchanged; tap a card for its ingredients, component points and source. The previous isolated preview is a separate historical deployment and is not updated by this release.
+
+Owner check: compare a complete and provisional card, expand the explanation, confirm the ingredient/number match with the package, then switch back to original Fit. A missing-salt or contradictory product must not look fully rated. Review a real shelf and a translated name/different-flavour pair; automated tests do not establish store-wide recognition accuracy.
+
+Set `PERSONAL_SHELF_RANK_ENABLED=false` and redeploy to hide the switch, demo and evidence endpoint without deleting data or changing original Fit. Model/source details are in [the ranking contract](docs/personal-shelf-rank.md) and [missing-data policy](docs/personal-shelf-missing-data-proposal.md).
 
 ## Trust rules
 
@@ -51,7 +71,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Camera frames are sent to Google Gemini for recognition. Sugar.no does not write them to analytics, logs or Supabase. This processing boundary is documented here and in the privacy contract rather than repeated as persistent camera chrome.
 - The investor link opens the scanner directly. Its first same-origin page request receives a 12-hour HTTP-only, same-site session cookie so protected APIs remain unavailable to bare cross-origin calls. Recognition, enrichment, offer and analytics POST endpoints also reject cross-origin browser requests, bound request bodies and apply rate limits. This is request hardening, not viewer access control. The limiter key is a one-way hash of the client address and does not retain the address itself.
 - Commercial availability never changes Sugar.no ranking.
-- Two exact Livinn source tables with contradictory nutrition (`03000011074`, `1AM180309678`) are quarantined: their identities remain available but their nutrition and Fit are hidden. Of 1,855 collected nutrition tables, 1,853 are eligible for the original Fit; 636 of the 2,489 identities remain unrated. This production catalog release does not enable Personal Shelf Rank or its preview/demo.
+- Contradictory exact source tables are quarantined: identities remain available but neither rating can use their nutrition. The guard includes the known Livinn cases `03000011074` and `1AM180309678` and newly collected composition evidence. Missing optional fiber is different: it can receive a clearly provisional Personal Shelf range without inventing fiber or changing original Fit. Source record counts are not globally deduplicated product counts.
 
 ## Stack
 
@@ -128,6 +148,8 @@ Use the project change lanes in `AGENTS.md`:
 - local logic: related tests plus `check:fast`;
 - recognition/scoring/privacy/auth/schema/dependency/release: `verify`, full browser suite, Railway deploy and production smoke.
 
+The standard Mobile Safari suite starts the development server over local HTTP. `E2E_PRODUCTION=1` is not a complete acceptance path on this HTTP harness: Safari does not send production's Secure session cookie, so protected demo APIs return 401. Keep the security flag intact; verify built deployment/session behavior over Railway HTTPS instead.
+
 ## API
 
 - `POST /api/recognize`: image data URL plus source type, returns bounded detections.
@@ -168,6 +190,8 @@ Checked-in generated snapshots make the investor demo reproducible and fast:
 - `data/open-food-facts-lv.generated.json`: attributed Latvia subset imported through the ODbL pipeline. Source-provided `product_name_*` values are retained as multilingual identity aliases rather than translated or discarded.
 - `data/open-food-facts-regional.generated.json`: optional licensed Lithuania/Belarus OFF bulk layer. It stays empty until the official multi-gigabyte export is run as an approved durable data job.
 - `data/catalog-sources.generated.json`: source, license and redistribution manifest.
+- `data/personal-shelf-evidence.generated.json`: exact Barbora, Rimi and Livinn ingredient/salt/saturated-fat/fiber observations from the resumable supported-category batch. Missing values are null; QA fixtures are not included.
+- `data/personal-shelf-off-evidence.generated.json`: separate ODbL composition observations obtained by exact barcode, never mixed into the retailer file.
 
 Regeneration and validation scripts live in `scripts/`. Supabase migrations and seed tooling live in `supabase/`. Do not hand-edit generated JSON. Rimi/Livin/Livinn snapshots are for the private proof of concept; production reuse and recurring ingestion require retailer permission. Open Food Facts rows stay logically and physically separate because of ODbL obligations. See [catalog sources](docs/catalog-sources.md).
 
@@ -181,11 +205,16 @@ Connected-retailer resolution runs before Open Food Facts and grounded web looku
 
 The managed `products` table is optional in this proof of concept. If it has not been migrated and seeded, or is empty, product recognition and barcode lookup continue from the checked-in scored catalog while `web_nutrition_cache` still uses Supabase independently.
 
+For Personal Shelf Rank, additionally apply `supabase/migrations/202609030002_personal_shelf_evidence.sql` and review `npm run supabase:seed:shelf-pilot` (dry-run). With the approved Supabase target and server credentials, `npm run supabase:seed:shelf-pilot -- --apply` uses the server-only atomic RPC to upsert whole observations only when newer, then verifies every field on readback. It never deletes rows or joins nutrient fields from different sources. The optional `/api/personal-shelf` reads at most ten exact IDs only when the pilot opens; absent/offline/unseeded Supabase falls back to local observations within a two-second read deadline. It does not scrape, store images or delay recognition. Deployment evidence is recorded in the dated rollout log.
+
 ## Railway release
 
 For the Livinn-only release, apply the additive multilingual migrations through `202609020001_livinn_multilingual_catalog.sql` in the approved Supabase project. Run `npm run supabase:seed:livinn` for a dry run, then `npm run supabase:seed:livinn -- --apply` with server-only credentials. This scoped import upserts only the Livinn source, 2,489 identities, 1,853 eligible nutrition records and their immutable versions; it never prunes data or rewrites Barbora, Rimi, Livin Latvia, Open Food Facts or web caches. Quarantined raw observations remain in the versioned local snapshot, not in the verified Supabase nutrition layer.
 
 Release checks and owner acceptance: [Livinn production release](docs/test-runs/2026-09-03-livinn-production-release.md).
+### Production release
+
+The bounded Personal Shelf rollout uses the normal GitHub main and Railway production lane. Do not publish this batch to the separate historical preview or onboarding service.
 
 Normal releases are pushed once, after the requested batch is complete:
 
@@ -209,8 +238,10 @@ Then verify `/api/health`, direct root entry plus its silent session cookie, rej
 4. Confirm verified results gain fit labels and every confidently named product remains in the list after lookup. An unresolved product must stay neutral with no invented fit; an anonymous price-only finding must stay hidden.
 5. In the collapsed result sheet, tap `Scan again`. Confirm the captured result clears and the live camera starts a fresh scan; `View all` must still open the ranked comparison.
 6. Open Shelf and Checkout demos and expand `View all`.
+6a. Open `Show demo → New rating demo`, or go directly to `/demo/personal-shelf`. Confirm chips 64/61, a provisional 57–59 chip, one unscored chip and yogurts 97/54. Tap a card to see original ingredients and the exact source. The fourth chip can scroll below the fold. Reload the direct link: it must not request camera permission. Return to scanner and confirm the original Fit remains the default.
 7. Confirm the expanded comparison begins with `Best fit first` and the ranked cards, without duplicate summaries, rated counters or a second scan-again button.
 7a. Confirm every rated card visibly shows `Protein …g · Sugar …g` and adds `Carbs …g` only when the exact source provides carbohydrates; the numbers are per 100 g or 100 ml and protein remains part of the unchanged two-signal fit.
+7b. In `View all`, enable `Personal Shelf Rank`. Check within-category places, clearly provisional fiber-missing ranges, neutral unscored essential-missing cards and `Why this score?` with original ingredients/source. Overlapping ranges cannot establish a verified winner. Switch it off: the original order and Fit values must return unchanged. Follow the [owner checklist](docs/personal-shelf-rank.md#owner-product-check) on a real shelf.
 8. Confirm a physical price appears only when a price label is visible and an exact cheaper Barbora result is clearly qualified.
 9. Confirm each overlay tightly follows its package rather than a nearby shelf label.
 10. Wait until `Reading visible products…` appears, then move the phone or close the shelf/fridge. Confirm the submitted frame remains frozen and every box stays attached to the product that was analyzed. Confirm no new scene is read until the explicit retry/new-scan action is used.

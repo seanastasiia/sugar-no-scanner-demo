@@ -5,6 +5,7 @@ import { investorCategoryForRetailPath } from "@/lib/supported-categories";
 import type { BarboraNutritionIndexProduct } from "@/server/barbora-nutrition-index";
 import { externalCatalogCounts, externalCatalogIdentityCount } from "@/server/external-catalog";
 import { openFoodFactsBulkCount } from "@/server/open-food-facts";
+import { shelfEvidenceCounts } from "@/server/personal-shelf-evidence";
 
 export const dynamic = "force-dynamic";
 
@@ -23,13 +24,14 @@ export function GET() {
       status: "ok",
       service: "sugar-no-scanner-demo",
       commit: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.COMMIT_SHA || "local",
-      features: { sharedWebCatalog: process.env.SHARED_WEB_CATALOG_ENABLED === "true" },
+      features: { sharedWebCatalog: process.env.SHARED_WEB_CATALOG_ENABLED === "true", personalShelfRank: process.env.PERSONAL_SHELF_RANK_ENABLED !== "false" },
       catalog: {
         activeFoodProducts: foodProductIndex.length,
         productsWithAutomaticFit: nutritionIndex.length,
         connectedRetailerProducts: retailerCatalogs,
         livinnFoodIdentities: externalCatalogIdentityCount(),
         openFoodFactsBulkProducts: openFoodFactsBulkCount(),
+        personalShelf: shelfEvidenceCounts(),
         investorPack: {
           ...investorPack,
           total: investorPack.snacks + investorPack.dairy_desserts,

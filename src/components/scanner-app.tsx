@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowUpRight,
   Camera,
@@ -51,6 +52,7 @@ import {
 import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
 import { compactNutritionLabel } from "@/lib/nutrition-display";
+import { PersonalShelfResults, ShelfRankToggle } from "./personal-shelf-results";
 import { retailerOfferKey } from "@/lib/online-offer";
 import { mapWithConcurrency, mergeProgressiveEnrichment } from "@/lib/product-enrichment";
 import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
@@ -230,7 +232,7 @@ function trapFocus(event: KeyboardEvent, container: HTMLElement) {
   }
 }
 
-export function ScannerApp() {
+export function ScannerApp({ personalRankAvailable = true }: { personalRankAvailable?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -262,6 +264,7 @@ export function ScannerApp() {
   const barcodeDetectorRef = useRef<NativeBarcodeDetector | null | undefined>(undefined);
 
   const [source, setSource] = useState<ScanSource>("camera");
+  const [personalRankEnabled, setPersonalRankEnabled] = useState(false);
   const [cameraState, setCameraState] = useState<CameraState>("idle");
   const [recognitionState, setRecognitionState] = useState<RecognitionState>("idle");
   const [detections, setDetections] = useState<ProductDetection[]>([]);
@@ -1478,7 +1481,7 @@ export function ScannerApp() {
                   <>
                     {visibleTrayIds.length > 1 ? (
                       <h2 className={styles.expandedSheetTitle} id="scan-ranking-title">
-                        {ratedCount > 0 ? "Best fit first" : pendingProductIds.size ? "Matching products" : "Products identified"}
+                        {personalRankEnabled ? "Personal Shelf Rank" : ratedCount > 0 ? "Best fit first" : pendingProductIds.size ? "Matching products" : "Products identified"}
                       </h2>
                     ) : (
                       <span aria-hidden="true" />
@@ -1521,6 +1524,8 @@ export function ScannerApp() {
                   </>
                 )}
               </div>
+
+              {resultsAreExpanded && personalRankAvailable ? <ShelfRankToggle enabled={personalRankEnabled} onChange={setPersonalRankEnabled} /> : null}
 
               {!resultsAreExpanded ? (
                 <div className={styles.sheetPreview} aria-label="Product result preview">
@@ -1639,7 +1644,13 @@ export function ScannerApp() {
                     </div>
                   ) : null}
 
-                  {visibleTrayIds.length > 1 ? (
+                  {personalRankEnabled ? <PersonalShelfResults
+                    products={visibleTrayIds.flatMap((id) => products[id]?.product ? [products[id].product] : [])}
+                    unidentifiedCount={visibleTrayIds.filter((id) => !products[id]?.product).length}
+                    thumbnail={(id) => <ProductThumbnail imageUrl={products[id]?.product.imageUrl} sceneImageUrl={sceneImageUrl} sceneDimensions={mediaDimensions} detection={detectionById[id]} sizes="48px" targetAspect={48 / 60} />}
+                  /> : null}
+
+                  {!personalRankEnabled && visibleTrayIds.length > 1 ? (
                     <section className={styles.rankingSection} aria-labelledby="scan-ranking-title">
                       <ol className={styles.rankedList} aria-label="Products ranked by Sugar.no fit">
                         {rankedTrayIds.map((id) => {
@@ -1710,7 +1721,7 @@ export function ScannerApp() {
                     </section>
                   ) : null}
 
-                  {selectedPayload ? (
+                  {personalRankEnabled ? null : selectedPayload ? (
                     <ProductResult
                       payload={selectedPayload}
                       detection={selectedDetection}
@@ -1756,6 +1767,10 @@ export function ScannerApp() {
               </button>
             </div>
             <div className={styles.demoChoices}>
+              {personalRankAvailable ? <Link href="/demo/personal-shelf" prefetch={false} className={styles.ratingDemoLink}>
+                <List aria-hidden="true" size={22} />
+                <span><strong>New rating demo</strong><small>6 real products with scores and ingredients</small></span>
+              </Link> : null}
               <button type="button" onClick={startShelf}>
                 <Layers3 aria-hidden="true" size={22} />
                 <span><strong>Shelf demo</strong><small>Compare several products at once</small></span>

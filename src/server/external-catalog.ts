@@ -13,6 +13,8 @@ import {
 } from "./barbora-catalog";
 import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "./external-catalog-types";
 import { isQuarantinedRetailerNutrition } from "./retailer-nutrition-quarantine";
+import { getShelfEvidence } from "./personal-shelf-evidence";
+import { applyShelfNutritionTrustGuard } from "@/lib/personal-shelf-rank";
 
 interface RankedExternalCatalogCandidate {
   product: ExternalCatalogProduct;
@@ -267,6 +269,7 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
   const pack = canonicalPack(product.packSize);
   const record: ProductRecord = {
     id: `${product.source}:${product.sourceProductId}`,
+    shelfEvidence: product.shelfEvidence || getShelfEvidence(`${product.source}:${product.sourceProductId}`),
     retailerProductId: product.sourceProductId,
     brand: product.brand,
     name: product.title,
@@ -309,7 +312,7 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
     isGolden: false,
     accent: "coral"
   };
-  const scored = scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial");
+  const scored = applyShelfNutritionTrustGuard(scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial"));
   if (!isQuarantinedRetailerNutrition(product)) return scored;
   return {
     ...scored,

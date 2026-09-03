@@ -113,7 +113,7 @@ function decodeJavascriptString(value: string): string | null {
   }
 }
 
-function rimiDetails(html: string): string {
+export function rimiDetails(html: string): string {
   const start = html.indexOf("Storefront.product_details_page");
   const section = start >= 0 ? html.slice(start, start + 120_000) : html;
   const encoded = section.match(/identifier:\s*['"]details['"][\s\S]{0,3000}?html:\s*("(?:\\.|[^"\\])*")/)?.[1];
