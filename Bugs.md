@@ -21,6 +21,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: Buy online looked smaller and heavier than Buy cheaper online.** Removed the alternative button’s separate 14 px size and reset its nested strong label to inherit the shared rounded semibold button typography, including the same narrow-phone adjustment.
+
 - **2026-09-03: Better alternatives needed a visible sideways browsing cue.** Replaced the temporary vertical grid with a contained horizontal carousel showing one full card plus 30% of the next, without negative side margins. Native scrolling, gentle snapping and keyboard focus keep every card and its retailer action reachable.
 
 - **2026-09-03: Saving prices lacked the approved hierarchy and were separated from the detail action.** The shared cheaper-online button now places the small crossed-out shelf price and larger bold online price together on the right. Details and eligible alternatives reuse the ranked-card action. Exact-SKU and genuine-saving conditions are preserved.

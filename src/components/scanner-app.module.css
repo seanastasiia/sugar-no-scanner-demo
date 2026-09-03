@@ -895,7 +895,8 @@
   gap: 8px;
   margin-top: 12px;
 }
-.onlineOfferAction > strong {
+.onlineOfferAction > strong,
+.alternativeBuy strong {
   font: inherit;
 }
 .onlineOfferPrice {
@@ -1161,7 +1162,6 @@
 .alternativeBuy {
   justify-content: space-between;
   padding-inline: 14px;
-  font-size: 14px;
 }
 .alternativeBuy > span:first-child {
   display: grid;
@@ -1526,7 +1526,8 @@
   .rankedProductCard {
     padding: 12px;
   }
-  .onlineOfferAction {
+  .onlineOfferAction,
+  .alternativeBuy {
     padding-inline: 14px;
     font-size: 15px;
   }
