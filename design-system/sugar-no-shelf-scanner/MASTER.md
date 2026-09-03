@@ -11,6 +11,7 @@ Source: the user's approved `/Users/anastasiia/Documents/untitled.pen`, saved 3 
 | Ink / muted | `#262626` / `#60606A` |
 | Action blue / retry coral | `#0A84FF` / `#F14E58` |
 | Primary button | 56 px minimum; pill; `#1A1A1A → #4D4D4D`; white → 2% white → white diagonal rim, 1.5 px; black 13% shadow, y 3.246 / blur 19.478 |
+| Show demo / Leave feedback | Shared primary black fill, rim, shadow and white rounded 600 labels; top-bar variant 44 px minimum height, 10/14 px padding, 17/22 px type (15/22 px up to 360 px wide); Show demo keeps its 20 px layers icon |
 | Scan again | `#0A84FF → #9BC7F5`; shared 1.5 px white gradient rim; 20 px white refresh icon on the left; 56 px minimum height |
 | Secondary action | White pill, blue label, 44 px minimum |
 | Fit chip | Compact 24 px with 12 px label (`Moderate`); regular 30 px, radius 24, padding 4/8, 15/22 semibold rounded; white gradient rim 1.25 px |

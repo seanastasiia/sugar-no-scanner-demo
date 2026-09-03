@@ -168,7 +168,9 @@
 .onboardingPrimary,
 .backToLive,
 .onlineOfferAction,
-.alternativeBuy {
+.alternativeBuy,
+.demoTrigger,
+.feedbackTrigger {
   position: relative;
   display: inline-flex;
   width: 100%;
@@ -191,7 +193,9 @@
 .onboardingPrimary::before,
 .backToLive::before,
 .onlineOfferAction::before,
-.alternativeBuy::before {
+.alternativeBuy::before,
+.demoTrigger::before,
+.feedbackTrigger::before {
   position: absolute;
   inset: 0;
   padding: 1.5px;
@@ -270,29 +274,15 @@
   gap: 34px;
 }
 .stageActions > button {
-  display: inline-flex;
+  width: auto;
   min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: 0;
-  border-radius: 999px;
-  padding: 0 14px;
-  cursor: pointer;
-  font: 500 13px/18px var(--font-display);
+  padding: 10px 14px;
 }
 .stageActions > .feedbackTrigger {
   min-width: 135px;
-  background: var(--surface);
-  color: var(--accent);
-  font-size: 15px;
-  font-weight: 600;
 }
 .stageActions > .demoTrigger {
   min-width: 124px;
-  background: #fffffff0;
-  color: var(--ink);
-  backdrop-filter: blur(12px);
 }
 .cameraViewport,
 .cameraViewportMediaRatio,
@@ -1583,7 +1573,9 @@
   .scanAgainButton:hover,
   .onboardingPrimary:hover,
   .backToLive:hover,
-  .onlineOfferAction:hover {
+  .onlineOfferAction:hover,
+  .demoTrigger:hover,
+  .feedbackTrigger:hover {
     opacity: 0.9;
   }
   .secondaryButton:hover {
@@ -1591,6 +1583,9 @@
   }
 }
 @media (max-width: 360px) {
+  .stageActions > button {
+    font-size: 15px;
+  }
   .sheetActions button {
     padding-inline: 12px;
     font-size: 15px;
@@ -1939,7 +1934,6 @@
   filter: none;
   opacity: 1;
 }
-.liveCamera .stageActions > button,
 .liveCamera .stageStatus {
   border: 1px solid #ffffff40;
   background: #222228ed;

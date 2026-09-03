@@ -21,6 +21,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-03: Show demo and Leave feedback used a separate flat camera style.** Both now reuse the shared black gradient/rim/shadow and rounded semibold type, with compact sizing for the top bar. Removed the live-camera fill override; demo/photo feedback and recovery's Show demo follow the same black finish.
+
 - **2026-09-03: Back to live duplicated Scan again over the demo photo.** Removed the floating return button from shelf/checkout demos and saved photos. Scan again still opens the camera, and chooser/recovery return paths remain available.
 
 - **2026-09-03: Result and dialog changes appeared abruptly.** Added brief shared surface/content entrances, capped card staggering and consistent press feedback without animating layout or camera coordinates. Rapid result/detail/back/Escape navigation stays available, and Reduce Motion disables presentation and loading animations. Closing results now restores focus to the remounted compact trigger instead of the detached original button.

@@ -1413,7 +1413,7 @@ export function ScannerApp() {
                   onClick={openDemo}
                   aria-label="Show demo"
                 >
-                  <Layers3 aria-hidden="true" size={17} />
+                  <Layers3 aria-hidden="true" size={20} />
                   Show demo
                 </button>
               ) : null}
@@ -1492,7 +1492,7 @@ export function ScannerApp() {
                     <Camera aria-hidden="true" size={17} />
                     {cameraState === "denied" ? "Enable camera" : "Try again"}
                   </button>
-                  <button ref={demoTriggerRef} className={styles.secondaryButton} type="button" onClick={openDemo}>
+                  <button ref={demoTriggerRef} className={styles.primaryButton} type="button" onClick={openDemo}>
                     Show demo
                   </button>
                 </div>
@@ -1639,7 +1639,7 @@ export function ScannerApp() {
                       Back to live camera
                     </button>
                   ) : networkOnline ? (
-                    <button ref={demoTriggerRef} className={styles.secondaryButton} type="button" onClick={openDemo}>
+                    <button ref={demoTriggerRef} className={styles.primaryButton} type="button" onClick={openDemo}>
                       Show demo
                     </button>
                   ) : null}

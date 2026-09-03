@@ -522,6 +522,12 @@ test("anonymous feedback validates Needs work and shows success", async ({ page 
   expect((await feedbackTrigger.boundingBox())?.width).toBeGreaterThanOrEqual(120);
   await feedbackTrigger.click();
   const dialog = page.getByRole("dialog", { name: "Was this scan helpful?" });
+  // Measure spacing after the dialog's entrance transform has settled.
+  await dialog.evaluate(async (element) => {
+    await Promise.all(element.getAnimations({ subtree: true })
+      .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+      .map((animation) => animation.finished.catch(() => undefined)));
+  });
   const ratingBox = await dialog.getByRole("group", { name: "Feedback rating" }).boundingBox();
   const submitBox = await dialog.getByRole("button", { name: "Send feedback" }).boundingBox();
   expect((submitBox?.y ?? 0) - ((ratingBox?.y ?? 0) + (ratingBox?.height ?? 0))).toBeGreaterThanOrEqual(8);
