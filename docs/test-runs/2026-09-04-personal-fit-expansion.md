@@ -54,4 +54,14 @@ The failed trace was preserved at `/tmp/sugar-no-final-navigation-failure-823f83
 
 Deploy only to project `9e2a4887-0e19-4ca7-ae99-d68816542558`, environment `personal-rank-preview`, service `37730464-07ba-482d-9c59-74c04ecdf6db`. Require terminal SUCCESS, matching HTTPS health revision/counts, original Shelf/Checkout demo smoke and exact evidence checks. Keep both shared-catalog flags off until isolated Supabase approval and acceptance.
 
+Candidate `380ef66131232428d2beaf396b9f68ea7d37cba5` (documentation-only changes after implementation `823f83c`) reached Railway **SUCCESS** as deployment `8937cee1-cbcf-44ed-905b-62983c2f69a0`. At 14:30 UTC, `PREVIEW_EXPECTED_COMMIT=380ef66131232428d2beaf396b9f68ea7d37cba5 npx tsx scripts/check-personal-fit-preview.ts` passed against the deployed HTTPS preview:
+
+- Exact SHA, model v1.5, 5,150 observations / 1,343 complete / 2,369 provisional / 1,438 unscored and 1,096 OFF records matched local data. Both shared flags remained false.
+- Onboarding, ordinary Shelf demo, View all and Personal Shelf toggle worked in iPhone 13 WebKit emulation. No camera or paid recognition request was used.
+- Four newly assessable exact observations (Barbora, Rimi and regional OFF) matched the local whole observations. Regional barcode responses retained grams versus millilitres, exact sugar/protein and unknown ingredient language.
+- Ordinary Shelf and Checkout retained 4/3 deterministic detections, with `imageStored: false`. The chip demo retained four cards with 64/61/57–59/unscored; its screenshot was visually checked for card layout, badges and the provisional disclosure.
+- Remote GitHub main and live production remained `ab813c710f41ee7423f19ff35acb95381140c98d`; production health was OK with its existing v1.1 model and OFF500. No production changes were made.
+
+Evidence: `/tmp/sugar-no-expansion-live-final.log`, ignored `test-results/personal-fit-expansion-live.json` and `test-results/personal-fit-expansion-live.png`. Local fresh-cache navigation recheck also failed (0/6, `/tmp/sugar-no-expansion-clean-cache-check.log`); it did not resolve the limitation above. Live smoke is targeted HTTPS acceptance, not a substitute claim that the entire final local mobile suite or physical-device camera testing passed.
+
 Owner: refresh preview → try the same real shelf → View all → Personal Shelf Rank. Verify protein/sugar against the exact physical variant, a provisional card still discloses unknown fiber, and unsupported/conflicting cards stay neutral. Switch back to original Fit and check the chip demo still shows 64/61/57–59/unscored. More evidence does not guarantee that every visible package is recognized.
