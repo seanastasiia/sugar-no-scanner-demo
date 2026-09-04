@@ -11,7 +11,7 @@ function setup(ids: string[] = ["barbora:qa-one"]) {
   temporary.push(dir);
   mkdirSync(join(dir, "data"));
   mkdirSync(join(dir, ".catalog-sync"));
-  for (const name of ["personal-shelf-evidence", "personal-shelf-off-evidence", "rimi-catalog", "livinn-food-index", "open-food-facts-lv"]) {
+  for (const name of ["personal-shelf-evidence", "personal-shelf-off-evidence", "rimi-catalog", "livinn-food-index", "open-food-facts-lv", "open-food-facts-regional"]) {
     writeFileSync(join(dir, `data/${name}.generated.json`), "[]\n");
   }
   writeFileSync(join(dir, "data/barbora-nutrition-index.generated.json"), JSON.stringify([
@@ -26,6 +26,7 @@ function run(dir: string, mode = "success", apply = true, extra: Record<string, 
       console.log("MOCK_FETCH " + new URL(url).pathname);
       if (${JSON.stringify(mode)} === "forbidden") return new Response("denied", {status:403});
       if (${JSON.stringify(mode)} === "limited") return new Response("wait", {status:429,headers:{"retry-after":"120"}});
+      if (${JSON.stringify(mode)} === "unavailable") return new Response("wait", {status:503,headers:{"retry-after":"120"}});
       if (${JSON.stringify(mode)} === "wrong-id") return new Response('window.product = {"Url":"other","title":"QA","price":1};');
       const product = {Url:new URL(url).pathname.split("/").pop(),title:"QA",price:1,category_name_full_path:"Chips",ingredients:"Kartupeļi, eļļa, sāls",nutrients:[]};
       return new Response("window.product = " + JSON.stringify(product) + ";");
@@ -85,5 +86,19 @@ describe("bounded Personal Shelf source batches", () => {
     run(dir, "wrong-id");
     expect(checkpoint(dir).observations).toEqual([]);
     expect(checkpoint(dir).attempts[0]).toMatchObject({ ok: false, error: "Exact SKU changed" });
+  });
+  it("uses OFF v3 and stops the queue on its global 503 rate limit", () => {
+    const ids = ["4006381333931", "3017620422003"];
+    const dir = setup(ids.map((id) => `off:${id}`));
+    writeFileSync(join(dir, "data/open-food-facts-lv.generated.json"), JSON.stringify(ids.map((id) => ({
+      source: "open_food_facts", sourceProductId: id, title: "QA Chips", brand: "QA", packSize: "100 g", gtin: id,
+      category: "Chips", url: `https://world.openfoodfacts.org/product/${id}`
+    }))));
+    const output = run(dir, "unavailable");
+    expect(output.match(/MOCK_FETCH/g)).toHaveLength(1);
+    expect(output).toContain("/api/v3/product/4006381333931");
+    expect(checkpoint(dir).attempts).toEqual([expect.objectContaining({ ok: false, error: "HTTP 503" })]);
+    expect(checkpoint(dir).observations).toEqual([]);
+    expect(run(dir, "success", false)).toContain('"planned":0');
   });
 });

@@ -30,6 +30,7 @@ describe("official OFF Parquet adaptation", () => {
     expect(offParquetProduct({ ...sample, data_quality_errors_tags: ["en:nutrition-value-over-100"] }, time).reason).toBe("source_quality_flag");
     expect(offParquetProduct({ ...sample, obsolete: true }, time).product).toBeNull();
     expect(offParquetProduct({ ...sample, categories_tags: ["en:pet-foods"] }, time).reason).toBe("not_human_food");
+    expect(offParquetProduct({ ...sample, categories: "Cat food" }, time).reason).toBe("not_human_food");
   });
   it("does not fill gaps or choose between contradictory same-language/source values", () => {
     expect(offParquetProduct({ ...sample, ingredients_text: [...sample.ingredients_text, { lang: "lt", text: "Sugar" }] }, time).reason).toBe("ambiguous_language_text");

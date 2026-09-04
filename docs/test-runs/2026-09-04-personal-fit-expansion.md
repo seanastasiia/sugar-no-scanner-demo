@@ -18,6 +18,8 @@ The 200-ID pilot accepted 140 observations and added 86 assessments; its isolate
 
 ## Technical acceptance
 
+The initial result was released as `e606422adc857e4275c8831fa7b67d3bb7a21dcd`; Railway deployment `bfcd0e71-f5b7-43bc-b600-84b8eee067af` reached SUCCESS and passed the original HTTPS smoke.
+
 - `npm run verify`: PASS, 68 test files / 630 tests, lint, TypeScript, catalog validators and standalone production build. Log: `/tmp/sugar-no-expansion-verify-final.log`.
 - Tests cover exact Rimi quantity versus conflicting/missing labels, category-positive/negative examples, explicit batch scope and 403/429 cooldowns, nullable OFF languages/nutrition, importer deduplication/source separation/idempotence, and 13 isolated PostgreSQL shared-card cases. Shared composition is default-off; no live Supabase migration is claimed.
 - `npm run catalog:audit:personal-fit -- --write`, `npm run catalog:report:personal-fit -- --write`, and `npx tsx scripts/report-personal-fit-expansion.ts --write`: PASS. Reports stay under ignored `.catalog-sync/`; regression baseline is pinned in the script.
@@ -25,7 +27,24 @@ The 200-ID pilot accepted 140 observations and added 86 assessments; its isolate
 - Exploratory local `E2E_PRODUCTION=1` HTTP runs failed protected API requests because production Secure cookies are not sent over HTTP. This is the already documented harness limitation, not weakened by a code workaround. Railway HTTPS smoke is the built-server acceptance gate.
 - `git diff --check`: PASS. Generated `next-env.d.ts` restored to its original tracked form after the build.
 
-OFF extraction remains a separate staged job until an accepted candidate/report is committed. Partial Parquet files were not promoted. Whole CSV output lacks trustworthy ingredient-language labels, so no language or rating is inferred from its product names or market tags.
+## Final OFF/data pass
+
+The pinned TSV stream completed in 1,020 seconds and scanned 4,535,553 rows. Of 15,669 regional rows, 500 were already present, 596 new GTINs passed import and 14,573 were rejected. `data/open-food-facts-regional-import-report.generated.json` preserves counts, source version and the candidate SHA-256, independently verified against the 596-row file. Repeating the importer plans zero additions. The original 500-row file remains byte-for-byte identical to the baseline. Failed exploratory Parquet/quote-delimited CSV partial files were not promoted. The corrected reader passes three Python regression tests, including literal quote preservation and malformed-row rejection.
+
+Exact OFF v3 follow-ups made 186 product reads: 50 original / 48 accepted / 19 new assessments; 136 regional / 124 accepted / 43 new assessments. Source name, brand, pack and barcode must still agree, and missing ingredient language is never inferred. Both queues completed without a source cooldown or paid-provider call. The saved checkpoints and per-ID impact reports remain under ignored `.catalog-sync/expansion-2026-09-04/`.
+
+| Final measure | Baseline | Final candidate |
+| --- | ---: | ---: |
+| Source records, not globally unique products | 19,524 | 20,120 |
+| OFF source records | 500 | 1,096 |
+| Exact observations | 4,102 | 5,150 |
+| Complete assessments | 1,225 | 1,343 |
+| Provisional assessments | 2,110 | 2,369 |
+| All assessable | 3,335 | 3,712 |
+
+Final per-ID regression: +377 assessments, zero changed prior assessments, zero changed demos, zero removed evidence. Audit: 3,605 supported incomplete rows, 12,803 outside current profiles, no duplicate source/evidence IDs, and 34 contradictory observed tables still unrated. Barcode package labels now preserve `g` versus `ml` and both are tested. Category calibration warnings remain; this is not a visual-recognition benchmark.
+
+Second-phase preflight: 70 Vitest files / 643 tests, full validators/build and 58 Mobile Safari cases passed before the final regional evidence promotion. Final committed-candidate checks and deployment will be recorded below before handoff.
 
 ## Release and owner acceptance
 

@@ -15,7 +15,7 @@ export async function resolveSharedWebBarcode(barcode: string): Promise<BarcodeR
   const result = resolveBarcodeFromKnownCatalogs(product.gtin, [product]);
   if (!result) return null;
   return { source: "web_search", detection: { ...result.detection, catalogProductId: null,
-    // The legacy generic mapper assumes grams; omit rather than mislabel ml.
+    // Shared records do not yet retain a separately validated display quantity.
     identity: { ...result.detection.identity!, barcode, packSize: null, matchKind: "web_search" } } };
 }
 
@@ -48,7 +48,7 @@ export function resolveBarcodeFromKnownCatalogs(
         brand: product.brand,
         name: product.name,
         variant: null,
-        packSize: product.packSizeG ? `${product.packSizeG}g` : null,
+        packSize: product.packSizeG ? `${product.packSizeG}${product.nutritionBasis === "100ml" ? "ml" : "g"}` : null,
         category: product.category || null,
         matchKind: source === "catalog" ? "verified_catalog" : source,
         barcode

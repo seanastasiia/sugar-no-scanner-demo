@@ -9,6 +9,8 @@ test-results/
 .env.production
 *.log
 *.tsbuildinfo
+__pycache__/
+*.pyc
 .DS_Store
 .vercel/
 .railway/

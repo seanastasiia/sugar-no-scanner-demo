@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import time
 from urllib.request import Request, urlopen
+from off_tsv import complete_row, daily_export_reader
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--apply", action="store_true")
@@ -30,7 +31,7 @@ candidate = directory / "off-csv-rows.jsonl.tmp"
 markets = {"en:latvia", "lv:latvija", "en:lithuania", "lt:lietuva", "en:belarus", "ru:belarus", "be:belarus"}
 nutrients = ["energy-kcal", "energy-kj", "proteins", "sugars", "carbohydrates", "fiber", "salt", "sodium", "saturated-fat", "fat"]
 csv.field_size_limit(2_000_000)
-scanned = kept = 0
+scanned = kept = malformed = 0
 def number(text):
     try:
         n = float(text)
@@ -42,11 +43,15 @@ with urlopen(Request(url, headers={"User-Agent": "Sugar.no offline regional expo
     if response.status != 200 or not 0 < size <= 1_400_000_000 or response.headers.get("x-amz-version-id") != version:
         raise RuntimeError("Unexpected source version or download size")
     with gzip.GzipFile(fileobj=response) as compressed, io.TextIOWrapper(compressed, encoding="utf8", newline="") as text, candidate.open("x", encoding="utf8") as output:
-        reader = csv.DictReader(text, delimiter="\t")
-        if not {"code", "countries_tags", "ingredients_text", "proteins_100g", "sugars_100g", "quantity"}.issubset(reader.fieldnames):
-            raise RuntimeError("Unexpected source schema")
+        # The daily export_database.pl writes sanitized tab-separated fields,
+        # not quote-delimited CSV. Quotes in a product name are literal data.
+        # https://github.com/openfoodfacts/openfoodfacts-server/blob/main/scripts/export_database.pl
+        reader = daily_export_reader(text)
         for row in reader:
             scanned += 1
+            if not complete_row(row):
+                malformed += 1
+                continue  # Never shift a malformed line's nutrition columns.
             if scanned % 100_000 == 0:
                 print(json.dumps({"stage": "progress", "scanned": scanned, "regionalRows": kept, "elapsedSeconds": round(time.monotonic()-started)}), flush=True)
                 if time.monotonic()-started > 1800: raise RuntimeError("30-minute stream budget exceeded")
@@ -62,7 +67,7 @@ with urlopen(Request(url, headers={"User-Agent": "Sugar.no offline regional expo
                 "no_nutrition_data": row.get("no_nutrition_data") in ("on", "1", "true"),
                 "data_quality_errors_tags": list(filter(None, row.get("data_quality_errors_tags", "").split(","))), "last_modified_t": number(row.get("last_modified_t"))}
             output.write(json.dumps(record, ensure_ascii=False) + "\n")
-report = {"format": "csv", "revision": version, "sourceUrl": url, "rows": kept, "scanned": scanned, "compressedBytes": size,
+report = {"format": "csv", "revision": version, "sourceUrl": url, "rows": kept, "scanned": scanned, "malformedRowsSkipped": malformed, "compressedBytes": size,
     "checkedAt": datetime.now(timezone.utc).isoformat(), "elapsedSeconds": round(time.monotonic()-started), "license": "ODbL-1.0",
     "imagesDownloaded": False, "ingredientLanguageAvailable": False, "translatedNamesAvailable": False}
 os.replace(candidate, directory / "off-parquet-rows.jsonl")

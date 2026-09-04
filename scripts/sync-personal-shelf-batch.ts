@@ -1,7 +1,8 @@
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { assessPersonalShelfProduct, shelfCategory, SHELF_CATEGORIES, type ShelfEvidence } from "../src/lib/personal-shelf-rank";
-import { barboraShelfEvidence, livinnShelfEvidence, offShelfEvidence, rimiShelfCategory, rimiShelfEvidence } from "../src/server/personal-shelf-parser";
+import { barboraShelfEvidence, livinnShelfEvidence, rimiShelfCategory, rimiShelfEvidence } from "../src/server/personal-shelf-parser";
+import { exactOffEvidence } from "../src/server/off-exact-evidence";
 import { parseBarboraProductPage } from "../src/server/barbora-catalog";
 import { parseShelfEvidence } from "../src/server/personal-shelf-evidence";
 import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "../src/server/external-catalog-types";
@@ -9,7 +10,7 @@ import type { BarboraNutritionIndexProduct } from "../src/server/barbora-nutriti
 import { retryBoundaryElapsed, retryNotBefore } from "../src/server/source-retry";
 
 // Independent, bounded source queues. No search/model calls; no scan images or user data.
-type Candidate = { id: string; sku: string; source: ShelfEvidence["source"]; url: string; gtin: string | null; category: string | null };
+type Candidate = { id: string; sku: string; source: ShelfEvidence["source"]; url: string; gtin: string | null; category: string | null; offIdentity?: { code: string; brand: string; title: string; aliases?: string[]; packSize: string } };
 const reportOnly = process.argv.includes("--report-only");
 const apply = process.argv.includes("--apply") || reportOnly;
 const retryFailed = process.argv.includes("--retry-failed");
@@ -33,14 +34,16 @@ const rows = new Map(previous.map((row) => [row.productId, row]));
 const sources: ShelfEvidence["source"][] = ["barbora_lv", "rimi_lv", "livinn_lt", "open_food_facts"];
 const barbora = await json<BarboraNutritionIndexProduct[]>("data/barbora-nutrition-index.generated.json");
 const external: Array<ExternalCatalogProduct | ExternalCatalogIdentity> = [...await json<ExternalCatalogProduct[]>("data/rimi-catalog.generated.json"),
-  ...await json<ExternalCatalogIdentity[]>("data/livinn-food-index.generated.json"), ...await json<ExternalCatalogProduct[]>("data/open-food-facts-lv.generated.json")];
+  ...await json<ExternalCatalogIdentity[]>("data/livinn-food-index.generated.json"), ...await json<ExternalCatalogProduct[]>("data/open-food-facts-lv.generated.json"),
+  ...await json<ExternalCatalogProduct[]>("data/open-food-facts-regional.generated.json")];
 const candidates: Candidate[] = [
   ...barbora.filter((p) => !p.isAdult).map((p) => ({ id: `barbora:${p.slug}`, sku: p.slug, source: "barbora_lv" as const,
     url: `https://barbora.lv/produkti/${p.slug}`, gtin: null, category: p.category })),
   ...external.filter((p) => ["rimi_lv", "livinn_lt", "open_food_facts"].includes(p.source)).map((p) => ({
     id: `${p.source === "open_food_facts" ? "off" : p.source}:${p.sourceProductId}`, sku: p.sourceProductId,
     source: p.source as ShelfEvidence["source"], url: p.url, gtin: p.gtin,
-    category: p.source === "rimi_lv" ? rimiShelfCategory(p.url) : p.category
+    category: p.source === "rimi_lv" ? rimiShelfCategory(p.url) : p.category,
+    ...(p.source === "open_food_facts" ? { offIdentity: { code: p.sourceProductId, brand: p.brand, title: p.title, aliases: p.aliases, packSize: p.packSize } } : {})
   }))
 ];
 const selected = [...new Map(candidates.filter((p) => {
@@ -108,7 +111,7 @@ class SourceRateLimitError extends Error {
   constructor(public readonly notBefore: string, status = 429) { super(`HTTP ${status}`); }
 }
 async function fetchEvidence(item: Candidate): Promise<ShelfEvidence> {
-  let url = item.source === "open_food_facts" ? `https://world.openfoodfacts.org/api/v2/product/${item.sku}.json` : item.url;
+  let url = item.source === "open_food_facts" ? `https://world.openfoodfacts.org/api/v3/product/${item.sku}` : item.url;
   let body = "";
   for (let redirects = 0; redirects < 4; redirects++) {
     const target = new URL(url);
@@ -118,7 +121,7 @@ async function fetchEvidence(item: Candidate): Promise<ShelfEvidence> {
       url = new URL(response.headers.get("location")!, url).href; continue;
     }
     // Stop this source's queue on rate limiting; never retry earlier than its instruction.
-    if (response.status === 429 || response.status === 403) throw new SourceRateLimitError(retryNotBefore(response.headers.get("retry-after")), response.status);
+    if (response.status === 429 || response.status === 403 || (item.source === "open_food_facts" && response.status === 503)) throw new SourceRateLimitError(retryNotBefore(response.headers.get("retry-after")), response.status);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     if (Number(response.headers.get("content-length") || 0) > 4000000) throw new Error("Source too large");
     body = await response.text();
@@ -136,7 +139,7 @@ async function fetchEvidence(item: Candidate): Promise<ShelfEvidence> {
   else {
     const response = JSON.parse(body);
     if (String(response.product?.code) !== item.sku) throw new Error("Exact barcode changed");
-    evidence = offShelfEvidence(response.product, checkedAt);
+    evidence = item.offIdentity ? exactOffEvidence(response.product, item.offIdentity, checkedAt) : null;
   }
   if (!evidence || evidence.productId !== item.id || !parseShelfEvidence(evidence)) throw new Error("Missing exact labelled evidence");
   if (item.gtin && evidence.gtin && item.gtin !== evidence.gtin) throw new Error("Source barcode conflict");

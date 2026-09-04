@@ -39,7 +39,7 @@ export function offParquetProduct(row: OffParquetRow, checkedAt: string) {
   if (!isOpenFoodFactsMarketRecord({ countries_tags: row.countries_tags }, ["latvia", "lithuania", "belarus"])) return { product: null, reason: "outside_markets" } as const;
   if (row.obsolete || row.no_nutrition_data || row.data_quality_errors_tags?.length) return { product: null, reason: "source_quality_flag" } as const;
   if (!row.brands?.trim()) return { product: null, reason: "missing_brand" } as const;
-  if (row.categories_tags?.some((tag) => /(?:pet|cat|dog|animal)-foods?|non-food/.test(tag))) return { product: null, reason: "not_human_food" } as const;
+  if ([...(row.categories_tags || []), row.categories || ""].some((tag) => /(?:pet|cat|dog|animal)[ -]foods?|non[ -]food/i.test(tag))) return { product: null, reason: "not_human_food" } as const;
   const names = translations(row.product_name);
   const ingredients = translations(row.ingredients_text);
   if (!names || !ingredients) return { product: null, reason: "ambiguous_language_text" } as const;
