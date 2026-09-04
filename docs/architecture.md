@@ -21,6 +21,8 @@ Use this page to locate a change without scanning the whole repository.
 
 ## Data resolution
 
+The v1.4 ingredient fallback lives in `src/lib/personal-shelf-ingredient-aliases.ts`. It runs only after an unknown v1.3 first-ingredient classification and does not perform I/O or touch source observations. `scripts/report-personal-shelf-alias-impact.ts` pins the preceding model and identical source inputs for a per-ID coverage/regression report.
+
 The exact-match ladder is:
 
 1. curated Sugar.no catalog;

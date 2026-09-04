@@ -1,6 +1,7 @@
 import type { ProductRecord, ScoredProduct } from "./types";
+import { reviewedIngredientBase } from "./personal-shelf-ingredient-aliases";
 
-export const SHELF_MODEL_VERSION = "personal-shelf-v1.3-bounded";
+export const SHELF_MODEL_VERSION = "personal-shelf-v1.4-bounded";
 export type ShelfCategory = "chips" | "savory-snack" | "crackers" | "yogurt" | "dairy-dessert" | "ice-cream" |
   "bar" | "cookie" | "breakfast-cereal" | "bread" | "pasta" | "nuts-seeds" | "dried-fruit" | "chocolate" |
   "candy" | "cheese" | "meat-product" | "fish-product" | "sauce";
@@ -171,6 +172,8 @@ export function analyzeIngredients(text: string | null, language: string | null,
     : wholeBase.test(first) || (extended && extendedWholeBase.test(first)) ? 100
       : dairyBase.test(first) || (extended && animalBase.test(first)) ? 85
         : potatoCornBase.test(first) ? 75 : refinedBase.test(first) || (extended && extendedRefinedBase.test(first)) ? 25 : null;
+  const alias = base === null && category ? reviewedIngredientBase(normalizeIngredientText(parts[0]), language!, category) : null;
+  if (alias) base = alias.score;
   if (base !== null && category && ["meat-product", "fish-product"].includes(category)) {
     const percent = first.match(/(\d+(?:[.,]\d+)?)\s*%/)?.[1];
     const amount = percent ? Number(percent.replace(",", ".")) : null;
@@ -181,6 +184,7 @@ export function analyzeIngredients(text: string | null, language: string | null,
   const sugarNearStart = parts.slice(0, 3).some((part) => sugars.test(normalizeIngredientText(part)));
   return {
     firstIngredient: parts[0],
+    aliasRule: alias?.rule ?? null,
     score: base === null ? null : sugarNearStart ? Math.min(base, 40) : base,
     sugarNearStart,
     sweetenersDetected: sweeteners.test(normalizeIngredientText(text))
@@ -222,9 +226,14 @@ export function assessPersonalShelfProduct(product: Pick<ProductRecord, "id" | "
   else if (ingredients.score === null) result.missing.push("recognized first ingredient");
   // A retailer can put curd cream in its yogurt category. Do not silently compare it as yogurt.
   if (category === "yogurt" && ingredients && /biezpiens|biezpiena|varske|varskes|curd|творог/.test(normalizeIngredientText(ingredients.firstIngredient))) result.missing.push("unambiguous product type");
-  // Some retailer tables use a literal zero as a placeholder. For new families,
-  // reject a zero that conflicts with the same page's ingredients/macros.
-  if (!legacyIngredientCategories.has(category) && evidence.ingredientsText) {
+  // The added vocabulary must not turn an existing source-taxonomy mistake into a rank.
+  // A cone's "wafer" leaf is not a cookie; curd filed as biscuits needs source review.
+  if (ingredients?.aliasRule && (
+    (category !== "ice-cream" && /saldej|ice[ -]?cream|ledai/.test(normalizeIngredientText(evidence.category))) ||
+    (["cookie", "bar"].includes(category) && /biezpiens|biezpiena|varske|varskes|curd|quark|творог/.test(normalizeIngredientText(ingredients.firstIngredient)))
+  )) result.missing.push("unambiguous product type");
+  // New families and newly unlocked wording get the same source-placeholder checks.
+  if ((!legacyIngredientCategories.has(category) || ingredients?.aliasRule) && evidence.ingredientsText) {
     const ingredientText = normalizeIngredientText(evidence.ingredientsText);
     if (evidence.totalSugarG === 0 && sugars.test(ingredientText)) result.missing.push("consistent zero sugar and ingredient list");
     if (evidence.saltG === 0 && saltIngredient.test(ingredientText) && ["cheese", "meat-product", "fish-product"].includes(category)) result.missing.push("consistent zero salt and ingredient list");

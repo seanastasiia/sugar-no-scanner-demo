@@ -144,9 +144,9 @@ describe("Personal Shelf Rank, independent pilot", () => {
   ])("recognizes an explicit whole/refined food base without translation: %s", (text, language, score) => {
     expect(analyzeIngredients(text, language, "sauce")?.score).toBe(score);
   });
-  it("does not let a new-family ingredient alias change legacy category scoring", () => {
+  it("v1.4 allows reviewed fruit aliases in explicit legacy categories, not without a category", () => {
     expect(analyzeIngredients("Dates, cocoa", "en")?.score).toBeNull();
-    expect(analyzeIngredients("Dates, cocoa", "en", "cookie")?.score).toBeNull();
+    expect(analyzeIngredients("Dates, cocoa", "en", "cookie")?.score).toBe(100);
     expect(analyzeIngredients("Dates, cocoa", "en", "dried-fruit")?.score).toBe(100);
   });
   it("rejects source placeholder zeroes that conflict with a new-family ingredient list or total fat", () => {
