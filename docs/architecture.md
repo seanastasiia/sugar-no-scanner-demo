@@ -21,6 +21,10 @@ Use this page to locate a change without scanning the whole repository.
 
 ## Data resolution
 
+The v1.5 preview adds exact source-category leaf aliases without changing weights. `scripts/report-personal-fit-expansion.ts` compares all earlier assessments and demos with pinned `b4e7453`. Bounded cohort scripts isolate new observations and checkpoints before promotion; 403/429 halt the source. The Rimi mixed-basis parser requires a proven pack dimension from title or a single labelled quantity, and rejects conflicts.
+
+`SHARED_WEB_SHELF_EVIDENCE_ENABLED` is a separate default-off gate. Exact Rimi/Livinn pages can carry one canonical composition object through the shared-card transaction. Reads check its source, GTIN, provenance and nutrition agreement before adapting it to the stable web-card ID. The additive 202609040001 RPC never merges composition fields, strips composition after conflicts and cannot auto-heal quarantined fields. Activation requires an isolated Supabase acceptance run; preview has no production integration credentials.
+
 The v1.4 ingredient fallback lives in `src/lib/personal-shelf-ingredient-aliases.ts`. It runs only after an unknown v1.3 first-ingredient classification and does not perform I/O or touch source observations. `scripts/report-personal-shelf-alias-impact.ts` pins the preceding model and identical source inputs for a per-ID coverage/regression report.
 
 The exact-match ladder is:

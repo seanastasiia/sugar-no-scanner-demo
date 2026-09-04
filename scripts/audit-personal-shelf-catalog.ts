@@ -23,7 +23,7 @@ const inventory: ShelfAuditIdentity[] = barboraSlugs.map((slug) => {
   return { id: `barbora:${slug}`, source: "barbora_lv", title: row?.title || slug.replaceAll("-", " "), category: row?.category || null, brand: row?.brand || null,
     packSize: row?.packSize || null, gtin: null, excluded: row?.isAdult || false };
 });
-for (const name of ["rimi-catalog", "livinn-food-index", "livin-catalog", "open-food-facts-lv"]) {
+for (const name of ["rimi-catalog", "livinn-food-index", "livin-catalog", "open-food-facts-lv", "open-food-facts-regional"]) {
   const rows = await json<ExternalCatalogProduct | ExternalCatalogIdentity>(name);
   for (const row of rows) inventory.push({
     id: `${row.source === "open_food_facts" ? "off" : row.source}:${row.sourceProductId}`,

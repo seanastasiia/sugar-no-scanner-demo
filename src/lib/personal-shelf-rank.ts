@@ -1,7 +1,7 @@
 import type { ProductRecord, ScoredProduct } from "./types";
 import { reviewedIngredientBase } from "./personal-shelf-ingredient-aliases";
 
-export const SHELF_MODEL_VERSION = "personal-shelf-v1.4-bounded";
+export const SHELF_MODEL_VERSION = "personal-shelf-v1.5-bounded";
 export type ShelfCategory = "chips" | "savory-snack" | "crackers" | "yogurt" | "dairy-dessert" | "ice-cream" |
   "bar" | "cookie" | "breakfast-cereal" | "bread" | "pasta" | "nuts-seeds" | "dried-fruit" | "chocolate" |
   "candy" | "cheese" | "meat-product" | "fish-product" | "sauce";
@@ -123,6 +123,13 @@ export function shelfCategory(category: string | null | undefined, format?: stri
     if (/^(?:tomatu[- ]merces[- ]un[- ]pastas|tomato sauces?|barbecue sauces?|mayonnaises?|salatu[- ]merces|citas[- ]merces|padazai|uztepai|sauces?)$/.test(leaf)) matches.push("sauce");
   }
   if (matches.length) return matches.length === 1 ? matches[0] : null;
+  // Additional exact retailer leaves, reviewed against the source taxonomy.
+  // Fallback-only: mixed bakery, soups, oils and nut spreads stay separate.
+  if (/^(?:riesutai|seklos|indijas[- ]rieksti[- ]un[- ]pistacijas|mandeles|valrieksti|lazdu[- ]rieksti)$/.test(leaf)) return "nuts-seeds";
+  if (/^garie[- ]makaroni$/.test(leaf)) return "pasta";
+  if (/^(?:gaisa[- ]maize|seklu[- ]maize|porciju[- ]maize|tumsa[- ]maize[- ]ar[- ]piedevam)$/.test(leaf)) return "bread";
+  if (/^zuvies[- ]konservai$/.test(leaf)) return "fish-product";
+  if (/^konfektes[- ]kastes$/.test(leaf)) return "candy";
   return format === "bar" || format === "cookie" ? format : null;
 }
 

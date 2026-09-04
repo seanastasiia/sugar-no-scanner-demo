@@ -1,6 +1,8 @@
-# Personal Shelf Rank v1.4 — bounded preview contract
+# Personal Shelf Rank v1.5 — bounded preview contract
 
-Status: v1.4 adds reviewed ingredient vocabulary to the nineteen-type isolated preview, 4 September 2026; it is not clinically validated and does not replace default Fit. Model ID: `personal-shelf-v1.4-bounded`. Production keeps its separately approved release. [Preview](https://sugar-no-personal-rank-personal-rank-preview.up.railway.app/).
+Status: v1.5 adds reviewed source-category leaves to the nineteen-type isolated preview, 4 September 2026; weights and nutrient curves are unchanged. It is not clinically validated and does not replace default Fit. Model ID: `personal-shelf-v1.5-bounded`. Production keeps its separately approved release. [Preview](https://sugar-no-personal-rank-personal-rank-preview.up.railway.app/).
+
+The bounded expansion maps only exact leaf labels for nuts/seeds, long pasta, specific breads, canned fish and boxed candy to existing types. All earlier assessed results and demos are compared per ID against `b4e7453` using `scripts/report-personal-fit-expansion.ts`. Source-language ingredients and null values are preserved; product-name guesses never create a category. See [the execution plan](personal-fit-expansion-plan.md).
 
 For an immediate camera-free example, open [New rating demo](https://sugar-no-personal-rank-personal-rank-preview.up.railway.app/demo/personal-shelf). Its four selected chip records use the same scorer: 64/61, real PROPER lentil chips 57–59 with unknown fiber and one unscored contradictory-source chip. The Yogurts demo tab is removed; real yogurt recognition and assessment are unchanged. This is a labelled selection, not a recognition test or market-wide ranking. No refresh or provider request is made by the demo.
 

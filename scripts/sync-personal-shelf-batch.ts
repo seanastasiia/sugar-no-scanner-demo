@@ -14,14 +14,21 @@ const reportOnly = process.argv.includes("--report-only");
 const apply = process.argv.includes("--apply") || reportOnly;
 const retryFailed = process.argv.includes("--retry-failed");
 const refresh = process.argv.includes("--refresh-existing");
+const resumeOnly = process.env.SHELF_BATCH_RESUME_ONLY === "true";
 const maxPerSource = Number(process.env.SHELF_BATCH_LIMIT_PER_SOURCE || "10000");
 if (!Number.isInteger(maxPerSource) || maxPerSource < 1 || maxPerSource > 10000) throw new Error("SHELF_BATCH_LIMIT_PER_SOURCE must be 1..10000");
 const categoryScope = process.env.SHELF_BATCH_CATEGORIES?.split(",").map((value) => value.trim());
 if (categoryScope?.some((value) => !Object.hasOwn(SHELF_CATEGORIES, value))) throw new Error("Unknown SHELF_BATCH_CATEGORIES value");
 const json = async <T>(file: string): Promise<T> => JSON.parse(await readFile(file, "utf8"));
-const retailerFile = "data/personal-shelf-evidence.generated.json";
-const offFile = "data/personal-shelf-off-evidence.generated.json";
-const previous = [...await json<ShelfEvidence[]>(retailerFile), ...await json<ShelfEvidence[]>(offFile)];
+const retailerFile = process.env.SHELF_BATCH_RETAILER_OUTPUT || "data/personal-shelf-evidence.generated.json";
+const offFile = process.env.SHELF_BATCH_OFF_OUTPUT || "data/personal-shelf-off-evidence.generated.json";
+const previous = [...await json<ShelfEvidence[]>("data/personal-shelf-evidence.generated.json"), ...await json<ShelfEvidence[]>("data/personal-shelf-off-evidence.generated.json")];
+const idScope: unknown = process.env.SHELF_BATCH_IDS_FILE ? await json(process.env.SHELF_BATCH_IDS_FILE) : null;
+if (idScope !== null && (!Array.isArray(idScope) || idScope.length < 1 || idScope.length > 10000 ||
+  idScope.some((id) => typeof id !== "string" || !/^(?:barbora|rimi_lv|livinn_lt|off):[^\s]+$/.test(id)) || new Set(idScope).size !== idScope.length)) {
+  throw new Error("SHELF_BATCH_IDS_FILE must contain 1..10000 distinct canonical IDs");
+}
+const scopedIds = idScope === null ? null : new Set(idScope as string[]);
 const rows = new Map(previous.map((row) => [row.productId, row]));
 const sources: ShelfEvidence["source"][] = ["barbora_lv", "rimi_lv", "livinn_lt", "open_food_facts"];
 const barbora = await json<BarboraNutritionIndexProduct[]>("data/barbora-nutrition-index.generated.json");
@@ -38,8 +45,9 @@ const candidates: Candidate[] = [
 ];
 const selected = [...new Map(candidates.filter((p) => {
   const category = shelfCategory(p.category);
-  return category && (!categoryScope || categoryScope.includes(category));
+  return category && (!categoryScope || categoryScope.includes(category)) && (!scopedIds || scopedIds.has(p.id));
 }).map((p) => [p.id, p])).values()];
+if (scopedIds && selected.length !== scopedIds.size) throw new Error("Scoped IDs contain an unavailable or unsupported candidate");
 const sourceCounts: Record<string, number> = {};
 const pending = selected.filter((p) => {
   if (!refresh && rows.has(p.id)) return false;
@@ -48,7 +56,7 @@ const pending = selected.filter((p) => {
   return true;
 });
 if (apply) await mkdir(".catalog-sync", { recursive: true });
-const checkpointPath = resolve(".catalog-sync/personal-shelf-batch-v1.json");
+const checkpointPath = resolve(process.env.SHELF_BATCH_CHECKPOINT || ".catalog-sync/personal-shelf-batch-v1.json");
 type Attempt = { id: string; ok: boolean; error?: string; attemptedAt?: string };
 const attempts = new Map<string, Attempt>();
 const sourceCooldowns: Partial<Record<ShelfEvidence["source"], string>> = {};
@@ -75,7 +83,7 @@ for (const source of Object.keys(sourceCooldowns) as ShelfEvidence["source"][]) 
   if (retryBoundaryElapsed(sourceCooldowns[source])) delete sourceCooldowns[source];
 }
 const jobs = reportOnly ? [] : pending.filter((p) => !sourceCooldowns[p.source] &&
-  (refresh || !attempts.has(p.id) || (retryFailed && !attempts.get(p.id)!.ok)));
+  (resumeOnly ? !attempts.has(p.id) : refresh || !attempts.has(p.id) || (retryFailed && !attempts.get(p.id)!.ok)));
 const plannedBySource = Object.fromEntries(sources.map((source) =>
   [source, jobs.filter((row) => row.source === source).length]));
 console.log(JSON.stringify({ mode: reportOnly ? "report-only" : apply ? "apply" : "dry-run", candidates: selected.length,
@@ -97,7 +105,7 @@ const hosts: Record<ShelfEvidence["source"], string[]> = {
   livinn_lt: ["www.livinn.lt", "livinn.lt"], open_food_facts: ["world.openfoodfacts.org"]
 };
 class SourceRateLimitError extends Error {
-  constructor(public readonly notBefore: string) { super("HTTP 429"); }
+  constructor(public readonly notBefore: string, status = 429) { super(`HTTP ${status}`); }
 }
 async function fetchEvidence(item: Candidate): Promise<ShelfEvidence> {
   let url = item.source === "open_food_facts" ? `https://world.openfoodfacts.org/api/v2/product/${item.sku}.json` : item.url;
@@ -110,7 +118,7 @@ async function fetchEvidence(item: Candidate): Promise<ShelfEvidence> {
       url = new URL(response.headers.get("location")!, url).href; continue;
     }
     // Stop this source's queue on rate limiting; never retry earlier than its instruction.
-    if (response.status === 429) throw new SourceRateLimitError(retryNotBefore(response.headers.get("retry-after")));
+    if (response.status === 429 || response.status === 403) throw new SourceRateLimitError(retryNotBefore(response.headers.get("retry-after")), response.status);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     if (Number(response.headers.get("content-length") || 0) > 4000000) throw new Error("Source too large");
     body = await response.text();
@@ -154,7 +162,7 @@ await Promise.all(Object.keys(hosts).map(async (source) => {
       console.log(JSON.stringify({ completed, total: jobs.length, elapsedSeconds: Math.round((Date.now() - started) / 1000) }));
       await checkpoint();
     }
-    await sleep(source === "open_food_facts" ? 1000 : 700);
+    await sleep(source === "open_food_facts" ? 4100 : 1000);
   }
 }));
 await checkpoint();
@@ -176,5 +184,5 @@ const coverage = Object.fromEntries(Object.keys(hosts).map((source) => {
 }));
 const report = { checkedAt: new Date().toISOString(), candidates: selected.length, observations: rows.size, groups, coverage,
   attempts: [...attempts.values()], elapsedSeconds: Math.round((Date.now() - started) / 1000) };
-await atomicJson(".catalog-sync/personal-shelf-batch-report.json", report);
+await atomicJson(process.env.SHELF_BATCH_REPORT || ".catalog-sync/personal-shelf-batch-report.json", report);
 console.log(JSON.stringify({ ...report, attempts: { successful: report.attempts.filter((a) => a.ok).length, failed: report.attempts.filter((a) => !a.ok).length } }));

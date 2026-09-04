@@ -27,6 +27,20 @@ function rimiPage(salt = "0.5 g", ingredientsHeading = "Sastāvdaļas", basis = 
 }
 
 describe("independent exact-source shelf evidence", () => {
+  it.each([
+    ["Maistas > Riešutai ir sėklos > Riešutai", "nuts-seeds"],
+    ["Maistas > Riešutai ir sėklos > Sėklos", "nuts-seeds"],
+    ["Maistas > Konservuotas maistas > Žuvies konservai", "fish-product"],
+    ["Bakaleja/Makaroni/Garie makaroni", "pasta"],
+    ["maize > seklu-maize", "bread"],
+    ["maize > gaisa-maize", "bread"],
+    ["saldumi > konfektes-kastes", "candy"]
+  ])("maps the reviewed source leaf %s without name translation", (category, expected) => {
+    expect(shelfCategory(category)).toBe(expected);
+  });
+  it.each(["Maistas > Riešutų ir sėklų kremai", "Maistas > Aliejus > Sėklų ir kauliukų aliejus", "Konservēti ēdieni un zupas", "Svaigi cepta maize un maizītes", "Dribsniai ir košės"])("keeps mixed/unreviewed source type %s unsupported", (category) => {
+    expect(shelfCategory(category)).toBeNull();
+  });
   it("recognizes the exact Latvian flour alias and savory-biscuit taxonomy without translating nutrients", () => {
     expect(analyzeIngredients("KVIEŠU milti, sāls", "lv")?.score).toBe(analyzeIngredients("Wheat flour, salt", "en")?.score);
     expect(analyzeIngredients("KVIEŠU milti, cukurs, sāls", "lv")?.sugarNearStart).toBe(true);
@@ -48,6 +62,24 @@ describe("independent exact-source shelf evidence", () => {
     expect(rimiShelfEvidence(rimiPage(".5 g", "Related ingredients"), rimiUrl, "100", time)?.ingredientsText).toBeNull();
     expect(rimiShelfEvidence(rimiPage("0.5 g", "Sastāvdaļas", "30g"), rimiUrl, "100", time)).toBeNull();
     expect(rimiShelfCategory("https://www.rimi.lv/e-veikals/lv/produkti/cipsi-un-dip-merces/dip-mercu-maisijumi/mercite-cipsiem/p/101")).toBe("cipsi-un-dip-merces > dip-mercu-maisijumi");
+  });
+  it("uses Rimi's exact labelled quantity when the product title has no pack", () => {
+    const basic = `<div class="product__list-wrapper -basic"><ul><li><span>Daudzums</span><div class="text"><p>0.1 kg</p></div></li></ul></div>`;
+    const original = rimiPage().replace("QA chips 100g", "QA chips");
+    const add = (heading: string) => original.replace('html:"', `html:${JSON.stringify(heading).slice(0,-1)}`);
+    const page = add(basic);
+    expect(rimiShelfEvidence(page, rimiUrl, "100", time)).toMatchObject({ nutritionBasis: "100g", totalSugarG: 2, fiberG: null });
+    expect(rimiShelfEvidence(original, rimiUrl, "100", time)).toBeNull();
+    expect(rimiShelfEvidence(add(basic.replace("0.1 kg", "6 x 25 g")), rimiUrl, "100", time)?.nutritionBasis).toBe("100g");
+    expect(rimiShelfEvidence(add(basic.replace("0.1 kg", "0.1 l")), rimiUrl, "100", time)?.nutritionBasis).toBe("100ml");
+    expect(rimiShelfEvidence(add(basic.replace("Daudzums", "Nearby package")), rimiUrl, "100", time)).toBeNull();
+    expect(rimiShelfEvidence(add(basic + basic), rimiUrl, "100", time)).toBeNull();
+    expect(rimiShelfEvidence(add(basic.replace("0.1 kg", "about 100 g")), rimiUrl, "100", time)).toBeNull();
+  });
+  it("rejects a source mass/volume conflict rather than guessing the per-100 basis", () => {
+    const quantity = `<div class="product__list-wrapper -basic"><ul><li><span>Daudzums</span><div><p>0.1 l</p></div></li></ul></div>`;
+    const page = rimiPage().replace('html:"', `html:${JSON.stringify(quantity).slice(0,-1)}`);
+    expect(rimiShelfEvidence(page, rimiUrl, "100", time)).toBeNull();
   });
   it("extracts only labelled Livinn blocks including shorthand saturates", () => {
     expect(livinnShelfEvidence(page, "https://www.livinn.lt/p/qa", "qa", time)).toMatchObject({

@@ -2,17 +2,18 @@
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProductRecord } from "@/lib/types";
+import { assessPersonalShelfProduct } from "@/lib/personal-shelf-rank";
 import { sharedRecordToProduct } from "./shared-web-catalog";
 import { verifyWebProductPage, webLookupKey } from "./web-product-evidence";
-import { lookup, page, productUrl } from "./__fixtures__/verified-web-product";
+import { lookup, page, productUrl, shelfPage, shelfUrl } from "./__fixtures__/verified-web-product";
 
 let db: PGlite;
 const observation = verifyWebProductPage(lookup, page(), productUrl)!;
 async function promote(product = observation.product, alias = webLookupKey(lookup)) {
   const hash = createHash("sha256").update(JSON.stringify({ product, alias })).digest("hex");
-  const result = await db.query<{ value: { status: string; record?: ProductRecord } }>(
+  const result = await db.query<{ value: { status: string; record?: ProductRecord & Pick<typeof product, "canonicalShelfEvidence"> } }>(
     "select public.promote_shared_web_product($1,$2,$3::jsonb,$4) as value",
     [alias, observation.identityKey, JSON.stringify(product), hash]);
   return result.rows[0].value;
@@ -21,11 +22,49 @@ beforeAll(async () => {
   db = new PGlite();
   await db.exec("create role anon; create role authenticated; create role service_role bypassrls;");
   await db.exec(await readFile(new URL("../../supabase/migrations/202609030001_shared_web_products.sql", import.meta.url), "utf8"));
+  await db.exec(await readFile(new URL("../../supabase/migrations/202609040001_shared_web_shelf_evidence.sql", import.meta.url), "utf8"));
 }, 30_000);
 beforeEach(async () => { await db.exec("reset role; truncate shared_web_product_aliases, shared_web_products, shared_web_product_observations;"); });
 afterAll(async () => { await db?.close(); });
+afterEach(() => vi.unstubAllEnvs());
 
 describe("shared catalog migration on isolated PostgreSQL", () => {
+  it("adds a whole exact composition to an existing shared card and reads it after a new scan", async () => {
+    vi.stubEnv("SHARED_WEB_SHELF_EVIDENCE_ENABLED", "true");
+    const full = verifyWebProductPage(lookup, shelfPage(), shelfUrl)!.product;
+    expect(full.canonicalShelfEvidence?.proteinG).toBe(6.6);
+    const basic = structuredClone(full);
+    delete basic.canonicalShelfEvidence;
+    await promote(basic);
+    const result = await promote(full);
+    expect(result.record?.canonicalShelfEvidence).toEqual(full.canonicalShelfEvidence);
+    expect(sharedRecordToProduct(result.record)?.shelfEvidence).toMatchObject({ productId: full.id, ingredientsLanguage: "lt", proteinG: 6.6 });
+    expect(assessPersonalShelfProduct(sharedRecordToProduct(result.record)!).status).toBe("scored");
+    expect((await promote(basic)).record?.canonicalShelfEvidence).toEqual(full.canonicalShelfEvidence);
+    const repeated = structuredClone(full);
+    repeated.canonicalShelfEvidence!.checkedAt = "2026-09-05T00:00:00.000Z";
+    repeated.sources = repeated.sources.map((s) => ({ ...s, checkedAt: "2026-09-05T00:00:00.000Z" }));
+    expect((await promote(repeated)).record).toEqual(result.record);
+    vi.stubEnv("SHARED_WEB_SHELF_EVIDENCE_ENABLED", "false");
+    expect(sharedRecordToProduct(result.record)?.shelfEvidence).toBeUndefined();
+  });
+  it.each(["ingredients", "core"])("quarantines %s conflicts permanently without stitching composition", async (kind) => {
+    vi.stubEnv("SHARED_WEB_SHELF_EVIDENCE_ENABLED", "true");
+    const full = verifyWebProductPage(lookup, shelfPage(), shelfUrl)!.product;
+    await promote(full);
+    const changed = structuredClone(full);
+    if (kind === "ingredients") changed.canonicalShelfEvidence!.ingredientsText = "Sugar, salt";
+    else changed.nutrientsPer100g.proteinG = 10;
+    expect((await promote(changed)).record?.canonicalShelfEvidence).toBeUndefined();
+    expect((await promote(full)).record?.canonicalShelfEvidence).toBeUndefined();
+  });
+  it("rejects cross-page, contradictory or malformed composition at read time", () => {
+    vi.stubEnv("SHARED_WEB_SHELF_EVIDENCE_ENABLED", "true");
+    const full = verifyWebProductPage(lookup, shelfPage(), shelfUrl)!.product;
+    for (const change of [{ sourceUrl: productUrl }, { proteinG: 99 }, { gtin: "1234567890123" }]) {
+      expect(sharedRecordToProduct({ ...full, canonicalShelfEvidence: { ...full.canonicalShelfEvidence, ...change } })?.shelfEvidence).toBeUndefined();
+    }
+  });
   it("atomically creates a shared card, alias and immutable observation", async () => {
     await db.exec("set role service_role");
     expect((await promote()).status).toBe("accepted");

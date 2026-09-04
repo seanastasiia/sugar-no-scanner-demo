@@ -24,7 +24,9 @@ export function GET() {
       status: "ok",
       service: "sugar-no-scanner-demo",
       commit: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.COMMIT_SHA || "local",
-      features: { sharedWebCatalog: process.env.SHARED_WEB_CATALOG_ENABLED === "true", personalShelfRank: process.env.PERSONAL_SHELF_RANK_ENABLED !== "false" },
+      features: { sharedWebCatalog: process.env.SHARED_WEB_CATALOG_ENABLED === "true",
+        sharedWebShelfEvidence: process.env.SHARED_WEB_CATALOG_ENABLED === "true" && process.env.SHARED_WEB_SHELF_EVIDENCE_ENABLED === "true",
+        personalShelfRank: process.env.PERSONAL_SHELF_RANK_ENABLED !== "false" },
       catalog: {
         activeFoodProducts: foodProductIndex.length,
         productsWithAutomaticFit: nutritionIndex.length,

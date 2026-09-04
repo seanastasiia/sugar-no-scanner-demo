@@ -1,6 +1,27 @@
 # Catalog sources, licensing and refresh
 
-Checked: 2026-09-02
+Checked: 2026-09-04
+
+## Bounded preview expansion
+
+The first regional import uses `python3 scripts/extract-off-regional-csv.py --apply`: a version-pinned official CSV stream of 1,275,171,186 compressed bytes, with only selected regional product fields saved. Its dry-run prints the exact S3 version and limits. This avoids thousands of small Parquet range requests. The archive is not saved. CSV lacks reliable ingredient-language and translated-name fields; the importer preserves that absence and does not invent aliases or Personal Fit eligibility. All existing OFF names and observations are retained.
+
+The Parquet extractor below remains an optional richer-source route. Its 4,615 small row groups made full remote scanning unsuitable for this local batch; exploratory runs were stopped without promoting partial files. `--gtin-prefixes 475,477,481` can scope a batch, but never substitutes prefixes for market tags and does not guarantee fewer requests on unsorted row groups.
+
+Exact retailer refresh is scoped by `SHELF_BATCH_IDS_FILE` with isolated checkpoint/output paths. The frozen 200-ID pilot and 307-ID category review are documented in `docs/personal-fit-expansion-plan.md`. HTTP 403/429 stop that source until its recorded retry boundary. New values must come from the same exact SKU page; a changed SKU or variant is not repaired by copying another market's nutrition.
+
+The [OFF-owned Parquet export](https://huggingface.co/datasets/openfoodfacts/product-database) offers an alternative to downloading the full JSONL database. `scripts/extract-off-regional.py` pins an immutable revision, uses exact HTTP ranges, reads no image columns and writes only Latvia/Lithuania/Belarus rows to an ignored staging file. Limits: 128 MB per read, 1.5 GB actual transferred bytes, 100,000 regional rows and a 30-minute job deadline checked between requests, each with a 60-second timeout. A source refusal, ignored range or incomplete extraction fails closed. No complete Parquet file is saved.
+
+```sh
+uv run --no-project --python 3.13 --with pyarrow==21.0.0 python scripts/extract-off-regional.py --apply
+npx tsx scripts/import-off-regional-parquet.ts
+# Inspect candidate/rejection counts first, then append only reviewed new GTINs:
+npx tsx scripts/import-off-regional-parquet.ts --apply
+npm run catalog:audit:personal-fit -- --write
+npx tsx scripts/report-personal-fit-expansion.ts --write
+```
+
+The importer checks GTIN checksum, market tags, original language, package dimension, source quality flags, normalized per-100 values and duplicate conflicts. Existing OFF records and earlier observations are not overwritten. Unknown ingredients/fiber stay unknown; contradictory totals cannot become usable nutrition. OFF attribution stays separate from retailer data. This prepares local snapshots, not a database load; later seeding must use the documented Supabase tooling. A successful extraction/import report is required before claiming net-new products.
 
 This document separates product coverage from visual recognition. A catalog row can help only after the camera or barcode resolves the exact brand, variant and pack size. It is not evidence that every package on a shelf will be recognized.
 

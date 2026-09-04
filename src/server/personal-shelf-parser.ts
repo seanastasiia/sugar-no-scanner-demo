@@ -104,8 +104,20 @@ export function rimiShelfEvidence(html: string, url: string, expectedSku: string
   const table = tables[0];
   const tableText = ingredientPlainText(table);
   const mixedBasis = /100\s*g\s*\/\s*ml/i.test(tableText);
-  const solidPack = /\b\d+(?:[.,]\d+)?\s*(?:kg|g)\b/i.test(product.packSize);
-  const liquidPack = /\b\d+(?:[.,]\d+)?\s*(?:ml|cl|l)\b/i.test(product.packSize);
+  // Some exact Rimi names omit the pack, especially multipacks and weighed food.
+  // Read the product's labelled quantity, not a nearby card or a title guess.
+  const basicSections = [...details.matchAll(/<div\b[^>]*class=["'][^"']*product__list-wrapper[^"']*-basic[^"']*["'][^>]*>[\s\S]*?<\/ul>/gi)];
+  const basic = basicSections.length === 1 ? basicSections[0][0] : "";
+  const labelledQuantities = [...basic.matchAll(/<span\b[^>]*>\s*Daudzums\s*<\/span>\s*<div\b[^>]*>\s*<p\b[^>]*>([\s\S]*?)<\/p>/gi)]
+    .map((match) => ingredientPlainText(match[1]));
+  const quantity = labelledQuantities.length === 1 ? labelledQuantities[0] : "";
+  const strictQuantity = /^\d+(?:[.,]\d+)?(?:\s*[x×]\s*\d+(?:[.,]\d+)?)?\s*(kg|g|ml|cl|l)$/i.exec(quantity);
+  const sourceUnit = strictQuantity?.[1].toLowerCase();
+  const titleSolid = /\b\d+(?:[.,]\d+)?\s*(?:kg|g)\b/i.test(product.packSize);
+  const titleLiquid = /\b\d+(?:[.,]\d+)?\s*(?:ml|cl|l)\b/i.test(product.packSize);
+  const solidPack = titleSolid || sourceUnit === "kg" || sourceUnit === "g";
+  const liquidPack = titleLiquid || sourceUnit === "ml" || sourceUnit === "cl" || sourceUnit === "l";
+  if (mixedBasis && (solidPack === liquidPack || labelledQuantities.length > 1 || basicSections.length > 1)) return null;
   if (mixedBasis ? !solidPack && !liquidPack : !/100\s*g\b|100\s*ml\b/i.test(tableText)) return null;
   if (preparedNutrition(tableText)) return null;
   const cells = [...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].flatMap((row) => {
