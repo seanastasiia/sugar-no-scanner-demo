@@ -44,7 +44,11 @@ Exact OFF v3 follow-ups made 186 product reads: 50 original / 48 accepted / 19 n
 
 Final per-ID regression: +377 assessments, zero changed prior assessments, zero changed demos, zero removed evidence. Audit: 3,605 supported incomplete rows, 12,803 outside current profiles, no duplicate source/evidence IDs, and 34 contradictory observed tables still unrated. Barcode package labels now preserve `g` versus `ml` and both are tested. Category calibration warnings remain; this is not a visual-recognition benchmark.
 
-Second-phase preflight: 70 Vitest files / 643 tests, full validators/build and 58 Mobile Safari cases passed before the final regional evidence promotion. Final committed-candidate checks and deployment will be recorded below before handoff.
+Second-phase preflight: 70 Vitest files / 643 tests, full validators/build and 58 Mobile Safari cases passed before the final regional evidence promotion.
+
+Final implementation commit: `823f83c66fcfb48cdba03dc1424783315c9801b7`. `npm run verify` passed all 643 tests, lint, types, validators and production build (`/tmp/sugar-no-expansion-final-verify.log`). `python3 scripts/test_off_tsv.py` passed 3 tests. Final Mobile Safari: shard 1 passed 29/29; shard 2 passed 28/29, with `page.goto: Provisiolal navigation canceled` before the Barbora scenario's product assertions. Its auth request returned 200 and the document request never received an HTTP response. The adjacent pair passed 5/6 repeated cases; the Barbora case alone passed 2/3, with the remaining run timing out at the same initial navigation. Assertions, timeouts and production cookie protections were not weakened.
+
+The failed trace was preserved at `/tmp/sugar-no-final-navigation-failure-823f83c/trace.zip`. Logs: `/tmp/sugar-no-expansion-final-e2e-1.log`, `/tmp/sugar-no-expansion-final-e2e-2.log`, `/tmp/sugar-no-expansion-navigation-recheck.log`, `/tmp/sugar-no-expansion-barbora-isolated-3.log`. Moving the 1.2 GB generated Next cache aside did not cure local startup failures; its recoverable copy is `/tmp/sugar-no-next-cache.S7ZAWd/next`. This is an unresolved local acceptance limitation, not a claimed fix or a clean final 58/58 run. The unchanged deployed preview opened in three fresh WebKit contexts over HTTPS (HTTP 200 in 1.4/1.0/0.7 seconds). Candidate deployment is preview-only and requires fresh HTTPS health, exact-data and browser acceptance before handoff.
 
 ## Release and owner acceptance
 
