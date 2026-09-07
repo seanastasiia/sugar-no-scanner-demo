@@ -33,9 +33,9 @@ The first whole-suite run used parallel Vitest workers and three heavy catalog-i
 
 1. Applied `202609070001_shared_open_food_facts.sql` to staging project `gfvzibdikjexcygmkxpm`. All three tables and the promotion RPC exist; RLS denies browser roles, the service role can read/promote but cannot update history, and anonymous RPC execution is denied.
 2. Enabled only `SHARED_OFF_CATALOG_ENABLED=true`; `SHARED_WEB_CATALOG_ENABLED=false` and `SHARED_WEB_SHELF_EVIDENCE_ENABLED=false` remain unchanged.
-3. Railway deployments `83a6d4f1-e30c-492b-92a7-a1aaba51a208` and `cf55c278-a661-4c71-bb51-34c1db9d3c0e` reached SUCCESS for the inline-card and name-query fixes. HTTPS smoke passed with the shared OFF feature on and the retailer flags off.
+3. Railway deployments `83a6d4f1-e30c-492b-92a7-a1aaba51a208`, `cf55c278-a661-4c71-bb51-34c1db9d3c0e` and acceptance deployment `830e38ba-c9ca-45ce-9b7b-07f2ec53492c` reached SUCCESS. HTTPS smoke passed on exact revision `d8de384053bba6bbd314ccca66e2c7d14787332b`, with the shared OFF feature on and the retailer flags off.
 4. Real barcode `3017620422003`, absent from the checked-in 1,096 OFF records, returned one stable `off:03017620422003` card with 6.3 g protein and 56.3 g sugar; a repeat created no duplicate.
-5. Real name-only lookup `Multipower Protein Delight Salty Peanut Caramel 35 g`, also absent from the checked-in layer, returned complete inline card `off:04006643138274` with 34 g protein and 3.7 g sugar in 741 ms. The repeat returned the same card in 518 ms. This also exposed and fixed a duplicated `35 g 35 g` search-query regression.
+5. Real name-only lookup `Multipower Protein Delight Salty Peanut Caramel 35 g`, also absent from the checked-in layer, returned complete inline card `off:04006643138274` with 34 g protein and 3.7 g sugar in 741 ms. The repeat returned the same card in 518 ms. After a new Railway deployment restarted the process and cleared memory, the same hashed alias returned the persisted card in 469 ms and database counts stayed unchanged. This also exposed and fixed a duplicated `35 g 35 g` search-query regression.
 6. Final database read: 2 product cards, 1 one-way alias, 2 accepted immutable observations and 0 conflicts. Both cards retain `Open Food Facts contributors` and `ODbL-1.0`; no image, user or session field is stored.
 
 ## Owner product checks
