@@ -226,6 +226,7 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await expect(chips.getByRole("heading", { level: 4 }).first()).toHaveText(samples[0].shortName);
   await expect(chips.getByText("64/100", { exact: true })).toBeVisible();
   await expect(chips.getByLabel("Not scored", { exact: true })).toHaveCount(0);
+  await expect(chips.getByText("More products", { exact: true })).toHaveCount(0);
   await expect(chips).not.toContainText(/Not enough verified data|Missing or unverified/);
   await expectNoDocumentOverflow(page);
   await expect.poll(() => chips.getByTestId("product-packshot").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete)), { timeout: 10_000 }).toBe(true);
@@ -238,7 +239,7 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn-expanded.png"), fullPage: true, animations: "disabled" });
 });
 
-test("personal shelf pilot keeps incomplete and unsupported products visible without verbose warnings", async ({ page }, testInfo) => {
+test("personal shelf pilot hides incomplete and unsupported products", async ({ page }, testInfo) => {
   const bar = { ...shelfFixture("barbora:qa-skriveru-bar", { category: "Snack bars" }), shelfEvidence: undefined };
   const candy = shelfFixture("barbora:qa-raffaello", { category: "Confectionery" });
   await openPersonalShelfFixture(page, [bar, candy]);
@@ -247,10 +248,12 @@ test("personal shelf pilot keeps incomplete and unsupported products visible wit
   const toggle = page.getByRole("switch", { name: /Personal Shelf Rank/ });
   await toggle.click();
   const results = page.getByLabel("Personal Shelf Rank results");
-  await expect(results.getByRole("heading", { name: "Snack bars", exact: true })).toBeVisible();
-  await expect(results.getByRole("heading", { level: 4 })).toHaveCount(2);
-  await expect(results.getByText("Personal score unavailable", { exact: true })).toBeVisible();
-  await expect(results.getByLabel("Not scored", { exact: true })).toHaveText("—");
+  await expect(results.getByRole("heading", { name: "Snack bars", exact: true })).toHaveCount(0);
+  await expect(results.getByRole("heading", { level: 4 })).toHaveCount(0);
+  await expect(results.getByText("More products", { exact: true })).toHaveCount(0);
+  await expect(results.getByText("Personal score unavailable", { exact: true })).toHaveCount(0);
+  await expect(results.getByLabel("Not scored", { exact: true })).toHaveCount(0);
+  await expect(results.getByText("No rated products in this scan.", { exact: true })).toBeVisible();
   await expect(results.locator("details")).toHaveCount(0);
   await expect(results.getByTestId("personal-fit-badge")).toHaveCount(0);
   await expect(results).not.toContainText(/Within-type comparison|assessed in this|Not enough verified data|Missing or unverified|Not compared in this pilot|still need an exact identity/);
@@ -261,15 +264,16 @@ test("personal shelf pilot keeps incomplete and unsupported products visible wit
   await expect(original.getByRole("button")).toHaveCount(2);
 });
 
-test("personal shelf pilot preserves all unsupported cards instead of showing a false empty state", async ({ page }) => {
+test("personal shelf pilot hides all unsupported cards and shows one empty state", async ({ page }) => {
   const samples = [shelfFixture("barbora:qa-candy-a", { category: "Confectionery" }), shelfFixture("barbora:qa-candy-b", { category: "Confectionery" })];
   await openPersonalShelfFixture(page, samples);
   const toggle = page.getByRole("switch", { name: /Personal Shelf Rank/ });
   await toggle.click();
   const results = page.getByLabel("Personal Shelf Rank results");
-  await expect(results.getByRole("heading", { level: 4 })).toHaveText(samples.map((sample) => sample.shortName));
-  await expect(results.getByText("Personal score unavailable", { exact: true })).toHaveCount(2);
-  await expect(results).not.toContainText(/No ratings for this shelf|Not compared in this pilot|assessed in this/);
+  await expect(results.getByRole("heading", { level: 4 })).toHaveCount(0);
+  await expect(results.getByText("More products", { exact: true })).toHaveCount(0);
+  await expect(results.getByText("Personal score unavailable", { exact: true })).toHaveCount(0);
+  await expect(results.getByText("No rated products in this scan.", { exact: true })).toBeVisible();
   await toggle.click();
   await expect(page.getByLabel("Products ranked by Sugar.no fit").getByRole("button")).toHaveCount(2);
 });

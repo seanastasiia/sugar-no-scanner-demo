@@ -18,9 +18,8 @@ export function ShelfRankToggle({ enabled, onChange }: { enabled: boolean; onCha
   );
 }
 
-export function PersonalShelfResults({ products, unresolved = [], thumbnail, context = "scan" }: {
+export function PersonalShelfResults({ products, thumbnail, context = "scan" }: {
   products: ProductRecord[];
-  unresolved?: Array<{ id: string; brand: string; name: string; pending: boolean }>;
   thumbnail: (id: string) => ReactNode;
   context?: "scan" | "demo";
 }) {
@@ -43,16 +42,20 @@ export function PersonalShelfResults({ products, unresolved = [], thumbnail, con
       .finally(() => clearTimeout(timeout));
     return () => { controller.abort(); clearTimeout(timeout); };
   }, [context, ids]);
-  const { groups, unsupported } = rankPersonalShelfProducts(products.map((product) => {
+  const { groups } = rankPersonalShelfProducts(products.map((product) => {
     const next = managed[product.id];
     const current = product.shelfEvidence;
     return next?.productId === product.id && (!current || Date.parse(next.checkedAt) > Date.parse(current.checkedAt))
       ? { ...product, shelfEvidence: next } : product;
   }));
+  const ratedGroups = groups.map((group) => ({
+    ...group,
+    entries: group.entries.filter(({ assessment }) => shelfScoreLabel(assessment) !== null)
+  })).filter((group) => group.entries.length > 0);
   return (
     <section className={styles.results} aria-label="Personal Shelf Rank results">
-      {!groups.length && !unsupported.length && !unresolved.length ? <p className={styles.empty}>No products identified yet. Try a closer photo of the shelf.</p> : null}
-      {groups.map((group) => (
+      {!ratedGroups.length ? <p className={styles.empty}>No rated products in this scan.</p> : null}
+      {ratedGroups.map((group) => (
         <section key={group.category} aria-labelledby={`shelf-group-${group.category}`}>
           <h3 id={`shelf-group-${group.category}`}>{group.label}</h3>
           <ul className={styles.list}>
@@ -89,25 +92,6 @@ export function PersonalShelfResults({ products, unresolved = [], thumbnail, con
           </ul>
         </section>
       ))}
-      {unsupported.length || unresolved.length ? <section aria-labelledby="shelf-unrated-title">
-        <h3 id="shelf-unrated-title">More products</h3>
-        <ul className={styles.list}>
-          {unsupported.map(({ product }) => <li className={styles.card} key={product.id}>
-            <div className={styles.heading}>
-              <div className={styles.thumb} aria-hidden="true">{thumbnail(product.id)}</div>
-              <div><small>{product.brand}</small><h4>{product.shortName}</h4></div>
-            </div>
-            <p className={styles.empty}>Personal score unavailable</p>
-          </li>)}
-          {unresolved.map((product) => <li className={styles.card} key={product.id}>
-            <div className={styles.heading}>
-              <div className={styles.thumb} aria-hidden="true">{thumbnail(product.id)}</div>
-              <div><small>{product.brand}</small><h4>{product.name}</h4></div>
-            </div>
-            <p className={styles.empty} role="status">{product.pending ? "Checking product data…" : "Nutrition not verified"}</p>
-          </li>)}
-        </ul>
-      </section> : null}
     </section>
   );
 }

@@ -44,6 +44,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-07, preview: Personal Shelf Rank still exposed unscored products under `More products`.** Personal scan results now render only numeric scores and provisional score ranges. Missing-data, contradictory, unsupported and unresolved rows are hidden; an all-unrated scan shows one short empty state. The original Fit list and the standalone source-conflict demo remain available and unchanged.
+
 - **2026-09-07, preview: the expanded scan repeated explanatory hierarchy above already-ranked cards.** Removed the Personal Shelf switch helper and the original result list's `Best fit first` plus scan/basis heading block. The switch keeps its accessible label, the ranked list keeps an explicit accessible name, and product order, ratings, cards and detail navigation are unchanged.
 
 - **2026-09-07, preview: final scan results displayed named cards after exact nutrition lookup had failed.** Pending cards still say `Checking nutrition…`, but after lookup finishes every card without a numeric source-backed Sugar.no fit is removed from the compact tray, expanded comparison and Personal Shelf scan view. Mixed scans keep verified products; an all-unverified scan shows the existing no-verified-fit state. This intentionally supersedes the 28 August visual-name retention behavior.
