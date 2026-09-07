@@ -2133,8 +2133,29 @@ test("provider unavailability pauses live recognition and offers manual recovery
   await expect(retryButton).toBeVisible({ timeout: 6_000 });
   await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
   await expectInsideViewport(page, retryButton);
+  const showDemoButton = page.getByRole("button", { name: "Show demo" });
+  await expect(showDemoButton).toBeVisible();
+  const retryBox = await retryButton.boundingBox();
+  const demoBox = await showDemoButton.boundingBox();
+  expect(Math.abs((retryBox?.height ?? 0) - (demoBox?.height ?? 0))).toBeLessThanOrEqual(1);
+  const retryStyle = await retryButton.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { backgroundImage: style.backgroundImage, minHeight: style.minHeight };
+  });
+  expect(retryStyle.minHeight).toBe("56px");
+  expect(retryStyle.backgroundImage).toContain("rgb(10, 132, 255)");
+  expect(retryStyle.backgroundImage).not.toContain("rgb(241, 78, 88)");
   await page.screenshot({ path: "test-results/pen-service-unavailable.png" });
-  await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
+  for (const viewport of [{ width: 375, height: 667 }, { width: 667, height: 375 }]) {
+    await page.setViewportSize(viewport);
+    await expectInsideViewport(page, retryButton);
+    await expectInsideViewport(page, showDemoButton);
+    const resizedRetryBox = await retryButton.boundingBox();
+    const resizedDemoBox = await showDemoButton.boundingBox();
+    expect(Math.abs((resizedRetryBox?.height ?? 0) - (resizedDemoBox?.height ?? 0))).toBeLessThanOrEqual(1);
+    await expectVisibleTouchTargets(page);
+    await expectNoDocumentOverflow(page);
+  }
   await page.waitForTimeout(2_500);
   expect(recognitionRequests).toBe(1);
 });
