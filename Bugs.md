@@ -1,5 +1,7 @@
 # Bugs
 
+- **2026-09-07: repeated scans of a known Fazer bread could lose verified nutrition.** Vision sometimes returned the same visible product name with extra search text read from a neighbouring package. The extra tokens diluted an otherwise exact Barbora-index match, changed the product to a temporary `visual:*` identity, and the UI then showed `Nutrition not verified`. The strict matcher now evaluates the primary brand + product name independently of optional search terms while retaining the existing confidence and candidate-margin gates. A regression test covers `Sēklu bagātīgā Tostermaize` with contaminated neighbouring-pack text. Staging only until explicitly approved for production.
+
 This file tracks open limitations and only recent resolved regressions. Older history remains recoverable in Git.
 
 ## Open
