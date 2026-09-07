@@ -37,6 +37,12 @@ export function readFreeScanCount(storage: Pick<Storage, "getItem">): number {
   }
 }
 
+export function freeScanAllowanceLabel(completedScans: number): string {
+  const remaining = Math.max(0, FREE_REAL_SCANS - Math.min(FREE_REAL_SCANS, Math.max(0, completedScans)));
+  if (remaining === 0) return "Free scans used";
+  return `${remaining} free ${remaining === 1 ? "scan" : "scans"} left`;
+}
+
 export function recordFreeScan(storage: Pick<Storage, "getItem" | "setItem">): number {
   const next = Math.min(FREE_REAL_SCANS, readFreeScanCount(storage) + 1);
   try {

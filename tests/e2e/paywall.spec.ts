@@ -13,12 +13,12 @@ test.beforeEach(async ({ page }) => {
   await page.route("**/api/billing/status", (route) => route.fulfill({ contentType: "application/json", body: '{"active":false}' }));
   await page.addInitScript(() => {
     localStorage.setItem("sugar_scanner_onboarding_v1", "completed");
-    localStorage.setItem("sugar_scanner_free_scans_v1", "3");
   });
   await authenticate(page);
 });
 
 test("three successful scans lead to a clear one-time offer", async ({ page }, testInfo) => {
+  await page.addInitScript(() => localStorage.setItem("sugar_scanner_free_scans_v1", "3"));
   const events: Array<Record<string, unknown>> = [];
   await page.route("**/api/events", async (route) => {
     events.push(route.request().postDataJSON());
@@ -38,7 +38,13 @@ test("three successful scans lead to a clear one-time offer", async ({ page }, t
     (event.metadata as Record<string, unknown>)?.utm_source === "meta")).toBe(true);
 });
 
+test("the remaining free-scan allowance is visible before the paywall", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("3 free scans left", { exact: true })).toBeVisible();
+});
+
 test("checkout and access restoration have recoverable states", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("sugar_scanner_free_scans_v1", "3"));
   await page.route("**/api/events", (route) => route.fulfill({ contentType: "application/json", body: '{"ok":true}' }));
   await page.route("**/api/billing/restore/request", (route) => route.fulfill({ contentType: "application/json", body: '{"ok":true}' }));
   await page.route("**/api/billing/checkout", (route) => route.fulfill({ contentType: "application/json", body: '{"error":"checkout_failed"}', status: 502 }));

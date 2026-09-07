@@ -248,6 +248,21 @@
 .scannerHeader {
   pointer-events: none;
 }
+.freeScanAllowance {
+  position: absolute;
+  top: calc(56px + env(safe-area-inset-top));
+  left: max(24px, env(safe-area-inset-left));
+  margin: 0;
+  padding: 6px 11px;
+  border: 1px solid #ffffff52;
+  border-radius: 999px;
+  background: #222228d9;
+  color: #fff;
+  font: 600 13px/18px var(--font-display);
+  letter-spacing: 0.1px;
+  box-shadow: 0 3px 12px #0000001f;
+  backdrop-filter: blur(10px);
+}
 .experience {
   --collapsed-sheet-height: 324px;
   position: absolute;
@@ -1646,6 +1661,9 @@
   }
   .header {
     padding-inline: 16px;
+  }
+  .freeScanAllowance {
+    left: max(16px, env(safe-area-inset-left));
   }
   .stageTopbar {
     right: 16px;

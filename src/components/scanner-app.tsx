@@ -62,6 +62,7 @@ import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import {
   captureAttribution,
   FREE_REAL_SCANS,
+  freeScanAllowanceLabel,
   readFreeScanCount,
   readOrCreateAccessToken,
   recordFreeScan,
@@ -1541,6 +1542,11 @@ export function ScannerApp({
             priority
             unoptimized
           />
+          {paywallEnabled && !paidAccess ? (
+            <p className={styles.freeScanAllowance} aria-live="polite">
+              {freeScanAllowanceLabel(freeScanCount)}
+            </p>
+          ) : null}
         </header>
       ) : null}
 
