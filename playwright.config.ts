@@ -31,7 +31,8 @@ export default defineConfig({
       DEMO_ACCESS_CODE: "e2e-demo-code",
       DEMO_SESSION_SECRET: "e2e-session-secret",
       DEMO_AUTH_RATE_LIMIT: "1000",
-      RECOGNITION_RATE_LIMIT: "1000"
+      RECOGNITION_RATE_LIMIT: "1000",
+      WTP_PAYWALL_ENABLED: process.env.WTP_PAYWALL_ENABLED || "false"
     }
   },
   projects: [

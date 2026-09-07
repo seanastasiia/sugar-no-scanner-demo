@@ -23,6 +23,17 @@ The scanner implements the approved Pen screen/state designs from 3 September 20
 
 The owner approved publishing this release on 3 September 2026. Future production releases still require explicit approval. Immediate rollback is `production-before-pen-2026-09-03` (`f8b760e`), preserving the latest catalog and ranking. Older fallbacks `production-baseline-2026-08-31` and `scanner-golden-3c83a65` remain available. Apply the additive `supabase/migrations/202608310002_pilot_feedback.sql` to the production Supabase before publishing the feedback UI. Never replace production Supabase credentials with staging credentials.
 
+## Willingness-to-pay pilot (staging only)
+
+The isolated `codex/wtp-stripe-staging` experiment keeps three successful real camera/upload scans free, then offers seven days of scanner access for a one-time €2.99 payment. Failed recognition and deterministic demos do not use the allowance. The offer has no subscription or automatic renewal. `WTP_PAYWALL_ENABLED` defaults to `false`; production must remain false until a separate explicit release approval.
+
+- Stripe Checkout collects payment and email. The client never receives a Stripe secret.
+- A success URL alone never unlocks the scanner. The server retrieves the Checkout Session and the signed webhook provides the independent fulfilment path.
+- Supabase stores the entitlement and only one-way hashes of browser/restore tokens. Apply `supabase/migrations/202609070001_scanner_wtp_billing.sql` only to the approved staging project before enabling the flag.
+- Paid access lasts seven days from the Checkout Session creation time. A buyer can request a 15-minute, one-time restoration link at the email used for payment.
+- Amplitude receives `paywall_viewed`, `checkout_started`, `checkout_completed`, `checkout_cancelled` and `access_restored`, together with bounded UTM fields. It receives no email, Stripe identifier, product identity, photo or health data.
+- `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET` and environment-specific Supabase, Amplitude and Resend values stay in Railway. Use Stripe test mode in staging.
+
 ## Current product behavior
 
 - AR (Launch) production sets `PERSONAL_SHELF_RANK_ENTRY_ENABLED=false`: `/` (including `?onboarding=1`) has no Personal Shelf Rank switch or New rating demo entry. Original Fit, camera, Shelf/Checkout demos and feedback stay available. This is a presentation boundary, not access control. The direct `/demo/personal-shelf`, rating API, evidence and model are preserved for AR (My). Its separate preview keeps the entry flag true/unset; do not set the global `PERSONAL_SHELF_RANK_ENABLED=false` to hide only launch entries. Rebuild/redeploy after changing the entry flag because the root page can be prerendered.
@@ -145,6 +156,9 @@ Core runtime values:
 - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: optional server-only catalog and metadata analytics configuration. The service role key must never be exposed through a `NEXT_PUBLIC_` variable.
 - `AMPLITUDE_API_KEY`: optional server-only Amplitude project key. When present, `/api/events` mirrors approved anonymous properties to the EU ingestion endpoint after storing the complete event in Supabase. Amplitude failure is non-blocking.
 - `AMPLITUDE_ENVIRONMENT`: environment label attached to Amplitude events; use `production` for AR Launch and `staging` for the isolated staging project. Never point production at the staging project key.
+- `WTP_PAYWALL_ENABLED`: defaults off. The isolated staging test leaves three successful real scans free before showing the one-time offer.
+- `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`: staging test-mode Checkout configuration. Never use a `NEXT_PUBLIC_` variable or commit these values.
+- `BILLING_EMAIL_FROM`: optional verified Resend sender for access restoration; it falls back to the environment's feedback sender.
 - `DEMO_ACCESS_CODE` and `DEMO_SESSION_SECRET`: server-only signing inputs for the silent 12-hour same-site session. Their presence does not create a user-facing access gate.
 - `COMMIT_SHA`: fallback health metadata for direct Railway uploads.
 
@@ -188,6 +202,10 @@ The standard Mobile Safari suite starts the development server over local HTTP. 
 - `POST /api/offers`: bounded exact retailer keys for the displayed products and alternatives, returning current Barbora offers plus reproducible exact Rimi/Livin snapshot offers without blocking recognition.
 - `POST /api/events`: metadata-only product events with image-like values rejected.
 - `POST /api/feedback`: bounded anonymous pilot feedback; comments are optional, limited to 300 characters, and image-like content is rejected.
+- `POST /api/billing/checkout`: creates the configured one-time Stripe Checkout Session when the pilot is enabled.
+- `POST /api/billing/status`: checks a hashed browser token and server-verifies a returned Checkout Session before access.
+- `POST /api/billing/webhook`: public only for Stripe's signed webhook; invalid signatures fail closed.
+- `POST /api/billing/restore/request` and `/claim`: privacy-preserving request response and one-time paid-access restoration.
 - `GET /api/health`: service, catalog and deployed commit status.
 
 ## Data and Supabase

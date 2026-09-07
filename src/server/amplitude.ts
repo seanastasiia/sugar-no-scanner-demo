@@ -59,6 +59,12 @@ export function amplitudeEventProperties(event: AmplitudeEvent): AnalyticsMetada
   const model = boundedString(metadata.model);
   const placement = boundedString(metadata.placement);
   const errorCategory = safeErrorCategory(metadata.message);
+  const freeScanCount = finiteNumber(metadata.freeScanCount);
+  const utmSource = boundedString(metadata.utm_source);
+  const utmMedium = boundedString(metadata.utm_medium);
+  const utmCampaign = boundedString(metadata.utm_campaign);
+  const utmContent = boundedString(metadata.utm_content);
+  const utmTerm = boundedString(metadata.utm_term);
 
   if (onboardingVersion !== undefined) properties.onboarding_version = onboardingVersion;
   if (step !== undefined) properties.step = step;
@@ -75,6 +81,12 @@ export function amplitudeEventProperties(event: AmplitudeEvent): AnalyticsMetada
   if (retryAfterSeconds !== undefined) properties.retry_after_seconds = retryAfterSeconds;
   if (frameCount !== undefined) properties.frame_count = frameCount;
   if (errorCategory) properties.error_category = errorCategory;
+  if (freeScanCount !== undefined) properties.free_scan_count = freeScanCount;
+  if (utmSource) properties.utm_source = utmSource;
+  if (utmMedium) properties.utm_medium = utmMedium;
+  if (utmCampaign) properties.utm_campaign = utmCampaign;
+  if (utmContent) properties.utm_content = utmContent;
+  if (utmTerm) properties.utm_term = utmTerm;
 
   return properties;
 }

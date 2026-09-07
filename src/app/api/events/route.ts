@@ -29,7 +29,12 @@ const eventSchema = z.object({
     "alternative_viewed",
     "retailer_link_clicked",
     "permission_denied",
-    "recognition_failed"
+    "recognition_failed",
+    "paywall_viewed",
+    "checkout_started",
+    "checkout_completed",
+    "checkout_cancelled",
+    "access_restored"
   ]),
   source: z.enum(["camera", "upload", "sample-shelf", "sample-conveyor"]),
   productId: z.string().max(180).nullable().optional(),
