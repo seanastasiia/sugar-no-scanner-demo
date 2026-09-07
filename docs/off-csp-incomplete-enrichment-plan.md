@@ -34,3 +34,5 @@ This work stays on `codex/personal-fit-catalog-preview` and the isolated Railway
 - OFF identity-only layer accepted in step 1: 9,626 rows; no duplicate conflicts; no aliases were invented because the preserved CSV does not expose labelled translations.
 - Existing Personal Shelf audit queue for step 3: 3,605 supported-type source records without sufficient exact evidence.
 - CSP: no source file or credentials have been issued. Code readiness does not count as a connected feed.
+- First exact-source pass: 3,009 attempts and 2,508 successful refreshes; 1,799 net-new observations; 1,444 net-new assessments; no previous rating outcome changed. Rimi, Livinn and OFF completed. Barbora stopped at HTTP 429 with 591 rows unattempted until `2026-09-07T17:27:58.859Z`.
+- Current audit after the saved pass: 6,949 observations, 5,156 assessable source rows and 2,153 supported-type rows still missing sufficient exact evidence.

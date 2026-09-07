@@ -2,6 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import livinnFoodIdentities from "../data/livinn-food-index.generated.json";
 import offIdentities from "../data/open-food-facts-regional-identities.generated.json";
 import cspReport from "../data/csp-import-report.generated.json";
+import retailerShelfEvidence from "../data/personal-shelf-evidence.generated.json";
+import offShelfEvidence from "../data/personal-shelf-off-evidence.generated.json";
 import { BARBORA_RATED_PRODUCT_COUNT } from "../src/server/barbora-supabase-catalog";
 
 async function main() {
@@ -60,6 +62,10 @@ async function main() {
   if (cspPrices.error) throw cspPrices.error;
   const cspIdentities = await supabase.from("csp_product_identities").select("gtin", { count: "exact", head: true });
   if (cspIdentities.error) throw cspIdentities.error;
+  const retailerEvidence = await supabase.from("retailer_shelf_evidence").select("product_id", { count: "exact", head: true });
+  if (retailerEvidence.error) throw retailerEvidence.error;
+  const offEvidence = await supabase.from("open_food_facts_shelf_evidence").select("product_id", { count: "exact", head: true });
+  if (offEvidence.error) throw offEvidence.error;
 
   const summary = {
     expected: BARBORA_RATED_PRODUCT_COUNT,
@@ -75,7 +81,11 @@ async function main() {
     expectedCspPriceCount: cspExpected.records,
     cspPriceCount: cspPrices.count ?? 0,
     expectedCspIdentityCount: cspExpected.identities,
-    cspIdentityCount: cspIdentities.count ?? 0
+    cspIdentityCount: cspIdentities.count ?? 0,
+    expectedRetailerShelfEvidence: retailerShelfEvidence.length,
+    retailerShelfEvidence: retailerEvidence.count ?? 0,
+    expectedOffShelfEvidence: offShelfEvidence.length,
+    offShelfEvidence: offEvidence.count ?? 0
   };
   console.log(JSON.stringify(summary, null, 2));
 
@@ -96,6 +106,9 @@ async function main() {
   }
   if ((cspPrices.count ?? 0) !== cspExpected.records || (cspIdentities.count ?? 0) !== cspExpected.identities) {
     throw new Error("CSP database layer does not match the generated import report");
+  }
+  if ((retailerEvidence.count ?? 0) < retailerShelfEvidence.length || (offEvidence.count ?? 0) < offShelfEvidence.length) {
+    throw new Error("Personal Shelf database evidence is behind the generated source files");
   }
 }
 
