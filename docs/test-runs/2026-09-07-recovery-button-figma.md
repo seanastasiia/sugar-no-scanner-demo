@@ -30,4 +30,11 @@
 3. Tap `Not sure — try again` and confirm recognition starts again.
 4. Open `Show demo` and confirm its existing behavior is unchanged.
 
-Deployment ID and live revision are appended after Railway succeeds.
+## Preview release
+
+- Application revision: `2ce76cc6d11cbb48c286209032232acdd48c1361`.
+- Railway deployment: `841115d1-0e94-49d8-b8b2-2ecc3518e052`, status `SUCCESS`.
+- Live health returned `status: ok` and the exact application revision.
+- Live root returned HTTP 200 and opened the first-visit Sugar.no screen in the in-app browser.
+- Preview: <https://sugar-no-personal-rank-personal-rank-preview.up.railway.app/>.
+- Production and `main` were not changed.
