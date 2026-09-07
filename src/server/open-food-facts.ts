@@ -449,8 +449,17 @@ async function promoteOpenFoodFactsProduct(
   });
 }
 
+export function openFoodFactsSearchQuery(input: BarboraLookupInput): string {
+  const name = normalizeRetailQuantityText(input.name);
+  const optionalParts = [input.variant, input.packSize].filter((part) => {
+    const normalized = normalizeRetailQuantityText(part || "");
+    return normalized && !name.includes(normalized);
+  });
+  return [input.brand, input.name, ...optionalParts].filter(Boolean).join(" ");
+}
+
 async function searchProducts(input: BarboraLookupInput): Promise<OpenFoodFactsProduct[]> {
-  const query = [input.brand, input.name, input.variant, input.packSize].filter(Boolean).join(" ");
+  const query = openFoodFactsSearchQuery(input);
   const response = await fetch(SEARCH_URL, {
     method: "POST",
     headers: { "content-type": "application/json", "user-agent": USER_AGENT },

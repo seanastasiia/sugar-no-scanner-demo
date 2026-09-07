@@ -257,6 +257,7 @@ Technical and migration evidence: [shared web catalog checks](docs/test-runs/202
 - The three tables contain only bounded OFF records, one-way hashes of exact normalized search aliases and immutable decisions with explicit `Open Food Facts contributors` / `ODbL-1.0` metadata. They have RLS enabled, no browser-role access and no public write endpoint. Retailer records, raw scan text, user/session identifiers and camera images are excluded.
 - Records require a checksum-valid exact GTIN and enough source-backed energy, protein and total sugar for the existing fit. Multilingual names are retained only when OFF supplies them. Missing ingredients, fiber or other optional values stay unknown. A later identity/composition contradiction permanently blocks automatic reuse; values from different observations are never stitched together.
 - Exact OFF results are returned as complete inline cards to the scan UI, so a newly resolved name can show its nutrition and Personal Fit immediately rather than exposing only a product ID.
+- OFF name searches add a visible variant or pack size only when it is not already present in the camera label. This avoids duplicated queries such as `35 g 35 g`, which can hide an otherwise exact multilingual SKU.
 - Run `npx vitest run src/server/shared-open-food-facts-sql.test.ts src/server/shared-open-food-facts.test.ts src/server/open-food-facts-shared.test.ts src/app/api/barcode/route.test.ts` for the storage, security, exact-response and route checks.
 
 Checked-in generated snapshots make the investor demo reproducible and fast:

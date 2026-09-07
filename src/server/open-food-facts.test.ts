@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  openFoodFactsSearchQuery,
   openFoodFactsToScoredProduct,
   rankOpenFoodFactsCandidates,
   resolveOpenFoodFactsProduct,
@@ -32,6 +33,23 @@ function product(overrides: Partial<OpenFoodFactsProduct> = {}): OpenFoodFactsPr
 }
 
 describe("Open Food Facts matching", () => {
+  it("does not repeat a visible variant or pack size in the OFF search query", () => {
+    expect(openFoodFactsSearchQuery({
+      brand: "Multipower",
+      name: "Protein Delight Salty Peanut Caramel 35 g",
+      variant: "Salty Peanut Caramel",
+      packSize: "35 g",
+      searchTerms: []
+    })).toBe("Multipower Protein Delight Salty Peanut Caramel 35 g");
+    expect(openFoodFactsSearchQuery({
+      brand: "Dzintars",
+      name: "Processed Cheese",
+      variant: "Classic",
+      packSize: "200 g",
+      searchTerms: []
+    })).toBe("Dzintars Processed Cheese Classic 200 g");
+  });
+
   it("resolves the bundled Pilos milk record from the detailed visual search query", async () => {
     const resolved = await resolveOpenFoodFactsProduct({
       brand: "Pilos",
