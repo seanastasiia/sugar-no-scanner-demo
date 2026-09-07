@@ -441,7 +441,8 @@ describe("resolveVisibleDetections", () => {
     expect(detections[0]).toMatchObject({
       productId: "off:7350104401012",
       nutritionLinkConfidence: 0.93,
-      identity: { matchKind: "open_food_facts" }
+      identity: { matchKind: "open_food_facts" },
+      inlineProduct: { id: "off:7350104401012" }
     });
   });
 
@@ -681,7 +682,8 @@ describe("resolveVisibleDetections", () => {
     expect(resolveWebNutrition).not.toHaveBeenCalled();
     expect(detections[0]).toMatchObject({
       productId: "off:20059750",
-      identity: { matchKind: "open_food_facts", packSize: "1L" }
+      identity: { matchKind: "open_food_facts", packSize: "1L" },
+      inlineProduct: { id: "off:20059750", nutrientsPer100g: { proteinG: 3.2, totalSugarG: 4.7 } }
     });
   });
 

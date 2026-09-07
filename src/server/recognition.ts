@@ -632,7 +632,7 @@ export async function resolveVisibleDetections(
         : null,
       retailerOffer: resolvedRetailerOffer,
       nutritionLinkConfidence,
-      inlineProduct: externalCatalogCandidate?.product || webNutrition?.product || externalCatalogIdentity?.product || null
+      inlineProduct: externalCatalogCandidate?.product || openFoodFactsCandidate?.product || webNutrition?.product || externalCatalogIdentity?.product || null
     };
   });
   return dedupeProductDetections(resolved);

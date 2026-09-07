@@ -39,6 +39,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-07: a dynamic Open Food Facts name match carried the right product ID but omitted the inline rated card.** The complete OFF result now crosses the enrichment response like other exact external products, so scan results can render its source-backed nutrition and Personal Fit immediately. Dedicated recognition assertions cover both ordinary and search-query-assisted OFF matches.
 - **2026-09-07: parallel catalog integration tests could exceed Vitest's five-second deadline under CPU contention.** Three unchanged heavy imports timed out only in the full parallel run while passing separately. Vitest now runs one worker; all 662 unchanged assertions then passed, together with catalog validation and the production build. No runtime behavior or assertion was relaxed.
 - Daily OFF TSV parsing now treats quotes as literal characters and checks column counts; the rejected partial standard-CSV parse was never imported. Regression tests cover both cases. The completed source stream is pinned by S3 version and the accepted candidate by SHA-256.
 - Exact OFF follow-ups verify source barcode/name/brand/pack, retain unknown nutrient inequalities and stop on 403/429/503. Promotion is idempotent and refuses a concurrently changed target. Two bounded cohorts made 186 product reads, accepted 172 observations and added 62 assessments without changing prior scores.
