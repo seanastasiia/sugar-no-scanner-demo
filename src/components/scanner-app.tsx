@@ -50,6 +50,8 @@ import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from
 import { productDisplayName, productDisplayImage } from "@/lib/product-display";
 import { compactNutritionLabel } from "@/lib/nutrition-display";
 import { PersonalShelfResults, ShelfRankToggle } from "./personal-shelf-results";
+import { shelfDemoPersonalProduct } from "@/lib/shelf-demo-personal-rank";
+import { shelfDemoOriginalId } from "@/lib/shelf-demo-products";
 import { isExactOnlineSaving, retailerOfferKey } from "@/lib/online-offer";
 import {
   readOnboardingCompletion,
@@ -1183,8 +1185,8 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   );
   const ratedTrayIds = useMemo(() => ratedScanProductIds(tray, productById), [productById, tray]);
   const visibleTrayIds = useMemo(
-    () => displayableScanProductIds(tray, productById, pendingProductIds, detectionById),
-    [detectionById, pendingProductIds, productById, tray]
+    () => displayableScanProductIds(tray, productById, pendingProductIds),
+    [pendingProductIds, productById, tray]
   );
   const visibleTrayIdSet = useMemo(() => new Set(visibleTrayIds), [visibleTrayIds]);
   const ratedTrayIdSet = useMemo(() => new Set(ratedTrayIds), [ratedTrayIds]);
@@ -1672,9 +1674,6 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
               </div>
             ) : null}
           </div>
-          {!showRecovery && (source === "upload" || source === "sample-conveyor") ? (
-            <p className={styles.stageGuidance}>Photos are not saved.</p>
-          ) : null}
         </div>
 
         {visibleTrayIds.length ? (
@@ -1815,9 +1814,13 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
                 ) : null}
                 {!productDetailsOpen && personalRankEnabled ? (
                   <PersonalShelfResults
-                    products={visibleTrayIds.flatMap((id) => products[id]?.product ? [products[id].product] : [])}
-                    unidentifiedCount={visibleTrayIds.filter((id) => !products[id]?.product).length}
-                    thumbnail={(id) => <ProductThumbnail imageUrl={products[id]?.product.imageUrl} sceneImageUrl={sceneImageUrl} sceneDimensions={mediaDimensions} detection={detectionById[id]} sizes="48px" targetAspect={48 / 60} />}
+                    context={source === "sample-shelf" ? "demo" : "scan"}
+                    products={visibleTrayIds.flatMap((id) => products[id]?.product ? [source === "sample-shelf" ? shelfDemoPersonalProduct(products[id].product) : products[id].product] : [])}
+                    thumbnail={(id) => {
+                      const sourceId = source === "sample-shelf" ? shelfDemoOriginalId(id) : id;
+                      const item = products[sourceId]?.product;
+                      return <ProductThumbnail imageUrl={source === "sample-shelf" && item ? productDisplayImage(item) : item?.imageUrl} sceneImageUrl={sceneImageUrl} sceneDimensions={mediaDimensions} detection={detectionById[sourceId]} sizes="48px" targetAspect={48 / 60} />;
+                    }}
                   />
                 ) : null}
                 {!productDetailsOpen && !personalRankEnabled && visibleTrayIds.length === 1 ? (
@@ -1843,22 +1846,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
                 ) : null}
 
                 {visibleTrayIds.length > 1 && !productDetailsOpen && !personalRankEnabled ? (
-                  <section className={styles.rankingSection} aria-labelledby="scan-ranking-title">
-                    <h2 className={styles.expandedSheetTitle} id="scan-ranking-title">
-                      {ratedCount > 0
-                        ? "Best fit first"
-                        : pendingProductIds.size
-                          ? "Matching products"
-                          : "Products identified"}
-                    </h2>
-                    <p className={styles.resultsSubtitle}>
-                      {source === "sample-shelf"
-                        ? "Sample shelf"
-                        : source === "sample-conveyor"
-                          ? "Checkout demo"
-                          : "Your scan"}{" "}
-                      · Sugar per {resultsBasis}
-                    </p>
+                  <section className={styles.rankingSection} aria-label="Scan results">
                     <ol className={styles.rankedList} aria-label="Products ranked by Sugar.no fit">
                       {rankedTrayIds.map((id) => {
                         const item = products[id]?.product;

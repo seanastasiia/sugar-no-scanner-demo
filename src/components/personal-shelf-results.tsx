@@ -2,24 +2,24 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { rankPersonalShelfProducts, shelfScoreLabel, type ShelfEvidence } from "@/lib/personal-shelf-rank";
+import { personalShelfFit } from "@/lib/personal-shelf-fit";
 import type { ProductRecord } from "@/lib/types";
+import { PersonalShelfFitBadge } from "./personal-shelf-fit-badge";
 import styles from "./personal-shelf-results.module.css";
 
 export function ShelfRankToggle({ enabled, onChange }: { enabled: boolean; onChange: (enabled: boolean) => void }) {
   return (
     <div className={styles.mode}>
-      <button type="button" role="switch" aria-checked={enabled} aria-describedby="shelf-pilot-help" onClick={() => onChange(!enabled)}>
+      <button type="button" role="switch" aria-checked={enabled} onClick={() => onChange(!enabled)}>
         <span>Personal Shelf Rank <small>Pilot</small></span>
         <span aria-hidden="true" className={`${styles.switch} ${enabled ? styles.switchOn : ""}`}><span /></span>
       </button>
-      <p id="shelf-pilot-help">{enabled ? "Camera markers keep the original Sugar + Protein Fit." : "Compare sugar, protein and composition. Original Fit stays available."}</p>
     </div>
   );
 }
 
 export function PersonalShelfResults({ products, thumbnail, context = "scan" }: {
   products: ProductRecord[];
-  unidentifiedCount: number;
   thumbnail: (id: string) => ReactNode;
   context?: "scan" | "demo";
 }) {
@@ -48,43 +48,62 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan" }: 
     return next?.productId === product.id && (!current || Date.parse(next.checkedAt) > Date.parse(current.checkedAt))
       ? { ...product, shelfEvidence: next } : product;
   }));
+  const ratedGroups = groups.map((group) => ({
+    ...group,
+    entries: group.entries.filter(({ assessment }) => shelfScoreLabel(assessment) !== null)
+  })).filter((group) => group.entries.length > 0);
+  const ratedEntries = ratedGroups.flatMap((group) => group.entries.map((entry) => ({ ...entry, group })));
   return (
     <section className={styles.results} aria-label="Personal Shelf Rank results">
-      {!groups.length ? <p className={styles.empty}>No ratings for this shelf yet. Switch off Personal Shelf Rank to view all products.</p> : null}
-      {groups.map((group) => (
-        <section key={group.category} aria-labelledby={`shelf-group-${group.category}`}>
-          <h3 id={`shelf-group-${group.category}`}>{group.label}</h3>
-          <ul className={styles.list}>
-            {group.entries.map(({ product, assessment, rank, tied, rankProvisional }) => {
-              const scoreLabel = shelfScoreLabel(assessment);
-              return (
-                <li className={styles.card} key={product.id}>
-                  <div className={styles.heading}>
-                    <div className={styles.thumb} aria-hidden="true">{thumbnail(product.id)}</div>
-                    <div><small>{product.brand}</small><h4>{product.shortName}</h4></div>
-                  </div>
-                  <div className={styles.scoreRow}>
-                    {scoreLabel !== null ? <>
-                      <strong>{scoreLabel}<span>/100</span>{assessment.status === "provisional" ? <small> Provisional · fiber unknown</small> : null}</strong>
-                      <span>{rank ? `${rankProvisional ? "Provisional " : tied ? "Tied " : ""}#${rank} of ${group.scoredCount} in ${group.label.toLowerCase()}` : `Score only · ${group.label}`}</span>
-                    </> : <span className={styles.unknown} role="img" aria-label="Not scored">—</span>}
-                  </div>
-                  {scoreLabel !== null ? <>
-                    <ul className={styles.reasons}>{assessment.reasons.slice(0, 2).map((reason) => <li key={reason}>{reason}</li>)}</ul>
-                    <p className={styles.tradeoff}><b>Consider:</b> {assessment.tradeoffs[0]}</p>
-                  </> : null}
-                  {assessment.components.length ? <details className={styles.details}>
-                    <summary>Why this score?</summary>
-                    {assessment.status === "provisional" ? <p>Fiber is not listed. The range covers its possible point contribution, not estimated grams. Provisional places use the lower bound; overlapping ranges do not establish a winner.</p> : null}
-                    {assessment.components.length ? <dl className={styles.breakdown}>{assessment.components.map((part) => <div key={part.key}><dt>{part.label}</dt><dd>{part.points}{part.maxPoints !== undefined && part.maxPoints !== part.points ? `–${part.maxPoints}` : ""} / {part.weight} points</dd></div>)}</dl> : null}
-                    {assessment.cap ? <p>{assessment.cap}</p> : null}
-                  </details> : null}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ))}
+      {ratedEntries.length ? <>
+        <header className={styles.resultsHeader}>
+          <h2>{ratedEntries.length === 1 ? "Best product" : "Best products"}</h2>
+          <details className={styles.method}>
+            <summary>How scores work</summary>
+            <div>
+              <p>Scores compare products within the same category using sugar, protein, the ingredient base and nutrient balance.</p>
+              <p>Great 75–100 · Moderate 50–74 · Low 0–49. Missing facts stay unknown. This is a preference score, not a health rating.</p>
+            </div>
+          </details>
+        </header>
+        <div className={styles.groups}>
+          {ratedGroups.map((group) => <section className={styles.group} key={group.category} aria-label={group.label}>
+            <ol className={styles.list}>
+              {group.entries.map(({ product, assessment, rank, tied, rankProvisional }) => {
+                const scoreLabel = shelfScoreLabel(assessment);
+                const fit = personalShelfFit(assessment);
+                const evidence = product.shelfEvidence;
+                const reason = assessment.tradeoffs[0] || assessment.reasons[0];
+                const rankText = rank ? `${rankProvisional ? "Provisional " : tied ? "Tied " : ""}#${rank} of ${group.scoredCount}` : null;
+                return (
+                  <li className={styles.card} key={product.id} data-personal-fit={fit?.tone}>
+                    <div className={styles.heading}>
+                      <div className={styles.thumb} aria-hidden="true">{thumbnail(product.id)}</div>
+                      <div className={styles.identity}>
+                        <p className={styles.eyebrow}><span>{group.label}</span><span>{product.brand}</span></p>
+                        <h3>{product.shortName}</h3>
+                      </div>
+                    </div>
+                    <div className={styles.scoreRow}>
+                      {scoreLabel !== null ? <>
+                        <strong aria-label={assessment.status === "provisional" ? `Provisional score ${scoreLabel} out of 100` : `Score ${scoreLabel} out of 100`}>{scoreLabel}<span>/100</span></strong>
+                        <PersonalShelfFitBadge fit={fit} />
+                        {rankText ? <span className={styles.rankLabel} aria-label={`${rankProvisional ? "Provisional " : tied ? "Tied " : ""}rank ${rank} of ${group.scoredCount} in ${group.label}`}>{rankText}</span> : null}
+                      </> : <span className={styles.unknown} role="img" aria-label="Not scored">—</span>}
+                    </div>
+                    {scoreLabel !== null && evidence ? <div className={styles.metrics} aria-label="Nutrition per 100 grams">
+                      <span><small>Sugar</small><b>{evidence.totalSugarG} g</b></span>
+                      <span><small>Protein</small><b>{evidence.proteinG} g</b></span>
+                      <small className={styles.basis}>per 100 g</small>
+                    </div> : null}
+                    {reason ? <p className={styles.reason}><b>{assessment.status === "provisional" ? "Why this range" : `Why ${scoreLabel}`}</b><span>{reason}</span></p> : null}
+                  </li>
+                );
+              })}
+            </ol>
+          </section>)}
+        </div>
+      </> : <p className={styles.empty}>No rated products in this scan.</p>}
     </section>
   );
 }

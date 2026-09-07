@@ -4,29 +4,34 @@ import { resolveBarcodeFromKnownCatalogs } from "./barcode-resolution";
 
 describe("barcode fast path", () => {
   it("returns an exact curated product without calling visual recognition", () => {
-    const product = { ...getCatalog()[0], gtin: "12345678" };
-    const result = resolveBarcodeFromKnownCatalogs("12345678", [product]);
+    const product = { ...getCatalog()[0], gtin: "12345670" };
+    const result = resolveBarcodeFromKnownCatalogs("12345670", [product]);
     expect(result).toMatchObject({ source: "catalog", detection: { productId: product.id, confidence: 1 } });
     expect(result?.detection.inlineProduct?.id).toBe(product.id);
   });
 
-  it("rejects malformed barcodes", () => {
-    expect(resolveBarcodeFromKnownCatalogs("1234", getCatalog())).toBeNull();
+  it("labels a dynamically restored Open Food Facts card with its actual source", () => {
+    const product = { ...getCatalog()[0], gtin: "12345670" };
+    const result = resolveBarcodeFromKnownCatalogs("12345670", [product], "open_food_facts");
+    expect(result).toMatchObject({
+      source: "open_food_facts",
+      detection: { identity: { matchKind: "open_food_facts" } }
+    });
   });
 
-  it("returns an exact Livinn food identity without inventing missing nutrition", () => {
-    const result = resolveBarcodeFromKnownCatalogs("900414507757", getCatalog());
-    expect(result).toMatchObject({
-      source: "retailer_catalog",
-      detection: {
-        productId: "livinn_lt:02000005925",
-        identity: { matchKind: "retailer_catalog", barcode: "900414507757" },
-        inlineProduct: {
-          ratingStatus: "identity_only",
-          matchScore: null,
-          nutrientsPer100g: { proteinG: null, totalSugarG: null }
-        }
-      }
-    });
+  it("rejects malformed barcodes", () => {
+    expect(resolveBarcodeFromKnownCatalogs("1234", getCatalog())).toBeNull();
+    expect(resolveBarcodeFromKnownCatalogs("12345678", getCatalog())).toBeNull();
+  });
+
+  it.each(["100g", "100ml"] as const)("retains the %s package dimension on the expanded catalog path", (nutritionBasis) => {
+    const product = { ...getCatalog()[0], gtin: "12345670", packSizeG: 250, nutritionBasis };
+    const result = resolveBarcodeFromKnownCatalogs("12345670", [product]);
+    expect(result?.detection.identity?.packSize).toBe(nutritionBasis === "100ml" ? "250ml" : "250g");
+    expect(result?.detection.inlineProduct?.nutritionBasis).toBe(nutritionBasis);
+  });
+
+  it("does not treat a Livinn source product number as a barcode", () => {
+    expect(resolveBarcodeFromKnownCatalogs("900414507757", getCatalog())).toBeNull();
   });
 });

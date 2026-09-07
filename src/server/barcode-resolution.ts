@@ -2,6 +2,7 @@ import type { ProductDetection, ScoredProduct } from "@/lib/types";
 import { getExternalCatalogIdentityByBarcode, getExternalCatalogProductByBarcode } from "./external-catalog";
 import { getOpenFoodFactsBulkProductByBarcode } from "./open-food-facts";
 import { findSharedWebProductByBarcode } from "./shared-web-catalog";
+import { validWebGtin } from "./web-product-evidence";
 
 export interface BarcodeResolution {
   detection: ProductDetection;
@@ -14,25 +15,31 @@ export async function resolveSharedWebBarcode(barcode: string): Promise<BarcodeR
   const result = resolveBarcodeFromKnownCatalogs(product.gtin, [product]);
   if (!result) return null;
   return { source: "web_search", detection: { ...result.detection, catalogProductId: null,
-    // The legacy generic mapper assumes grams; omit rather than mislabel ml.
+    // Shared records do not yet retain a separately validated display quantity.
     identity: { ...result.detection.identity!, barcode, packSize: null, matchKind: "web_search" } } };
 }
 
 export function resolveBarcodeFromKnownCatalogs(
   barcode: string,
-  catalog: ScoredProduct[]
+  catalog: ScoredProduct[],
+  catalogSource: "catalog" | "open_food_facts" = "catalog"
 ): BarcodeResolution | null {
-  if (!/^\d{8,14}$/.test(barcode)) return null;
-  const catalogProduct = catalog.find((product) => product.gtin === barcode);
+  const canonical = validWebGtin(barcode);
+  if (!canonical) return null;
+  const catalogProduct = catalog.find((product) => product.gtin === barcode || validWebGtin(product.gtin) === canonical);
   const external = catalogProduct ? null : getExternalCatalogProductByBarcode(barcode);
   const off = catalogProduct || external ? null : getOpenFoodFactsBulkProductByBarcode(barcode);
   const externalIdentity = catalogProduct || external || off ? null : getExternalCatalogIdentityByBarcode(barcode);
   const product = catalogProduct || external?.product || off || externalIdentity;
   if (!product) return null;
   const source = catalogProduct
-    ? "catalog"
-    : external || externalIdentity
+    ? catalogSource
+    : external
       ? "retailer_catalog"
+      : externalIdentity?.ratingBasis.startsWith("open_food_facts")
+        ? "open_food_facts"
+        : externalIdentity
+          ? "retailer_catalog"
       : "open_food_facts";
   return {
     source,
@@ -46,7 +53,7 @@ export function resolveBarcodeFromKnownCatalogs(
         brand: product.brand,
         name: product.name,
         variant: null,
-        packSize: product.packSizeG ? `${product.packSizeG}g` : null,
+        packSize: product.packSizeG ? `${product.packSizeG}${product.nutritionBasis === "100ml" ? "ml" : "g"}` : null,
         category: product.category || null,
         matchKind: source === "catalog" ? "verified_catalog" : source,
         barcode

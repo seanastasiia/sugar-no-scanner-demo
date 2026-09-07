@@ -18,6 +18,7 @@ export interface OpenFoodFactsBulkRecord {
   image_front_url?: string;
   nutrition_data_per?: string;
   nutriments?: {
+    [nutrient: string]: unknown;
     "energy-kcal_100g"?: number;
     "energy-kj_100g"?: number;
     proteins_100g?: number;

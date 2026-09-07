@@ -5,6 +5,7 @@ import { listProducts } from "@/server/catalog-repository";
 import { createRecognitionRateLimiter, recognitionClientKey } from "@/server/rate-limit";
 import { readBoundedJson } from "@/server/request-body";
 import { hasTrustedBrowserOrigin } from "@/server/request-origin";
+import { getOpenFoodFactsProductByBarcode } from "@/server/open-food-facts";
 
 export const runtime = "nodejs";
 
@@ -30,7 +31,12 @@ export async function POST(request: Request) {
   }
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "invalid_request" }, { status: 400 });
-  const result = resolveBarcodeFromKnownCatalogs(parsed.data.barcode, await listProducts()) || await resolveSharedWebBarcode(parsed.data.barcode);
+  let result = resolveBarcodeFromKnownCatalogs(parsed.data.barcode, await listProducts());
+  if (!result) {
+    const off = await getOpenFoodFactsProductByBarcode(parsed.data.barcode);
+    result = off ? resolveBarcodeFromKnownCatalogs(parsed.data.barcode, [off], "open_food_facts") : null;
+  }
+  result ||= await resolveSharedWebBarcode(parsed.data.barcode);
   return NextResponse.json(
     result ? { status: "matched", ...result, imageStored: false } : { status: "not_found", imageStored: false },
     { headers: { "cache-control": "private, max-age=300" } }

@@ -3,7 +3,7 @@ import foodProductIndex from "../../../../data/barbora-food-product-index.genera
 import nutritionIndex from "../../../../data/barbora-nutrition-index.generated.json";
 import { investorCategoryForRetailPath } from "@/lib/supported-categories";
 import type { BarboraNutritionIndexProduct } from "@/server/barbora-nutrition-index";
-import { externalCatalogCounts, externalCatalogIdentityCount } from "@/server/external-catalog";
+import { externalCatalogCounts, externalCatalogIdentityCounts } from "@/server/external-catalog";
 import { openFoodFactsBulkCount } from "@/server/open-food-facts";
 import { shelfEvidenceCounts } from "@/server/personal-shelf-evidence";
 
@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export function GET() {
   const retailerCatalogs = externalCatalogCounts();
+  const identityCatalogs = externalCatalogIdentityCounts();
   const investorPack = (nutritionIndex as BarboraNutritionIndexProduct[]).reduce(
     (counts, product) => {
       const category = investorCategoryForRetailPath(product.category);
@@ -24,12 +25,17 @@ export function GET() {
       status: "ok",
       service: "sugar-no-scanner-demo",
       commit: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.COMMIT_SHA || "local",
-      features: { sharedWebCatalog: process.env.SHARED_WEB_CATALOG_ENABLED === "true", personalShelfRank: process.env.PERSONAL_SHELF_RANK_ENABLED !== "false" },
+      features: { sharedWebCatalog: process.env.SHARED_WEB_CATALOG_ENABLED === "true",
+        sharedWebShelfEvidence: process.env.SHARED_WEB_CATALOG_ENABLED === "true" && process.env.SHARED_WEB_SHELF_EVIDENCE_ENABLED === "true",
+        sharedOpenFoodFactsCatalog: process.env.SHARED_OFF_CATALOG_ENABLED === "true",
+        personalShelfRank: process.env.PERSONAL_SHELF_RANK_ENABLED !== "false" },
       catalog: {
         activeFoodProducts: foodProductIndex.length,
         productsWithAutomaticFit: nutritionIndex.length,
         connectedRetailerProducts: retailerCatalogs,
-        livinnFoodIdentities: externalCatalogIdentityCount(),
+        livinnFoodIdentities: identityCatalogs.livinn_lt,
+        openFoodFactsIdentityOnly: identityCatalogs.open_food_facts,
+        cspFoodIdentities: identityCatalogs.csp_lv,
         openFoodFactsBulkProducts: openFoodFactsBulkCount(),
         personalShelf: shelfEvidenceCounts(),
         investorPack: {

@@ -1,0 +1,8 @@
+.great { --personal-fit-fill: #2a7a47; --personal-fit-gradient: linear-gradient(180deg, #2a7a47, #176b30); --personal-fit-ink: #ffffff; }
+.moderate { --personal-fit-fill: #ffc917; --personal-fit-gradient: linear-gradient(180deg, #ffc917, #ff9900); --personal-fit-ink: #3b2600; }
+.low { --personal-fit-fill: #c23c23; --personal-fit-gradient: linear-gradient(180deg, #c23c23, #953215); --personal-fit-ink: #ffffff; }
+.uncertain { --personal-fit-gradient: linear-gradient(var(--surface-accent), var(--surface-accent)); --personal-fit-ink: var(--ink); }
+.badge { position: relative; display: inline-flex; align-items: center; max-width: 100%; min-height: 30px; padding: 4px 10px; border: 0; border-radius: 999px; background: var(--personal-fit-gradient); color: var(--personal-fit-ink); font-family: var(--font-display); font-size: .8125rem; font-weight: 750; line-height: 1.35; white-space: nowrap; }
+.badge::after { position: absolute; inset: 0; padding: 1.25px; border-radius: inherit; content: ""; pointer-events: none; background: linear-gradient(135deg, #fff, #ffffff00 50%, #fff); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; }
+.badge.uncertain { border: 1px dashed var(--muted); }
+@media (forced-colors: active) { .badge { border: 1px solid ButtonText; } }

@@ -8,6 +8,13 @@ import { offShelfEvidence } from "./personal-shelf-parser";
 import { applyShelfNutritionTrustGuard } from "@/lib/personal-shelf-rank";
 import { getShelfEvidence } from "./personal-shelf-evidence";
 import {
+  canonicalSharedOffGtin,
+  promoteSharedOffRecord,
+  readSharedOffRecord,
+  readSharedOffRecordByAlias,
+  sharedOffLookupKey
+} from "./shared-open-food-facts";
+import {
   normalizeRetailQuantityText,
   normalizeRetailText,
   retailIdentityTokenMatches,
@@ -383,11 +390,76 @@ async function fetchByBarcode(barcode: string): Promise<OpenFoodFactsProduct | n
   });
   if (!response.ok) return null;
   const body = (await response.json()) as ProductResponse;
-  return body.product || null;
+  return body.product && canonicalSharedOffGtin(body.product.code) === canonicalSharedOffGtin(barcode) ? body.product : null;
+}
+
+function boundedSharedRecord(product: OpenFoodFactsProduct): OpenFoodFactsProduct | null {
+  const code = canonicalSharedOffGtin(product.code);
+  if (!code) return null;
+  const bounded = (value: unknown, maximum: number) => typeof value === "string" && value.trim().length > 0 && value.length <= maximum ? value : undefined;
+  const result: OpenFoodFactsProduct = { code };
+  for (const field of productNameFields) {
+    const value = bounded(product[field], 240);
+    if (value) result[field] = value;
+  }
+  const brands = Array.isArray(product.brands)
+    ? product.brands.flatMap((value) => bounded(value, 120) || []).slice(0, 12)
+    : bounded(product.brands, 240);
+  if (brands && (!Array.isArray(brands) || brands.length)) result.brands = brands;
+  const quantity = bounded(product.quantity, 120);
+  if (quantity) result.quantity = quantity;
+  const category = bounded(product.categories, 2_000);
+  if (category) result.categories = category;
+  const image = bounded(product.image_front_url, 2_000);
+  if (image && /^https:\/\//i.test(image)) result.image_front_url = image;
+  if (product.nutrition_data_per === "100g" || product.nutrition_data_per === "100ml") result.nutrition_data_per = product.nutrition_data_per;
+  const nutrients: OpenFoodFactsNutriments = {};
+  for (const key of ["energy-kcal_100g", "energy-kj_100g", "proteins_100g", "sugars_100g", "carbohydrates_100g", "fiber_100g", "salt_100g", "sodium_100g", "saturated-fat_100g", "fat_100g"] as const) {
+    const value = product.nutriments?.[key];
+    if (typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= (key === "energy-kj_100g" ? 5_000 : key === "energy-kcal_100g" ? 1_000 : 100)) nutrients[key] = value;
+  }
+  result.nutriments = nutrients;
+  for (const key of ["ingredients_text", "ingredients_text_en", "ingredients_text_lv", "ingredients_text_lt", "ingredients_text_ru", "ingredients_text_et"] as const) {
+    const value = bounded(product[key], 12_000);
+    if (value) result[key] = value;
+  }
+  for (const key of ["ingredients_lc", "lang"] as const) {
+    const value = bounded(product[key], 10);
+    if (value) result[key] = value;
+  }
+  return openFoodFactsToScoredProduct(result) ? result : null;
+}
+
+async function promoteOpenFoodFactsProduct(
+  product: OpenFoodFactsProduct,
+  checkedAt: string,
+  aliasKey = ""
+): Promise<"accepted" | "conflict" | "unavailable"> {
+  const record = boundedSharedRecord(product);
+  if (!record) return "unavailable";
+  const scored = openFoodFactsToScoredProduct(record, checkedAt)!;
+  const evidence = scored.shelfEvidence ? { ...scored.shelfEvidence, checkedAt: undefined } : null;
+  return promoteSharedOffRecord({
+    gtin: record.code,
+    record,
+    checkedAt,
+    aliasKey,
+    identity: { gtin: record.code, brand: normalizeRetailText(scored.brand), packSizeG: scored.packSizeG, nutritionBasis: scored.nutritionBasis },
+    composition: { category: scored.category, energyKcalPer100: scored.energyKcalPer100, nutrientsPer100g: scored.nutrientsPer100g, evidence }
+  });
+}
+
+export function openFoodFactsSearchQuery(input: BarboraLookupInput): string {
+  const name = normalizeRetailQuantityText(input.name);
+  const optionalParts = [input.variant, input.packSize].filter((part) => {
+    const normalized = normalizeRetailQuantityText(part || "");
+    return normalized && !name.includes(normalized);
+  });
+  return [input.brand, input.name, ...optionalParts].filter(Boolean).join(" ");
 }
 
 async function searchProducts(input: BarboraLookupInput): Promise<OpenFoodFactsProduct[]> {
-  const query = [input.brand, input.name, input.variant, input.packSize].filter(Boolean).join(" ");
+  const query = openFoodFactsSearchQuery(input);
   const response = await fetch(SEARCH_URL, {
     method: "POST",
     headers: { "content-type": "application/json", "user-agent": USER_AGENT },
@@ -416,11 +488,22 @@ async function searchProducts(input: BarboraLookupInput): Promise<OpenFoodFactsP
 export async function getOpenFoodFactsProductByBarcode(barcode: string): Promise<ScoredProduct | null> {
   const bulkProduct = getOpenFoodFactsBulkProductByBarcode(barcode);
   if (bulkProduct) return bulkProduct;
+  const shared = await readSharedOffRecord(barcode);
+  if (shared) {
+    const product = boundedSharedRecord(shared.record as OpenFoodFactsProduct);
+    const scored = product ? openFoodFactsToScoredProduct(product, shared.checkedAt) : null;
+    if (scored) return scored;
+  }
   const cacheKey = `barcode:${barcode}`;
   const cached = responseCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.product;
-  const product = await fetchByBarcode(barcode).catch(() => null);
-  const scored = product ? openFoodFactsToScoredProduct(product) : null;
+  const fetched = await fetchByBarcode(barcode).catch(() => null);
+  // Score exactly the bounded canonical record that is eligible for sharing so
+  // the first scan and every later shared read keep the same id and evidence.
+  const product = fetched ? boundedSharedRecord(fetched) : null;
+  const checkedAt = new Date().toISOString();
+  let scored = product ? openFoodFactsToScoredProduct(product, checkedAt) : null;
+  if (product && scored && await promoteOpenFoodFactsProduct(product, checkedAt) === "conflict") scored = null;
   responseCache.set(cacheKey, { product: scored, confidence: scored ? 1 : 0, expiresAt: Date.now() + CACHE_TTL_MS });
   return scored;
 }
@@ -469,6 +552,16 @@ export async function resolveOpenFoodFactsProduct(
     const product = await getOpenFoodFactsProductByBarcode(barcode);
     if (product && retailerBrandMatches(input.brand, product.brand)) return { product, confidence: 1 };
   }
+  const aliasKey = sharedOffLookupKey(input, barcode);
+  const shared = await readSharedOffRecordByAlias(aliasKey);
+  if (shared) {
+    const candidate = boundedSharedRecord(shared.record as OpenFoodFactsProduct);
+    const rankedShared = candidate ? rankOpenFoodFactsCandidates(input, [candidate])[0] : null;
+    const product = rankedShared?.confidence && rankedShared.confidence >= 0.84
+      ? openFoodFactsToScoredProduct(rankedShared.product, shared.checkedAt)
+      : null;
+    if (product) return { product, confidence: 0.99 };
+  }
   const cacheKey = `search:${normalizeRetailText([input.brand, input.name, input.packSize].join(" "))}`;
   const cached = responseCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
@@ -477,7 +570,10 @@ export async function resolveOpenFoodFactsProduct(
   const ranked = rankOpenFoodFactsCandidates(input, await searchProducts(input).catch(() => []));
   const best = ranked[0];
   const exact = Boolean(best && best.confidence >= 0.84 && best.confidence - (ranked[1]?.confidence || 0) >= 0.08);
-  const product = exact ? openFoodFactsToScoredProduct(best.product) : null;
+  const checkedAt = new Date().toISOString();
+  const exactRecord = exact ? boundedSharedRecord(best.product) : null;
+  let product = exactRecord ? openFoodFactsToScoredProduct(exactRecord, checkedAt) : null;
+  if (product && await promoteOpenFoodFactsProduct(exactRecord!, checkedAt, aliasKey) === "conflict") product = null;
   responseCache.set(cacheKey, {
     product,
     confidence: product ? best.confidence : 0,

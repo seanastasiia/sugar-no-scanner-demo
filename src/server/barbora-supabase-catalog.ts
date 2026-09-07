@@ -11,6 +11,7 @@ export interface BarboraManagedProductRow {
   retailer: "Barbora";
   url: string;
   title: string;
+  aliases: string[];
   brand: string;
   gtin: null;
   sku: string;
@@ -88,6 +89,7 @@ export function buildBarboraCatalogSnapshot(input: {
       retailer: "Barbora" as const,
       url: exactBarboraUrl(product.slug),
       title: product.title,
+      aliases: [],
       brand: product.brand,
       gtin: null,
       sku: product.slug,

@@ -35,7 +35,8 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
   await expect(page.locator("footer")).toHaveCount(0);
   await expect(page.locator("video")).toHaveCount(0);
   const chips = page.getByRole("region", { name: "Chips", exact: true });
-  await expect(page.getByRole("heading", { name: "Chips", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Chips", exact: true })).toHaveCount(0);
+  await expect(page.getByText("Chips", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("radio")).toHaveCount(0);
   await expect(page.getByText("Yogurts", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Spoonable yogurts", exact: true })).toHaveCount(0);
@@ -47,6 +48,9 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
   await expect(chips.getByText("#1", { exact: true })).toBeVisible();
   await expect(chips.getByText("#2", { exact: true })).toBeVisible();
   await expect(chips.getByText("Not scored", { exact: true })).toBeVisible();
+  await expect(chips.getByTestId("personal-fit-badge")).toHaveText(["Moderate fit", "Moderate fit", "Moderate fit"]);
+  await expect(chips.locator('li[data-personal-fit="moderate"]')).toHaveCount(3);
+  await expect(chips.getByTestId("demo-product-row").last().getByTestId("personal-fit-badge")).toHaveCount(0);
   await expect(chips.getByText("Protein 5g · Sugar 0.6g /100 g", { exact: true })).toBeVisible();
   await expect(chips.getByText("Protein 4.8g · Sugar 0.6g /100 g", { exact: true })).toBeVisible();
   await expect(chips.getByTestId("demo-product-details").first()).toBeHidden();
@@ -96,7 +100,8 @@ test("rating demo is reachable from Show demo and can return to the unchanged sc
   await page.getByRole("button", { name: /^Shelf demo/ }).click();
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("switch", { name: "Personal Shelf Rank Pilot", exact: true })).not.toBeChecked();
-  await expect(page.getByRole("heading", { name: "Best fit first", exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Scan results", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first", exact: true })).toHaveCount(0);
 });
 
 test("rating demo handles broken packshots and remains accessible on small dark phones", async ({ page }, testInfo) => {

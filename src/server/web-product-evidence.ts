@@ -2,11 +2,13 @@ import { createHash } from "node:crypto";
 import type { ProductRecord } from "@/lib/types";
 import { normalizeRetailText, type BarboraLookupInput } from "./barbora-catalog";
 import { parseRimiProductPage } from "./retailer-page-parser";
+import { livinnShelfEvidence, rimiShelfEvidence } from "./personal-shelf-parser";
+import type { ShelfEvidence } from "@/lib/personal-shelf-rank";
 
 export type WebProductLookup = BarboraLookupInput & { barcode?: string };
 export interface VerifiedWebProduct {
   identityKey: string;
-  product: ProductRecord;
+  product: ProductRecord & { canonicalShelfEvidence?: ShelfEvidence };
 }
 
 // Reviewed retailer hosts only. OFF remains in its separate ODbL layer. New
@@ -216,7 +218,17 @@ export function verifyWebProductPage(input: WebProductLookup, html: string, sour
     if (percentages(`${input.name} ${input.variant}`).some((value) => !percentages(name).includes(value))) return null;
     if (!queryWords.length || !queryWords.every((word) => pageWords.has(word))) return null;
   }
-  const nutrition = pageNutrition(html, page);
+  let canonicalShelfEvidence: ShelfEvidence | null = null;
+  if (process.env.SHARED_WEB_SHELF_EVIDENCE_ENABLED === "true" && typeof page.sku === "string") {
+    if (/(^|\.)rimi\.lv$/.test(new URL(url).hostname)) canonicalShelfEvidence = rimiShelfEvidence(html, url, page.sku, checkedAt);
+    if (/(^|\.)livinn\.lt$/.test(new URL(url).hostname)) canonicalShelfEvidence = livinnShelfEvidence(html, url, page.sku, checkedAt);
+    if (canonicalShelfEvidence?.gtin && gtin && validWebGtin(canonicalShelfEvidence.gtin) !== gtin) canonicalShelfEvidence = null;
+  }
+  // When supported, every field comes from the same exact labelled observation.
+  // Do not assemble a Personal Fit table from different pages or model output.
+  const nutrition = canonicalShelfEvidence ? { basis: canonicalShelfEvidence.nutritionBasis, energy: canonicalShelfEvidence.energyKcal,
+    protein: canonicalShelfEvidence.proteinG, sugar: canonicalShelfEvidence.totalSugarG, carbohydrate: canonicalShelfEvidence.carbohydrateG ?? null,
+    fiber: canonicalShelfEvidence.fiberG, fat: canonicalShelfEvidence.fatG ?? null } : pageNutrition(html, page);
   const identityKey = [new URL(url).hostname.replace(/^www\./, ""), normalizeRetailText(brand), gtin || url, pack.key].join("|");
   const id = `web:shared:${createHash("sha256").update(identityKey).digest("hex").slice(0, 24)}`;
   const fields: ProductRecord["sources"][number]["fields"] = ["identity"];
@@ -229,6 +241,7 @@ export function verifyWebProductPage(input: WebProductLookup, html: string, sour
     packSizeG: pack.amount, ...(nutrition.basis ? { nutritionBasis: nutrition.basis } : {}), energyKcalPer100: nutrition.energy,
     gtin, nutrientsPer100g: { proteinG: nutrition.protein, totalSugarG: nutrition.sugar, carbohydrateG: nutrition.carbohydrate, fiberG: nutrition.fiber },
     noAddedSugarClaim: false, imageUrl: null, retailerUrl: url, isGolden: false, accent: "coral",
+    ...(canonicalShelfEvidence ? { canonicalShelfEvidence } : {}),
     sources: [{ label: `Checked product page · ${new URL(url).hostname}`, url, checkedAt, fields, status: "secondary" }]
   } };
 }

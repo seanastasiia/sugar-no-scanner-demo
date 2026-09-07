@@ -6,6 +6,7 @@ import livinProducts from "../data/livin-catalog.generated.json";
 import livinnFoodIdentities from "../data/livinn-food-index.generated.json";
 import livinnProducts from "../data/livinn-catalog.generated.json";
 import offProducts from "../data/open-food-facts-lv.generated.json";
+import offIdentities from "../data/open-food-facts-regional-identities.generated.json";
 import regionalOffProducts from "../data/open-food-facts-regional.generated.json";
 import rimiProducts from "../data/rimi-catalog.generated.json";
 import { buildBarboraCatalogSnapshot } from "../src/server/barbora-supabase-catalog";
@@ -96,6 +97,31 @@ async function pruneStaleLivinnIdentityRows(
   return staleIds.length;
 }
 
+async function pruneStaleOffIdentityRows(
+  supabase: SupabaseClient,
+  retainedGtins: Set<string>
+): Promise<number> {
+  const staleGtins: string[] = [];
+  for (let from = 0; ; from += 1_000) {
+    const { data, error } = await supabase
+      .from("open_food_facts_product_identities")
+      .select("gtin")
+      .range(from, from + 999);
+    if (error) throw error;
+    const rows = (data || []) as Array<{ gtin: string }>;
+    staleGtins.push(...rows.filter((row) => !retainedGtins.has(row.gtin)).map((row) => row.gtin));
+    if (rows.length < 1_000) break;
+  }
+  for (let index = 0; index < staleGtins.length; index += BATCH_SIZE) {
+    const { error } = await supabase
+      .from("open_food_facts_product_identities")
+      .delete()
+      .in("gtin", staleGtins.slice(index, index + BATCH_SIZE));
+    if (error) throw error;
+  }
+  return staleGtins.length;
+}
+
 async function main() {
   const snapshotCheckedAt = new Date().toISOString();
   const barbora = buildBarboraCatalogSnapshot({
@@ -104,6 +130,7 @@ async function main() {
   });
   console.log(JSON.stringify({ barbora: barbora.summary }, null, 2));
   console.log(JSON.stringify({ livinnFoodIdentities: (livinnFoodIdentities as ExternalCatalogIdentity[]).length }));
+  console.log(JSON.stringify({ openFoodFactsIdentityOnly: (offIdentities as ExternalCatalogIdentity[]).length }));
   if (process.argv.includes("--dry-run")) return;
 
   const url = process.env.SUPABASE_URL?.trim();
@@ -239,6 +266,34 @@ async function main() {
           .map((product) => [product.gtin || product.sourceProductId, product] as const)
       ).values()
     ];
+    const completeOffGtins = new Set(combinedOffProducts.map((product) => product.gtin));
+    const offIdentityRows = (offIdentities as ExternalCatalogIdentity[]).map((product) => ({
+      gtin: product.gtin,
+      source_product_id: product.sourceProductId,
+      url: product.url,
+      title: product.title,
+      aliases: product.aliases,
+      brand: product.brand,
+      category: product.category,
+      pack_size: product.packSize,
+      checked_at: product.checkedAt,
+      attribution: "Open Food Facts contributors",
+      license: "ODbL-1.0"
+    }));
+    if (offIdentityRows.some((row) => !row.gtin || completeOffGtins.has(row.gtin))) {
+      throw new Error("OFF identity-only rows must have canonical GTINs and remain separate from nutrition-complete rows");
+    }
+    for (let index = 0; index < offIdentityRows.length; index += BATCH_SIZE) {
+      const { error } = await supabase.from("open_food_facts_product_identities").upsert(
+        offIdentityRows.slice(index, index + BATCH_SIZE),
+        { onConflict: "gtin" }
+      );
+      if (error) throw error;
+    }
+    const prunedOffIdentityRows = await pruneStaleOffIdentityRows(
+      supabase,
+      new Set(offIdentityRows.map((product) => product.gtin!))
+    );
     const offRows = combinedOffProducts.map((product) => ({
       gtin: product.gtin,
       source_product_id: product.sourceProductId,
@@ -271,8 +326,9 @@ async function main() {
     console.log(
       `Seeded ${sourceRows.length} sources, ${barbora.productRows.length} rated Barbora SKUs, ` +
       `${retailerRows.length} nutrition-complete retailer rows, ${livinnIdentityRows.length} Livinn food identities ` +
-      `and ${offRows.length} ODbL rows; ` +
-      `pruned ${prunedBarboraRows} unrated Barbora rows and ${prunedLivinnIdentityRows} stale Livinn identities.`
+      `${offIdentityRows.length} OFF identity-only rows and ${offRows.length} nutrition-complete ODbL rows; ` +
+      `pruned ${prunedBarboraRows} unrated Barbora rows, ${prunedLivinnIdentityRows} stale Livinn identities ` +
+      `and ${prunedOffIdentityRows} stale OFF identities.`
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

@@ -15,7 +15,7 @@ test("launch entry flag hides the pilot without removing its separate demo", asy
   await page.goto("/?onboarding=1");
   await page.getByRole("button", { name: "Try a sample shelf", exact: true }).click();
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Best fit first", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first", exact: true })).toHaveCount(0);
   await expect(page.getByRole("switch", { name: /Personal Shelf Rank/ })).toHaveCount(entryVisible ? 1 : 0);
   await page.getByRole("button", { name: "Rank 1, BAREBELLS Salty Peanut, Great fit", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Salty Peanut", exact: true })).toBeVisible();

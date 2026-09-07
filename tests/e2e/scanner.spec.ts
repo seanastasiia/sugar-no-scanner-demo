@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { shelfFixture } from "../fixtures/personal-shelf";
-import type { ScoredProduct } from "../../src/lib/types";
+import type { ProductDetection, ScoredProduct } from "../../src/lib/types";
 import type { ShelfEvidence } from "../../src/lib/personal-shelf-rank";
 import { applyShelfNutritionTrustGuard } from "../../src/lib/personal-shelf-rank";
 import type { ExternalCatalogProduct } from "../../src/server/external-catalog-types";
@@ -114,7 +114,12 @@ async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   await expect(page.getByRole("button", { name: "Back to live camera", exact: true })).toHaveCount(0);
 }
 
-async function openPersonalShelfFixture(page: Page, samples?: ScoredProduct[]) {
+async function openPersonalShelfFixture(
+  page: Page,
+  samples?: ScoredProduct[],
+  unresolved: ProductDetection[] = [],
+  expectResults = true
+) {
   const products = samples || [
     shelfFixture("qa-chips-a"), shelfFixture("qa-chips-b"),
     shelfFixture("qa-chips-c", { fiberG: null }),
@@ -123,17 +128,28 @@ async function openPersonalShelfFixture(page: Page, samples?: ScoredProduct[]) {
   ].map((product) => ({ ...product, id: `barbora:${product.id}`, shelfEvidence: { ...product.shelfEvidence!, productId: `barbora:${product.id}` } }));
   await page.route("**/api/recognize", (route) => route.fulfill({ contentType: "application/json", body: JSON.stringify({
     requestId: "personal-shelf-qa", status: "matched", latencyMs: 1, model: "qa-fixture", imageStored: false,
-    detections: products.map((product, index) => ({
+    detections: [...products.map((product, index) => ({
       productId: product.id, catalogProductId: product.id, confidence: .99,
-      box: { x: .02 + index * .19, y: .1, width: .16, height: .6 }, observedText: product.name,
+      box: { x: .02 + (index % 5) * .19, y: .05 + Math.floor(index / 5) * .45, width: .16, height: .4 }, observedText: product.name,
       identity: { brand: product.brand, name: product.name, variant: null, packSize: "100g", category: product.category, matchKind: "barbora" },
       inlineProduct: product, shelfPrice: null, retailerOffer: null
-    }))
+    })), ...unresolved]
   }) }));
+  await page.route("**/api/resolve-products", async (route) => {
+    const { detections } = route.request().postDataJSON();
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify({ detections, latencyMs: 1, imageStored: false }) });
+  });
   await page.route("**/api/offers", (route) => route.fulfill({ contentType: "application/json", body: '{"offers":{}}' }));
+  await page.route("**/api/products/**", (route) => {
+    const id = decodeURIComponent(new URL(route.request().url()).pathname.split("/").at(-1)!);
+    const product = products.find((item) => item.id === id);
+    return route.fulfill({ status: product ? 200 : 404, contentType: "application/json", body: JSON.stringify(product ? { product, alternatives: [] } : { error: "not_found" }) });
+  });
   await page.route("**/api/personal-shelf", (route) => route.fulfill({ contentType: "application/json", body: '{"evidence":{}}' }));
   await unlock(page);
   await chooseSavedPhoto(page, "synthetic-personal-shelf-qa.png");
+  if (!expectResults) return;
+  if (products.length + unresolved.length === 1) await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Products from this scan" })).toBeVisible();
 }
 
@@ -154,14 +170,18 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   const results = page.getByLabel("Personal Shelf Rank results");
   await expect(results).not.toContainText(/Within-type comparison|assessed in this|Need two for a relative rank|Not compared in this pilot|Missing or unverified/);
   const chips = results.getByRole("region", { name: "Chips", exact: true });
-  await expect(chips.getByText("Provisional #1 of 3 in chips", { exact: true })).toHaveCount(2);
+  await expect(chips.getByText("Provisional #1 of 3", { exact: true })).toHaveCount(2);
   await expect(chips.getByText("Not enough verified data", { exact: true })).toHaveCount(0);
-  await expect(chips.getByText("Provisional · fiber unknown", { exact: true })).toBeVisible();
+  await expect(chips.getByText("Why this range", { exact: true })).toBeVisible();
   await expect(chips.getByText(/71–81/)).toBeVisible();
-  await expect(results.getByText("Score only · Spoonable yogurts", { exact: true })).toBeVisible();
-  await chips.getByText("Why this score?", { exact: true }).first().click();
-  const details = chips.locator("details[open]");
-  await expect(details.locator("dt")).toHaveText(["Sugar", "Protein", "Food base", "Salt, saturates & fiber"]);
+  await expect(chips.getByTestId("personal-fit-badge")).toHaveText(["Great fit", "Great fit", "Moderate to Great fit"]);
+  await expect(chips.locator('li[data-personal-fit="uncertain"]')).toHaveCount(1);
+  await expect(results.getByText("Score only · Spoonable yogurts", { exact: true })).toHaveCount(0);
+  await expect(results.getByText("Best products", { exact: true })).toBeVisible();
+  await results.getByText("How scores work", { exact: true }).click();
+  await expect(results.locator("details[open]")).toContainText("Scores compare products within the same category");
+  await expect(results.locator("details[open]")).toContainText("Missing facts stay unknown");
+  await expect(results.locator("dt")).toHaveCount(0);
   await expect(results.getByRole("link", { includeHidden: true })).toHaveCount(0);
   await expect(results).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Potatoes, sunflower oil, salt/);
   await expectNoDocumentOverflow(page);
@@ -203,23 +223,26 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await openPersonalShelfFixture(page, samples);
   await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
   const chips = page.getByRole("region", { name: "Chips", exact: true });
-  await expect(chips.getByText("#1 of 2 in chips", { exact: true })).toBeVisible();
-  await expect(chips.getByRole("heading", { level: 4 }).first()).toHaveText(samples[0].shortName);
+  await expect(chips.getByText("#1 of 2", { exact: true })).toBeVisible();
+  await expect(chips.getByRole("heading", { level: 3 })).toHaveCount(2);
+  await expect(chips.getByRole("heading", { level: 3 }).first()).toHaveText(samples[0].shortName);
   await expect(chips.getByText("64/100", { exact: true })).toBeVisible();
-  await expect(chips.getByLabel("Not scored", { exact: true })).toHaveText("—");
+  await expect(chips.getByLabel("Not scored", { exact: true })).toHaveCount(0);
+  await expect(chips.getByText("More products", { exact: true })).toHaveCount(0);
   await expect(chips).not.toContainText(/Not enough verified data|Missing or unverified/);
   await expectNoDocumentOverflow(page);
   await expect.poll(() => chips.getByTestId("product-packshot").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete)), { timeout: 10_000 }).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn.png"), fullPage: true, animations: "disabled" });
-  await chips.getByText("Why this score?", { exact: true }).first().click();
-  await expect(chips.locator("details[open]").locator("dd")).toHaveText(["10 / 10 points", "2.1 / 10 points", "22.5 / 30 points", "28.9 / 50 points"]);
+  await expect(chips.getByText("Why 64", { exact: true })).toBeVisible();
+  await page.getByText("How scores work", { exact: true }).click();
+  await expect(page.locator('details[open]')).toContainText("Great 75–100 · Moderate 50–74 · Low 0–49");
   await expect(chips).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Sudedamosios dalys/);
   await expect(chips.getByText("View available evidence", { exact: true })).toHaveCount(0);
   await expect(chips.getByRole("link", { includeHidden: true })).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn-expanded.png"), fullPage: true, animations: "disabled" });
 });
 
-test("personal shelf pilot keeps incomplete cards compact and unsupported products in original Fit", async ({ page }, testInfo) => {
+test("personal shelf pilot hides incomplete and unsupported products", async ({ page }, testInfo) => {
   const bar = { ...shelfFixture("barbora:qa-skriveru-bar", { category: "Snack bars" }), shelfEvidence: undefined };
   const candy = shelfFixture("barbora:qa-raffaello", { category: "Confectionery" });
   await openPersonalShelfFixture(page, [bar, candy]);
@@ -228,10 +251,14 @@ test("personal shelf pilot keeps incomplete cards compact and unsupported produc
   const toggle = page.getByRole("switch", { name: /Personal Shelf Rank/ });
   await toggle.click();
   const results = page.getByLabel("Personal Shelf Rank results");
-  await expect(results.getByRole("heading", { name: "Snack bars", exact: true })).toBeVisible();
-  await expect(results.getByRole("heading", { level: 4 })).toHaveCount(1);
-  await expect(results.getByLabel("Not scored", { exact: true })).toHaveText("—");
+  await expect(results.getByRole("heading", { name: "Snack bars", exact: true })).toHaveCount(0);
+  await expect(results.getByRole("heading", { level: 4 })).toHaveCount(0);
+  await expect(results.getByText("More products", { exact: true })).toHaveCount(0);
+  await expect(results.getByText("Personal score unavailable", { exact: true })).toHaveCount(0);
+  await expect(results.getByLabel("Not scored", { exact: true })).toHaveCount(0);
+  await expect(results.getByText("No rated products in this scan.", { exact: true })).toBeVisible();
   await expect(results.locator("details")).toHaveCount(0);
+  await expect(results.getByTestId("personal-fit-badge")).toHaveCount(0);
   await expect(results).not.toContainText(/Within-type comparison|assessed in this|Not enough verified data|Missing or unverified|Not compared in this pilot|still need an exact identity/);
   await expectNoDocumentOverflow(page);
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-compact-unknown.png"), fullPage: true });
@@ -240,17 +267,68 @@ test("personal shelf pilot keeps incomplete cards compact and unsupported produc
   await expect(original.getByRole("button")).toHaveCount(2);
 });
 
-test("personal shelf pilot has a short empty state instead of the unsupported-product list", async ({ page }) => {
+test("personal shelf pilot hides all unsupported cards and shows one empty state", async ({ page }) => {
   const samples = [shelfFixture("barbora:qa-candy-a", { category: "Confectionery" }), shelfFixture("barbora:qa-candy-b", { category: "Confectionery" })];
   await openPersonalShelfFixture(page, samples);
   const toggle = page.getByRole("switch", { name: /Personal Shelf Rank/ });
   await toggle.click();
   const results = page.getByLabel("Personal Shelf Rank results");
-  await expect(results.getByText("No ratings for this shelf yet. Switch off Personal Shelf Rank to view all products.", { exact: true })).toBeVisible();
-  await expect(results.locator("ul")).toHaveCount(0);
-  await expect(results).not.toContainText(/Not compared in this pilot|assessed in this|qa-candy/);
+  await expect(results.getByRole("heading", { level: 4 })).toHaveCount(0);
+  await expect(results.getByText("More products", { exact: true })).toHaveCount(0);
+  await expect(results.getByText("Personal score unavailable", { exact: true })).toHaveCount(0);
+  await expect(results.getByText("No rated products in this scan.", { exact: true })).toBeVisible();
   await toggle.click();
   await expect(page.getByLabel("Products ranked by Sugar.no fit").getByRole("button")).toHaveCount(2);
+});
+
+test("a visual-only name disappears when nutrition cannot be verified", async ({ page }) => {
+  await openPersonalShelfFixture(page, [], [{
+    productId: "visual:qa-cereal", catalogProductId: null, confidence: .97,
+    box: { x: .2, y: .2, width: .6, height: .6 }, observedText: "Unknown cereal",
+    identity: { brand: "Example", name: "Unknown cereal", variant: null, packSize: null, category: null, matchKind: "visual_only" },
+    inlineProduct: null
+  }], false);
+  await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Unknown cereal", exact: true })).toHaveCount(0);
+  await expect(page.getByText(/Nutrition not verified/)).toHaveCount(0);
+  await expect(page.getByRole("status")).toContainText("No products with verified Sugar.no fit found");
+  await expectNoDocumentOverflow(page);
+});
+
+test("personal shelf pilot displays all eight real Turtle cereal records and leaves original Fit unchanged", async ({ page }, testInfo) => {
+  // Fixed detection fixture tests rendering/assessment, not visual recognition accuracy.
+  const { readFile } = await import("node:fs/promises");
+  const observations: ShelfEvidence[] = JSON.parse(await readFile("data/personal-shelf-evidence.generated.json", "utf8"));
+  const catalog: ExternalCatalogProduct[] = JSON.parse(await readFile("data/livinn-catalog.generated.json", "utf8"));
+  const samples = ["TURT3022", "TURT3024", "TURT3036", "TURT3038", "TURT3041", "TURT3044", "TURT3048", "TURT3070"]
+    .map((sku) => {
+      const id = `livinn_lt:${sku}`;
+      const source = catalog.find((row) => row.sourceProductId === sku)!;
+      const evidence = observations.find((row) => row.productId === id)!;
+      return { ...shelfFixture(id, evidence), brand: source.brand, name: source.title, shortName: source.title, imageUrl: source.imageUrl, gtin: source.gtin };
+    });
+  await openPersonalShelfFixture(page, samples);
+  const original = page.getByLabel("Products ranked by Sugar.no fit");
+  await expect(original.getByRole("button")).toHaveCount(8);
+  const before = await original.innerText();
+  await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
+  const group = page.getByRole("region", { name: "Breakfast cereals & granola", exact: true });
+  await expect(group.getByRole("heading", { level: 3 })).toHaveCount(8);
+  await expect(group.getByText("79/100", { exact: true })).toBeVisible();
+  await expect(group.getByRole("heading", { level: 3 }).first()).toHaveText(samples[5].shortName);
+  await expect(group).not.toContainText(/No ratings for this shelf|Personal score unavailable/);
+  await expect(group.getByTestId("personal-fit-badge")).toHaveText(["Great fit", "Great fit", "Moderate fit", "Moderate fit", "Moderate fit", "Moderate fit", "Low fit", "Low fit"]);
+  for (const tone of ["great", "moderate", "low"]) {
+    const card = group.locator(`li[data-personal-fit="${tone}"]`).first();
+    await expect(card).toHaveCSS("background-image", "none");
+    await expect(card.getByTestId("personal-fit-badge")).toHaveCSS("background-image", /linear-gradient/);
+  }
+  const accessibility = await new AxeBuilder({ page }).include('[aria-label="Personal Shelf Rank results"]').withTags(["wcag2a", "wcag2aa"]).analyze();
+  expect(accessibility.violations).toEqual([]);
+  await expectNoDocumentOverflow(page);
+  await page.screenshot({ path: testInfo.outputPath("personal-shelf-turtle.png"), fullPage: true, animations: "disabled" });
+  await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
+  expect(await original.innerText()).toBe(before);
 });
 
 async function mockSampleShelfRecognition(page: Page) {
@@ -811,7 +889,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     await dialog.getByRole("button", { name: "Rank 1, BAREBELLS Salty Peanut, Great fit", exact: true }).dispatchEvent("click");
     await expect(dialog.getByRole("heading", { name: "Salty Peanut", exact: true })).toBeVisible();
     await dialog.getByRole("button", { name: "Back to all results" }).dispatchEvent("click");
-    await expect(dialog.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
     await expect(dialog).toBeFocused();
     // A system preference change also stops an entry already in progress.
     await page.emulateMedia({ reducedMotion: "reduce" });
@@ -833,6 +911,43 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     await expect(feedback).toBeFocused();
   });
 }
+
+test("ordinary Shelf demo rates all four bars in Personal Shelf without evidence requests", async ({ page }) => {
+  let evidenceRequests = 0;
+  await page.route("**/api/personal-shelf", async (route) => { evidenceRequests++; await route.abort(); });
+  await mockAlternativeOffers(page);
+  await unlock(page);
+  await openDemoScene(page, "Shelf demo");
+  await page.getByRole("button", { name: "View all", exact: true }).click();
+  const original = page.getByLabel("Products ranked by Sugar.no fit");
+  await expect(original.getByRole("button")).toHaveCount(4);
+  await expect(original).not.toContainText("Checking online…");
+  const originalNames = await original.getByRole("button").allTextContents();
+  await page.getByRole("switch", { name: "Personal Shelf Rank Pilot", exact: true }).click();
+  const personal = page.getByRole("region", { name: "Personal Shelf Rank results", exact: true });
+  await expect(personal.getByRole("region", { name: "Snack bars", exact: true })).toBeVisible();
+  await expect(personal.getByRole("heading", { name: "Cookies & wafers", exact: true })).toHaveCount(0);
+  await expect(personal.locator("h3")).toHaveCount(4);
+  await expect(personal.locator("img")).toHaveCount(4);
+  for (const image of await personal.locator("img").all()) {
+    // Off-screen cards use native lazy loading; inspect each when it enters view.
+    await image.scrollIntoViewIfNeeded();
+    await expect(image).toHaveAttribute("src", /demo-products/);
+    await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).complete && (element as HTMLImageElement).naturalWidth > 0)).toBe(true);
+  }
+  await personal.getByRole("region", { name: "Snack bars", exact: true }).scrollIntoViewIfNeeded();
+  await expect(personal.getByText("Provisional #1 of 4", { exact: true })).toHaveCount(4);
+  await expect(personal.getByText("Why this range", { exact: true })).toHaveCount(4);
+  await expect(personal.getByRole("img", { name: "Not scored", exact: true })).toHaveCount(0);
+  await expect(personal.locator("strong").filter({ hasText: "59/100" })).toHaveCount(4);
+  await personal.getByText("How scores work", { exact: true }).click();
+  await expect(personal).toContainText("Scores compare products within the same category");
+  await expectNoDocumentOverflow(page);
+  await page.screenshot({ path: test.info().outputPath("shelf-demo-personal-rank.png"), fullPage: true, animations: "disabled" });
+  expect(evidenceRequests).toBe(0);
+  await page.getByRole("switch", { name: "Personal Shelf Rank Pilot", exact: true }).click();
+  await expect(original.getByRole("button")).toHaveText(originalNames);
+});
 
 test("sample shelf photo highlights products and ranks two-factor Sugar.no fits", async ({ page }) => {
   await mockAlternativeOffers(page);
@@ -857,7 +972,8 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   const dialog = page.getByRole("dialog", { name: "Products from this scan" });
   const ranking = dialog.getByLabel("Products ranked by Sugar.no fit");
   await expect(ranking.getByRole("button")).toHaveCount(4);
-  await expect(dialog.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
+  await expect(dialog.getByText("Compare sugar, protein and composition. Original Fit stays available.", { exact: true })).toHaveCount(0);
   await expectOfficialSugarNoLogo(page);
   const offer = ranking.getByRole("link", { name: /Buy cheaper online Salty Peanut at Barbora for €2\.79/ });
   await expect(offer).toHaveAttribute("href", "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g");
@@ -1012,7 +1128,7 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await expect(ranking.getByText("SPROUD", { exact: true })).toBeVisible();
   await expect(ranking.getByText("SCHNITZER", { exact: true })).toBeVisible();
   await expect(ranking.getByText("STOCKMANN", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
   await page.waitForTimeout(300);
   await page.screenshot({ path: "test-results/checkout-results-mobile.png" });
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
@@ -1083,7 +1199,7 @@ test("demo chooser supports shelf, checkout and a clear return to live camera", 
   await openDemoScene(page, "Checkout demo");
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Saved options" })).toHaveCount(0);
   await page.getByRole("button", { name: "Collapse product results" }).click();
@@ -1648,10 +1764,10 @@ test("a long online-store screenshot is scanned in four passes and opens one mer
   await expect(ranking.getByRole("button", { name: /BALTAIS Protein Fit Stracciatella 200g/ })).toHaveCount(1);
   await expect(ranking.getByRole("button", { name: /JUNGLE POP Kiwi jelly 115g/ })).toHaveCount(1);
   await expect(page.getByTestId("scan-guide")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
 });
 
-test("confidently named products remain visible when exact nutrition is unavailable", async ({ page }) => {
+test("confidently named products stay hidden when exact nutrition is unavailable", async ({ page }) => {
   const limitedId = "barbora:qa-protein-only";
   const identityId = "barbora:qa-identity-only";
   await page.route("**/api/recognize", async (route) => {
@@ -1732,15 +1848,15 @@ test("confidently named products remain visible when exact nutrition is unavaila
 
   await unlock(page);
   await chooseSavedPhoto(page, "limited-and-identity.png");
-  const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
-  await expect(resultsDialog).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("status")).toContainText("No products with verified Sugar.no fit found", {
+    timeout: 10_000
+  });
+  await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
   await expect(page.getByTestId("rated-detection-marker")).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
-  const ranking = resultsDialog.getByLabel("Products ranked by Sugar.no fit");
-  await expect(ranking.getByRole("button")).toHaveCount(2);
-  await expect(ranking.getByText("QA protein only", { exact: true })).toBeVisible();
-  await expect(ranking.getByText("QA identity only", { exact: true })).toBeVisible();
-  await expect(ranking.getByText("Nutrition not verified online", { exact: true })).toHaveCount(2);
+  await expect(page.getByText("QA protein only", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("QA identity only", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Nutrition not verified online", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
 });
@@ -1838,15 +1954,13 @@ test("an unrated package can receive a Sugar.no fit from automatic online enrich
   });
 
   await unlock(page);
-  await expect(page.getByRole("status")).toContainText("2 products · 1 with Sugar.no fit", { timeout: 8_000 });
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 8_000 });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByText("1 of 2 ready to compare", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
-  await expect(page.getByLabel("Products ranked by Sugar.no fit").getByText("Other Snack", { exact: true })).toBeVisible();
-  await expect(page.getByText("Nutrition not verified online", { exact: true })).toBeVisible();
-  await expect(
-    page.getByLabel("Products ranked by Sugar.no fit").getByRole("button", { name: /Sproud Barista 1L/ })
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
+  await expect(page.getByText("Other Snack", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Nutrition not verified online", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Sproud Barista 1L", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
 });
 
@@ -2046,12 +2160,12 @@ test("live camera applies each online result without waiting for the slowest pro
   releaseSlowEnrichment();
   await expect.poll(() => slowEnrichmentFinished).toBe(true);
   await expect(preview.getByText("Checking nutrition…", { exact: true })).toHaveCount(0);
-  await expect(preview.locator("article")).toHaveCount(2);
-  await expect(preview.getByRole("button", { name: /Sanpellegrino Zero 330 ml/ })).toBeVisible();
-  await expect(preview.getByText("Nutrition not verified", { exact: true })).toBeVisible();
+  await expect(preview.locator("article")).toHaveCount(1);
+  await expect(preview.getByRole("button", { name: /Sanpellegrino Zero 330 ml/ })).toHaveCount(0);
+  await expect(preview.getByText("Nutrition not verified", { exact: true })).toHaveCount(0);
 });
 
-test("a visual-only live result holds the captured frame without scanning a new scene", async ({ page }) => {
+test("a visual-only live result holds the frame but hides the unverified card", async ({ page }) => {
   await mockLiveCamera(page);
   let recognitionRequests = 0;
   const focusModes: boolean[] = [];
@@ -2104,9 +2218,10 @@ test("a visual-only live result holds the captured frame without scanning a new 
   expect(focusModes).toEqual([false]);
   await page.waitForTimeout(2_000);
   expect(recognitionRequests).toBe(1);
-  await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "First Product" })).toBeVisible();
-  await expect(page.getByText("Nutrition not verified", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Not sure — try again" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "View all", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "First Product" })).toHaveCount(0);
+  await expect(page.getByText("Nutrition not verified", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
 });
 
@@ -2580,11 +2695,13 @@ test("Pen feedback keeps the answer through saving, failure and retry", async ({
 
 test("saved-photo recovery retries the same prepared image without reopening the camera", async ({ page }) => {
   const submittedImages: string[] = [];
+  let finishFirstRead: (() => void) | undefined;
   await page.route("**/api/recognize", async (route) => {
     const request = route.request().postDataJSON() as { source: string; imageDataUrl: string };
     expect(request.source).toBe("upload");
     submittedImages.push(request.imageDataUrl);
     const recovered = submittedImages.length > 1;
+    if (!recovered) await new Promise<void>((resolve) => { finishFirstRead = resolve; });
     await route.fulfill({ contentType: "application/json", body: JSON.stringify({
       requestId: "retry-upload", status: recovered ? "matched" : "provider_unavailable", latencyMs: 1, model: "qa-mock", imageStored: false,
       detections: recovered ? [{ productId: "barbora:upload-retry", confidence: .99, box: { x: .1, y: .1, width: .7, height: .7 }, observedText: "Retry test", inlineProduct: ratedInlineProduct({ id: "barbora:upload-retry", brand: "Example", name: "Retry test", score: 80, protein: 20, sugar: 2 }) }] : []
@@ -2592,10 +2709,18 @@ test("saved-photo recovery retries the same prepared image without reopening the
   });
   await unlock(page);
   await chooseSavedPhoto(page);
+  await expect(page.getByRole("heading", { name: "Read a saved photo", exact: true })).toBeVisible();
+  // This one-pixel fixture submits one image, not the tiled large-photo path.
+  await expect(page.getByRole("status")).toContainText("Reading visible products");
+  await expect(page.getByText("Photos are not saved.", { exact: true })).toHaveCount(0);
+  await expect.poll(() => Boolean(finishFirstRead)).toBe(true);
+  await page.screenshot({ path: test.info().outputPath("saved-photo-without-footer.png"), animations: "disabled" });
+  finishFirstRead!();
   await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
   await page.getByRole("button", { name: "Not sure — try again", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
   expect(submittedImages).toHaveLength(2);
   expect(submittedImages[1]).toBe(submittedImages[0]);
   await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
+  await expect(page.getByText("Photos are not saved.", { exact: true })).toHaveCount(0);
 });

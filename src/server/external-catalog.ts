@@ -1,6 +1,8 @@
+import cspFoodIdentities from "../../data/csp-food-identities.generated.json";
 import livinSnapshot from "../../data/livin-catalog.generated.json";
 import livinnFoodIndex from "../../data/livinn-food-index.generated.json";
 import livinnSnapshot from "../../data/livinn-catalog.generated.json";
+import offRegionalIdentities from "../../data/open-food-facts-regional-identities.generated.json";
 import rimiSnapshot from "../../data/rimi-catalog.generated.json";
 import { scoreReferenceProduct } from "@/lib/scoring";
 import type { ProductRecord, RetailerOffer, ScoredProduct } from "@/lib/types";
@@ -15,11 +17,15 @@ import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "./external
 import { isQuarantinedRetailerNutrition } from "./retailer-nutrition-quarantine";
 import { getShelfEvidence } from "./personal-shelf-evidence";
 import { applyShelfNutritionTrustGuard } from "@/lib/personal-shelf-rank";
+import { isReviewedPackageAlias, withReviewedPackageAliases } from "./reviewed-package-aliases";
+import { validWebGtin } from "./web-product-evidence";
 
 interface RankedExternalCatalogCandidate {
   product: ExternalCatalogProduct;
   confidence: number;
 }
+
+const safeGtin = (value: string | null): string | null => validWebGtin(value) ? value : null;
 
 const rawProducts = [
   ...(rimiSnapshot as ExternalCatalogProduct[]),
@@ -94,9 +100,12 @@ function canonicalPack(value: string | null | undefined): { amount: number; dime
 }
 
 function dedupeIdentityKey(product: ExternalCatalogProduct): string {
-  if (product.gtin) return `${product.source}:gtin:${product.gtin}`;
+  const gtin = safeGtin(product.gtin);
+  if (gtin) return `${product.source}:gtin:${gtin}`;
   const pack = canonicalPack(product.packSize);
   const packKey = pack ? `${pack.dimension}:${pack.amount}` : normalizeRetailText(product.packSize);
+  // Invalid source numbers do not participate. Fall back to the existing
+  // conservative within-retailer identity; this is never a cross-source merge.
   return [
     product.source,
     normalizeRetailText(product.brand).replaceAll(" ", ""),
@@ -107,7 +116,7 @@ function dedupeIdentityKey(product: ExternalCatalogProduct): string {
 
 function candidatePriority(product: ExternalCatalogProduct): number {
   return (product.available === true ? 8 : product.available === null ? 2 : 0) +
-    (product.gtin ? 4 : 0) +
+    (safeGtin(product.gtin) ? 4 : 0) +
     (product.imageUrl ? 2 : 0) +
     (product.price !== null ? 1 : 0);
 }
@@ -131,13 +140,26 @@ export function dedupeExternalCatalogProducts(candidates: ExternalCatalogProduct
   return [...deduped.values()].sort((left, right) => left.sourceProductId.localeCompare(right.sourceProductId));
 }
 
-const products = dedupeExternalCatalogProducts(rawProducts);
-const identities = livinnFoodIndex as ExternalCatalogIdentity[];
+const products = dedupeExternalCatalogProducts(rawProducts.map(withReviewedPackageAliases));
+const identities = [
+  ...(livinnFoodIndex as ExternalCatalogIdentity[]),
+  ...(offRegionalIdentities as ExternalCatalogIdentity[]),
+  ...(cspFoodIdentities as ExternalCatalogIdentity[])
+].map(withReviewedPackageAliases);
+
+function externalIdentityProductId(product: ExternalCatalogIdentity): string {
+  return product.source === "open_food_facts"
+    ? `off:${product.sourceProductId}`
+    : `${product.source}:${product.sourceProductId}`;
+}
 
 function barcodeIndex<T extends { gtin: string | null }>(values: T[]): Map<string, T> {
   const index = new Map<string, T>();
   for (const value of values) {
-    if (value.gtin && !index.has(value.gtin)) index.set(value.gtin, value);
+    const canonical = validWebGtin(value.gtin);
+    if (!canonical) continue;
+    if (!index.has(value.gtin!)) index.set(value.gtin!, value);
+    if (!index.has(canonical)) index.set(canonical, value);
   }
   return index;
 }
@@ -148,7 +170,7 @@ const productsById = new Map<string, ExternalCatalogProduct>(
   products.map((product) => [`${product.source}:${product.sourceProductId}`, product])
 );
 const identitiesById = new Map<string, ExternalCatalogIdentity>(
-  identities.map((product) => [`${product.source}:${product.sourceProductId}`, product])
+  identities.map((product) => [externalIdentityProductId(product), product])
 );
 
 function brandIndex<T extends { brand: string }>(values: T[]): Map<string, T[]> {
@@ -203,6 +225,19 @@ function balancedCoverage(query: string[], candidate: string[]): number {
   return (2 * queryCoverage * candidateCoverage) / (queryCoverage + candidateCoverage);
 }
 
+function aliasCoverage(query: string[], name: string, excluded: Set<string>): number {
+  const candidate = tokens(name, excluded);
+  if (!isReviewedPackageAlias(name)) return balancedCoverage(query, candidate);
+  // A reviewed label is not permission to ignore an extra flavour. Allow only
+  // generic label words and pack numbers (the separate pack guard checks those).
+  const generic = new Set(["organic", "cereal", "cereals", "breakfast"]);
+  const clean = (values: string[]) => values.filter((token) => !generic.has(token) && !/^\d+$/.test(token));
+  const cleanQuery = clean(query);
+  const cleanCandidate = clean(candidate);
+  if (coverage(cleanQuery, cleanCandidate) < 1) return 0;
+  return balancedCoverage(cleanQuery, cleanCandidate);
+}
+
 function packEvidenceBonus(packMatches: boolean | null, nameScore: number): number {
   if (packMatches === true) return 0.2;
   // Protein and sugar are normalized per 100 g / 100 ml, so a missing pack
@@ -224,7 +259,7 @@ export function rankExternalCatalogCandidates(
     .flatMap((product): RankedExternalCatalogCandidate[] => {
       if (!retailerBrandMatches(input.brand, product.brand)) return [];
       const nameScore = [product.title, ...(product.aliases || [])].reduce(
-        (best, name) => Math.max(best, balancedCoverage(queryTokens, tokens(name, brandTokens))),
+        (best, name) => Math.max(best, aliasCoverage(queryTokens, name, brandTokens)),
         0
       );
       const candidatePack = canonicalPack(product.packSize);
@@ -250,7 +285,7 @@ export function rankExternalCatalogIdentities(
     .flatMap((product) => {
       if (!retailerBrandMatches(input.brand, product.brand)) return [];
       const nameScore = [product.title, ...product.aliases].reduce(
-        (best, name) => Math.max(best, balancedCoverage(queryTokens, tokens(name, brandTokens))),
+        (best, name) => Math.max(best, aliasCoverage(queryTokens, name, brandTokens)),
         0
       );
       const candidatePack = canonicalPack(product.packSize);
@@ -280,7 +315,7 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
     packSizeG: pack?.amount || 1,
     nutritionBasis: product.nutritionBasis,
     energyKcalPer100: product.energyKcal,
-    gtin: product.gtin,
+    gtin: safeGtin(product.gtin),
     nutrientsPer100g: {
       proteinG: product.proteinG,
       fiberG: null,
@@ -328,8 +363,10 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
 
 export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogIdentity): ScoredProduct {
   const pack = canonicalPack(product.packSize);
+  const productId = externalIdentityProductId(product);
   const record: ProductRecord = {
-    id: `${product.source}:${product.sourceProductId}`,
+    id: productId,
+    shelfEvidence: getShelfEvidence(productId),
     retailerProductId: product.sourceProductId,
     brand: product.brand,
     name: product.title,
@@ -337,10 +374,10 @@ export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogI
     aliases: product.aliases,
     format: "other",
     category: product.category,
-    packSizeG: pack?.amount || 1,
-    nutritionBasis: pack?.dimension === "liquid" ? "100ml" : "100g",
+    packSizeG: pack?.amount || 0,
+    nutritionBasis: pack?.dimension === "liquid" ? "100ml" : pack?.dimension === "solid" ? "100g" : undefined,
     energyKcalPer100: null,
-    gtin: product.gtin,
+    gtin: safeGtin(product.gtin),
     nutrientsPer100g: {
       proteinG: null,
       fiberG: null,
@@ -352,7 +389,11 @@ export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogI
     retailerUrl: product.url,
     sources: [
       {
-        label: "Livinn Lithuania product identity",
+        label: product.source === "open_food_facts"
+          ? "Open Food Facts product identity"
+          : product.source === "csp_lv"
+            ? "Central Statistical Bureau Latvia product identity"
+            : "Livinn Lithuania product identity",
         url: product.url,
         checkedAt: product.checkedAt,
         fields: ["identity", "retailerUrl"],
@@ -362,7 +403,9 @@ export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogI
     isGolden: false,
     accent: "coral"
   };
-  return scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial");
+  return product.source === "open_food_facts"
+    ? scoreReferenceProduct(record, "open_food_facts_reference", "open_food_facts_reference_partial")
+    : scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial");
 }
 
 function offerFor(product: ExternalCatalogProduct, confidence: number): RetailerOffer | null {
@@ -394,8 +437,9 @@ export function resolveExternalCatalogProduct(
   input: BarboraLookupInput,
   barcode = ""
 ): { product: ScoredProduct; confidence: number; offer: RetailerOffer | null } | null {
-  if (/^\d{8,14}$/.test(barcode)) {
-    const exact = productsByBarcode.get(barcode);
+  const canonicalBarcode = validWebGtin(barcode);
+  if (canonicalBarcode) {
+    const exact = productsByBarcode.get(barcode) || productsByBarcode.get(canonicalBarcode);
     if (exact && retailerBrandMatches(input.brand, exact.brand)) {
       return { product: externalCatalogToScoredProduct(exact), confidence: 1, offer: offerFor(exact, 1) };
     }
@@ -414,8 +458,9 @@ export function resolveExternalCatalogIdentity(
   input: BarboraLookupInput,
   barcode = ""
 ): { identity: ExternalCatalogIdentity; product: ScoredProduct; confidence: number } | null {
-  if (/^\d{8,14}$/.test(barcode)) {
-    const exact = identitiesByBarcode.get(barcode);
+  const canonicalBarcode = validWebGtin(barcode);
+  if (canonicalBarcode) {
+    const exact = identitiesByBarcode.get(barcode) || identitiesByBarcode.get(canonicalBarcode);
     if (exact && retailerBrandMatches(input.brand, exact.brand)) {
       return { identity: exact, product: externalCatalogIdentityToScoredProduct(exact), confidence: 1 };
     }
@@ -433,16 +478,18 @@ export function resolveExternalCatalogIdentity(
 export function getExternalCatalogProductByBarcode(
   barcode: string
 ): { product: ScoredProduct; confidence: 1; offer: RetailerOffer | null } | null {
-  if (!/^\d{8,14}$/.test(barcode)) return null;
-  const exact = productsByBarcode.get(barcode);
+  const canonical = validWebGtin(barcode);
+  if (!canonical) return null;
+  const exact = productsByBarcode.get(barcode) || productsByBarcode.get(canonical);
   return exact
     ? { product: externalCatalogToScoredProduct(exact), confidence: 1, offer: offerFor(exact, 1) }
     : null;
 }
 
 export function getExternalCatalogIdentityByBarcode(barcode: string): ScoredProduct | null {
-  if (!/^\d{8,14}$/.test(barcode)) return null;
-  const identity = identitiesByBarcode.get(barcode);
+  const canonical = validWebGtin(barcode);
+  if (!canonical) return null;
+  const identity = identitiesByBarcode.get(barcode) || identitiesByBarcode.get(canonical);
   return identity ? externalCatalogIdentityToScoredProduct(identity) : null;
 }
 
@@ -453,7 +500,7 @@ export function listExternalCatalogScoredProducts(): ScoredProduct[] {
 
 export function getExternalCatalogProductById(id: string): ScoredProduct | null {
   const [source, sourceProductId] = id.split(":", 2);
-  if ((source !== "rimi_lv" && source !== "livin_lv" && source !== "livinn_lt") || !sourceProductId) return null;
+  if ((source !== "rimi_lv" && source !== "livin_lv" && source !== "livinn_lt" && source !== "off" && source !== "csp_lv") || !sourceProductId) return null;
   const product = productsById.get(id);
   if (product) return externalCatalogToScoredProduct(product);
   const identity = identitiesById.get(id);
@@ -476,6 +523,16 @@ export function externalCatalogCounts() {
       return counts;
     },
     { rimi_lv: 0, livin_lv: 0, livinn_lt: 0 } as Record<"rimi_lv" | "livin_lv" | "livinn_lt", number>
+  );
+}
+
+export function externalCatalogIdentityCounts() {
+  return identities.reduce(
+    (counts, identity) => {
+      counts[identity.source] += 1;
+      return counts;
+    },
+    { livinn_lt: 0, open_food_facts: 0, csp_lv: 0 } as Record<ExternalCatalogIdentity["source"], number>
   );
 }
 

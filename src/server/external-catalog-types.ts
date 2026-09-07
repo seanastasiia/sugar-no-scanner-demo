@@ -1,4 +1,4 @@
-export type ExternalCatalogSource = "barbora_lv" | "rimi_lv" | "livin_lv" | "livinn_lt" | "open_food_facts";
+export type ExternalCatalogSource = "barbora_lv" | "rimi_lv" | "livin_lv" | "livinn_lt" | "open_food_facts" | "csp_lv";
 
 export interface ExternalCatalogProduct {
   shelfEvidence?: import("@/lib/personal-shelf-rank").ShelfEvidence | null;
@@ -26,16 +26,16 @@ export interface ExternalCatalogProduct {
 }
 
 export interface ExternalCatalogIdentity {
-  source: "livinn_lt";
+  source: "livinn_lt" | "open_food_facts" | "csp_lv";
   sourceProductId: string;
-  retailer: "Livin";
+  retailer: "Livin" | null;
   url: string;
   title: string;
   aliases: string[];
   brand: string;
   gtin: string | null;
-  sku: string;
-  category: string;
+  sku: string | null;
+  category: string | null;
   packSize: string;
   imageUrl: string | null;
   price: number | null;
@@ -47,7 +47,7 @@ export interface ExternalCatalogIdentity {
 export interface CatalogSourceManifest {
   id: ExternalCatalogSource;
   displayName: string;
-  layer: "retailer_snapshot" | "odbl_bulk";
+  layer: "retailer_snapshot" | "odbl_bulk" | "government_price_feed";
   license: string;
   attribution: string;
   termsUrl: string;
