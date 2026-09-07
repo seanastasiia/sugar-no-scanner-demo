@@ -23,4 +23,10 @@
 3. Tap `Not sure — try again` and confirm recognition starts again.
 4. Open `Show demo` and confirm its existing behavior is unchanged.
 
-Deployment ID and live revision are appended after Railway succeeds.
+## Production verification
+
+- Application commit: `d03f295b6d22e9c1a1eecc29d98f05741f7ebec9`.
+- Railway deployment: `ad10e8e6-8ded-4b47-b079-160ff26193e8` — `SUCCESS`.
+- `https://sugar-no-scanner-demo-production.up.railway.app/api/health`: `status=ok` and exact commit `d03f295b6d22e9c1a1eecc29d98f05741f7ebec9`.
+- Production root returned HTTP 200.
+- Rollback tag: `production-before-retry-button-2026-09-07` → `ab813c710f41ee7423f19ff35acb95381140c98d`.
