@@ -9,6 +9,7 @@ beforeAll(async () => {
   db = new PGlite();
   await db.exec("create role anon; create role authenticated; create role service_role bypassrls;");
   await db.exec(await readFile(new URL("../../supabase/migrations/202609070001_scanner_wtp_billing.sql", import.meta.url), "utf8"));
+  await db.exec(await readFile(new URL("../../supabase/migrations/202609070002_scanner_wtp_service_role_grants.sql", import.meta.url), "utf8"));
 }, 30_000);
 
 afterAll(async () => { await db?.close(); });
@@ -76,5 +77,15 @@ describe("scanner willingness-to-pay migration", () => {
       where relname in ('scanner_entitlements', 'scanner_access_tokens', 'scanner_restore_tokens')
         and relrowsecurity
     `)).rows[0]).toEqual({ n: 3 });
+  });
+
+  it("allows only the server role to operate the billing tables", async () => {
+    const privileges = await db.query(`
+      select
+        has_table_privilege('service_role', 'scanner_entitlements', 'select,insert,update') entitlements,
+        has_table_privilege('service_role', 'scanner_access_tokens', 'select,insert,update') access_tokens,
+        has_table_privilege('service_role', 'scanner_restore_tokens', 'select,insert,update') restore_tokens
+    `);
+    expect(privileges.rows[0]).toEqual({ entitlements: true, access_tokens: true, restore_tokens: true });
   });
 });

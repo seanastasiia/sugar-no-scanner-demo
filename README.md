@@ -29,7 +29,7 @@ The isolated `codex/wtp-stripe-staging` experiment keeps three successful real c
 
 - Stripe Checkout collects payment and email. The client never receives a Stripe secret.
 - A success URL alone never unlocks the scanner. The server retrieves the Checkout Session and the signed webhook provides the independent fulfilment path.
-- Supabase stores the entitlement and only one-way hashes of browser/restore tokens. Apply `supabase/migrations/202609070001_scanner_wtp_billing.sql` only to the approved staging project before enabling the flag.
+- Supabase stores the entitlement and only one-way hashes of browser/restore tokens. Apply `supabase/migrations/202609070001_scanner_wtp_billing.sql` and then `supabase/migrations/202609070002_scanner_wtp_service_role_grants.sql` only to the approved staging project before enabling the flag. The second migration grants the minimum table operations required by the server-only role; browser roles retain no access.
 - Paid access lasts seven days from the Checkout Session creation time. A buyer can request a 15-minute, one-time restoration link at the email used for payment.
 - Amplitude receives `paywall_viewed`, `checkout_started`, `checkout_completed`, `checkout_cancelled` and `access_restored`, together with bounded UTM fields. It receives no email, Stripe identifier, product identity, photo or health data.
 - `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET` and environment-specific Supabase, Amplitude and Resend values stay in Railway. Use Stripe test mode in staging.
