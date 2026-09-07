@@ -226,6 +226,15 @@ function extractPackSize(value: string): string {
   );
 }
 
+const nutritionClaimQuantityPattern =
+  /(?:\d{1,2}(?:[.,]\d+)?\s*g\s*(?:of\s+)?(?:protein|prote[iī]n(?:a|s|u)?|olbaltumviel(?:u|as)?|sugar|cukur(?:a|s)?|fib(?:er|re)|šķiedrviel(?:u|as)?|белк[а-яё]*|сахар[а-яё]*|клетчатк[а-яё]*)|(?:protein|prote[iī]n(?:a|s|u)?|olbaltumviel(?:u|as)?|sugar|cukur(?:a|s)?|fib(?:er|re)|šķiedrviel(?:u|as)?|белк[а-яё]*|сахар[а-яё]*|клетчатк[а-яё]*)\s*\d{1,2}(?:[.,]\d+)?\s*g)/iu;
+const retailQuantityPattern =
+  /\b(?:\d+\s*[x×]\s*)?\d+(?:[.,]\d+)?\s*(?:kg|g|ml|l|cl|pcs?|gab)\b/giu;
+
+function withoutRetailQuantities(value: string): string {
+  return value.replace(retailQuantityPattern, " ").replace(/\s+/g, " ").trim();
+}
+
 const genericIdentityTokens = new Set(["food", "product", "snack", "drink"]);
 
 function detectionIdentityText(detection: ProviderDetection): string {
@@ -269,6 +278,7 @@ export function recognitionInstruction(
     savedImageContext +
     `Read the front label and preserve every clearly visible distinguishing word in productName: exact brand, product type, variant or flavor, ` +
     `and exact pack size or multipack count. Do not omit a readable size and do not guess one that is not visible. ` +
+    `A nutrition claim such as "17 g protein" is not a pack size. Never copy a nutrient amount into the size, and never combine a size from a neighboring package. ` +
     `Classify retailCategory as snack for packaged sweet or salty snacks, dairy_dessert for yogurts, puddings, sweet curd creams or glazed curd snacks, ` +
     `and other for everything else. ` +
     `searchQuery should repeat the identity using useful English or Latvian equivalents of foreign flavor words for retailer matching. ` +
@@ -287,8 +297,19 @@ export function recognitionInstruction(
   );
 }
 
-function lookupInputForDetection(detection: ProviderDetection): BarboraLookupInput {
-  const packSize = extractPackSize(detectionIdentityText(detection));
+export function lookupInputForDetection(detection: ProviderDetection): BarboraLookupInput {
+  const identityText = detectionIdentityText(detection);
+  const hasQuantityShapedNutritionClaim = nutritionClaimQuantityPattern.test(identityText);
+  // If the vision label mixed a front-of-pack nutrition claim with a nearby
+  // quantity, treat package size as unknown. Exact identity and margin checks
+  // still apply, but a false 17 g/330 g conflict no longer blocks the real SKU.
+  const productName = hasQuantityShapedNutritionClaim
+    ? withoutRetailQuantities(detection.productName)
+    : detection.productName;
+  const searchQuery = hasQuantityShapedNutritionClaim
+    ? withoutRetailQuantities(detection.searchQuery)
+    : detection.searchQuery;
+  const packSize = hasQuantityShapedNutritionClaim ? "" : extractPackSize(identityText);
   const categoryHint: InvestorCategory | null =
     detection.retailCategory === "snack"
       ? "snacks"
@@ -297,10 +318,10 @@ function lookupInputForDetection(detection: ProviderDetection): BarboraLookupInp
         : null;
   return {
     brand: detection.brand,
-    name: detection.productName,
+    name: productName,
     variant: "",
     packSize,
-    searchTerms: [detection.searchQuery],
+    searchTerms: [searchQuery].filter(Boolean),
     categoryHint
   };
 }
@@ -503,17 +524,18 @@ export async function resolveVisibleDetections(
   mode: DetectionResolutionMode = "complete"
 ): Promise<ProductDetection[]> {
   const resolved = await mapWithConcurrency(visible.slice(0, MAX_SCAN_PRODUCTS), concurrency, async (detection): Promise<ProductDetection> => {
-    const identityText = detectionIdentityText(detection);
-    const packSize = extractPackSize(identityText);
+    const lookupInput = lookupInputForDetection(detection);
+    const packSize = lookupInput.packSize;
     const observedIdentity = {
       brand: detection.brand,
-      name: detection.productName,
+      name: lookupInput.name,
       variant: "",
       packSize,
-      observedText: identityText
+      observedText: [lookupInput.brand, lookupInput.name, ...lookupInput.searchTerms, packSize]
+        .filter(Boolean)
+        .join(" ")
     };
     const initialCatalogMatch = matchCatalogProductWithConfidence(observedIdentity, catalog);
-    const lookupInput = lookupInputForDetection(detection);
     const indexedBarboraMatch = initialCatalogMatch
       ? null
       : detection.confirmedBarboraSlug

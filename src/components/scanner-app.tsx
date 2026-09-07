@@ -1185,8 +1185,8 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
   );
   const ratedTrayIds = useMemo(() => ratedScanProductIds(tray, productById), [productById, tray]);
   const visibleTrayIds = useMemo(
-    () => displayableScanProductIds(tray, productById, pendingProductIds, detectionById),
-    [detectionById, pendingProductIds, productById, tray]
+    () => displayableScanProductIds(tray, productById, pendingProductIds),
+    [pendingProductIds, productById, tray]
   );
   const visibleTrayIdSet = useMemo(() => new Set(visibleTrayIds), [visibleTrayIds]);
   const ratedTrayIdSet = useMemo(() => new Set(ratedTrayIds), [ratedTrayIds]);

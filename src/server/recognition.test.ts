@@ -9,6 +9,7 @@ import {
   geminiBox2dToFrame,
   isTrustedShelfPriceDetection,
   isTrustedCandidateImageUrl,
+  lookupInputForDetection,
   matchCatalogProduct,
   recognitionInstruction,
   recognitionConfidenceThreshold,
@@ -21,6 +22,7 @@ import {
 } from "./recognition";
 import { externalCatalogIdentityToScoredProduct, resolveExternalCatalogProduct } from "./external-catalog";
 import type { ExternalCatalogIdentity } from "./external-catalog-types";
+import { resolveIndexedBarboraCandidate } from "./barbora-catalog";
 
 const originalKey = process.env.GEMINI_API_KEY;
 
@@ -188,6 +190,8 @@ describe("recognitionInstruction", () => {
     expect(instruction).toContain("may omit the € symbol");
     expect(instruction).toContain("immediate shelf edge");
     expect(instruction).toContain("distant header or promotion labels");
+    expect(instruction).toContain('A nutrition claim such as "17 g protein" is not a pack size');
+    expect(instruction).toContain("never combine a size from a neighboring package");
   });
 
   it("keeps the uncertain retry focused on one centered package", () => {
@@ -341,6 +345,34 @@ describe("candidate confirmation", () => {
 });
 
 describe("resolveVisibleDetections", () => {
+  it("recovers the exact verified Lakto cherry yogurt when a protein claim was mistaken for its pack size", async () => {
+    const observed = providerDetection(1, {
+      brand: "LAKTO",
+      productName: "Lakto Protein Jogurts Ķiršu 17g Protein 330g",
+      searchQuery: "Lakto Protein cherry yogurt 17g protein 330g",
+      retailCategory: "dairy_dessert"
+    });
+    const lookup = lookupInputForDetection(observed);
+
+    expect(lookup).toMatchObject({
+      brand: "LAKTO",
+      name: "Lakto Protein Jogurts Ķiršu Protein",
+      packSize: "",
+      categoryHint: "dairy_desserts"
+    });
+    expect(resolveIndexedBarboraCandidate(lookup)).toMatchObject({
+      slug: "jogurts-protein-lakto-kirsu-200-g",
+      score: expect.any(Number)
+    });
+    await expect(resolveVisibleDetections([observed], [], undefined, 3, "fast")).resolves.toMatchObject([
+      {
+        productId: "barbora:jogurts-protein-lakto-kirsu-200-g",
+        catalogProductId: "barbora:jogurts-protein-lakto-kirsu-200-g",
+        identity: { matchKind: "barbora", packSize: null }
+      }
+    ]);
+  });
+
   it("returns locally linked camera identities without waiting for retailer or Open Food Facts", async () => {
     const getOfferBySlug = vi.fn(async () => null);
     const resolveOffer = vi.fn(async () => null);

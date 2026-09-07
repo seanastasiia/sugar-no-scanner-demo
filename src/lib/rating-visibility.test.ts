@@ -1,33 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { ProductDetection, ScoredProduct } from "./types";
-import {
-  displayableScanProductIds,
-  hasRecognizedProductIdentity,
-  hasSugarNoRating,
-  ratedScanProductIds
-} from "./rating-visibility";
+import type { ScoredProduct } from "./types";
+import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "./rating-visibility";
 
 function product(matchScore: number | null, signalCount = matchScore === null ? 1 : 2): ScoredProduct {
   return { matchScore, ratingSignalCount: signalCount } as ScoredProduct;
-}
-
-function detection(name?: string): ProductDetection {
-  return {
-    productId: "visual:test",
-    confidence: 0.96,
-    box: { x: 0.1, y: 0.1, width: 0.4, height: 0.6 },
-    observedText: name || "€0.69",
-    identity: name
-      ? {
-          brand: "Test",
-          name,
-          variant: null,
-          packSize: null,
-          category: null,
-          matchKind: "visual_only"
-        }
-      : undefined
-  };
 }
 
 describe("Sugar.no rating visibility", () => {
@@ -49,11 +25,7 @@ describe("Sugar.no rating visibility", () => {
     };
 
     expect(ratedScanProductIds(["rated", "price-only", "missing"], products)).toEqual(["rated"]);
-    expect(
-      displayableScanProductIds(["rated", "price-only", "missing"], products, new Set(), {
-        "price-only": detection()
-      })
-    ).toEqual(["rated"]);
+    expect(displayableScanProductIds(["rated", "price-only", "missing"], products, new Set())).toEqual(["rated"]);
   });
 
   it("keeps a pending identity visible before the nutrition lookup finishes", () => {
@@ -61,17 +33,7 @@ describe("Sugar.no rating visibility", () => {
     expect(displayableScanProductIds(["pending"], {}, new Set())).toEqual([]);
   });
 
-  it("keeps a confidently named product visible after nutrition lookup misses", () => {
-    const named = detection("Turtle Cinnamon Crunch 300g");
-
-    expect(hasRecognizedProductIdentity(named)).toBe(true);
-    expect(
-      displayableScanProductIds(["visual:test"], {}, new Set(), { "visual:test": named })
-    ).toEqual(["visual:test"]);
-  });
-
-  it("does not treat generic model placeholders as product identities", () => {
-    expect(hasRecognizedProductIdentity(detection("Product"))).toBe(false);
-    expect(hasRecognizedProductIdentity(detection("Unknown product"))).toBe(false);
+  it("removes a named product after nutrition lookup finishes without a rating", () => {
+    expect(displayableScanProductIds(["visual:test"], {}, new Set())).toEqual([]);
   });
 });

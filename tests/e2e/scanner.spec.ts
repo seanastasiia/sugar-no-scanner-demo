@@ -114,7 +114,12 @@ async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   await expect(page.getByRole("button", { name: "Back to live camera", exact: true })).toHaveCount(0);
 }
 
-async function openPersonalShelfFixture(page: Page, samples?: ScoredProduct[], unresolved: ProductDetection[] = []) {
+async function openPersonalShelfFixture(
+  page: Page,
+  samples?: ScoredProduct[],
+  unresolved: ProductDetection[] = [],
+  expectResults = true
+) {
   const products = samples || [
     shelfFixture("qa-chips-a"), shelfFixture("qa-chips-b"),
     shelfFixture("qa-chips-c", { fiberG: null }),
@@ -143,6 +148,7 @@ async function openPersonalShelfFixture(page: Page, samples?: ScoredProduct[], u
   await page.route("**/api/personal-shelf", (route) => route.fulfill({ contentType: "application/json", body: '{"evidence":{}}' }));
   await unlock(page);
   await chooseSavedPhoto(page, "synthetic-personal-shelf-qa.png");
+  if (!expectResults) return;
   if (products.length + unresolved.length === 1) await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Products from this scan" })).toBeVisible();
 }
@@ -216,9 +222,10 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
   const chips = page.getByRole("region", { name: "Chips", exact: true });
   await expect(chips.getByText("#1 of 2 in chips", { exact: true })).toBeVisible();
+  await expect(chips.getByRole("heading", { level: 4 })).toHaveCount(2);
   await expect(chips.getByRole("heading", { level: 4 }).first()).toHaveText(samples[0].shortName);
   await expect(chips.getByText("64/100", { exact: true })).toBeVisible();
-  await expect(chips.getByLabel("Not scored", { exact: true })).toHaveText("—");
+  await expect(chips.getByLabel("Not scored", { exact: true })).toHaveCount(0);
   await expect(chips).not.toContainText(/Not enough verified data|Missing or unverified/);
   await expectNoDocumentOverflow(page);
   await expect.poll(() => chips.getByTestId("product-packshot").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete)), { timeout: 10_000 }).toBe(true);
@@ -267,19 +274,17 @@ test("personal shelf pilot preserves all unsupported cards instead of showing a 
   await expect(page.getByLabel("Products ranked by Sugar.no fit").getByRole("button")).toHaveCount(2);
 });
 
-test("personal shelf pilot preserves a visual-only name without inventing nutrition or a score", async ({ page }) => {
+test("a visual-only name disappears when nutrition cannot be verified", async ({ page }) => {
   await openPersonalShelfFixture(page, [], [{
     productId: "visual:qa-cereal", catalogProductId: null, confidence: .97,
     box: { x: .2, y: .2, width: .6, height: .6 }, observedText: "Unknown cereal",
     identity: { brand: "Example", name: "Unknown cereal", variant: null, packSize: null, category: null, matchKind: "visual_only" },
     inlineProduct: null
-  }]);
-  await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
-  const results = page.getByLabel("Personal Shelf Rank results");
-  await expect(results.getByRole("heading", { name: "Unknown cereal", exact: true })).toBeVisible();
-  await expect(results.getByText("Nutrition not verified", { exact: true })).toBeVisible();
-  await expect(results.getByTestId("personal-fit-badge")).toHaveCount(0);
-  await expect(results).not.toContainText(/\/100|No ratings for this shelf|0 g/);
+  }], false);
+  await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Unknown cereal", exact: true })).toHaveCount(0);
+  await expect(page.getByText(/Nutrition not verified/)).toHaveCount(0);
+  await expect(page.getByRole("status")).toContainText("No products with verified Sugar.no fit found");
   await expectNoDocumentOverflow(page);
 });
 
@@ -1752,7 +1757,7 @@ test("a long online-store screenshot is scanned in four passes and opens one mer
   await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
 });
 
-test("confidently named products remain visible when exact nutrition is unavailable", async ({ page }) => {
+test("confidently named products stay hidden when exact nutrition is unavailable", async ({ page }) => {
   const limitedId = "barbora:qa-protein-only";
   const identityId = "barbora:qa-identity-only";
   await page.route("**/api/recognize", async (route) => {
@@ -1833,15 +1838,15 @@ test("confidently named products remain visible when exact nutrition is unavaila
 
   await unlock(page);
   await chooseSavedPhoto(page, "limited-and-identity.png");
-  const resultsDialog = page.getByRole("dialog", { name: "Products from this scan" });
-  await expect(resultsDialog).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("status")).toContainText("No products with verified Sugar.no fit found", {
+    timeout: 10_000
+  });
+  await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
   await expect(page.getByTestId("rated-detection-marker")).toHaveCount(0);
   await expect(page.getByLabel("Shelf marker legend")).toHaveCount(0);
-  const ranking = resultsDialog.getByLabel("Products ranked by Sugar.no fit");
-  await expect(ranking.getByRole("button")).toHaveCount(2);
-  await expect(ranking.getByText("QA protein only", { exact: true })).toBeVisible();
-  await expect(ranking.getByText("QA identity only", { exact: true })).toBeVisible();
-  await expect(ranking.getByText("Nutrition not verified online", { exact: true })).toHaveCount(2);
+  await expect(page.getByText("QA protein only", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("QA identity only", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Nutrition not verified online", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
 });
@@ -1939,15 +1944,13 @@ test("an unrated package can receive a Sugar.no fit from automatic online enrich
   });
 
   await unlock(page);
-  await expect(page.getByRole("status")).toContainText("2 products · 1 with Sugar.no fit", { timeout: 8_000 });
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit", { timeout: 8_000 });
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByText("1 of 2 ready to compare", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
-  await expect(page.getByLabel("Products ranked by Sugar.no fit").getByText("Other Snack", { exact: true })).toBeVisible();
-  await expect(page.getByText("Nutrition not verified online", { exact: true })).toBeVisible();
-  await expect(
-    page.getByLabel("Products ranked by Sugar.no fit").getByRole("button", { name: /Sproud Barista 1L/ })
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
+  await expect(page.getByText("Other Snack", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Nutrition not verified online", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Sproud Barista 1L", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
 });
 
@@ -2147,12 +2150,12 @@ test("live camera applies each online result without waiting for the slowest pro
   releaseSlowEnrichment();
   await expect.poll(() => slowEnrichmentFinished).toBe(true);
   await expect(preview.getByText("Checking nutrition…", { exact: true })).toHaveCount(0);
-  await expect(preview.locator("article")).toHaveCount(2);
-  await expect(preview.getByRole("button", { name: /Sanpellegrino Zero 330 ml/ })).toBeVisible();
-  await expect(preview.getByText("Nutrition not verified", { exact: true })).toBeVisible();
+  await expect(preview.locator("article")).toHaveCount(1);
+  await expect(preview.getByRole("button", { name: /Sanpellegrino Zero 330 ml/ })).toHaveCount(0);
+  await expect(preview.getByText("Nutrition not verified", { exact: true })).toHaveCount(0);
 });
 
-test("a visual-only live result holds the captured frame without scanning a new scene", async ({ page }) => {
+test("a visual-only live result holds the frame but hides the unverified card", async ({ page }) => {
   await mockLiveCamera(page);
   let recognitionRequests = 0;
   const focusModes: boolean[] = [];
@@ -2205,9 +2208,10 @@ test("a visual-only live result holds the captured frame without scanning a new 
   expect(focusModes).toEqual([false]);
   await page.waitForTimeout(2_000);
   expect(recognitionRequests).toBe(1);
-  await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "First Product" })).toBeVisible();
-  await expect(page.getByText("Nutrition not verified", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Not sure — try again" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "View all", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "First Product" })).toHaveCount(0);
+  await expect(page.getByText("Nutrition not verified", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
 });
 
