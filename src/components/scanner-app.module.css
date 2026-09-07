@@ -170,7 +170,8 @@
 .onlineOfferAction,
 .alternativeBuy,
 .demoTrigger,
-.feedbackTrigger {
+.feedbackTrigger,
+.recognitionRetry {
   position: relative;
   display: inline-flex;
   width: 100%;
@@ -195,7 +196,8 @@
 .onlineOfferAction::before,
 .alternativeBuy::before,
 .demoTrigger::before,
-.feedbackTrigger::before {
+.feedbackTrigger::before,
+.recognitionRetry::before {
   position: absolute;
   inset: 0;
   padding: 1.5px;
@@ -361,19 +363,7 @@
   white-space: nowrap;
 }
 .recognitionRetry {
-  display: inline-flex;
-  width: 100%;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px 16px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--coral);
-  color: #fff;
-  font: 600 15px/20px var(--font-display);
-  cursor: pointer;
+  background: linear-gradient(180deg, var(--accent), #9bc7f5);
 }
 .toneStrong {
   --tone: #2dbc51;
@@ -419,17 +409,17 @@
 }
 
 .recognitionRetry:active {
-  background: rgb(0 0 0 / 18%);
+  opacity: 0.88;
 }
 
 .recognitionRetry:focus-visible {
-  outline-color: #ffffff;
-  outline-offset: -4px;
+  outline-color: var(--focus);
+  outline-offset: 3px;
 }
 
 @media (hover: hover) {
   .recognitionRetry:hover {
-    background: rgb(255 255 255 / 10%);
+    opacity: 0.9;
   }
 }
 .matchPill::after,
@@ -1557,7 +1547,8 @@
   .demoChoices button,
   .feedbackChoices button,
   .demoTrigger,
-  .feedbackTrigger {
+  .feedbackTrigger,
+  .recognitionRetry {
     transition: transform 160ms var(--motion-ease, ease-out), opacity 160ms ease-out;
   }
   .primaryButton:not(:disabled):active,
@@ -1573,7 +1564,8 @@
   .demoChoices button:active,
   .feedbackChoices button:not(:disabled):active,
   .demoTrigger:active,
-  .feedbackTrigger:active {
+  .feedbackTrigger:active,
+  .recognitionRetry:active {
     transform: scale(0.985);
   }
 }
@@ -1584,7 +1576,8 @@
   .backToLive:hover,
   .onlineOfferAction:hover,
   .demoTrigger:hover,
-  .feedbackTrigger:hover {
+  .feedbackTrigger:hover,
+  .recognitionRetry:hover {
     opacity: 0.9;
   }
   .secondaryButton:hover {
