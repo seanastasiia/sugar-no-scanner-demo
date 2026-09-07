@@ -44,6 +44,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-07, preview: the expanded scan repeated explanatory hierarchy above already-ranked cards.** Removed the Personal Shelf switch helper and the original result list's `Best fit first` plus scan/basis heading block. The switch keeps its accessible label, the ranked list keeps an explicit accessible name, and product order, ratings, cards and detail navigation are unchanged.
+
 - **2026-09-07, preview: final scan results displayed named cards after exact nutrition lookup had failed.** Pending cards still say `Checking nutrition…`, but after lookup finishes every card without a numeric source-backed Sugar.no fit is removed from the compact tray, expanded comparison and Personal Shelf scan view. Mixed scans keep verified products; an all-unverified scan shows the existing no-verified-fit state. This intentionally supersedes the 28 August visual-name retention behavior.
 
 - **2026-09-07, preview: LAKTO cherry yogurt was rejected although its exact nutrition had already been verified.** Vision combined the front claim `17 g protein` with `330 g` from a neighboring package and the strict matcher correctly refused to attach the 200 g SKU. Recognition now excludes nutrition-claim quantities from pack identity and downgrades other size text from the same contaminated label to unknown. The unchanged brand/cherry-yogurt match then resolves only the clearly separated exact Barbora record `jogurts-protein-lakto-kirsu-200-g`; no flavour or pack nutrition is borrowed.

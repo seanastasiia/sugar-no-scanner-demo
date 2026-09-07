@@ -881,7 +881,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     await dialog.getByRole("button", { name: "Rank 1, BAREBELLS Salty Peanut, Great fit", exact: true }).dispatchEvent("click");
     await expect(dialog.getByRole("heading", { name: "Salty Peanut", exact: true })).toBeVisible();
     await dialog.getByRole("button", { name: "Back to all results" }).dispatchEvent("click");
-    await expect(dialog.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
     await expect(dialog).toBeFocused();
     // A system preference change also stops an entry already in progress.
     await page.emulateMedia({ reducedMotion: "reduce" });
@@ -963,7 +963,8 @@ test("sample shelf photo highlights products and ranks two-factor Sugar.no fits"
   const dialog = page.getByRole("dialog", { name: "Products from this scan" });
   const ranking = dialog.getByLabel("Products ranked by Sugar.no fit");
   await expect(ranking.getByRole("button")).toHaveCount(4);
-  await expect(dialog.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
+  await expect(dialog.getByText("Compare sugar, protein and composition. Original Fit stays available.", { exact: true })).toHaveCount(0);
   await expectOfficialSugarNoLogo(page);
   const offer = ranking.getByRole("link", { name: /Buy cheaper online Salty Peanut at Barbora for €2\.79/ });
   await expect(offer).toHaveAttribute("href", "https://barbora.lv/produkti/prot-bat-sal-riekst-saldin-barebells-55-g");
@@ -1118,7 +1119,7 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await expect(ranking.getByText("SPROUD", { exact: true })).toBeVisible();
   await expect(ranking.getByText("SCHNITZER", { exact: true })).toBeVisible();
   await expect(ranking.getByText("STOCKMANN", { exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
   await page.waitForTimeout(300);
   await page.screenshot({ path: "test-results/checkout-results-mobile.png" });
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
@@ -1189,7 +1190,7 @@ test("demo chooser supports shelf, checkout and a clear return to live camera", 
   await openDemoScene(page, "Checkout demo");
   await expect(page.getByRole("status")).toContainText("3 products · 3 with Sugar.no fit");
   await page.getByRole("button", { name: "View all", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /save/i })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Saved options" })).toHaveCount(0);
   await page.getByRole("button", { name: "Collapse product results" }).click();
@@ -1754,7 +1755,7 @@ test("a long online-store screenshot is scanned in four passes and opens one mer
   await expect(ranking.getByRole("button", { name: /BALTAIS Protein Fit Stracciatella 200g/ })).toHaveCount(1);
   await expect(ranking.getByRole("button", { name: /JUNGLE POP Kiwi jelly 115g/ })).toHaveCount(1);
   await expect(page.getByTestId("scan-guide")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Best fit first" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first" })).toHaveCount(0);
 });
 
 test("confidently named products stay hidden when exact nutrition is unavailable", async ({ page }) => {

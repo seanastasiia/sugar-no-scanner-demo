@@ -1852,22 +1852,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
                 ) : null}
 
                 {visibleTrayIds.length > 1 && !productDetailsOpen && !personalRankEnabled ? (
-                  <section className={styles.rankingSection} aria-labelledby="scan-ranking-title">
-                    <h2 className={styles.expandedSheetTitle} id="scan-ranking-title">
-                      {ratedCount > 0
-                        ? "Best fit first"
-                        : pendingProductIds.size
-                          ? "Matching products"
-                          : "Products identified"}
-                    </h2>
-                    <p className={styles.resultsSubtitle}>
-                      {source === "sample-shelf"
-                        ? "Sample shelf"
-                        : source === "sample-conveyor"
-                          ? "Checkout demo"
-                          : "Your scan"}{" "}
-                      · Sugar per {resultsBasis}
-                    </p>
+                  <section className={styles.rankingSection} aria-label="Scan results">
                     <ol className={styles.rankedList} aria-label="Products ranked by Sugar.no fit">
                       {rankedTrayIds.map((id) => {
                         const item = products[id]?.product;

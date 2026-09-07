@@ -705,17 +705,6 @@
   margin: 0 auto;
   padding: 4px 24px max(32px, env(safe-area-inset-bottom));
 }
-.expandedSheetTitle {
-  margin: 0;
-  font: 700 28px/34px var(--font-display);
-  letter-spacing: -0.5px;
-}
-.resultsSubtitle {
-  margin: 2px 0 20px;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 18px;
-}
 .scanSummary {
   display: flex;
   gap: 12px;
@@ -741,6 +730,7 @@
   box-shadow: none;
 }
 .rankingSection {
+  padding-top: 16px;
   margin-bottom: 16px;
 }
 .rankedList {
@@ -1800,10 +1790,6 @@
 
 .sheetContent:has(.rankingSection) {
   padding-inline: 16px;
-}
-.rankingSection > .expandedSheetTitle,
-.rankingSection > .resultsSubtitle {
-  margin-left: 8px;
 }
 .rankedProductMeta > small {
   margin-left: auto;

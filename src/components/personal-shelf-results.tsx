@@ -10,11 +10,10 @@ import styles from "./personal-shelf-results.module.css";
 export function ShelfRankToggle({ enabled, onChange }: { enabled: boolean; onChange: (enabled: boolean) => void }) {
   return (
     <div className={styles.mode}>
-      <button type="button" role="switch" aria-checked={enabled} aria-describedby="shelf-pilot-help" onClick={() => onChange(!enabled)}>
+      <button type="button" role="switch" aria-checked={enabled} onClick={() => onChange(!enabled)}>
         <span>Personal Shelf Rank <small>Pilot</small></span>
         <span aria-hidden="true" className={`${styles.switch} ${enabled ? styles.switchOn : ""}`}><span /></span>
       </button>
-      <p id="shelf-pilot-help">{enabled ? "Camera markers keep the original Sugar + Protein Fit." : "Compare sugar, protein and composition. Original Fit stays available."}</p>
     </div>
   );
 }

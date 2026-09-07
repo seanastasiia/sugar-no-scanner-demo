@@ -1,7 +1,7 @@
-.mode { padding: 8px 20px 16px; border-bottom: 1px solid var(--border); }
+.mode { padding: 8px 20px 12px; border-bottom: 1px solid var(--border); }
 .mode button { width: 100%; min-height: 48px; display: flex; gap: 12px; align-items: center; justify-content: space-between; border: 0; border-radius: 12px; background: transparent; color: var(--ink); text-align: left; font: inherit; font-weight: 650; cursor: pointer; touch-action: manipulation; }
 .mode small { display: inline-block; padding: 3px 7px; border-radius: 6px; background: var(--canvas); font-size: .75rem; font-weight: 500; }
-.mode p, .empty { font-size: .8125rem; line-height: 1.5; color: var(--muted); margin: 4px 0 0; }
+.empty { font-size: .8125rem; line-height: 1.5; color: var(--muted); margin: 4px 0 0; }
 .switch { width: 44px; height: 26px; flex-shrink: 0; border: 1px solid var(--muted); background: var(--canvas); border-radius: 20px; padding: 3px; transition: background-color 180ms ease; }
 .switch > span { display: block; width: 18px; height: 18px; background: var(--muted); border-radius: 50%; transition: transform 180ms ease; }
 .switchOn { background: var(--ink); border-color: var(--ink); }
