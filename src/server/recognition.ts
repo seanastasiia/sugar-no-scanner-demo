@@ -480,6 +480,18 @@ export interface DetectionResolutionDependencies {
 
 type DetectionResolutionMode = "fast" | "complete";
 
+interface DetectionResolutionCandidate {
+  product: ScoredProduct;
+  confidence: number | null;
+  matchKind: NonNullable<ProductDetection["identity"]>["matchKind"];
+  catalogProductId?: string | null;
+  retailerOffer?: ProductDetection["retailerOffer"];
+}
+
+function hasConfirmedNutrition(candidate: DetectionResolutionCandidate | null | undefined): boolean {
+  return typeof candidate?.product.matchScore === "number" && candidate.product.ratingSignalCount >= 2;
+}
+
 const defaultResolutionDependencies: DetectionResolutionDependencies = {
   getOfferBySlug: getBarboraOfferBySlug,
   resolveOffer: resolveBarboraOffer,
@@ -536,7 +548,15 @@ export async function resolveVisibleDetections(
         .join(" ")
     };
     const initialCatalogMatch = matchCatalogProductWithConfidence(observedIdentity, catalog);
-    const indexedBarboraMatch = initialCatalogMatch
+    const initialCatalogCandidate: DetectionResolutionCandidate | null = initialCatalogMatch
+      ? {
+          product: initialCatalogMatch.product,
+          confidence: initialCatalogMatch.confidence,
+          matchKind: "verified_catalog",
+          catalogProductId: initialCatalogMatch.product.id
+        }
+      : null;
+    const indexedBarboraMatch = hasConfirmedNutrition(initialCatalogCandidate)
       ? null
       : detection.confirmedBarboraSlug
         ? { slug: detection.confirmedBarboraSlug, score: 1 }
@@ -544,32 +564,61 @@ export async function resolveVisibleDetections(
     const indexedProduct = indexedBarboraMatch
       ? dependencies.getIndexedProduct?.(indexedBarboraMatch.slug)?.product || null
       : null;
+    const indexedBarboraCandidate: DetectionResolutionCandidate | null = indexedProduct && indexedBarboraMatch
+      ? {
+          product: indexedProduct,
+          confidence: indexedBarboraMatch.score,
+          matchKind: "barbora",
+          catalogProductId: indexedProduct.id
+        }
+      : null;
     const retailerOffer = mode === "fast"
       ? null
-      : initialCatalogMatch
+      : initialCatalogMatch && hasConfirmedNutrition(initialCatalogCandidate)
         ? await dependencies.getOfferBySlug(initialCatalogMatch.product.id, lookupInput).catch(() => null)
-        : indexedBarboraMatch
+      : indexedBarboraMatch
           ? await dependencies.getOfferBySlug(indexedBarboraMatch.slug, lookupInput).catch(() => null)
           : await dependencies.resolveOffer(lookupInput).catch(() => null);
     const exactRetailerOffer = retailerOffer?.exactSku ? retailerOffer : null;
     const exactOfferProduct = exactRetailerOffer
       ? dependencies.getIndexedProduct?.(exactRetailerOffer.slug)?.product || null
       : null;
-    const knownProduct = initialCatalogMatch?.product || indexedProduct || exactOfferProduct || null;
+    const exactOfferCandidate: DetectionResolutionCandidate | null = exactOfferProduct && exactRetailerOffer
+      ? {
+          product: exactOfferProduct,
+          confidence: exactRetailerOffer.matchConfidence,
+          matchKind: "barbora",
+          catalogProductId: exactOfferProduct.id,
+          retailerOffer: exactRetailerOffer
+        }
+      : null;
+    const initialRetailerCandidates = [initialCatalogCandidate, indexedBarboraCandidate, exactOfferCandidate]
+      .filter((candidate): candidate is DetectionResolutionCandidate => Boolean(candidate));
+    const confirmedInitialRetailer = initialRetailerCandidates.find(hasConfirmedNutrition) || null;
     // The vision response may keep the concise UI label in productName while
     // preserving the readable variant and size in searchQuery. Use both before
     // deciding that an exact lookup is impossible. Brand-only results remain
     // fail-closed so nutrition from a random SKU is never attached.
     const canSearchExactIdentity = hasSearchableIdentityEvidence(detection, packSize);
-    // Open Food Facts is the first internet fallback. A visual Barbora slug is
-    // not enough to skip it when that exact SKU has no local nutrition record.
-    // These two resolvers read in-memory indexes only. Resolve exact multilingual
-    // identities before merging photo crops; otherwise known packages can be
-    // discarded as visual-only duplicates before background enrichment begins.
-    const externalCatalogCandidate = knownProduct
+    // Retailer nutrition always wins over an identity-only match. An OFF or
+    // Livinn identity can still contribute language, pack and GTIN aliases, but
+    // it must not terminate resolution before those aliases are retried against
+    // the verified Barbora/Rimi layers.
+    const externalCatalogCandidate = confirmedInitialRetailer
       ? null
       : dependencies.resolveExternalCatalog?.(lookupInput, detection.barcode) || null;
-    const externalCatalogIdentity = knownProduct || externalCatalogCandidate
+    const directExternalCandidate: DetectionResolutionCandidate | null = externalCatalogCandidate
+      ? {
+          product: externalCatalogCandidate.product,
+          confidence: externalCatalogCandidate.confidence,
+          matchKind: "retailer_catalog",
+          retailerOffer: externalCatalogCandidate.offer
+        }
+      : null;
+    const confirmedDirectRetailer = hasConfirmedNutrition(directExternalCandidate)
+      ? directExternalCandidate
+      : null;
+    const externalCatalogIdentity = confirmedInitialRetailer || confirmedDirectRetailer
       ? null
       : dependencies.resolveExternalCatalogIdentity?.(lookupInput, detection.barcode) || null;
     const canonicalLookupInput = externalCatalogIdentity
@@ -577,43 +626,129 @@ export async function resolveVisibleDetections(
           ...lookupInput,
           brand: externalCatalogIdentity.identity.brand,
           name: externalCatalogIdentity.identity.title,
-          packSize: externalCatalogIdentity.identity.packSize,
+          // A name-only OFF match must not invent a package size and turn a
+          // 70 g identity into an exact 165 g shelf match (or vice versa).
+          packSize: lookupInput.packSize || "",
           searchTerms: [
             ...externalCatalogIdentity.identity.aliases,
             detection.searchQuery
           ].filter(Boolean)
         }
       : lookupInput;
-    const canonicalBarcode = detection.barcode || externalCatalogIdentity?.identity.gtin || "";
+    // Promote an identity-layer GTIN only when the package size was also read
+    // from the shelf. Otherwise it can lock a name-only match to the wrong pack.
+    const canonicalBarcode = detection.barcode ||
+      (lookupInput.packSize ? externalCatalogIdentity?.identity.gtin || "" : "");
     const webLookupInput = { ...canonicalLookupInput, ...(canonicalBarcode ? { barcode: canonicalBarcode } : {}) };
-    const sharedWebNutrition = mode === "fast" || knownProduct || externalCatalogCandidate || (!canSearchExactIdentity && !externalCatalogIdentity)
+
+    const canonicalIndexedMatch = confirmedInitialRetailer || confirmedDirectRetailer || !externalCatalogIdentity
+      ? null
+      : (dependencies.resolveIndexedCandidate || resolveIndexedBarboraCandidate)(canonicalLookupInput);
+    const canonicalIndexedProduct = canonicalIndexedMatch
+      ? dependencies.getIndexedProduct?.(canonicalIndexedMatch.slug)?.product || null
+      : null;
+    const canonicalIndexedCandidate: DetectionResolutionCandidate | null = canonicalIndexedProduct && canonicalIndexedMatch
+      ? {
+          product: canonicalIndexedProduct,
+          confidence: canonicalIndexedMatch.score,
+          matchKind: "barbora",
+          catalogProductId: canonicalIndexedProduct.id
+        }
+      : null;
+    const canonicalRetailerOffer = mode === "fast" || confirmedInitialRetailer || confirmedDirectRetailer ||
+      hasConfirmedNutrition(canonicalIndexedCandidate) || !externalCatalogIdentity
+      ? null
+      : canonicalIndexedMatch
+        ? await dependencies.getOfferBySlug(canonicalIndexedMatch.slug, canonicalLookupInput).catch(() => null)
+        : await dependencies.resolveOffer(canonicalLookupInput).catch(() => null);
+    const canonicalExactOffer = canonicalRetailerOffer?.exactSku ? canonicalRetailerOffer : null;
+    const canonicalExactProduct = canonicalExactOffer
+      ? dependencies.getIndexedProduct?.(canonicalExactOffer.slug)?.product || null
+      : null;
+    const canonicalOfferCandidate: DetectionResolutionCandidate | null = canonicalExactProduct && canonicalExactOffer
+      ? {
+          product: canonicalExactProduct,
+          confidence: canonicalExactOffer.matchConfidence,
+          matchKind: "barbora",
+          catalogProductId: canonicalExactProduct.id,
+          retailerOffer: canonicalExactOffer
+        }
+      : null;
+    const canonicalExternalCatalog = confirmedInitialRetailer || confirmedDirectRetailer ||
+      hasConfirmedNutrition(canonicalIndexedCandidate) || hasConfirmedNutrition(canonicalOfferCandidate) || !externalCatalogIdentity
+      ? null
+      : dependencies.resolveExternalCatalog?.(canonicalLookupInput, canonicalBarcode) || null;
+    const canonicalExternalCandidate: DetectionResolutionCandidate | null = canonicalExternalCatalog
+      ? {
+          product: canonicalExternalCatalog.product,
+          confidence: canonicalExternalCatalog.confidence,
+          matchKind: "retailer_catalog",
+          retailerOffer: canonicalExternalCatalog.offer
+        }
+      : null;
+    const retailerCandidates = [
+      ...initialRetailerCandidates,
+      directExternalCandidate,
+      canonicalIndexedCandidate,
+      canonicalOfferCandidate,
+      canonicalExternalCandidate
+    ].filter((candidate): candidate is DetectionResolutionCandidate => Boolean(candidate));
+    const confirmedRetailer = retailerCandidates.find(hasConfirmedNutrition) || null;
+    const identityCandidate: DetectionResolutionCandidate | null = externalCatalogIdentity
+      ? {
+          product: externalCatalogIdentity.product,
+          confidence: externalCatalogIdentity.confidence,
+          matchKind: externalCatalogIdentity.identity.source === "open_food_facts"
+            ? "open_food_facts"
+            : "retailer_catalog"
+        }
+      : null;
+
+    const sharedWebNutrition = mode === "fast" || confirmedRetailer || (!canSearchExactIdentity && !externalCatalogIdentity)
       ? null
       : await dependencies.resolveSharedWebNutrition?.(webLookupInput, detection.confidence).catch(() => null) || null;
-    const openFoodFactsCandidate = mode === "fast" || knownProduct || externalCatalogCandidate || sharedWebNutrition || (!canSearchExactIdentity && !externalCatalogIdentity)
+    const sharedWebCandidate: DetectionResolutionCandidate | null = sharedWebNutrition
+      ? { product: sharedWebNutrition.product, confidence: sharedWebNutrition.confidence, matchKind: "web_search" }
+      : null;
+    const openFoodFactsCandidate = mode === "fast" || confirmedRetailer || hasConfirmedNutrition(sharedWebCandidate) ||
+      (!canSearchExactIdentity && !externalCatalogIdentity)
       ? null
       : await dependencies.resolveOpenFoodFacts(canonicalLookupInput, canonicalBarcode).catch(() => null);
-    const webNutrition = sharedWebNutrition || (mode === "fast" || knownProduct || externalCatalogCandidate || openFoodFactsCandidate || (!canSearchExactIdentity && !externalCatalogIdentity)
+    const openFoodFactsResolution: DetectionResolutionCandidate | null = openFoodFactsCandidate
+      ? { product: openFoodFactsCandidate.product, confidence: openFoodFactsCandidate.confidence, matchKind: "open_food_facts" }
+      : null;
+    const webNutrition = mode === "fast" || confirmedRetailer || hasConfirmedNutrition(sharedWebCandidate) ||
+      hasConfirmedNutrition(openFoodFactsResolution) || (!canSearchExactIdentity && !externalCatalogIdentity)
       ? null
-      : await dependencies.resolveWebNutrition?.(webLookupInput, detection.confidence).catch(() => null) || null);
-    const resolvedProduct = knownProduct || externalCatalogCandidate?.product || openFoodFactsCandidate?.product || webNutrition?.product || externalCatalogIdentity?.product || null;
-    const resolvedRetailerOffer = mode === "fast" ? null : exactRetailerOffer || externalCatalogCandidate?.offer || retailerOffer;
-    const nutritionLinkConfidence =
-      initialCatalogMatch?.confidence ??
-      externalCatalogCandidate?.confidence ??
-      openFoodFactsCandidate?.confidence ??
-      webNutrition?.confidence ??
-      externalCatalogIdentity?.confidence ??
-      indexedBarboraMatch?.score ??
-      exactRetailerOffer?.matchConfidence ??
-      null;
+      : await dependencies.resolveWebNutrition?.(webLookupInput, detection.confidence).catch(() => null) || null;
+    const webCandidate: DetectionResolutionCandidate | null = webNutrition
+      ? { product: webNutrition.product, confidence: webNutrition.confidence, matchKind: "web_search" }
+      : null;
+    const resolutionCandidates = [
+      ...retailerCandidates,
+      sharedWebCandidate,
+      openFoodFactsResolution,
+      webCandidate,
+      identityCandidate
+    ].filter((candidate): candidate is DetectionResolutionCandidate => Boolean(candidate));
+    // A confirmed result from any later source outranks every identity-only
+    // fallback. Identity-only remains available only after each bounded lookup
+    // path has either missed or returned incomplete data.
+    const selectedCandidate = resolutionCandidates.find(hasConfirmedNutrition) || resolutionCandidates[0] || null;
+    const resolvedProduct = selectedCandidate?.product || null;
+    const resolvedRetailerOffer = mode === "fast"
+      ? null
+      : selectedCandidate?.retailerOffer || exactRetailerOffer || canonicalExactOffer || retailerOffer;
+    const nutritionLinkConfidence = selectedCandidate?.confidence ?? indexedBarboraMatch?.score ??
+      exactRetailerOffer?.matchConfidence ?? canonicalIndexedMatch?.score ?? canonicalExactOffer?.matchConfidence ?? null;
     const productId =
       resolvedProduct?.id ||
-      (indexedBarboraMatch || exactRetailerOffer
-        ? `barbora:${indexedBarboraMatch?.slug || exactRetailerOffer!.slug}`
+      (indexedBarboraMatch || exactRetailerOffer || canonicalIndexedMatch || canonicalExactOffer
+        ? `barbora:${indexedBarboraMatch?.slug || exactRetailerOffer?.slug || canonicalIndexedMatch?.slug || canonicalExactOffer!.slug}`
           : genericProductId(detection.brand, detection.productName, ""));
     return {
       productId,
-      catalogProductId: knownProduct?.id || null,
+      catalogProductId: selectedCandidate?.catalogProductId || null,
       confidence: detection.confidence,
       box: detection.box,
       observedText: detection.productName,
@@ -630,19 +765,10 @@ export async function resolveVisibleDetections(
               : null,
         searchQuery: detection.searchQuery,
         barcode: detection.barcode || null,
-        matchKind: initialCatalogMatch
-          ? "verified_catalog"
-          : indexedProduct || exactOfferProduct
+        matchKind: selectedCandidate?.matchKind ||
+          (indexedBarboraMatch || exactRetailerOffer || canonicalIndexedMatch || canonicalExactOffer
             ? "barbora"
-            : externalCatalogCandidate || externalCatalogIdentity
-              ? "retailer_catalog"
-            : openFoodFactsCandidate
-              ? "open_food_facts"
-              : webNutrition
-                ? "web_search"
-                : indexedBarboraMatch || exactRetailerOffer
-                  ? "barbora"
-                  : "visual_only"
+            : "visual_only")
       },
       shelfPrice: isTrustedShelfPriceDetection(detection)
         ? {
@@ -654,7 +780,7 @@ export async function resolveVisibleDetections(
         : null,
       retailerOffer: resolvedRetailerOffer,
       nutritionLinkConfidence,
-      inlineProduct: externalCatalogCandidate?.product || openFoodFactsCandidate?.product || webNutrition?.product || externalCatalogIdentity?.product || null
+      inlineProduct: selectedCandidate && !selectedCandidate.catalogProductId ? selectedCandidate.product : null
     };
   });
   return dedupeProductDetections(resolved);

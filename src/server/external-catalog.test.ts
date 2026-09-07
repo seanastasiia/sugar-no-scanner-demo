@@ -130,6 +130,24 @@ describe("external retailer catalog", () => {
     }
   });
 
+  it.each([
+    ["Pringles Sour Cream & Onion 70g", "70g", "rimi_lv:1001662"],
+    ["Pringles Sour Cream & Onion 165g", "165g", "rimi_lv:127407"]
+  ])("joins the English Pringles identity to the exact verified Rimi pack: %s", (name, packSize, expectedId) => {
+    const resolved = resolveExternalCatalogProduct(
+      { brand: "Pringles", name, variant: "", packSize, searchTerms: [name] },
+      ""
+    );
+
+    expect(resolved).toMatchObject({
+      product: {
+        id: expectedId,
+        ratingStatus: "complete",
+        nutrientsPer100g: { proteinG: expect.any(Number), totalSugarG: expect.any(Number) }
+      }
+    });
+  });
+
   it("keeps a generic Rimi juice identity unresolved when variants are ambiguous", () => {
     const candidates = [
       rimiProduct("812378", "Sulas dzēriens Rimi multiaugļu 200ml", "200ml"),

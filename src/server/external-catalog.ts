@@ -32,8 +32,11 @@ const rawProducts = [
   ...(livinSnapshot as ExternalCatalogProduct[]),
   ...(livinnSnapshot as ExternalCatalogProduct[])
 ];
-const stopWords = new Set(["and", "ar", "bar", "bez", "for", "from", "in", "of", "the", "un", "with"]);
+const stopWords = new Set([
+  "and", "ar", "bar", "bez", "for", "from", "gars", "garsa", "garsu", "in", "of", "sala", "the", "un", "uzkod", "uzkoda", "with"
+]);
 const identityPhraseAliases: Array<[RegExp, string]> = [
+  [/\bsour cream (?:and )?onions?\b/g, "skaba krej sip"],
   [/\bbrown rice cakes?\b/g, "risu galetes"],
   [/\bhimalayan salt\b/g, "himalaju sali"],
   [/\bgluten free\b/g, "bez glutena"],
@@ -53,6 +56,7 @@ const identityTokenAliases: Record<string, string> = {
   banana: "bananu",
   banan: "bananu",
   cheese: "siers",
+  cream: "krej",
   chesnok: "kiploku",
   chernika: "mellenu",
   desert: "deserts",
@@ -70,6 +74,16 @@ const identityTokenAliases: Record<string, string> = {
   persik: "persiku",
   puding: "pudins",
   shokolad: "sokolades",
+  sipoli: "sip",
+  sipoliem: "sip",
+  sipols: "sip",
+  sipolu: "sip",
+  onion: "sip",
+  onions: "sip",
+  krej: "krej",
+  krejuma: "krej",
+  krejums: "krej",
+  krejumu: "krej",
   siera: "siers",
   sieru: "siers",
   syr: "siers",

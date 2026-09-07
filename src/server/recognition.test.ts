@@ -526,6 +526,156 @@ describe("resolveVisibleDetections", () => {
     expect(resolveWebNutrition).not.toHaveBeenCalled();
   });
 
+  it("uses an OFF identity only as a bridge to the verified Rimi card for the same Pringles pack", async () => {
+    const identity: ExternalCatalogIdentity = {
+      source: "open_food_facts",
+      sourceProductId: "5053990101597",
+      retailer: null,
+      url: "https://world.openfoodfacts.org/product/5053990101597",
+      title: "Sour Cream & Onion",
+      aliases: ["Pringles sour cream and onion"],
+      brand: "Pringles",
+      gtin: "5053990101597",
+      sku: null,
+      category: "Chips",
+      packSize: "165g",
+      imageUrl: null,
+      price: null,
+      currency: null,
+      available: null,
+      checkedAt: "2026-09-07T00:00:00.000Z"
+    };
+    const verifiedRimi = {
+      ...getCatalog()[0],
+      id: "rimi_lv:127407",
+      retailerProductId: "127407",
+      brand: "Pringles",
+      name: "Sāļā uzkod. Pringles krēj. un sīp.garšu 165g",
+      shortName: "Pringles Sour Cream & Onion 165g",
+      ratingBasis: "retailer_catalog_reference" as const
+    };
+    const resolveExternalCatalog = vi.fn((input: { name: string }) =>
+      input.name === identity.title
+        ? { product: verifiedRimi, confidence: 0.96, offer: null }
+        : null
+    );
+    const resolveOpenFoodFacts = vi.fn(async () => null);
+    const resolveWebNutrition = vi.fn(async () => null);
+    const resolveSharedWebNutrition = vi.fn(async () => null);
+
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, {
+        brand: "Pringles",
+        productName: "Pringles Sour Cream & Onion 165g",
+        searchQuery: "Pringles Sour Cream and Onion 165g"
+      })],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveIndexedCandidate: () => null,
+        resolveExternalCatalog,
+        resolveExternalCatalogIdentity: () => ({
+          identity,
+          product: externalCatalogIdentityToScoredProduct(identity),
+          confidence: 0.95
+        }),
+        resolveOpenFoodFacts,
+        resolveWebNutrition,
+        resolveSharedWebNutrition
+      }
+    );
+
+    expect(resolveExternalCatalog).toHaveBeenCalledTimes(2);
+    expect(detections[0]).toMatchObject({
+      productId: "rimi_lv:127407",
+      identity: { matchKind: "retailer_catalog" },
+      inlineProduct: { id: "rimi_lv:127407", ratingStatus: "complete" }
+    });
+    expect(resolveSharedWebNutrition).not.toHaveBeenCalled();
+    expect(resolveOpenFoodFacts).not.toHaveBeenCalled();
+    expect(resolveWebNutrition).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["Pringles Sour Cream & Onion 70g", "barbora:uzk-pringles-skaba-krej-un-sipola-g-70-g"],
+    ["Pringles Sour Cream & Onion 165g", "barbora:sala-uzk-pringles-ar-sk-krej-sipol-165-g"]
+  ])("prefers the exact verified Barbora Pringles card over OFF identity-only: %s", async (name, expectedId) => {
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, {
+        brand: "Pringles",
+        productName: name,
+        searchQuery: name
+      })],
+      [],
+      undefined,
+      1,
+      "fast"
+    );
+
+    expect(detections[0]).toMatchObject({
+      productId: expectedId,
+      catalogProductId: expectedId,
+      identity: { matchKind: "barbora" }
+    });
+  });
+
+  it("exhausts every verified nutrition path after identity-only matches", async () => {
+    const identity: ExternalCatalogIdentity = {
+      source: "open_food_facts",
+      sourceProductId: "0454595068356",
+      retailer: null,
+      url: "https://world.openfoodfacts.org/product/0454595068356",
+      title: "Pringles sour cream & onions",
+      aliases: [],
+      brand: "Pringles",
+      gtin: "00454595068356",
+      sku: null,
+      category: "Chips",
+      packSize: "70g",
+      imageUrl: null,
+      price: null,
+      currency: null,
+      available: null,
+      checkedAt: "2026-09-07T00:00:00.000Z"
+    };
+    const identityOnly = externalCatalogIdentityToScoredProduct(identity);
+    const verifiedWeb = { ...getCatalog()[0], id: "web:verified-pringles" };
+    const resolveExternalCatalog = vi.fn(() => ({ product: identityOnly, confidence: 0.91, offer: null }));
+    const resolveSharedWebNutrition = vi.fn(async () => ({ product: identityOnly, confidence: 0.92 }));
+    const resolveOpenFoodFacts = vi.fn(async () => ({ product: identityOnly, confidence: 0.97 }));
+    const resolveWebNutrition = vi.fn(async () => ({ product: verifiedWeb, confidence: 0.96 }));
+
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, {
+        brand: "Pringles",
+        productName: "Pringles Sour Cream & Onion 70g",
+        searchQuery: "Pringles Sour Cream and Onion 70g"
+      })],
+      [],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveIndexedCandidate: () => null,
+        resolveExternalCatalog,
+        resolveExternalCatalogIdentity: () => null,
+        resolveSharedWebNutrition,
+        resolveOpenFoodFacts,
+        resolveWebNutrition
+      }
+    );
+
+    expect(resolveExternalCatalog).toHaveBeenCalledOnce();
+    expect(resolveSharedWebNutrition).toHaveBeenCalledOnce();
+    expect(resolveOpenFoodFacts).toHaveBeenCalledOnce();
+    expect(resolveWebNutrition).toHaveBeenCalledOnce();
+    expect(detections[0]).toMatchObject({
+      productId: "web:verified-pringles",
+      identity: { matchKind: "web_search" },
+      inlineProduct: { id: "web:verified-pringles", ratingStatus: "complete" }
+    });
+  });
+
   it("uses a multilingual Livinn identity to make the nutrition lookup exact", async () => {
     const identity: ExternalCatalogIdentity = {
       source: "livinn_lt",
@@ -573,7 +723,7 @@ describe("resolveVisibleDetections", () => {
       expect.objectContaining({
         brand: "Bett'r",
         name: identity.title,
-        packSize: "120g",
+        packSize: "120 g",
         searchTerms: expect.arrayContaining(identity.aliases)
       }),
       "380023368242"
