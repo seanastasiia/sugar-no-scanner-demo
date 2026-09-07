@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import livinnFoodIdentities from "../data/livinn-food-index.generated.json";
 import offIdentities from "../data/open-food-facts-regional-identities.generated.json";
+import cspReport from "../data/csp-import-report.generated.json";
 import { BARBORA_RATED_PRODUCT_COUNT } from "../src/server/barbora-supabase-catalog";
 
 async function main() {
@@ -54,6 +55,11 @@ async function main() {
   if (offIdentityRows.error) throw offIdentityRows.error;
   const offIdentityCount = offIdentityRows.count ?? 0;
   const expectedOffIdentityCount = offIdentities.length;
+  const cspExpected = cspReport as { connected: boolean; records: number; identities: number };
+  const cspPrices = await supabase.from("csp_food_price_records").select("gtin", { count: "exact", head: true });
+  if (cspPrices.error) throw cspPrices.error;
+  const cspIdentities = await supabase.from("csp_product_identities").select("gtin", { count: "exact", head: true });
+  if (cspIdentities.error) throw cspIdentities.error;
 
   const summary = {
     expected: BARBORA_RATED_PRODUCT_COUNT,
@@ -64,7 +70,12 @@ async function main() {
     expectedLivinnIdentityCount,
     livinnIdentityCount,
     expectedOffIdentityCount,
-    offIdentityCount
+    offIdentityCount,
+    cspConnected: cspExpected.connected,
+    expectedCspPriceCount: cspExpected.records,
+    cspPriceCount: cspPrices.count ?? 0,
+    expectedCspIdentityCount: cspExpected.identities,
+    cspIdentityCount: cspIdentities.count ?? 0
   };
   console.log(JSON.stringify(summary, null, 2));
 
@@ -82,6 +93,9 @@ async function main() {
   }
   if (offIdentityCount !== expectedOffIdentityCount) {
     throw new Error(`Expected ${expectedOffIdentityCount} OFF identity-only rows, found ${offIdentityCount}`);
+  }
+  if ((cspPrices.count ?? 0) !== cspExpected.records || (cspIdentities.count ?? 0) !== cspExpected.identities) {
+    throw new Error("CSP database layer does not match the generated import report");
   }
 }
 

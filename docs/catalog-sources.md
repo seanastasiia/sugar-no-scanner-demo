@@ -45,7 +45,8 @@ This document separates product coverage from visual recognition. A catalog row 
 | 4 | Livin Latvia | exact identity, nutrition and offer | 6 complete food pages from the full 169-URL public sitemap | non-redistributable retailer snapshot; obtain permission before recurring production use |
 | 5 | Livinn Lithuania | multilingual exact identity, GTIN and nutrition | 2,489 edible identities, including 1,855 nutrition-complete products, from complete 5,926-URL canonical sitemap accounting | non-redistributable retailer snapshot; obtain permission before recurring production use |
 | 6 | Open Food Facts | exact GTIN/name identity plus nutrition fallback when complete | 1,096 nutrition-complete records plus 9,626 separate identity-only records; original 119 alternate-name records retained; no guessed CSV aliases | ODbL database; attribution required; images have separate CC BY-SA terms |
-| 7 | Cited web result | last-resort exact per-100 nutrition | runtime only | keep source URL and reject ambiguous variants |
+| 7 | CSP Latvia price feed | exact GTIN, Latvian product name and Rimi/Lidl/Maxima prices for a free price-comparison surface | adapter and private schema ready; 0 rows because no provider file/access has been issued | statutory free price-comparison purpose only; not nutrition evidence and not approved for unrestricted database reuse |
+| 8 | Cited web result | last-resort exact per-100 nutrition | runtime only | keep source URL and reject ambiguous variants |
 
 The Rimi/Livin/Livinn counts are source-backed snapshot counts, not visual-recognition or market-coverage claims. Rimi covers meat/fish/prepared food, dairy/eggs, bakery, frozen food, packaged food, sweets/snacks and drinks. The Livinn identity index includes every page classified by the source under `Maistas`; only the nutrition-complete subset can receive a fit. The Open Food Facts release file is a bounded Latvia subset; the same isolated schema also accepts the official daily bulk export.
 
@@ -55,6 +56,7 @@ The Rimi/Livin/Livinn counts are source-backed snapshot counts, not visual-recog
 - `retailer_catalog_food_identities` contains exact Livinn edible identities and source-provided language aliases without pretending that missing nutrition is zero.
 - `open_food_facts_products` contains the attributed ODbL-derived subset only. Its `aliases` array stores source-provided multilingual names for the same GTIN.
 - `open_food_facts_product_identities` contains the 9,626 additional attributed ODbL identities. It deliberately has no nutrition, ingredient, score or user-image columns.
+- `csp_food_price_records` and `csp_product_identities` are server-only tables for the official daily basic-food price feed. The checked-in generated files remain empty until CSP issues a file and confirms Sugar.no's use. They contain no nutrition, ingredients, scores or user images.
 - `shared_open_food_facts_products`, `shared_open_food_facts_aliases` and `shared_open_food_facts_observations` are the separate server-only ODbL runtime layer for exact new OFF hits. They retain attribution/licence metadata and permanently block identity/composition or alias conflicts; retailer rows can never enter them.
 - `catalog_sources` stores terms, attribution and redistribution metadata.
 - Personal Shelf Rank adds `retailer_shelf_evidence` and `open_food_facts_shelf_evidence` as separate RLS/server-role-only tables. Ingredients and extra nutrients retain one exact source, date and language; they are not merged across markets or recipes. The original 198-row pilot is expanded by the resumable supported-category batch, with separate OFF exact-barcode output. No OFF ingredients are synthesized from the old ingredient-free snapshot. Missing fiber can produce a bounded provisional assessment; missing essential or contradictory data cannot. Current counts and source limitations are in the [rollout log](test-runs/2026-09-03-personal-shelf-batch-rollout.md); see [ingestion rules](personal-shelf-rank.md).
@@ -72,6 +74,20 @@ npm run supabase:seed:external
 ```
 
 The deployed scanner can run from checked-in snapshots when Supabase is not configured. This is intentional for the private investor proof of concept, but a scheduled managed catalog is the production target.
+
+## CSP price feed
+
+`npm run catalog:import:csp` is a no-write connection check. It reports `connected: false` while `CSP_CSV_INPUT` is absent. Once CSP has issued an official file and confirmed the permitted Sugar.no use, inspect it first and then run:
+
+```bash
+CSP_CSV_INPUT=/approved/csp/daily-file.csv npm run catalog:import:csp
+CSP_CSV_INPUT=/approved/csp/daily-file.csv npm run catalog:import:csp -- --apply
+npm run supabase:seed:csp
+```
+
+The adapter accepts only the official Annex 2 identity/price fields, checksum-valid GTINs, valid Latvian dates, Rimi/Lidl/Maxima retailers, positive package/unit prices and kg/l/gab quantities. Unknown schemas and conflicting duplicate price rows fail closed. A cross-store GTIN becomes one identity only when the latest manufacturer and pack agree; names may then remain source aliases. CSP has no brand field, so a reusable identity also requires one unambiguous manufacturer. Its price rows never enter Personal Fit or composition evidence.
+
+Official scope: [CSP access announcement and request route](https://www.csp.gov.lv/lv/jaunums/cenu-salidzinasanas-riku-izstradataji-no-1-decembra-vares-sanemt-datus-no-csp) and [Cabinet Regulation No. 508, Annex 2 field specification](https://likumi.lv/ta/id/362598). The regulation limits transferred data to the statutory food-price-comparison purpose and requires consumer access without charge or other restrictions. Access readiness is not legal permission; the provider response must be retained with the import.
 
 ## Rimi, Livin and Livinn refresh
 

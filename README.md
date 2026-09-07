@@ -275,6 +275,8 @@ Checked-in generated snapshots make the investor demo reproducible and fast:
 - `data/open-food-facts-lv.generated.json`: attributed Latvia subset imported through the ODbL pipeline. Source-provided `product_name_*` values are retained as multilingual identity aliases rather than translated or discarded.
 - `data/open-food-facts-regional.generated.json`: 596 accepted Latvia/Lithuania/Belarus-tagged OFF records from the version-pinned daily export. The corresponding generated import report records all exclusions. It is a separate ODbL snapshot; no full archive or images are retained.
 - `data/catalog-sources.generated.json`: source, license and redistribution manifest.
+- `data/open-food-facts-regional-identities.generated.json`: attributed OFF identity-only GTIN/name rows; never rating evidence.
+- `data/csp-*.generated.json`: default-empty CSP price/identity layer; remains disconnected until an issued file and permitted-use confirmation exist.
 - `data/personal-shelf-evidence.generated.json`: exact Barbora, Rimi and Livinn ingredient/salt/saturated-fat/fiber observations from the resumable supported-category batch. Missing values are null; QA fixtures are not included.
 - `data/personal-shelf-off-evidence.generated.json`: separate ODbL composition observations obtained by exact barcode, never mixed into the retailer file.
 

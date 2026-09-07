@@ -1,3 +1,4 @@
+import cspFoodIdentities from "../../data/csp-food-identities.generated.json";
 import livinSnapshot from "../../data/livin-catalog.generated.json";
 import livinnFoodIndex from "../../data/livinn-food-index.generated.json";
 import livinnSnapshot from "../../data/livinn-catalog.generated.json";
@@ -142,7 +143,8 @@ export function dedupeExternalCatalogProducts(candidates: ExternalCatalogProduct
 const products = dedupeExternalCatalogProducts(rawProducts.map(withReviewedPackageAliases));
 const identities = [
   ...(livinnFoodIndex as ExternalCatalogIdentity[]),
-  ...(offRegionalIdentities as ExternalCatalogIdentity[])
+  ...(offRegionalIdentities as ExternalCatalogIdentity[]),
+  ...(cspFoodIdentities as ExternalCatalogIdentity[])
 ].map(withReviewedPackageAliases);
 
 function externalIdentityProductId(product: ExternalCatalogIdentity): string {

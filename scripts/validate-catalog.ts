@@ -111,9 +111,9 @@ const offIdentityReportSchema = z.object({
 }).passthrough();
 
 const catalogSourceManifestSchema = z.object({
-  id: z.enum(["barbora_lv", "rimi_lv", "livin_lv", "livinn_lt", "open_food_facts"]),
+  id: z.enum(["barbora_lv", "rimi_lv", "livin_lv", "livinn_lt", "open_food_facts", "csp_lv"]),
   displayName: z.string().min(1),
-  layer: z.enum(["retailer_snapshot", "odbl_bulk"]),
+  layer: z.enum(["retailer_snapshot", "odbl_bulk", "government_price_feed"]),
   license: z.string().min(1),
   attribution: z.string().min(1),
   termsUrl: z.url().startsWith("https://"),
@@ -206,6 +206,36 @@ async function main() {
   const offIdentityReport = offIdentityReportSchema.parse(
     JSON.parse(await readFile("data/open-food-facts-regional-identities-report.generated.json", "utf8"))
   );
+  const cspIdentities = z.array(z.object({
+    source: z.literal("csp_lv"),
+    sourceProductId: z.string().regex(/^\d{8,14}$/),
+    retailer: z.null(),
+    url: z.url(),
+    title: z.string().trim().min(1),
+    aliases: z.array(z.string().trim().min(1)),
+    brand: z.string().trim().min(1),
+    gtin: z.string().regex(/^\d{14}$/),
+    sku: z.null(),
+    category: z.string().trim().min(1).nullable(),
+    packSize: z.string().trim().min(1),
+    imageUrl: z.null(),
+    price: z.null(),
+    currency: z.null(),
+    available: z.null(),
+    checkedAt: z.iso.datetime()
+  }).strict()).parse(JSON.parse(await readFile("data/csp-food-identities.generated.json", "utf8")));
+  const cspPrices = z.array(z.unknown()).parse(JSON.parse(await readFile("data/csp-price-records.generated.json", "utf8")));
+  const cspReport = z.object({
+    connected: z.boolean(), records: z.number().int().nonnegative(), identities: z.number().int().nonnegative(),
+    nutritionImported: z.literal(false), ingredientsImported: z.literal(false), imagesImported: z.literal(false),
+    permittedPurpose: z.literal("free_food_price_comparison")
+  }).passthrough().parse(JSON.parse(await readFile("data/csp-import-report.generated.json", "utf8")));
+  if (cspReport.records !== cspPrices.length || cspReport.identities !== cspIdentities.length) {
+    throw new Error("CSP generated layers do not match their report");
+  }
+  if (!cspReport.connected && (cspPrices.length || cspIdentities.length)) {
+    throw new Error("Disconnected CSP layer must remain empty");
+  }
   if (offIdentities.length !== offIdentityReport.identityOnlyRows) {
     throw new Error("Open Food Facts identity-only snapshot does not match its report");
   }
@@ -254,7 +284,7 @@ async function main() {
       throw new Error(`Livinn Lithuania representative product ${id} is missing or changed`);
     }
   }
-  const sourceManifests = z.array(catalogSourceManifestSchema).length(5).parse(
+  const sourceManifests = z.array(catalogSourceManifestSchema).length(6).parse(
     JSON.parse(await readFile("data/catalog-sources.generated.json", "utf8"))
   );
   if (new Set(sourceManifests.map((source) => source.id)).size !== sourceManifests.length) {
@@ -265,11 +295,15 @@ async function main() {
   const livinSource = sourceManifests.find((source) => source.id === "livin_lv")!;
   const livinnSource = sourceManifests.find((source) => source.id === "livinn_lt")!;
   const offSource = sourceManifests.find((source) => source.id === "open_food_facts")!;
+  const cspSource = sourceManifests.find((source) => source.id === "csp_lv")!;
   if (barboraSource.redistributable || rimiSource.redistributable || livinSource.redistributable || livinnSource.redistributable) {
     throw new Error("Retailer snapshots must remain non-redistributable without permission");
   }
   if (!offSource.redistributable || !/ODbL|Open Database License/i.test(offSource.license) || !/CC BY-SA/i.test(offSource.license)) {
     throw new Error("Open Food Facts manifest must retain database and product-image license notices");
+  }
+  if (cspSource.redistributable || cspSource.layer !== "government_price_feed" || !/free food-price-comparison/i.test(cspSource.license)) {
+    throw new Error("CSP manifest must stay restricted to the free price-comparison purpose");
   }
   const combinedOpenFoodFacts = [
     ...new Map(
@@ -345,6 +379,7 @@ async function main() {
   console.log(`Open Food Facts Lithuania/Belarus ODbL layer: ${regionalOpenFoodFacts.length}`);
   console.log(`Open Food Facts rows with multilingual aliases: ${multilingualOpenFoodFacts.length}`);
   console.log(`Open Food Facts identity-only rows: ${offIdentities.length}`);
+  console.log(`CSP price/identity rows: ${cspPrices.length}/${cspIdentities.length} (connected: ${cspReport.connected})`);
   if (process.argv.includes("--require-complete") && complete.length !== products.length) {
     throw new Error("Catalog is not ready for public two-factor fit scores");
   }

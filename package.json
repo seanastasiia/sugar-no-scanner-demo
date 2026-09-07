@@ -25,6 +25,7 @@
     "catalog:sync:shelf-demo": "tsx scripts/sync-shelf-demo-evidence.ts",
     "catalog:sync:shelf-batch": "tsx scripts/sync-personal-shelf-batch.ts",
     "catalog:audit:personal-fit": "tsx scripts/audit-personal-shelf-catalog.ts",
+    "catalog:queue:personal-fit": "tsx scripts/freeze-personal-shelf-incomplete.ts",
     "catalog:report:personal-fit": "tsx scripts/report-personal-shelf-quality.ts",
     "catalog:report:ingredient-impact": "tsx scripts/report-personal-shelf-alias-impact.ts",
     "catalog:validate:shelf-pilot": "tsx scripts/validate-personal-shelf-evidence.ts",
@@ -37,6 +38,7 @@
     "catalog:sync:off-latvia": "tsx scripts/sync-open-food-facts-latvia.ts",
     "catalog:import:off": "tsx scripts/import-open-food-facts-bulk.ts",
     "catalog:import:off-identities": "tsx scripts/import-off-regional-identities.ts",
+    "catalog:import:csp": "tsx scripts/import-csp-catalog.ts",
     "catalog:generate:sources": "tsx scripts/generate-catalog-sources.ts",
     "catalog:validate": "tsx scripts/validate-catalog.ts",
     "catalog:validate:barbora-coverage": "tsx scripts/validate-barbora-coverage.ts",
@@ -46,6 +48,7 @@
     "benchmark:models": "tsx scripts/benchmark-recognition-models.ts",
     "supabase:seed": "tsx scripts/seed-supabase.ts",
     "supabase:seed:external": "tsx scripts/seed-external-catalog.ts",
+    "supabase:seed:csp": "tsx scripts/seed-csp-catalog.ts",
     "supabase:seed:livinn": "tsx scripts/seed-livinn-catalog.ts",
     "supabase:seed:external:dry-run": "tsx scripts/seed-external-catalog.ts --dry-run",
     "supabase:verify:external": "tsx scripts/verify-external-catalog.ts"

@@ -1,0 +1,10 @@
+{
+  "connected": false,
+  "reason": "No provider file or permitted-use confirmation has been issued",
+  "records": 0,
+  "identities": 0,
+  "nutritionImported": false,
+  "ingredientsImported": false,
+  "imagesImported": false,
+  "permittedPurpose": "free_food_price_comparison"
+}

@@ -51,6 +51,16 @@ const manifests: CatalogSourceManifest[] = [
     termsUrl: "https://openfoodfacts.github.io/openfoodfacts-server/api/tutorials/license-be-on-the-legal-side/",
     dataUrl: "https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz",
     redistributable: true
+  },
+  {
+    id: "csp_lv",
+    displayName: "Central Statistical Bureau of Latvia price feed",
+    layer: "government_price_feed",
+    license: "Restricted to the statutory free food-price-comparison purpose; provider access and confirmation required",
+    attribution: "Latvian retailer price data supplied through the Central Statistical Bureau of Latvia",
+    termsUrl: "https://likumi.lv/ta/id/362598",
+    dataUrl: "https://www.csp.gov.lv/lv/jaunums/cenu-salidzinasanas-riku-izstradataji-no-1-decembra-vares-sanemt-datus-no-csp",
+    redistributable: false
   }
 ];
 
