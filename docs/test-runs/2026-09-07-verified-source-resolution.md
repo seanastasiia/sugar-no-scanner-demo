@@ -14,7 +14,8 @@
 - Regression coverage includes exact Pringles 70 g and 165 g retailer matching, OFF-identity-to-Rimi reconciliation, and continued lookup after three identity-only candidates.
 - `npm run build` — passed: Next.js 16.3.1 production build and standalone asset preparation.
 - Targeted Mobile Safari smoke — passed: Personal Shelf stays opt-in and leaves original Fit unchanged; a truly exhausted visual-only result is removed only after pending enrichment ends (2 tests).
-- Railway health/revision checks are recorded below after release.
+- Railway build `fca5b4d0-d0a1-4b97-9976-d384f6e0e7f7` — passed for implementation commit `67726dbb7d1d75d060d31e355fbd098e7e8c4698`; Next.js build, TypeScript and Railway `/api/health` gate all succeeded.
+- Production HTTPS smoke — passed: `/` returned HTTP 200 and `/api/health` returned `status: ok` with commit `67726dbb7d1d75d060d31e355fbd098e7e8c4698`.
 
 ## Product checks
 
@@ -26,4 +27,4 @@
 
 ## Release status
 
-Implementation verified locally on `codex/personal-fit-criteria-summary`; publication evidence will be appended after the owner-authorized `main` and Railway release.
+Published from owner-authorized `main`. Implementation deployment `fca5b4d0-d0a1-4b97-9976-d384f6e0e7f7` passed and served the expected implementation commit. Rollback tag: `production-before-verified-source-resolution-2026-09-07`.
