@@ -44,6 +44,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-07, preview: Personal Shelf cards looked like long tinted reports instead of a quick in-store decision.** Replaced visible category headings with one `Best product`/`Best products` heading and moved category into each neutral card. Fit color now appears only in the accessible gradient/rim badge. Each card keeps the exact score, meaningful within-category rank, sugar, protein and one short reason; repeated point tables and long card disclosures moved to one closed page-level `How scores work` explanation. Scoring, evidence, ordering, original Fit and camera markers are unchanged.
+
 - **2026-09-07, preview: Personal Shelf Rank still exposed unscored products under `More products`.** Personal scan results now render only numeric scores and provisional score ranges. Missing-data, contradictory, unsupported and unresolved rows are hidden; an all-unrated scan shows one short empty state. The original Fit list and the standalone source-conflict demo remain available and unchanged.
 
 - **2026-09-07, preview: the expanded scan repeated explanatory hierarchy above already-ranked cards.** Removed the Personal Shelf switch helper and the original result list's `Best fit first` plus scan/basis heading block. The switch keeps its accessible label, the ranked list keeps an explicit accessible name, and product order, ratings, cards and detail navigation are unchanged.

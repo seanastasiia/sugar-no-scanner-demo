@@ -100,7 +100,8 @@ test("rating demo is reachable from Show demo and can return to the unchanged sc
   await page.getByRole("button", { name: /^Shelf demo/ }).click();
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("switch", { name: "Personal Shelf Rank Pilot", exact: true })).not.toBeChecked();
-  await expect(page.getByRole("heading", { name: "Best fit first", exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Scan results", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Best fit first", exact: true })).toHaveCount(0);
 });
 
 test("rating demo handles broken packshots and remains accessible on small dark phones", async ({ page }, testInfo) => {

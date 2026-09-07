@@ -7,7 +7,7 @@ import { useId, useState } from "react";
 import { hasContradictoryShelfNutrition, rankPersonalShelfProducts, shelfScoreLabel } from "@/lib/personal-shelf-rank";
 import { personalShelfFit, PERSONAL_FIT_GUIDE } from "@/lib/personal-shelf-fit";
 import type { ProductRecord, ScoredProduct } from "@/lib/types";
-import { PersonalShelfFitBadge, personalFitCardClass } from "./personal-shelf-fit-badge";
+import { PersonalShelfFitBadge } from "./personal-shelf-fit-badge";
 import styles from "./personal-shelf-demo.module.css";
 
 function DemoPackshot({ product }: { product: ProductRecord }) {
@@ -30,7 +30,7 @@ function DemoCard({ entry }: { entry: DemoEntry }) {
   const evidence = product.shelfEvidence?.productId === product.id && (!product.gtin || !product.shelfEvidence.gtin || product.gtin === product.shelfEvidence.gtin) ? product.shelfEvidence : null;
   const inconsistent = hasContradictoryShelfNutrition(evidence);
   return (
-    <li className={`${styles.card} ${(rank === 1 && !rankProvisional) || expanded ? styles.emphasized : ""} ${personalFitCardClass(fit)}`} data-personal-fit={fit?.tone}>
+    <li className={`${styles.card} ${(rank === 1 && !rankProvisional) || expanded ? styles.emphasized : ""}`} data-personal-fit={fit?.tone}>
       <button type="button" className={styles.row} aria-expanded={expanded} aria-controls={detailId}
         onClick={() => setExpanded(!expanded)} data-testid="demo-product-row">
         <span className={`${styles.rank} ${rank === null ? styles.pending : ""} ${rankProvisional ? styles.provisionalRank : ""}`}

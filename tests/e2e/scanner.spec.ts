@@ -170,16 +170,18 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   const results = page.getByLabel("Personal Shelf Rank results");
   await expect(results).not.toContainText(/Within-type comparison|assessed in this|Need two for a relative rank|Not compared in this pilot|Missing or unverified/);
   const chips = results.getByRole("region", { name: "Chips", exact: true });
-  await expect(chips.getByText("Provisional #1 of 3 in chips", { exact: true })).toHaveCount(2);
+  await expect(chips.getByText("Provisional #1 of 3", { exact: true })).toHaveCount(2);
   await expect(chips.getByText("Not enough verified data", { exact: true })).toHaveCount(0);
-  await expect(chips.getByText("Provisional · fiber unknown", { exact: true })).toBeVisible();
+  await expect(chips.getByText("Why this range", { exact: true })).toBeVisible();
   await expect(chips.getByText(/71–81/)).toBeVisible();
   await expect(chips.getByTestId("personal-fit-badge")).toHaveText(["Great fit", "Great fit", "Moderate to Great fit"]);
   await expect(chips.locator('li[data-personal-fit="uncertain"]')).toHaveCount(1);
-  await expect(results.getByText("Score only · Spoonable yogurts", { exact: true })).toBeVisible();
-  await chips.getByText("Why this score?", { exact: true }).first().click();
-  const details = chips.locator("details[open]");
-  await expect(details.locator("dt")).toHaveText(["Sugar", "Protein", "Food base", "Salt, saturates & fiber"]);
+  await expect(results.getByText("Score only · Spoonable yogurts", { exact: true })).toHaveCount(0);
+  await expect(results.getByText("Best products", { exact: true })).toBeVisible();
+  await results.getByText("How scores work", { exact: true }).click();
+  await expect(results.locator("details[open]")).toContainText("Scores compare products within the same category");
+  await expect(results.locator("details[open]")).toContainText("Missing facts stay unknown");
+  await expect(results.locator("dt")).toHaveCount(0);
   await expect(results.getByRole("link", { includeHidden: true })).toHaveCount(0);
   await expect(results).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Potatoes, sunflower oil, salt/);
   await expectNoDocumentOverflow(page);
@@ -221,9 +223,9 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await openPersonalShelfFixture(page, samples);
   await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
   const chips = page.getByRole("region", { name: "Chips", exact: true });
-  await expect(chips.getByText("#1 of 2 in chips", { exact: true })).toBeVisible();
-  await expect(chips.getByRole("heading", { level: 4 })).toHaveCount(2);
-  await expect(chips.getByRole("heading", { level: 4 }).first()).toHaveText(samples[0].shortName);
+  await expect(chips.getByText("#1 of 2", { exact: true })).toBeVisible();
+  await expect(chips.getByRole("heading", { level: 3 })).toHaveCount(2);
+  await expect(chips.getByRole("heading", { level: 3 }).first()).toHaveText(samples[0].shortName);
   await expect(chips.getByText("64/100", { exact: true })).toBeVisible();
   await expect(chips.getByLabel("Not scored", { exact: true })).toHaveCount(0);
   await expect(chips.getByText("More products", { exact: true })).toHaveCount(0);
@@ -231,8 +233,9 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await expectNoDocumentOverflow(page);
   await expect.poll(() => chips.getByTestId("product-packshot").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete)), { timeout: 10_000 }).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn.png"), fullPage: true, animations: "disabled" });
-  await chips.getByText("Why this score?", { exact: true }).first().click();
-  await expect(chips.locator("details[open]").locator("dd")).toHaveText(["10 / 10 points", "2.1 / 10 points", "22.5 / 30 points", "28.9 / 50 points"]);
+  await expect(chips.getByText("Why 64", { exact: true })).toBeVisible();
+  await page.getByText("How scores work", { exact: true }).click();
+  await expect(page.locator('details[open]')).toContainText("Great 75–100 · Moderate 50–74 · Low 0–49");
   await expect(chips).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Sudedamosios dalys/);
   await expect(chips.getByText("View available evidence", { exact: true })).toHaveCount(0);
   await expect(chips.getByRole("link", { includeHidden: true })).toHaveCount(0);
@@ -310,14 +313,15 @@ test("personal shelf pilot displays all eight real Turtle cereal records and lea
   const before = await original.innerText();
   await page.getByRole("switch", { name: /Personal Shelf Rank/ }).click();
   const group = page.getByRole("region", { name: "Breakfast cereals & granola", exact: true });
-  await expect(group.getByRole("heading", { level: 4 })).toHaveCount(8);
+  await expect(group.getByRole("heading", { level: 3 })).toHaveCount(8);
   await expect(group.getByText("79/100", { exact: true })).toBeVisible();
-  await expect(group.getByRole("heading", { level: 4 }).first()).toHaveText(samples[5].shortName);
+  await expect(group.getByRole("heading", { level: 3 }).first()).toHaveText(samples[5].shortName);
   await expect(group).not.toContainText(/No ratings for this shelf|Personal score unavailable/);
   await expect(group.getByTestId("personal-fit-badge")).toHaveText(["Great fit", "Great fit", "Moderate fit", "Moderate fit", "Moderate fit", "Moderate fit", "Low fit", "Low fit"]);
   for (const tone of ["great", "moderate", "low"]) {
     const card = group.locator(`li[data-personal-fit="${tone}"]`).first();
-    await expect(card).toHaveCSS("background-image", /linear-gradient/);
+    await expect(card).toHaveCSS("background-image", "none");
+    await expect(card.getByTestId("personal-fit-badge")).toHaveCSS("background-image", /linear-gradient/);
   }
   const accessibility = await new AxeBuilder({ page }).include('[aria-label="Personal Shelf Rank results"]').withTags(["wcag2a", "wcag2aa"]).analyze();
   expect(accessibility.violations).toEqual([]);
@@ -917,12 +921,13 @@ test("ordinary Shelf demo rates all four bars in Personal Shelf without evidence
   await page.getByRole("button", { name: "View all", exact: true }).click();
   const original = page.getByLabel("Products ranked by Sugar.no fit");
   await expect(original.getByRole("button")).toHaveCount(4);
+  await expect(original).not.toContainText("Checking online…");
   const originalNames = await original.getByRole("button").allTextContents();
   await page.getByRole("switch", { name: "Personal Shelf Rank Pilot", exact: true }).click();
   const personal = page.getByRole("region", { name: "Personal Shelf Rank results", exact: true });
-  await expect(personal.getByRole("heading", { name: "Snack bars", exact: true })).toBeVisible();
+  await expect(personal.getByRole("region", { name: "Snack bars", exact: true })).toBeVisible();
   await expect(personal.getByRole("heading", { name: "Cookies & wafers", exact: true })).toHaveCount(0);
-  await expect(personal.locator("h4")).toHaveCount(4);
+  await expect(personal.locator("h3")).toHaveCount(4);
   await expect(personal.locator("img")).toHaveCount(4);
   for (const image of await personal.locator("img").all()) {
     // Off-screen cards use native lazy loading; inspect each when it enters view.
@@ -930,13 +935,13 @@ test("ordinary Shelf demo rates all four bars in Personal Shelf without evidence
     await expect(image).toHaveAttribute("src", /demo-products/);
     await expect.poll(() => image.evaluate((element) => (element as HTMLImageElement).complete && (element as HTMLImageElement).naturalWidth > 0)).toBe(true);
   }
-  await personal.getByRole("heading", { name: "Snack bars", exact: true }).scrollIntoViewIfNeeded();
-  await expect(personal.getByText("Provisional #1 of 4 in snack bars", { exact: true })).toHaveCount(4);
-  await expect(personal.getByText("Provisional · fiber unknown", { exact: true })).toHaveCount(4);
+  await personal.getByRole("region", { name: "Snack bars", exact: true }).scrollIntoViewIfNeeded();
+  await expect(personal.getByText("Provisional #1 of 4", { exact: true })).toHaveCount(4);
+  await expect(personal.getByText("Why this range", { exact: true })).toHaveCount(4);
   await expect(personal.getByRole("img", { name: "Not scored", exact: true })).toHaveCount(0);
   await expect(personal.locator("strong").filter({ hasText: "59/100" })).toHaveCount(4);
-  await personal.getByText("Why this score?", { exact: true }).first().click();
-  await expect(personal.getByText("Pilot ceiling 59/100: high saturated fat per 100 g. Protein cannot cancel this limit.").first()).toBeVisible();
+  await personal.getByText("How scores work", { exact: true }).click();
+  await expect(personal).toContainText("Scores compare products within the same category");
   await expectNoDocumentOverflow(page);
   await page.screenshot({ path: test.info().outputPath("shelf-demo-personal-rank.png"), fullPage: true, animations: "disabled" });
   expect(evidenceRequests).toBe(0);
