@@ -1,10 +1,10 @@
 # Catalog sources, licensing and refresh
 
-Checked: 2026-09-04
+Checked: 2026-09-07
 
 ## Bounded preview expansion
 
-The first regional import uses `python3 scripts/extract-off-regional-csv.py --apply`: a version-pinned official CSV stream of 1,275,171,186 compressed bytes, with only selected regional product fields saved. Its dry-run prints the exact S3 version and limits. This avoids thousands of small Parquet range requests. The archive is not saved. CSV lacks reliable ingredient-language and translated-name fields; the importer preserves that absence and does not invent aliases or Personal Fit eligibility. The original 500-record layer remains byte-for-byte unchanged.
+The first regional import uses `python3 scripts/extract-off-regional-csv.py --apply`: a version-pinned official CSV stream of 1,275,171,186 compressed bytes, with only selected regional product fields saved. Its dry-run prints the exact S3 version and limits. This avoids thousands of small Parquet range requests. The archive is not saved. CSV lacks reliable ingredient-language and translated-name fields; the importer preserves that absence and does not invent aliases or Personal Fit eligibility. The original 500-record layer remains byte-for-byte unchanged. `npm run catalog:import:off-identities -- --apply` now reuses that exact extraction to create a separate identity-only layer. It accepted 9,626 additional unique GTINs with a brand and unambiguous name, imported no nutrition/ingredients/images and did not overlap the 1,096 nutrition-complete OFF rows.
 
 The 4 September run completed in 1,020 seconds: 4,535,553 rows scanned, 15,669 regional rows, no malformed rows, 500 existing GTINs and **596 accepted new GTINs**. Rejected: 88 invalid GTINs, 3,715 missing brands, 8,178 unknown package dimensions, 2,385 missing core values/name, 204 source-quality flags and 3 contradictory tables. There were no conflicting duplicate GTINs. The report is `data/open-food-facts-regional-import-report.generated.json`. Bulk import alone adds no Personal Fit score: 136 records have supported categories but incomplete scoring evidence, and 460 are outside current profiles. A separate exact-response follow-up may improve that evidence; the raw CSV snapshot is retained separately.
 
@@ -44,7 +44,7 @@ This document separates product coverage from visual recognition. A catalog row 
 | 3 | Rimi Latvia | exact identity, nutrition and offer | 6,822 complete products from all 7,617 pages in seven approved categories | non-redistributable retailer snapshot; obtain permission before recurring production use |
 | 4 | Livin Latvia | exact identity, nutrition and offer | 6 complete food pages from the full 169-URL public sitemap | non-redistributable retailer snapshot; obtain permission before recurring production use |
 | 5 | Livinn Lithuania | multilingual exact identity, GTIN and nutrition | 2,489 edible identities, including 1,855 nutrition-complete products, from complete 5,926-URL canonical sitemap accounting | non-redistributable retailer snapshot; obtain permission before recurring production use |
-| 6 | Open Food Facts | exact GTIN/multilingual-name nutrition fallback | 1,096 records: original 500 plus 596 new Latvia/Lithuania/Belarus-tagged records; original 119 alternate-name records retained; no guessed CSV aliases | ODbL database; attribution required; images have separate CC BY-SA terms |
+| 6 | Open Food Facts | exact GTIN/name identity plus nutrition fallback when complete | 1,096 nutrition-complete records plus 9,626 separate identity-only records; original 119 alternate-name records retained; no guessed CSV aliases | ODbL database; attribution required; images have separate CC BY-SA terms |
 | 7 | Cited web result | last-resort exact per-100 nutrition | runtime only | keep source URL and reject ambiguous variants |
 
 The Rimi/Livin/Livinn counts are source-backed snapshot counts, not visual-recognition or market-coverage claims. Rimi covers meat/fish/prepared food, dairy/eggs, bakery, frozen food, packaged food, sweets/snacks and drinks. The Livinn identity index includes every page classified by the source under `Maistas`; only the nutrition-complete subset can receive a fit. The Open Food Facts release file is a bounded Latvia subset; the same isolated schema also accepts the official daily bulk export.
@@ -54,6 +54,7 @@ The Rimi/Livin/Livinn counts are source-backed snapshot counts, not visual-recog
 - `retailer_catalog_products` contains non-redistributable, nutrition-complete Rimi/Livin/Livinn page snapshots.
 - `retailer_catalog_food_identities` contains exact Livinn edible identities and source-provided language aliases without pretending that missing nutrition is zero.
 - `open_food_facts_products` contains the attributed ODbL-derived subset only. Its `aliases` array stores source-provided multilingual names for the same GTIN.
+- `open_food_facts_product_identities` contains the 9,626 additional attributed ODbL identities. It deliberately has no nutrition, ingredient, score or user-image columns.
 - `shared_open_food_facts_products`, `shared_open_food_facts_aliases` and `shared_open_food_facts_observations` are the separate server-only ODbL runtime layer for exact new OFF hits. They retain attribution/licence metadata and permanently block identity/composition or alias conflicts; retailer rows can never enter them.
 - `catalog_sources` stores terms, attribution and redistribution metadata.
 - Personal Shelf Rank adds `retailer_shelf_evidence` and `open_food_facts_shelf_evidence` as separate RLS/server-role-only tables. Ingredients and extra nutrients retain one exact source, date and language; they are not merged across markets or recipes. The original 198-row pilot is expanded by the resumable supported-category batch, with separate OFF exact-barcode output. No OFF ingredients are synthesized from the old ingredient-free snapshot. Missing fiber can produce a bounded provisional assessment; missing essential or contradictory data cannot. Current counts and source limitations are in the [rollout log](test-runs/2026-09-03-personal-shelf-batch-rollout.md); see [ingestion rules](personal-shelf-rank.md).
@@ -62,7 +63,7 @@ The Rimi/Livin/Livinn counts are source-backed snapshot counts, not visual-recog
 
 The 7 September 2026 terms review found no reusable publication grant for Barbora or Rimi retailer-page data and found Livinn's explicit written-consent requirement for copying/publishing site information. Therefore retailer-page discoveries remain current-scan evidence unless written permission is obtained. Shared persistence is enabled only for Open Food Facts under its ODbL attribution/share-alike conditions. This is a conservative source-policy decision, not legal advice.
 
-The schema is reproducible through `supabase/migrations/202609020001_livinn_multilingual_catalog.sql`. Apply and seed it with:
+The schema is reproducible through the checked-in Supabase migrations, including `202609020001_livinn_multilingual_catalog.sql` and `202609070002_open_food_facts_identities.sql`. Apply and seed it with:
 
 ```bash
 npx supabase link --project-ref <project-ref>

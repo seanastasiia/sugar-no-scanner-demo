@@ -1,6 +1,7 @@
 import livinSnapshot from "../../data/livin-catalog.generated.json";
 import livinnFoodIndex from "../../data/livinn-food-index.generated.json";
 import livinnSnapshot from "../../data/livinn-catalog.generated.json";
+import offRegionalIdentities from "../../data/open-food-facts-regional-identities.generated.json";
 import rimiSnapshot from "../../data/rimi-catalog.generated.json";
 import { scoreReferenceProduct } from "@/lib/scoring";
 import type { ProductRecord, RetailerOffer, ScoredProduct } from "@/lib/types";
@@ -139,7 +140,16 @@ export function dedupeExternalCatalogProducts(candidates: ExternalCatalogProduct
 }
 
 const products = dedupeExternalCatalogProducts(rawProducts.map(withReviewedPackageAliases));
-const identities = (livinnFoodIndex as ExternalCatalogIdentity[]).map(withReviewedPackageAliases);
+const identities = [
+  ...(livinnFoodIndex as ExternalCatalogIdentity[]),
+  ...(offRegionalIdentities as ExternalCatalogIdentity[])
+].map(withReviewedPackageAliases);
+
+function externalIdentityProductId(product: ExternalCatalogIdentity): string {
+  return product.source === "open_food_facts"
+    ? `off:${product.sourceProductId}`
+    : `${product.source}:${product.sourceProductId}`;
+}
 
 function barcodeIndex<T extends { gtin: string | null }>(values: T[]): Map<string, T> {
   const index = new Map<string, T>();
@@ -158,7 +168,7 @@ const productsById = new Map<string, ExternalCatalogProduct>(
   products.map((product) => [`${product.source}:${product.sourceProductId}`, product])
 );
 const identitiesById = new Map<string, ExternalCatalogIdentity>(
-  identities.map((product) => [`${product.source}:${product.sourceProductId}`, product])
+  identities.map((product) => [externalIdentityProductId(product), product])
 );
 
 function brandIndex<T extends { brand: string }>(values: T[]): Map<string, T[]> {
@@ -351,9 +361,10 @@ export function externalCatalogToScoredProduct(product: ExternalCatalogProduct):
 
 export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogIdentity): ScoredProduct {
   const pack = canonicalPack(product.packSize);
+  const productId = externalIdentityProductId(product);
   const record: ProductRecord = {
-    id: `${product.source}:${product.sourceProductId}`,
-    shelfEvidence: getShelfEvidence(`${product.source}:${product.sourceProductId}`),
+    id: productId,
+    shelfEvidence: getShelfEvidence(productId),
     retailerProductId: product.sourceProductId,
     brand: product.brand,
     name: product.title,
@@ -361,8 +372,8 @@ export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogI
     aliases: product.aliases,
     format: "other",
     category: product.category,
-    packSizeG: pack?.amount || 1,
-    nutritionBasis: pack?.dimension === "liquid" ? "100ml" : "100g",
+    packSizeG: pack?.amount || 0,
+    nutritionBasis: pack?.dimension === "liquid" ? "100ml" : pack?.dimension === "solid" ? "100g" : undefined,
     energyKcalPer100: null,
     gtin: safeGtin(product.gtin),
     nutrientsPer100g: {
@@ -376,7 +387,11 @@ export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogI
     retailerUrl: product.url,
     sources: [
       {
-        label: "Livinn Lithuania product identity",
+        label: product.source === "open_food_facts"
+          ? "Open Food Facts product identity"
+          : product.source === "csp_lv"
+            ? "Central Statistical Bureau Latvia product identity"
+            : "Livinn Lithuania product identity",
         url: product.url,
         checkedAt: product.checkedAt,
         fields: ["identity", "retailerUrl"],
@@ -386,7 +401,9 @@ export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogI
     isGolden: false,
     accent: "coral"
   };
-  return scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial");
+  return product.source === "open_food_facts"
+    ? scoreReferenceProduct(record, "open_food_facts_reference", "open_food_facts_reference_partial")
+    : scoreReferenceProduct(record, "retailer_catalog_reference", "retailer_catalog_reference_partial");
 }
 
 function offerFor(product: ExternalCatalogProduct, confidence: number): RetailerOffer | null {
@@ -481,7 +498,7 @@ export function listExternalCatalogScoredProducts(): ScoredProduct[] {
 
 export function getExternalCatalogProductById(id: string): ScoredProduct | null {
   const [source, sourceProductId] = id.split(":", 2);
-  if ((source !== "rimi_lv" && source !== "livin_lv" && source !== "livinn_lt") || !sourceProductId) return null;
+  if ((source !== "rimi_lv" && source !== "livin_lv" && source !== "livinn_lt" && source !== "off" && source !== "csp_lv") || !sourceProductId) return null;
   const product = productsById.get(id);
   if (product) return externalCatalogToScoredProduct(product);
   const identity = identitiesById.get(id);
@@ -504,6 +521,16 @@ export function externalCatalogCounts() {
       return counts;
     },
     { rimi_lv: 0, livin_lv: 0, livinn_lt: 0 } as Record<"rimi_lv" | "livin_lv" | "livinn_lt", number>
+  );
+}
+
+export function externalCatalogIdentityCounts() {
+  return identities.reduce(
+    (counts, identity) => {
+      counts[identity.source] += 1;
+      return counts;
+    },
+    { livinn_lt: 0, open_food_facts: 0, csp_lv: 0 } as Record<ExternalCatalogIdentity["source"], number>
   );
 }
 

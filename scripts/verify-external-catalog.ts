@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import livinnFoodIdentities from "../data/livinn-food-index.generated.json";
+import offIdentities from "../data/open-food-facts-regional-identities.generated.json";
 import { BARBORA_RATED_PRODUCT_COUNT } from "../src/server/barbora-supabase-catalog";
 
 async function main() {
@@ -47,6 +48,13 @@ async function main() {
   const livinnIdentityCount = livinnIdentities.count ?? 0;
   const expectedLivinnIdentityCount = livinnFoodIdentities.length;
 
+  const offIdentityRows = await supabase
+    .from("open_food_facts_product_identities")
+    .select("gtin", { count: "exact", head: true });
+  if (offIdentityRows.error) throw offIdentityRows.error;
+  const offIdentityCount = offIdentityRows.count ?? 0;
+  const expectedOffIdentityCount = offIdentities.length;
+
   const summary = {
     expected: BARBORA_RATED_PRODUCT_COUNT,
     currentCount,
@@ -54,7 +62,9 @@ async function main() {
     versionCount,
     dueForSilentRevalidation: staleCount,
     expectedLivinnIdentityCount,
-    livinnIdentityCount
+    livinnIdentityCount,
+    expectedOffIdentityCount,
+    offIdentityCount
   };
   console.log(JSON.stringify(summary, null, 2));
 
@@ -69,6 +79,9 @@ async function main() {
   }
   if (livinnIdentityCount !== expectedLivinnIdentityCount) {
     throw new Error(`Expected ${expectedLivinnIdentityCount} Livinn food identities, found ${livinnIdentityCount}`);
+  }
+  if (offIdentityCount !== expectedOffIdentityCount) {
+    throw new Error(`Expected ${expectedOffIdentityCount} OFF identity-only rows, found ${offIdentityCount}`);
   }
 }
 

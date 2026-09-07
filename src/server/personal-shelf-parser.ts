@@ -31,7 +31,7 @@ export function livinnShelfEvidence(html: string, url: string, expectedSku: stri
   const kcal = normalizeIngredientText(nutrition).match(/(\d+(?:[.,]\d+)?)\s*kcal\b/);
   return {
     productId: `livinn_lt:${expectedSku}`, source: "livinn_lt", sourceUrl: url, checkedAt,
-    gtin: identity.gtin, category: identity.category, nutritionBasis: "100g",
+    gtin: identity.gtin, category: identity.category || "", nutritionBasis: "100g",
     ingredientsText: ingredients || null, ingredientsLanguage: "lt",
     energyKcal: kcal ? Number(kcal[1].replace(",", ".")) : null,
     proteinG: strictAmount(nutrition, "baltymu|baltymai"), totalSugarG: strictAmount(nutrition, "cukru|cukrus"),

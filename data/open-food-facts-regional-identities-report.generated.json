@@ -1,0 +1,32 @@
+{
+  "format": "csv",
+  "revision": "ssk8Chy4rIudQaZJLMXPc5pF7SrBQzAM",
+  "sourceUrl": "https://openfoodfacts-ds.s3.eu-west-3.amazonaws.com/en.openfoodfacts.org.products.csv.gz?versionId=ssk8Chy4rIudQaZJLMXPc5pF7SrBQzAM",
+  "rows": 15669,
+  "scanned": 4535553,
+  "malformedRowsSkipped": 0,
+  "compressedBytes": 1275171186,
+  "checkedAt": "2026-09-04T13:57:00.325Z",
+  "elapsedSeconds": 1020,
+  "license": "ODbL-1.0",
+  "imagesDownloaded": false,
+  "ingredientLanguageAvailable": false,
+  "translatedNamesAvailable": false,
+  "completeRows": 1096,
+  "identityOnlyRows": 9626,
+  "rejected": {
+    "invalid_gtin": 88,
+    "missing_brand": 3721,
+    "missing_name": 1000,
+    "source_quality_flag": 136,
+    "not_human_food": 2
+  },
+  "conflicts": [],
+  "aliasCount": 0,
+  "withPackSize": 2316,
+  "withCategory": 2647,
+  "nutritionImported": false,
+  "ingredientsImported": false,
+  "imagesImported": false,
+  "candidateSha256": "e509fbfab1537e165077d7a0d700b429eeae56f0e3ff10905e1424626b6ee95e"
+}

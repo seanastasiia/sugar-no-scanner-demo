@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   dedupeExternalCatalogProducts,
+  externalCatalogIdentityCounts,
   externalCatalogIdentityToScoredProduct,
   externalCatalogToScoredProduct,
+  getExternalCatalogIdentityByBarcode,
+  getExternalCatalogProductById,
   rankExternalCatalogCandidates,
   rankExternalCatalogIdentities,
   resolveExternalCatalogProduct
@@ -238,6 +241,50 @@ describe("external retailer catalog", () => {
       totalSugarG: null,
       carbohydrateG: null
     });
+  });
+
+  it("keeps an OFF identity barcode-recognizable but strictly unscored", () => {
+    const offIdentity: ExternalCatalogIdentity = {
+      source: "open_food_facts",
+      sourceProductId: "3017620422003",
+      retailer: null,
+      url: "https://world.openfoodfacts.org/product/3017620422003",
+      title: "Lazdynų riešutų kremas",
+      aliases: ["Hazelnut spread"],
+      brand: "Nutella",
+      gtin: "03017620422003",
+      sku: null,
+      category: null,
+      packSize: "350 g",
+      imageUrl: null,
+      price: null,
+      currency: null,
+      available: null,
+      checkedAt: "2026-09-04T13:57:00.325Z"
+    };
+    const scored = externalCatalogIdentityToScoredProduct(offIdentity);
+    expect(scored).toMatchObject({
+      id: "off:3017620422003",
+      gtin: "03017620422003",
+      ratingBasis: "open_food_facts_reference_partial",
+      ratingStatus: "identity_only",
+      matchScore: null,
+      criterionScores: null
+    });
+    expect(scored.nutrientsPer100g).toEqual({ proteinG: null, fiberG: null, totalSugarG: null, carbohydrateG: null });
+    expect(scored.sources[0]).toMatchObject({ label: "Open Food Facts product identity", fields: ["identity", "retailerUrl"] });
+  });
+
+  it("ships the generated OFF identity-only layer into exact runtime lookup", () => {
+    expect(externalCatalogIdentityCounts()).toMatchObject({ open_food_facts: 9626, livinn_lt: 2489, csp_lv: 0 });
+    const byBarcode = getExternalCatalogIdentityByBarcode("0000790870012");
+    expect(byBarcode).toMatchObject({
+      id: "off:0000790870012",
+      name: "Skippy Wafer Bar",
+      ratingStatus: "identity_only",
+      matchScore: null
+    });
+    expect(getExternalCatalogProductById("off:0000790870012")?.id).toBe("off:0000790870012");
   });
 
   it("preserves decimal packs instead of treating 0,33 l as 33 litres", () => {

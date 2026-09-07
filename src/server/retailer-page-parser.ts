@@ -253,7 +253,7 @@ export function parseLivinnProductPage(
   checkedAt = new Date().toISOString()
 ): ExternalCatalogProduct | null {
   const identity = parseLivinnProductIdentity(html, url, checkedAt);
-  if (!identity) return null;
+  if (!identity || identity.source !== "livinn_lt" || identity.retailer !== "Livin") return null;
   const text = plainText(html);
   const nutritionStart = text.search(/maistinė vertė|uzturvērtība|пищевая ценность/i);
   const nutrition = nutritionStart >= 0 ? text.slice(nutritionStart, nutritionStart + 1_800) : text;

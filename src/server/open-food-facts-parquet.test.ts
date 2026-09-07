@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { offParquetProduct, type OffParquetRow } from "./open-food-facts-parquet";
+import { offParquetIdentity, offParquetProduct, type OffParquetRow } from "./open-food-facts-parquet";
 
 const time = "2026-09-04T13:00:00.000Z";
 const sample: OffParquetRow = { code: "3017620422003", brands: "QA", countries_tags: ["en:latvia"], categories: "Chips", lang: "lt",
@@ -10,6 +10,29 @@ const sample: OffParquetRow = { code: "3017620422003", brands: "QA", countries_t
     { name: "salt", "100g": .5, prepared_100g: 99 }, { name: "saturated-fat", "100g": 1 }
   ] };
 describe("official OFF Parquet adaptation", () => {
+  it("creates a multilingual identity without importing rating evidence", () => {
+    const result = offParquetIdentity({ ...sample, no_nutrition_data: true }, time);
+    expect(result.identity).toMatchObject({
+      source: "open_food_facts",
+      sourceProductId: "3017620422003",
+      title: "Bulvių traškučiai",
+      aliases: ["Potato chips"],
+      brand: "QA",
+      gtin: "03017620422003",
+      sku: null
+    });
+    expect(result.identity).not.toHaveProperty("nutritionBasis");
+    expect(result.identity).not.toHaveProperty("shelfEvidence");
+  });
+
+  it("requires an exact barcode, brand and unambiguous name for an identity", () => {
+    expect(offParquetIdentity({ ...sample, code: "3017620422004" }, time).reason).toBe("invalid_gtin");
+    expect(offParquetIdentity({ ...sample, brands: "" }, time).reason).toBe("missing_brand");
+    expect(offParquetIdentity({ ...sample, product_name: [] }, time).reason).toBe("missing_name");
+    expect(offParquetIdentity({ ...sample, product_name: [...sample.product_name, { lang: "en", text: "Other chips" }] }, time).reason)
+      .toBe("ambiguous_language_text");
+    expect(offParquetIdentity({ ...sample, data_quality_errors_tags: ["en:invalid-code"] }, time).reason).toBe("source_quality_flag");
+  });
   it("preserves labelled aliases, original ingredients and unknown fiber", () => {
     const r = offParquetProduct(sample, time);
     expect(r.product).toMatchObject({ source: "open_food_facts", totalSugarG: 2.7, aliases: ["Bulvių traškučiai"],

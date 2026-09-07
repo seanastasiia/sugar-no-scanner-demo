@@ -34,8 +34,12 @@ export function resolveBarcodeFromKnownCatalogs(
   if (!product) return null;
   const source = catalogProduct
     ? catalogSource
-    : external || externalIdentity
+    : external
       ? "retailer_catalog"
+      : externalIdentity?.ratingBasis.startsWith("open_food_facts")
+        ? "open_food_facts"
+        : externalIdentity
+          ? "retailer_catalog"
       : "open_food_facts";
   return {
     source,

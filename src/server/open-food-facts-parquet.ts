@@ -1,6 +1,7 @@
 import { validWebGtin, webPack } from "./web-product-evidence";
 import { hasContradictoryShelfNutrition } from "../lib/personal-shelf-rank";
 import { isOpenFoodFactsMarketRecord, openFoodFactsBulkRecordToProduct, type OpenFoodFactsBulkRecord } from "./open-food-facts-bulk";
+import type { ExternalCatalogIdentity } from "./external-catalog-types";
 
 type TranslatedText = { lang: string; text: string };
 type Nutrient = { name: string; "100g": number | null; unit?: string; prepared_100g?: number | null };
@@ -34,12 +35,67 @@ function translations(items: TranslatedText[] | null | undefined): Map<string, s
   return result;
 }
 
+function isHumanFood(row: OffParquetRow): boolean {
+  return ![...(row.categories_tags || []), row.categories || ""].some((tag) =>
+    /(?:pet|cat|dog|animal)[ -]foods?|non[ -]food/i.test(tag)
+  );
+}
+
+/**
+ * Builds an identity-only OFF row. Nutrition, ingredients and an assumed
+ * grams/millilitres basis are deliberately excluded: this layer can improve
+ * exact recognition but can never create a score.
+ */
+export function offParquetIdentity(
+  row: OffParquetRow,
+  checkedAt: string
+): { identity: ExternalCatalogIdentity | null; reason: string | null } {
+  const gtin = validWebGtin(row.code);
+  if (!gtin) return { identity: null, reason: "invalid_gtin" };
+  if (!isOpenFoodFactsMarketRecord({ countries_tags: row.countries_tags }, ["latvia", "lithuania", "belarus"])) {
+    return { identity: null, reason: "outside_markets" };
+  }
+  if (row.obsolete) return { identity: null, reason: "obsolete" };
+  if (row.data_quality_errors_tags?.length) return { identity: null, reason: "source_quality_flag" };
+  if (!isHumanFood(row)) return { identity: null, reason: "not_human_food" };
+  const brand = row.brands?.split(",")[0]?.trim() || "";
+  if (!brand) return { identity: null, reason: "missing_brand" };
+  const names = translations(row.product_name);
+  if (!names) return { identity: null, reason: "ambiguous_language_text" };
+  const distinctNames = [...new Map(
+    [...names.values()].filter(Boolean).map((name) => [name.normalize("NFKC").trim().toLocaleLowerCase(), name.trim()] as const)
+  ).values()];
+  if (!distinctNames.length) return { identity: null, reason: "missing_name" };
+  const preferred = (row.lang && names.get(row.lang)) || names.get("main") || distinctNames[0]!;
+  return {
+    identity: {
+      source: "open_food_facts",
+      sourceProductId: row.code.trim(),
+      retailer: null,
+      url: `https://world.openfoodfacts.org/product/${row.code.trim()}`,
+      title: preferred,
+      aliases: distinctNames.filter((name) => name !== preferred),
+      brand,
+      gtin,
+      sku: null,
+      category: row.categories?.trim() || null,
+      packSize: row.quantity?.trim() || "",
+      imageUrl: null,
+      price: null,
+      currency: null,
+      available: null,
+      checkedAt
+    },
+    reason: null
+  };
+}
+
 export function offParquetProduct(row: OffParquetRow, checkedAt: string) {
   if (!validWebGtin(row.code)) return { product: null, reason: "invalid_gtin" } as const;
   if (!isOpenFoodFactsMarketRecord({ countries_tags: row.countries_tags }, ["latvia", "lithuania", "belarus"])) return { product: null, reason: "outside_markets" } as const;
   if (row.obsolete || row.no_nutrition_data || row.data_quality_errors_tags?.length) return { product: null, reason: "source_quality_flag" } as const;
   if (!row.brands?.trim()) return { product: null, reason: "missing_brand" } as const;
-  if ([...(row.categories_tags || []), row.categories || ""].some((tag) => /(?:pet|cat|dog|animal)[ -]foods?|non[ -]food/i.test(tag))) return { product: null, reason: "not_human_food" } as const;
+  if (!isHumanFood(row)) return { product: null, reason: "not_human_food" } as const;
   const names = translations(row.product_name);
   const ingredients = translations(row.ingredients_text);
   if (!names || !ingredients) return { product: null, reason: "ambiguous_language_text" } as const;

@@ -36,6 +36,7 @@
     "catalog:sync:livinn": "RETAILER_SYNC_SOURCE=livinn tsx scripts/sync-retailer-catalog.ts",
     "catalog:sync:off-latvia": "tsx scripts/sync-open-food-facts-latvia.ts",
     "catalog:import:off": "tsx scripts/import-open-food-facts-bulk.ts",
+    "catalog:import:off-identities": "tsx scripts/import-off-regional-identities.ts",
     "catalog:generate:sources": "tsx scripts/generate-catalog-sources.ts",
     "catalog:validate": "tsx scripts/validate-catalog.ts",
     "catalog:validate:barbora-coverage": "tsx scripts/validate-barbora-coverage.ts",

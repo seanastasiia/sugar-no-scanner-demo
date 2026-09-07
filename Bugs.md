@@ -4,6 +4,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Open
 
+- **2026-09-07, preview: 9,626 valid regional OFF products were discarded only because their rating data was incomplete.** They now live in a separate ODbL identity-only layer after GTIN, market, brand, name, food and source-quality checks. Exact barcode/source-name recognition can reuse them, but they carry no nutrition, ingredients, score or image and do not overlap the 1,096 nutrition-complete OFF rows. The preserved CSV has no labelled translations, so zero aliases are invented; multilingual name coverage still needs a richer exact source.
+
 - **2026-09-04, final local WebKit acceptance is unstable.** On `823f83c`, all 643 unit/integration tests and the build pass; the final mobile run passed 57/58, but initial `page.goto` canceled before one product scenario. Repeated pairs and isolated cases sometimes pass and sometimes stall at document startup. Fresh Next cache did not cure it. No assertions or security settings were weakened. Deployed candidate `380ef66` passed targeted HTTPS health/data/browser acceptance, recorded in [expansion QA](docs/test-runs/2026-09-04-personal-fit-expansion.md). This does not make the full local suite green; root cause is not proven.
 - **2026-09-04, OFF source completeness remains limited.** The import accepted 596 new GTINs from 15,669 regional rows. Missing brand, package dimension or core nutrients remain rejection reasons. CSV has no reliable ingredient-language labels; exact follow-ups added 62 assessments across original/new OFF records, but unknown composition is never guessed. The original 500-record layer is unchanged.
 
