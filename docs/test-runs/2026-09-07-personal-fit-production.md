@@ -28,4 +28,12 @@
 4. Open `How scores work`, then disable Personal Shelf Rank and confirm original Fit returns unchanged.
 5. Open `Show demo` → `New rating demo` and confirm the compact chip cards render.
 
-Application commit, migration status, Railway deployment and live checks are appended after release.
+## Production result
+
+- Application commit: `77c0d2a682edd45397b372d5d07335d0a386a91e`.
+- Rollback tag: `production-before-personal-fit-2026-09-07` at `b275d76706b9834037049acab3c86caa88228b9d`.
+- Railway production deployment: `34867703-714a-438e-8b7e-067b2329ae33` — `SUCCESS`.
+- Live `/api/health`: `status=ok` and exact application commit `77c0d2a682edd45397b372d5d07335d0a386a91e`.
+- Live catalog health reports 9,707 active food products, 7,433 products with automatic Fit, 9,626 OFF identity-only rows and Personal Shelf model `personal-shelf-v1.5-bounded` with 6,949 observations (2,078 complete, 3,078 provisional and 1,793 intentionally unscored).
+- Headless Mobile Safari production smoke passed: rating demo HTTP 200, four compact cards, three Moderate badges, no horizontal overflow; the scanner exposed the rating-demo entry and opt-in Personal Shelf toggle; four sample products rendered in Personal Shelf; no unverified-card copy appeared; disabling the toggle restored original Fit.
+- Shared OFF persistence and CSP persistence remain disabled because their additive production Supabase tables are not installed yet. This does not disable the checked-in 9,626-row OFF identity layer or the released Personal Shelf model. No incomplete evidence was promoted to a nutrition fact.
