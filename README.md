@@ -25,7 +25,7 @@ The owner approved publishing this release on 3 September 2026. Future productio
 
 ## Willingness-to-pay pilot (staging only)
 
-The isolated `codex/wtp-stripe-staging` experiment keeps three successful real camera/upload scans free, then offers seven days of scanner access for a one-time €2.99 payment. A visible counter shows `3 free scans left`, `2 free scans left`, `1 free scan left`, then `Free scans used`; failed recognition and deterministic demos do not use the allowance. The offer has no subscription or automatic renewal. `WTP_PAYWALL_ENABLED` defaults to `false`; production must remain false until a separate explicit release approval.
+The isolated `codex/wtp-stripe-staging` experiment keeps three successful real camera/upload scans free, then offers seven days of scanner access for a one-time €2.99 payment. A visible counter shows `3 free scans left`, `2 free scans left`, `1 free scan left`, then `Free scans used`. An attempt counts only after at least one product has a confirmed Sugar.no rating; failed recognition, identity-only `Nutrition not verified` results and deterministic demos do not use the allowance. After verified Stripe checkout, a success screen confirms the seven-day access before the user starts the camera. The offer has no subscription or automatic renewal. `WTP_PAYWALL_ENABLED` defaults to `false`; production must remain false until a separate explicit release approval.
 
 - Stripe Checkout collects payment and email. The client never receives a Stripe secret.
 - A success URL alone never unlocks the scanner. The server retrieves the Checkout Session and the signed webhook provides the independent fulfilment path.

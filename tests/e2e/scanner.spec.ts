@@ -1743,6 +1743,9 @@ test("confidently named products remain visible when exact nutrition is unavaila
   await expect(ranking.getByText("Nutrition not verified online", { exact: true })).toHaveCount(2);
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
+  if (process.env.WTP_PAYWALL_ENABLED === "true") {
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("sugar_scanner_free_scans_v1"))).toBeNull();
+  }
 });
 
 test("an unrated package can receive a Sugar.no fit from automatic online enrichment", async ({ page }) => {
@@ -1848,6 +1851,9 @@ test("an unrated package can receive a Sugar.no fit from automatic online enrich
     page.getByLabel("Products ranked by Sugar.no fit").getByRole("button", { name: /Sproud Barista 1L/ })
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
+  if (process.env.WTP_PAYWALL_ENABLED === "true") {
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("sugar_scanner_free_scans_v1"))).toBe("1");
+  }
 });
 
 test("a broad live shelf scan keeps several different Sugar.no-rated products in one result", async ({ page }) => {

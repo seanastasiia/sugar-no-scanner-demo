@@ -96,3 +96,36 @@ export function PaywallDialog({
     </div>
   );
 }
+
+export function PaymentSuccessDialog({ onContinue }: { onContinue: () => void }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    dialogRef.current?.focus();
+  }, []);
+
+  return (
+    <div className={styles.scrim} role="presentation">
+      <div
+        ref={dialogRef}
+        className={styles.dialog}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="payment-success-title"
+        tabIndex={-1}
+      >
+        <div className={styles.brandRow}>
+          <Image src="/brand/sugar-no-logo-white.svg" alt="Sugar.no" width={128} height={25} unoptimized />
+        </div>
+        <div className={`${styles.icon} ${styles.successIcon}`} aria-hidden="true">
+          <Check size={30} />
+        </div>
+        <p className={styles.eyebrow}>Payment successful</p>
+        <h2 id="payment-success-title">You’re all set</h2>
+        <p className={styles.intro}>Your 7-day scanner access is active.</p>
+        <button className={styles.primary} type="button" onClick={onContinue}>Start scanning</button>
+        <p className={styles.secure}>Access ends automatically. No subscription or renewal.</p>
+      </div>
+    </div>
+  );
+}

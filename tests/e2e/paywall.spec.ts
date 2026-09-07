@@ -43,6 +43,36 @@ test("the remaining free-scan allowance is visible before the paywall", async ({
   await expect(page.getByText("3 free scans left", { exact: true })).toBeVisible();
 });
 
+test("a successful checkout confirms access before starting the camera", async ({ page }) => {
+  await page.unroute("**/api/billing/status");
+  await page.route("**/api/billing/status", (route) => route.fulfill({
+    contentType: "application/json",
+    body: '{"active":true,"scanSource":"camera"}'
+  }));
+  await page.addInitScript(() => {
+    let cameraRequests = 0;
+    Object.defineProperty(window, "__paymentCameraRequests", { get: () => cameraRequests, configurable: true });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: async () => {
+          cameraRequests += 1;
+          throw new DOMException("Permission denied for QA", "NotAllowedError");
+        }
+      }
+    });
+  });
+
+  await page.goto("/?checkout=success&session_id=cs_test_success");
+  const success = page.getByRole("dialog", { name: "You’re all set" });
+  await expect(success).toBeVisible();
+  await expect(success.getByText("Your 7-day scanner access is active.")).toBeVisible();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __paymentCameraRequests: number }).__paymentCameraRequests)).toBe(0);
+  await success.getByRole("button", { name: "Start scanning" }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __paymentCameraRequests: number }).__paymentCameraRequests)).toBe(1);
+  await expect(page.getByRole("button", { name: "Enable camera" })).toBeVisible();
+});
+
 test("checkout and access restoration have recoverable states", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("sugar_scanner_free_scans_v1", "3"));
   await page.route("**/api/events", (route) => route.fulfill({ contentType: "application/json", body: '{"ok":true}' }));

@@ -91,7 +91,7 @@ import {
 import { CheckoutScene, ShelfScene } from "./scanner-scenes";
 import { FeedbackDialog } from "./feedback-dialog";
 import { PilotOnboarding } from "./pilot-onboarding";
-import { PaywallDialog } from "./paywall-dialog";
+import { PaymentSuccessDialog, PaywallDialog } from "./paywall-dialog";
 import styles from "./scanner-app.module.css";
 
 type CameraState = "idle" | "requesting" | "live" | "denied" | "error";
@@ -322,6 +322,7 @@ export function ScannerApp({
   const cameraRequestRef = useRef(0);
   const cameraStartedFromOnboardingRef = useRef(false);
   const automaticCameraStartedRef = useRef(false);
+  const countedFreeScanSessionsRef = useRef(new Set<string>());
   const startCameraRef = useRef<() => void>(() => undefined);
   const productFetchesRef = useRef(new Set<string>());
   const barcodeDetectorRef = useRef<NativeBarcodeDetector | null | undefined>(undefined);
@@ -352,7 +353,9 @@ export function ScannerApp({
   const [onboardingState, setOnboardingState] = useState<OnboardingState>("loading");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [paymentSuccessOpen, setPaymentSuccessOpen] = useState(false);
   const [paidAccess, setPaidAccess] = useState(false);
+  const [accessCheckPending, setAccessCheckPending] = useState(paywallEnabled);
   const [freeScanCount, setFreeScanCount] = useState(0);
   const feedbackFocusRef = useRef<HTMLButtonElement>(null);
   const [pilotSessionId, setPilotSessionId] = useState("");
@@ -564,7 +567,6 @@ export function ScannerApp({
           uniqueDetections.reduce((sum, detection) => sum + detection.confidence, 0) / uniqueDetections.length
       });
       if (["camera", "upload"].includes(eventSource)) {
-        setFreeScanCount(recordFreeScan(window.localStorage));
         void enrichRecognizedProducts(uniqueDetections, cameraRequestRef.current);
       }
     },
@@ -1226,13 +1228,17 @@ export function ScannerApp({
         setPaidAccess(true);
         setPaywallOpen(false);
         if (restoreToken) track("access_restored", "camera");
-        else if (checkout === "success") track("checkout_completed", result.scanSource || "camera");
+        else if (checkout === "success") {
+          setPaymentSuccessOpen(true);
+          track("checkout_completed", result.scanSource || "camera");
+        }
       } else if (checkout === "success") {
         setPaywallOpen(true);
       }
     }).catch(() => {
       if (checkout === "success" || restoreToken) setPaywallOpen(true);
     }).finally(() => {
+      setAccessCheckPending(false);
       if (checkout || restoreToken || sessionId) {
         const clean = new URL(window.location.href);
         clean.searchParams.delete("checkout");
@@ -1271,7 +1277,12 @@ export function ScannerApp({
   }, []);
 
   useEffect(() => {
-    if (onboardingState !== "complete" || automaticCameraStartedRef.current) return;
+    if (
+      onboardingState !== "complete" ||
+      automaticCameraStartedRef.current ||
+      accessCheckPending ||
+      paymentSuccessOpen
+    ) return;
     automaticCameraStartedRef.current = true;
     if (cameraStartedFromOnboardingRef.current) {
       cameraStartedFromOnboardingRef.current = false;
@@ -1282,7 +1293,7 @@ export function ScannerApp({
       window.clearTimeout(timer);
       stopActiveCapture();
     };
-  }, [onboardingState, stopActiveCapture]);
+  }, [accessCheckPending, onboardingState, paymentSuccessOpen, stopActiveCapture]);
 
   useEffect(() => {
     if (onboardingState !== "complete") return;
@@ -1329,6 +1340,14 @@ export function ScannerApp({
   const fairComparison = useMemo(() => compareFairCohorts(loadedTray), [loadedTray]);
   const bestId = globalBestProductId(fairComparison);
   const ratedCount = ratedDetections.length;
+
+  useEffect(() => {
+    if (!paywallEnabled || paidAccess || ratedCount === 0 || !["camera", "upload"].includes(source)) return;
+    const scanSessionId = sessionIdRef.current;
+    if (!scanSessionId || countedFreeScanSessionsRef.current.has(scanSessionId)) return;
+    countedFreeScanSessionsRef.current.add(scanSessionId);
+    setFreeScanCount(recordFreeScan(window.localStorage));
+  }, [paidAccess, paywallEnabled, ratedCount, source]);
   const compactSheetTitle = `${visibleTrayIds.length} ${visibleTrayIds.length === 1 ? "product" : "products"}`;
   const rankedTrayIds = useMemo(() => rankScanProductIds(visibleTrayIds, productById), [productById, visibleTrayIds]);
   const rankedRatedIds = useMemo(
@@ -1532,7 +1551,7 @@ export function ScannerApp({
   return (
     <main className={`${styles.app} ${source === "camera" && !showRecovery ? styles.liveCamera : ""}`}>
       {!resultsAreExpanded && !demoOpen ? (
-        <header className={`${styles.header} ${styles.scannerHeader}`} inert={feedbackOpen || paywallOpen}>
+        <header className={`${styles.header} ${styles.scannerHeader}`} inert={feedbackOpen || paywallOpen || paymentSuccessOpen}>
           <Image
             className={styles.wordmark}
             src="/brand/sugar-no-logo-white.svg"
@@ -1550,7 +1569,7 @@ export function ScannerApp({
         </header>
       ) : null}
 
-      <section className={styles.experience} inert={feedbackOpen || paywallOpen} aria-label={`${sourceLabel(source)} scanner`}>
+      <section className={styles.experience} inert={feedbackOpen || paywallOpen || paymentSuccessOpen} aria-label={`${sourceLabel(source)} scanner`}>
         <div
           className={`${styles.stage} ${visibleTrayIds.length ? styles.stageWithResults : ""} ${source === "upload" || source === "sample-conveyor" ? styles.photoStage : ""}`}
           inert={resultsAreExpanded || demoOpen}
@@ -2195,6 +2214,9 @@ export function ScannerApp({
           onCheckout={beginCheckout}
           onRestore={requestAccessRestore}
         />
+      ) : null}
+      {paymentSuccessOpen ? (
+        <PaymentSuccessDialog onContinue={() => setPaymentSuccessOpen(false)} />
       ) : null}
     </main>
   );
