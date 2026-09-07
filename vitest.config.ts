@@ -11,6 +11,9 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
+    // Several integration files dynamically load the full 20k-record catalog.
+    // One worker avoids CPU contention crossing Vitest's per-test deadline.
+    maxWorkers: 1,
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary", "html"],

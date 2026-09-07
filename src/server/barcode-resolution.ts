@@ -21,7 +21,8 @@ export async function resolveSharedWebBarcode(barcode: string): Promise<BarcodeR
 
 export function resolveBarcodeFromKnownCatalogs(
   barcode: string,
-  catalog: ScoredProduct[]
+  catalog: ScoredProduct[],
+  catalogSource: "catalog" | "open_food_facts" = "catalog"
 ): BarcodeResolution | null {
   const canonical = validWebGtin(barcode);
   if (!canonical) return null;
@@ -32,7 +33,7 @@ export function resolveBarcodeFromKnownCatalogs(
   const product = catalogProduct || external?.product || off || externalIdentity;
   if (!product) return null;
   const source = catalogProduct
-    ? "catalog"
+    ? catalogSource
     : external || externalIdentity
       ? "retailer_catalog"
       : "open_food_facts";

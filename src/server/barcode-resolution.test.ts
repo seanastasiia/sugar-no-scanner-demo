@@ -10,6 +10,15 @@ describe("barcode fast path", () => {
     expect(result?.detection.inlineProduct?.id).toBe(product.id);
   });
 
+  it("labels a dynamically restored Open Food Facts card with its actual source", () => {
+    const product = { ...getCatalog()[0], gtin: "12345670" };
+    const result = resolveBarcodeFromKnownCatalogs("12345670", [product], "open_food_facts");
+    expect(result).toMatchObject({
+      source: "open_food_facts",
+      detection: { identity: { matchKind: "open_food_facts" } }
+    });
+  });
+
   it("rejects malformed barcodes", () => {
     expect(resolveBarcodeFromKnownCatalogs("1234", getCatalog())).toBeNull();
     expect(resolveBarcodeFromKnownCatalogs("12345678", getCatalog())).toBeNull();

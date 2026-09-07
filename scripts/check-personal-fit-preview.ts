@@ -24,6 +24,7 @@ try {
   assert.equal(health.catalog.openFoodFactsBulkProducts, original.length + regional.length);
   assert.equal(health.features.sharedWebCatalog, false);
   assert.equal(health.features.sharedWebShelfEvidence, false);
+  assert.equal(health.features.sharedOpenFoodFactsCatalog, true);
   assert.equal((await page.goto("/?onboarding=1"))?.status(), 200);
   await page.getByRole("button", { name: "Try a sample shelf", exact: true }).click();
   await page.getByRole("button", { name: "View all", exact: true }).click();

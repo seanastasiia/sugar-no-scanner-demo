@@ -54,10 +54,13 @@ The Rimi/Livin/Livinn counts are source-backed snapshot counts, not visual-recog
 - `retailer_catalog_products` contains non-redistributable, nutrition-complete Rimi/Livin/Livinn page snapshots.
 - `retailer_catalog_food_identities` contains exact Livinn edible identities and source-provided language aliases without pretending that missing nutrition is zero.
 - `open_food_facts_products` contains the attributed ODbL-derived subset only. Its `aliases` array stores source-provided multilingual names for the same GTIN.
+- `shared_open_food_facts_products`, `shared_open_food_facts_aliases` and `shared_open_food_facts_observations` are the separate server-only ODbL runtime layer for exact new OFF hits. They retain attribution/licence metadata and permanently block identity/composition or alias conflicts; retailer rows can never enter them.
 - `catalog_sources` stores terms, attribution and redistribution metadata.
 - Personal Shelf Rank adds `retailer_shelf_evidence` and `open_food_facts_shelf_evidence` as separate RLS/server-role-only tables. Ingredients and extra nutrients retain one exact source, date and language; they are not merged across markets or recipes. The original 198-row pilot is expanded by the resumable supported-category batch, with separate OFF exact-barcode output. No OFF ingredients are synthesized from the old ingredient-free snapshot. Missing fiber can produce a bounded provisional assessment; missing essential or contradictory data cannot. Current counts and source limitations are in the [rollout log](test-runs/2026-09-03-personal-shelf-batch-rollout.md); see [ingestion rules](personal-shelf-rank.md).
 - Never publish a mixed retailer/OFF derived dump. Do not copy retailer rows into the ODbL table.
 - Product images remain source URLs. Bulk image reuse needs a separate rights review.
+
+The 7 September 2026 terms review found no reusable publication grant for Barbora or Rimi retailer-page data and found Livinn's explicit written-consent requirement for copying/publishing site information. Therefore retailer-page discoveries remain current-scan evidence unless written permission is obtained. Shared persistence is enabled only for Open Food Facts under its ODbL attribution/share-alike conditions. This is a conservative source-policy decision, not legal advice.
 
 The schema is reproducible through `supabase/migrations/202609020001_livinn_multilingual_catalog.sql`. Apply and seed it with:
 
@@ -112,11 +115,15 @@ The importer streams the compressed file, keeps products tagged for the configur
 Official references:
 
 - [Open Food Facts API and bulk guidance](https://openfoodfacts.github.io/openfoodfacts-server/api/)
+- [Open Food Facts database reuse conditions](https://support.openfoodfacts.org/help/en-gb/12-donnees-api/94-y-a-t-il-des-conditions-pour-utiliser-l-api)
 - [Official JSONL dump reference](https://openfoodfacts.github.io/robotoff/explanations/interactions-product-opener/)
 - [Reuse and licensing](https://openfoodfacts.github.io/openfoodfacts-server/api/tutorials/license-be-on-the-legal-side/)
 - [Rimi Latvia sitemap](https://www.rimi.lv/e-veikals/sitemap.xml)
+- [Rimi mobile-service terms](https://www.rimi.lv/lietotne/rimi-mobilas-lietotnes-lietosanas-noteikumi)
+- [Barbora online-store terms](https://barbora.lv/info/interneta-veikala-lietosanas-noteikumi)
 - [Livin Latvia product sitemap](https://www.livin.lv/sitemap/products.xml)
 - [Livinn Lithuania product sitemap](https://www.livinn.lt/sitemap/products.xml)
+- [Livinn Lithuania terms](https://www.livinn.lt/puslapis/salygos-ir-nuostatos)
 
 ## Provider evaluation status
 
