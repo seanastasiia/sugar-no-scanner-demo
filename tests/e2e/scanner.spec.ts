@@ -178,6 +178,9 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   await expect(chips.locator('li[data-personal-fit="uncertain"]')).toHaveCount(1);
   await expect(results.getByText("Score only · Spoonable yogurts", { exact: true })).toHaveCount(0);
   await expect(results.getByText("Best products", { exact: true })).toBeVisible();
+  await expect(results.getByText("Sugar · Protein · Ingredients · Salt · Saturated fat · Fiber", { exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 320, height: 568 });
+  await expectNoDocumentOverflow(page);
   await results.getByText("How scores work", { exact: true }).click();
   await expect(results.locator("details[open]")).toContainText("Scores compare products within the same category");
   await expect(results.locator("details[open]")).toContainText("Missing facts stay unknown");

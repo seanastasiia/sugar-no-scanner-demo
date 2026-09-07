@@ -58,6 +58,7 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan" }: 
       {ratedEntries.length ? <>
         <header className={styles.resultsHeader}>
           <h2>{ratedEntries.length === 1 ? "Best product" : "Best products"}</h2>
+          <p className={styles.criteria}>Sugar · Protein · Ingredients · Salt · Saturated fat · Fiber</p>
           <details className={styles.method}>
             <summary>How scores work</summary>
             <div>
