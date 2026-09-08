@@ -41,8 +41,9 @@ Checked: 2026-09-08
 
 - CSP readiness deployment `0df7bca9-b7b5-4fba-839d-2607afae3494`: **SUCCESS**, commit `ff4f3b804ff0a24a2d62502e324958646054803f`.
 - Enrichment deployment `3b6be7fc-a3e0-4f3d-909a-df4b94c3d5c8`: **SUCCESS**, commit `66863723ec4d6ebc6ce86617851c37f39e0c067c`.
-- Live `/api/health`: `status=ok`, exact commit match, OFF identity-only 9,626, CSP identities 0, Personal Shelf 6,949 / 2,078 / 3,078 / 1,793.
-- `PREVIEW_EXPECTED_COMMIT=66863723ec4d6ebc6ce86617851c37f39e0c067c npx tsx scripts/check-personal-fit-preview.ts`: passed on iPhone 13 WebKit emulation. It checked the demo, ordinary sample shelf, checkout sample, Personal Shelf API, exact deployed evidence and OFF 100 g/100 ml barcode paths.
+- Completed-batch deployment `6e07f436-ae43-4f3b-9c74-e155328914b5`: **SUCCESS**, commit `24c286e783251aca3a6128e519a35c2ddf9dd44e`.
+- Live `/api/health`: `status=ok`, exact commit match, OFF identity-only 9,626, CSP identities 0, Personal Shelf 7,493 / 2,238 / 3,371 / 1,884. Root and demo returned HTTP 200.
+- `PREVIEW_EXPECTED_COMMIT=24c286e783251aca3a6128e519a35c2ddf9dd44e npx tsx scripts/check-personal-fit-preview.ts`: passed on iPhone 13 WebKit emulation. It checked the demo, ordinary sample shelf, checkout sample, Personal Shelf API, exact deployed evidence and OFF 100 g/100 ml barcode paths. The first run exposed only a stale QA locator after `Snack bars` became a named region; the locator was corrected without changing product assertions, and the full release gate passed again.
 
 ## Owner product checks
 

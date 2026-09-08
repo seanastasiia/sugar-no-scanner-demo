@@ -43,6 +43,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-08, preview QA: the HTTPS WebKit smoke still expected `Snack bars` to be a heading after the compact-results accessibility refactor.** The live page correctly exposes it as a named region, matching the maintained scanner E2E contract. The release smoke now targets that region; its product, exact-evidence and rating assertions are unchanged.
+
 - **2026-09-08, preview: the incomplete-card pass was paused by Barbora's rate-limit boundary.** The resumable worker waited for the recorded cooldown and then accounted for all 591 remaining cards: 544 accepted exact observations, 27 changed-SKU rejections and 20 HTTP 404 rejections. The one temporary HTTP 429 was retried once after its recorded cooldown. The full frozen queue now has 3,600 terminal fetch attempts plus 5 IDs with pre-existing exact evidence; no rate-limited or unattempted row remains, and no failed exact identity was promoted.
 
 - **2026-09-07, preview: Personal Shelf cards looked like long tinted reports instead of a quick in-store decision.** Replaced visible category headings with one `Best product`/`Best products` heading and moved category into each neutral card. Fit color now appears only in the accessible gradient/rim badge. Each card keeps the exact score, meaningful within-category rank, sugar, protein and one short reason; repeated point tables and long card disclosures moved to one closed page-level `How scores work` explanation. Scoring, evidence, ordering, original Fit and camera markers are unchanged.
