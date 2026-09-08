@@ -86,10 +86,29 @@ test("rating demo is reachable from Show demo and can return to the unchanged sc
   await page.getByRole("button", { name: "Open camera", exact: true }).click();
   await expect(page.getByRole("button", { name: "Enable camera", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Show demo", exact: true }).click();
-  const entry = page.getByRole("link", { name: "New rating demo 4 real products with score breakdowns", exact: true });
+  const entry = page.getByRole("link", { name: /^New rating demo 4 real products with score breakdowns/ });
+  const shelfEntry = page.getByRole("button", { name: /^Shelf demo Compare several products at once/ });
   await expect(entry).toHaveAttribute("href", demoPath);
   const size = await entry.boundingBox();
   expect(size?.height).toBeGreaterThanOrEqual(44);
+  const shelfSize = await shelfEntry.boundingBox();
+  expect(size?.height).toBeCloseTo(shelfSize?.height ?? 0, 0);
+  const rowStyles = (element: HTMLElement | SVGElement) => ({
+    background: getComputedStyle(element).backgroundColor,
+    radius: getComputedStyle(element).borderRadius,
+    chevron: getComputedStyle(element, "::after").content,
+    iconBackground: getComputedStyle(element.querySelector("svg")!).backgroundColor,
+    iconColor: getComputedStyle(element.querySelector("svg")!).color,
+    detailSize: getComputedStyle(element.querySelector("small")!).fontSize
+  });
+  const [ratingStyles, shelfStyles] = await Promise.all([
+    entry.evaluate(rowStyles),
+    shelfEntry.evaluate(rowStyles)
+  ]);
+  expect(ratingStyles).toEqual(shelfStyles);
+  expect(ratingStyles.background).toBe("rgb(255, 255, 255)");
+  expect(ratingStyles.radius).toBe("32px");
+  expect(ratingStyles.chevron).toBe('"›"');
   await entry.click();
   await expect(page).toHaveURL(new RegExp(`${demoPath}$`));
   await expect(page.getByText("64/100", { exact: true })).toBeVisible();
