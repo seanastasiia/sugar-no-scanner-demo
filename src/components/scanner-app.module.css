@@ -1273,12 +1273,14 @@
   cursor: pointer;
 }
 .demoChoices button::after,
+.demoChoices a::after,
 .demoUpload::after {
   content: "›";
   color: var(--muted);
   font-size: 22px;
 }
 .demoChoices button > svg,
+.demoChoices a > svg,
 .demoUpload > svg {
   box-sizing: content-box;
   width: 24px;
@@ -1301,9 +1303,9 @@
 }
 
 .demoChoices a { text-decoration: none; }
-.demoChoices .ratingDemoLink { border-color: var(--ink); background: var(--surface-accent); }
-.demoChoices .ratingDemoLink small { font-size: 13px; }
-.demoChoices a:active { background: var(--canvas); }
+.demoChoices button:active,
+.demoChoices a:active,
+.demoUpload:active { background: var(--canvas); }
 .demoUpload input {
   position: absolute;
   width: 1px;
