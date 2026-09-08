@@ -85763,7 +85763,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7.9,
     "carbohydrateG": 20.2,
-    "fatG": 12.1
+    "fatG": 12.1,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 1000,
+      "factor": 2,
+      "sourceTitle": "Saldējums Druva pistāciju 1000ml/500g"
+    }
   },
   {
     "productId": "rimi_lv:1022063",
@@ -99234,7 +99243,16 @@
     "saltG": 0.2,
     "saturatedFatG": 9.4,
     "carbohydrateG": 34,
-    "fatG": 20
+    "fatG": 20,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 48,
+      "packageVolumeMl": 53,
+      "factor": 1.104167,
+      "sourceTitle": "Saldējums Snickers ice batoniņš 53ml/48g"
+    }
   },
   {
     "productId": "rimi_lv:201005",
@@ -99462,7 +99480,16 @@
     "saltG": 0.2,
     "saturatedFatG": 0.4,
     "carbohydrateG": 28,
-    "fatG": 0.7
+    "fatG": 0.7,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 120,
+      "factor": 1.6,
+      "sourceTitle": "Saldējums Tio Vēsma 120ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:209017",
@@ -99538,7 +99565,16 @@
     "saltG": 0,
     "saturatedFatG": 5,
     "carbohydrateG": 21,
-    "fatG": 10
+    "fatG": 10,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 95,
+      "packageVolumeMl": 150,
+      "factor": 1.578947,
+      "sourceTitle": "Vaniļas saldējums Baltija 150ml/95g"
+    }
   },
   {
     "productId": "rimi_lv:209586",
@@ -99557,7 +99593,16 @@
     "saltG": 0.1,
     "saturatedFatG": 7.6,
     "carbohydrateG": 25.1,
-    "fatG": 11.6
+    "fatG": 11.6,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 125,
+      "factor": 1.666667,
+      "sourceTitle": "Saldējums Rūjiena plombīra 125ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:209588",
@@ -99576,7 +99621,16 @@
     "saltG": 0.1,
     "saturatedFatG": 8,
     "carbohydrateG": 27,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 125,
+      "factor": 1.666667,
+      "sourceTitle": "Saldējums Rūjiena šokolādes 125ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:209595",
@@ -99595,7 +99649,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7.3,
     "carbohydrateG": 31.8,
-    "fatG": 11.6
+    "fatG": 11.6,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 65,
+      "packageVolumeMl": 110,
+      "factor": 1.692308,
+      "sourceTitle": "Saldējums Rūjiena dzērveņu, konusā 110ml/65g"
+    }
   },
   {
     "productId": "rimi_lv:209596",
@@ -99614,7 +99677,16 @@
     "saltG": 0.1,
     "saturatedFatG": 7.5,
     "carbohydrateG": 34.1,
-    "fatG": 10.6
+    "fatG": 10.6,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 60,
+      "packageVolumeMl": 110,
+      "factor": 1.833333,
+      "sourceTitle": "Saldējums Rūjienas aveņu konuss 110ml/60g"
+    }
   },
   {
     "productId": "rimi_lv:210215",
@@ -100070,7 +100142,16 @@
     "saltG": 0.1,
     "saturatedFatG": 5.3,
     "carbohydrateG": 29.3,
-    "fatG": 8.2
+    "fatG": 8.2,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 125,
+      "factor": 1.666667,
+      "sourceTitle": "Plombīra saldējums Rūjiena ar roz. 125ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:214537",
@@ -100716,7 +100797,16 @@
     "saltG": 0,
     "saturatedFatG": 10,
     "carbohydrateG": 22,
-    "fatG": 15
+    "fatG": 15,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 86,
+      "packageVolumeMl": 110,
+      "factor": 1.27907,
+      "sourceTitle": "Vaniļas sald.s Magnum ar mandelēm 110ml/86g"
+    }
   },
   {
     "productId": "rimi_lv:256995",
@@ -101305,7 +101395,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 21.9,
-    "fatG": 0
+    "fatG": 0,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 100,
+      "packageVolumeMl": 100,
+      "factor": 1,
+      "sourceTitle": "Saldējums Nestea sulas citr. garša 100ml/100g"
+    }
   },
   {
     "productId": "rimi_lv:267609",
@@ -101742,7 +101841,16 @@
     "saltG": 0.2,
     "saturatedFatG": 9.5,
     "carbohydrateG": 38,
-    "fatG": 14
+    "fatG": 14,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 83,
+      "packageVolumeMl": 140,
+      "factor": 1.686747,
+      "sourceTitle": "Saldējums Baltija ar iebiez. pienu 140ml/83g"
+    }
   },
   {
     "productId": "rimi_lv:270464",
@@ -102312,7 +102420,16 @@
     "saltG": 0.1,
     "saturatedFatG": 7.6,
     "carbohydrateG": 25.9,
-    "fatG": 10.8
+    "fatG": 10.8,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 600,
+      "packageVolumeMl": 1000,
+      "factor": 1.666667,
+      "sourceTitle": "Sald. Rūjienas plomb. ar ķirš.un šok. 1l/600g"
+    }
   },
   {
     "productId": "rimi_lv:278353",
@@ -103376,7 +103493,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 20.6,
-    "fatG": 19.7
+    "fatG": 19.7,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 120,
+      "factor": 1.6,
+      "sourceTitle": "Saldējums Pols klas. šok.glaz. 120ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:292123",
@@ -103490,7 +103616,16 @@
     "saltG": 0,
     "saturatedFatG": 7.9,
     "carbohydrateG": 21,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 480,
+      "packageVolumeMl": 1000,
+      "factor": 2.083333,
+      "sourceTitle": "Saldējums Ekselence plombīra 1l/480g"
+    }
   },
   {
     "productId": "rimi_lv:292906",
@@ -103509,7 +103644,16 @@
     "saltG": 0,
     "saturatedFatG": 6.5,
     "carbohydrateG": 30,
-    "fatG": 11
+    "fatG": 11,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 480,
+      "packageVolumeMl": 1000,
+      "factor": 2.083333,
+      "sourceTitle": "Saldējums Ekselence ar balzamu 1l/480g"
+    }
   },
   {
     "productId": "rimi_lv:292930",
@@ -104117,7 +104261,16 @@
     "saltG": 0,
     "saturatedFatG": 7.9,
     "carbohydrateG": 20,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 450,
+      "packageVolumeMl": 1000,
+      "factor": 2.222222,
+      "sourceTitle": "Saldējums Tio plombīrs 1000ml/450g"
+    }
   },
   {
     "productId": "rimi_lv:298410",
@@ -104136,7 +104289,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 24.9,
-    "fatG": 22.1
+    "fatG": 22.1,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 120,
+      "factor": 1.6,
+      "sourceTitle": "Krējuma saldējums Pols gotiņa 120ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:298411",
@@ -104155,7 +104317,16 @@
     "saltG": 0,
     "saturatedFatG": 7.9,
     "carbohydrateG": 20,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 240,
+      "packageVolumeMl": 500,
+      "factor": 2.083333,
+      "sourceTitle": "Saldējums Tio plombīrs 500ml/240g"
+    }
   },
   {
     "productId": "rimi_lv:298473",
@@ -104174,7 +104345,16 @@
     "saltG": 0.1,
     "saturatedFatG": 6.7,
     "carbohydrateG": 22,
-    "fatG": 11
+    "fatG": 11,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 240,
+      "packageVolumeMl": 500,
+      "factor": 2.083333,
+      "sourceTitle": "Saldējums Tio šokolādes 500ml/240g"
+    }
   },
   {
     "productId": "rimi_lv:298474",
@@ -104250,7 +104430,16 @@
     "saltG": 0,
     "saturatedFatG": 0.3,
     "carbohydrateG": 21,
-    "fatG": 0.4
+    "fatG": 0.4,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 67,
+      "packageVolumeMl": 73,
+      "factor": 1.089552,
+      "sourceTitle": "Sald. pirulo arbūzu, ābolu sulas 73ml/ 67g"
+    }
   },
   {
     "productId": "rimi_lv:298950",
@@ -104896,7 +105085,16 @@
     "saltG": 0.1,
     "saturatedFatG": 6.5,
     "carbohydrateG": 28,
-    "fatG": 10
+    "fatG": 10,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 1000,
+      "factor": 2,
+      "sourceTitle": "Saldējums Rīgas Melnais Balzams ķirši 1l/500g"
+    }
   },
   {
     "productId": "rimi_lv:4001170",
@@ -104991,7 +105189,16 @@
     "saltG": 0.3,
     "saturatedFatG": 6.1,
     "carbohydrateG": 28,
-    "fatG": 11
+    "fatG": 11,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 1000,
+      "factor": 2,
+      "sourceTitle": "Saldējums ar pekanr., sāļo karameli 1l/500g"
+    }
   },
   {
     "productId": "rimi_lv:4001237",
@@ -105048,7 +105255,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7.4,
     "carbohydrateG": 21,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 680,
+      "packageVolumeMl": 1400,
+      "factor": 2.058824,
+      "sourceTitle": "Sald. piparm., vaniļas ar šok. 1,4l/680g"
+    }
   },
   {
     "productId": "rimi_lv:4001609",
@@ -105067,7 +105283,16 @@
     "saltG": 0.2,
     "saturatedFatG": 6.9,
     "carbohydrateG": 23,
-    "fatG": 11
+    "fatG": 11,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 680,
+      "packageVolumeMl": 1400,
+      "factor": 2.058824,
+      "sourceTitle": "Sald. pers.-marak., vaniļas 1,4l/680g"
+    }
   },
   {
     "productId": "rimi_lv:4001818",
@@ -105143,7 +105368,16 @@
     "saltG": 0.2,
     "saturatedFatG": 12,
     "carbohydrateG": 34,
-    "fatG": 17
+    "fatG": 17,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 90,
+      "factor": 1.285714,
+      "sourceTitle": "Saldējums Magnum Euphoria Stick 90ml, 70g"
+    }
   },
   {
     "productId": "rimi_lv:4002498",
@@ -105428,7 +105662,16 @@
     "saltG": 0.4,
     "saturatedFatG": 8,
     "carbohydrateG": 41.4,
-    "fatG": 11.2
+    "fatG": 11.2,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 65,
+      "packageVolumeMl": 110,
+      "factor": 1.692308,
+      "sourceTitle": "Sald. Rūjiena iebiez. piena pied. 110ml/65g"
+    }
   },
   {
     "productId": "rimi_lv:4003076",
@@ -105447,7 +105690,16 @@
     "saltG": 0.2,
     "saturatedFatG": 12,
     "carbohydrateG": 29,
-    "fatG": 16
+    "fatG": 16,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 54,
+      "packageVolumeMl": 80,
+      "factor": 1.481481,
+      "sourceTitle": "Saldējums Oga jogurta zemeņu 80ml/54g"
+    }
   },
   {
     "productId": "rimi_lv:4003077",
@@ -105466,7 +105718,16 @@
     "saltG": 0.2,
     "saturatedFatG": 12,
     "carbohydrateG": 31,
-    "fatG": 16
+    "fatG": 16,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 55,
+      "packageVolumeMl": 80,
+      "factor": 1.454545,
+      "sourceTitle": "Saldējums Oga jogurta persiku 80ml/55g"
+    }
   },
   {
     "productId": "rimi_lv:4003235",
@@ -105504,7 +105765,16 @@
     "saltG": 0.1,
     "saturatedFatG": 7.4,
     "carbohydrateG": 29,
-    "fatG": 11
+    "fatG": 11,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 120,
+      "factor": 1.714286,
+      "sourceTitle": "Saldējums Tio plombīra ar rozīnēm 120ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4003248",
@@ -105523,7 +105793,16 @@
     "saltG": 0.2,
     "saturatedFatG": 13,
     "carbohydrateG": 33,
-    "fatG": 19
+    "fatG": 19,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 90,
+      "packageVolumeMl": 150,
+      "factor": 1.666667,
+      "sourceTitle": "Saldējums Pols plombīra ar zemesr. 150ml/90g"
+    }
   },
   {
     "productId": "rimi_lv:4003249",
@@ -105542,7 +105821,16 @@
     "saltG": 0,
     "saturatedFatG": 0.1,
     "carbohydrateG": 31,
-    "fatG": 0.5
+    "fatG": 0.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 70,
+      "factor": 1,
+      "sourceTitle": "Sulas sald. Jungle Pop košļ. gum. g. 70ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4003251",
@@ -105561,7 +105849,16 @@
     "saltG": 0.2,
     "saturatedFatG": 12,
     "carbohydrateG": 35,
-    "fatG": 17
+    "fatG": 17,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 90,
+      "packageVolumeMl": 150,
+      "factor": 1.666667,
+      "sourceTitle": "Saldējums Pols plombīra,dzērv.pied. 150ml/90g"
+    }
   },
   {
     "productId": "rimi_lv:4003360",
@@ -105580,7 +105877,16 @@
     "saltG": 0.1,
     "saturatedFatG": 4.2,
     "carbohydrateG": 28.1,
-    "fatG": 5.7
+    "fatG": 5.7,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 120,
+      "factor": 1.6,
+      "sourceTitle": "Saldējums Druva zemeņu 120ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:4003379",
@@ -106302,7 +106608,16 @@
     "saltG": 0.2,
     "saturatedFatG": 8.2,
     "carbohydrateG": 18.7,
-    "fatG": 12.4
+    "fatG": 12.4,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 100,
+      "packageVolumeMl": 150,
+      "factor": 1.5,
+      "sourceTitle": "Saldējums Slow Melts Bubble Gum 150ml/100g"
+    }
   },
   {
     "productId": "rimi_lv:4005412",
@@ -106625,7 +106940,16 @@
     "saltG": 0.1,
     "saturatedFatG": 8.1,
     "carbohydrateG": 25,
-    "fatG": 9.3
+    "fatG": 9.3,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 700,
+      "packageVolumeMl": 1400,
+      "factor": 2,
+      "sourceTitle": "Ba. šok. sald. Manhattan ar pistāc. 1,4l/700g"
+    }
   },
   {
     "productId": "rimi_lv:4006091",
@@ -106644,7 +106968,16 @@
     "saltG": 0,
     "saturatedFatG": 9.6,
     "carbohydrateG": 25.5,
-    "fatG": 11.9
+    "fatG": 11.9,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 1000,
+      "factor": 2,
+      "sourceTitle": "Saldējums Druva Cigoriņa 1l/500g"
+    }
   },
   {
     "productId": "rimi_lv:4006138",
@@ -106948,7 +107281,16 @@
     "saltG": 0.1,
     "saturatedFatG": 6.8,
     "carbohydrateG": 27,
-    "fatG": 10
+    "fatG": 10,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 71,
+      "packageVolumeMl": 85,
+      "factor": 1.197183,
+      "sourceTitle": "Saldējums Magnum Double ķiršu 85ml/71g"
+    }
   },
   {
     "productId": "rimi_lv:4006529",
@@ -106967,7 +107309,16 @@
     "saltG": 0.4,
     "saturatedFatG": 12,
     "carbohydrateG": 38,
-    "fatG": 21
+    "fatG": 21,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 168,
+      "packageVolumeMl": 204,
+      "factor": 1.214286,
+      "sourceTitle": "Saldējums Magnum sālīta karamele 204ml/168g"
+    }
   },
   {
     "productId": "rimi_lv:4006540",
@@ -106986,7 +107337,16 @@
     "saltG": 0.3,
     "saturatedFatG": 9.3,
     "carbohydrateG": 36,
-    "fatG": 25
+    "fatG": 25,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 150,
+      "packageVolumeMl": 160,
+      "factor": 1.066667,
+      "sourceTitle": "Saldējums B&J sālīta karamele 160ml/150g"
+    }
   },
   {
     "productId": "rimi_lv:4006542",
@@ -107005,7 +107365,16 @@
     "saltG": 0.5,
     "saturatedFatG": 12,
     "carbohydrateG": 37,
-    "fatG": 20
+    "fatG": 20,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 71,
+      "packageVolumeMl": 85,
+      "factor": 1.197183,
+      "sourceTitle": "Saldējums Magnum Double lazdu riekst 85ml/71g"
+    }
   },
   {
     "productId": "rimi_lv:4006543",
@@ -107024,7 +107393,16 @@
     "saltG": 0.4,
     "saturatedFatG": 11,
     "carbohydrateG": 29,
-    "fatG": 17
+    "fatG": 17,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 388,
+      "packageVolumeMl": 465,
+      "factor": 1.198454,
+      "sourceTitle": "Saldējums B&J Brookies ar krēmu 465ml/388g"
+    }
   },
   {
     "productId": "rimi_lv:4006549",
@@ -107233,7 +107611,16 @@
     "saltG": 0.1,
     "saturatedFatG": 2.4,
     "carbohydrateG": 29,
-    "fatG": 3.7
+    "fatG": 3.7,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 80,
+      "packageVolumeMl": 120,
+      "factor": 1.5,
+      "sourceTitle": "Kefīra saldējums Vēsma zemeņu 120ml/80g"
+    }
   },
   {
     "productId": "rimi_lv:4006693",
@@ -107252,7 +107639,16 @@
     "saltG": 0.1,
     "saturatedFatG": 14,
     "carbohydrateG": 24,
-    "fatG": 21
+    "fatG": 21,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 100,
+      "factor": 1.333333,
+      "sourceTitle": "Saldējums Karlsons aveņu 100ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:4006694",
@@ -107271,7 +107667,16 @@
     "saltG": 0.1,
     "saturatedFatG": 14,
     "carbohydrateG": 31,
-    "fatG": 21
+    "fatG": 21,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 82,
+      "factor": 1.171429,
+      "sourceTitle": "Sald. Ekselence aveņu-granātābolu 82ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4006695",
@@ -107290,7 +107695,16 @@
     "saltG": 0.2,
     "saturatedFatG": 12,
     "carbohydrateG": 32,
-    "fatG": 20
+    "fatG": 20,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 90,
+      "factor": 1.285714,
+      "sourceTitle": "Saldējums Ekselence pekanriekstu 90ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4006701",
@@ -107309,7 +107723,16 @@
     "saltG": 0.1,
     "saturatedFatG": 14,
     "carbohydrateG": 26,
-    "fatG": 21
+    "fatG": 21,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 100,
+      "factor": 1.333333,
+      "sourceTitle": "Saldējums Karlsons ābolu-upeņu 100ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:4006702",
@@ -107328,7 +107751,16 @@
     "saltG": 0,
     "saturatedFatG": 2.4,
     "carbohydrateG": 29,
-    "fatG": 3.7
+    "fatG": 3.7,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 80,
+      "packageVolumeMl": 120,
+      "factor": 1.5,
+      "sourceTitle": "Kefīra saldējums Vēsma melleņu 120ml/80g"
+    }
   },
   {
     "productId": "rimi_lv:4006703",
@@ -107347,7 +107779,16 @@
     "saltG": 0.1,
     "saturatedFatG": 13,
     "carbohydrateG": 25,
-    "fatG": 21
+    "fatG": 21,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 100,
+      "factor": 1.333333,
+      "sourceTitle": "Saldējums Karlsons dzērveņu 100ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:4006719",
@@ -108050,7 +108491,16 @@
     "saltG": 0.2,
     "saturatedFatG": 16,
     "carbohydrateG": 31,
-    "fatG": 22
+    "fatG": 22,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 45,
+      "packageVolumeMl": 53,
+      "factor": 1.177778,
+      "sourceTitle": "Saldējums Pols kokosa 53ml/45g"
+    }
   },
   {
     "productId": "rimi_lv:4007556",
@@ -108069,7 +108519,16 @@
     "saltG": 0.2,
     "saturatedFatG": 15,
     "carbohydrateG": 24,
-    "fatG": 21
+    "fatG": 21,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 120,
+      "factor": 1.714286,
+      "sourceTitle": "Saldējums Pols ar cepumiem 120ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4007557",
@@ -108088,7 +108547,16 @@
     "saltG": 0.2,
     "saturatedFatG": 13,
     "carbohydrateG": 26,
-    "fatG": 20
+    "fatG": 20,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 84,
+      "packageVolumeMl": 150,
+      "factor": 1.785714,
+      "sourceTitle": "Saldējums ar zemeņu un van. garšu 150ml/84g"
+    }
   },
   {
     "productId": "rimi_lv:4007559",
@@ -108126,7 +108594,16 @@
     "saltG": 0.2,
     "saturatedFatG": 12,
     "carbohydrateG": 30,
-    "fatG": 16
+    "fatG": 16,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 54,
+      "packageVolumeMl": 80,
+      "factor": 1.481481,
+      "sourceTitle": "Saldējums Oga melleņu, jogurta glaz. 80ml/54g"
+    }
   },
   {
     "productId": "rimi_lv:4007587",
@@ -108145,7 +108622,16 @@
     "saltG": 0.1,
     "saturatedFatG": 11,
     "carbohydrateG": 20,
-    "fatG": 18
+    "fatG": 18,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 67,
+      "packageVolumeMl": 75,
+      "factor": 1.119403,
+      "sourceTitle": "Sald. Nutri ban.garš. ar kakao glaz. 75ml/67g"
+    }
   },
   {
     "productId": "rimi_lv:4007600",
@@ -108202,7 +108688,16 @@
     "saltG": 0,
     "saturatedFatG": 0.7,
     "carbohydrateG": 21,
-    "fatG": 0.8
+    "fatG": 0.8,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 73,
+      "packageVolumeMl": 80,
+      "factor": 1.09589,
+      "sourceTitle": "Saldējums Twister Marshmallow 80ml/73g"
+    }
   },
   {
     "productId": "rimi_lv:4007890",
@@ -108221,7 +108716,16 @@
     "saltG": 0.2,
     "saturatedFatG": 3.7,
     "carbohydrateG": 12,
-    "fatG": 6.4
+    "fatG": 6.4,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 73,
+      "packageVolumeMl": 100,
+      "factor": 1.369863,
+      "sourceTitle": "Saldējums Nutri ar sāl.karam. pild. 100ml/73g"
+    }
   },
   {
     "productId": "rimi_lv:4007891",
@@ -108240,7 +108744,16 @@
     "saltG": 0.4,
     "saturatedFatG": 8,
     "carbohydrateG": 42,
-    "fatG": 11
+    "fatG": 11,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 140,
+      "factor": 1.866667,
+      "sourceTitle": "Saldēj. Pols auzu cep., aveņu mērce 140ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:4007948",
@@ -108962,7 +109475,16 @@
     "saltG": 0.1,
     "saturatedFatG": 6.1,
     "carbohydrateG": 30,
-    "fatG": 9.7
+    "fatG": 9.7,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 1000,
+      "factor": 2,
+      "sourceTitle": "Saldēj. Ekselence krējuma-tiramisu g. 1l/500g"
+    }
   },
   {
     "productId": "rimi_lv:4009436",
@@ -108981,7 +109503,16 @@
     "saltG": 0.1,
     "saturatedFatG": 6.5,
     "carbohydrateG": 24.7,
-    "fatG": 9.9
+    "fatG": 9.9,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 550,
+      "packageVolumeMl": 1000,
+      "factor": 1.818182,
+      "sourceTitle": "Saldēj. Rūjienas meža zemeņu pied. 1l/550g"
+    }
   },
   {
     "productId": "rimi_lv:4009484",
@@ -109095,7 +109626,16 @@
     "saltG": 0.1,
     "saturatedFatG": 9.7,
     "carbohydrateG": 29.8,
-    "fatG": 23
+    "fatG": 23,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 230,
+      "packageVolumeMl": 470,
+      "factor": 2.043478,
+      "sourceTitle": "Saldējums Nutella 470ml/230g"
+    }
   },
   {
     "productId": "rimi_lv:4009527",
@@ -109266,7 +109806,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7,
     "carbohydrateG": 20,
-    "fatG": 10
+    "fatG": 10,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 680,
+      "packageVolumeMl": 1400,
+      "factor": 2.058824,
+      "sourceTitle": "Krējuma sald. Mr.Big ar vaniļas g. 1,4l/680g"
+    }
   },
   {
     "productId": "rimi_lv:4009831",
@@ -109475,7 +110024,16 @@
     "saltG": 1.2,
     "saturatedFatG": 8.2,
     "carbohydrateG": 49,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 82,
+      "packageVolumeMl": 80,
+      "factor": 0.97561,
+      "sourceTitle": "Saldējums Ben&Jerry's Wich Sandwich 80ml/82g"
+    }
   },
   {
     "productId": "rimi_lv:4010051",
@@ -109494,7 +110052,16 @@
     "saltG": 0.2,
     "saturatedFatG": 14,
     "carbohydrateG": 32,
-    "fatG": 21
+    "fatG": 21,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 90,
+      "factor": 1.285714,
+      "sourceTitle": "Saldējums Magnum Le Pistache 90ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4010060",
@@ -109513,7 +110080,16 @@
     "saltG": 0.2,
     "saturatedFatG": 16,
     "carbohydrateG": 33,
-    "fatG": 20
+    "fatG": 20,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 90,
+      "factor": 1.285714,
+      "sourceTitle": "Saldējums Magnum La Pesche 90ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4010070",
@@ -109532,7 +110108,16 @@
     "saltG": 0.3,
     "saturatedFatG": 12,
     "carbohydrateG": 40,
-    "fatG": 18
+    "fatG": 18,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 82,
+      "packageVolumeMl": 115,
+      "factor": 1.402439,
+      "sourceTitle": "Saldējums Magnum Pistach.,whi.choc.115ml/82g"
+    }
   },
   {
     "productId": "rimi_lv:4010190",
@@ -109551,7 +110136,16 @@
     "saltG": 0.2,
     "saturatedFatG": 9.7,
     "carbohydrateG": 35,
-    "fatG": 16
+    "fatG": 16,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 311,
+      "packageVolumeMl": 440,
+      "factor": 1.414791,
+      "sourceTitle": "Saldējums Magnum Le Pistache 440ml/311g"
+    }
   },
   {
     "productId": "rimi_lv:4010281",
@@ -109570,7 +110164,16 @@
     "saltG": 0.3,
     "saturatedFatG": 12,
     "carbohydrateG": 39,
-    "fatG": 18
+    "fatG": 18,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 82,
+      "packageVolumeMl": 115,
+      "factor": 1.402439,
+      "sourceTitle": "Saldējums Magnum Hazelnut 115ml/82g"
+    }
   },
   {
     "productId": "rimi_lv:4010338",
@@ -109912,7 +110515,16 @@
     "saltG": 0,
     "saturatedFatG": 0.4,
     "carbohydrateG": 27.1,
-    "fatG": 0.5
+    "fatG": 0.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 72,
+      "packageVolumeMl": 65,
+      "factor": 0.902778,
+      "sourceTitle": "Sorbeta bumbas Mini melts aveņu 65ml/72g"
+    }
   },
   {
     "productId": "rimi_lv:4010702",
@@ -109950,7 +110562,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 21,
-    "fatG": 0
+    "fatG": 0,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 67,
+      "packageVolumeMl": 62,
+      "factor": 0.925373,
+      "sourceTitle": "Sulas saldējums Norregade apelsīnu 62ml/67g"
+    }
   },
   {
     "productId": "rimi_lv:4010718",
@@ -109969,7 +110590,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 21,
-    "fatG": 0
+    "fatG": 0,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 67,
+      "packageVolumeMl": 62,
+      "factor": 0.925373,
+      "sourceTitle": "Sulas saldējums Norregade zemeņu 62ml/67g"
+    }
   },
   {
     "productId": "rimi_lv:4010719",
@@ -109988,7 +110618,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 19.6,
-    "fatG": 0
+    "fatG": 0,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 67,
+      "packageVolumeMl": 62,
+      "factor": 0.925373,
+      "sourceTitle": "Sulas saldējums Norregade kolas 62ml/67g"
+    }
   },
   {
     "productId": "rimi_lv:4010763",
@@ -110007,7 +110646,16 @@
     "saltG": 0.1,
     "saturatedFatG": 6.9,
     "carbohydrateG": 33,
-    "fatG": 9.8
+    "fatG": 9.8,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 85,
+      "packageVolumeMl": 150,
+      "factor": 1.764706,
+      "sourceTitle": "Saldējums Ekselence aveņu,granātābo.150ml/85g"
+    }
   },
   {
     "productId": "rimi_lv:4010764",
@@ -110026,7 +110674,16 @@
     "saltG": 0.1,
     "saturatedFatG": 13,
     "carbohydrateG": 29,
-    "fatG": 20
+    "fatG": 20,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 90,
+      "factor": 1.285714,
+      "sourceTitle": "Sald.Ekselence aveņu,baltās šokolād. 90ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4010765",
@@ -110045,7 +110702,16 @@
     "saltG": 0.1,
     "saturatedFatG": 12,
     "carbohydrateG": 28,
-    "fatG": 22
+    "fatG": 22,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 65,
+      "packageVolumeMl": 95,
+      "factor": 1.461538,
+      "sourceTitle": "Saldējums Pols mandeļu 95ml/65g"
+    }
   },
   {
     "productId": "rimi_lv:4010771",
@@ -110064,7 +110730,16 @@
     "saltG": 0.1,
     "saturatedFatG": 14,
     "carbohydrateG": 29,
-    "fatG": 18
+    "fatG": 18,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 65,
+      "packageVolumeMl": 95,
+      "factor": 1.461538,
+      "sourceTitle": "Saldējums Pols bārbeļu 95ml/65g"
+    }
   },
   {
     "productId": "rimi_lv:4010772",
@@ -110083,7 +110758,16 @@
     "saltG": 0.1,
     "saturatedFatG": 6.2,
     "carbohydrateG": 26,
-    "fatG": 10
+    "fatG": 10,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 80,
+      "packageVolumeMl": 120,
+      "factor": 1.5,
+      "sourceTitle": "Saldējums Tio piena karamele 120ml/80g"
+    }
   },
   {
     "productId": "rimi_lv:4010774",
@@ -110102,7 +110786,16 @@
     "saltG": 0.4,
     "saturatedFatG": 6.2,
     "carbohydrateG": 37,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 90,
+      "packageVolumeMl": 200,
+      "factor": 2.222222,
+      "sourceTitle": "Saldējums Pols karameļu,lazdu rieks.200ml/90g"
+    }
   },
   {
     "productId": "rimi_lv:4010775",
@@ -110121,7 +110814,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 21,
-    "fatG": 0
+    "fatG": 0,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 70,
+      "factor": 1,
+      "sourceTitle": "Saldējums Jungle pop zemeņu 70ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4010782",
@@ -110140,7 +110842,16 @@
     "saltG": 0.2,
     "saturatedFatG": 11,
     "carbohydrateG": 38,
-    "fatG": 15
+    "fatG": 15,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 90,
+      "packageVolumeMl": 150,
+      "factor": 1.666667,
+      "sourceTitle": "Saldējums Pols citronu 150ml/90g"
+    }
   },
   {
     "productId": "rimi_lv:4010787",
@@ -110159,7 +110870,16 @@
     "saltG": 0.1,
     "saturatedFatG": 3.4,
     "carbohydrateG": 30,
-    "fatG": 5.5
+    "fatG": 5.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 125,
+      "factor": 1.785714,
+      "sourceTitle": "Saldējums Oga zemeņu jogurta 125ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4010788",
@@ -110178,7 +110898,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7.7,
     "carbohydrateG": 37,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 94,
+      "packageVolumeMl": 165,
+      "factor": 1.755319,
+      "sourceTitle": "Sal.Mr.Big zem.iev.,piena šokol.gab.165ml/94g"
+    }
   },
   {
     "productId": "rimi_lv:4010789",
@@ -110197,7 +110926,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7.7,
     "carbohydrateG": 37,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 94,
+      "packageVolumeMl": 165,
+      "factor": 1.755319,
+      "sourceTitle": "Sal.Mr.Big aveņu,upeņu iev.,šok.gab.165ml/94g"
+    }
   },
   {
     "productId": "rimi_lv:4010790",
@@ -110216,7 +110954,16 @@
     "saltG": 0.1,
     "saturatedFatG": 3.4,
     "carbohydrateG": 30,
-    "fatG": 5.5
+    "fatG": 5.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 125,
+      "factor": 1.785714,
+      "sourceTitle": "Saldējums Oga Persiku jogurta 125ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4010825",
@@ -110235,7 +110982,16 @@
     "saltG": 0,
     "saturatedFatG": 0.3,
     "carbohydrateG": 35.4,
-    "fatG": 0.6
+    "fatG": 0.6,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 85,
+      "packageVolumeMl": 125,
+      "factor": 1.470588,
+      "sourceTitle": "Sorbets Rūjienas Citr.,apel.,baz.ga.125ml/85g"
+    }
   },
   {
     "productId": "rimi_lv:4010828",
@@ -110254,7 +111010,16 @@
     "saltG": 0,
     "saturatedFatG": 8,
     "carbohydrateG": 21,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 120,
+      "factor": 1.714286,
+      "sourceTitle": "Olu saldējums Balticovo plombīra 120ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4010837",
@@ -110273,7 +111038,16 @@
     "saltG": 0.1,
     "saturatedFatG": 8,
     "carbohydrateG": 21,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 120,
+      "factor": 1.714286,
+      "sourceTitle": "Olu sald.Balticovo plomb.sāļ.kar.ga.120ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4010838",
@@ -110292,7 +111066,16 @@
     "saltG": 0.1,
     "saturatedFatG": 8,
     "carbohydrateG": 22,
-    "fatG": 12.6
+    "fatG": 12.6,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 120,
+      "factor": 1.714286,
+      "sourceTitle": "Olu sald.Balticovo šokolādes plombī.120ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4010839",
@@ -110311,7 +111094,16 @@
     "saltG": 0,
     "saturatedFatG": 8,
     "carbohydrateG": 21,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 120,
+      "factor": 1.714286,
+      "sourceTitle": "Olu sal.Balticovo plomb.ananasu gar.120ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4010860",
@@ -110330,7 +111122,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7.1,
     "carbohydrateG": 16.8,
-    "fatG": 12.2
+    "fatG": 12.2,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 100,
+      "packageVolumeMl": 150,
+      "factor": 1.5,
+      "sourceTitle": "Cukurvates saldē.Slow melts ar cuk.150ml/100g"
+    }
   },
   {
     "productId": "rimi_lv:4010861",
@@ -110368,7 +111169,16 @@
     "saltG": 0.2,
     "saturatedFatG": 10,
     "carbohydrateG": 35,
-    "fatG": 19
+    "fatG": 19,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 110,
+      "factor": 1.571429,
+      "sourceTitle": "Saldējums Snickers Ice Cone 110ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:4010884",
@@ -110406,7 +111216,16 @@
     "saltG": 0.2,
     "saturatedFatG": 6.9,
     "carbohydrateG": 20,
-    "fatG": 8.2
+    "fatG": 8.2,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 59,
+      "packageVolumeMl": 110,
+      "factor": 1.864407,
+      "sourceTitle": "Saldējums M&M's Ice Cone 110ml/59g"
+    }
   },
   {
     "productId": "rimi_lv:4010891",
@@ -110425,7 +111244,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 26,
-    "fatG": 1.8
+    "fatG": 1.8,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 330,
+      "packageVolumeMl": 360,
+      "factor": 1.090909,
+      "sourceTitle": "Sald.Tymbark Mix augļu ledus tēja 360ml/330g"
+    }
   },
   {
     "productId": "rimi_lv:4010918",
@@ -110444,7 +111272,16 @@
     "saltG": 0,
     "saturatedFatG": 8.6,
     "carbohydrateG": 24,
-    "fatG": 10
+    "fatG": 10,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 700,
+      "packageVolumeMl": 1400,
+      "factor": 2,
+      "sourceTitle": "Sald.Manhattan kafi.ar saldo krēj.1400ml/700g"
+    }
   },
   {
     "productId": "rimi_lv:4010927",
@@ -110596,7 +111433,16 @@
     "saltG": 0,
     "saturatedFatG": 0.1,
     "carbohydrateG": 20,
-    "fatG": 0.5
+    "fatG": 0.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 65,
+      "packageVolumeMl": 70,
+      "factor": 1.076923,
+      "sourceTitle": "Augļu saldēj.Pirulo mango,pasifloras 70ml/65g"
+    }
   },
   {
     "productId": "rimi_lv:4010942",
@@ -110653,7 +111499,16 @@
     "saltG": 0,
     "saturatedFatG": 0.1,
     "carbohydrateG": 23,
-    "fatG": 0.5
+    "fatG": 0.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 105,
+      "packageVolumeMl": 105,
+      "factor": 1,
+      "sourceTitle": "Saldējums Calippo Orange 105ml/105g"
+    }
   },
   {
     "productId": "rimi_lv:4010978",
@@ -110672,7 +111527,16 @@
     "saltG": 0.3,
     "saturatedFatG": 7.5,
     "carbohydrateG": 27,
-    "fatG": 11
+    "fatG": 11,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 393,
+      "packageVolumeMl": 465,
+      "factor": 1.183206,
+      "sourceTitle": "Sald.Ben&Jerry's Strawb.dough.465ml/393g"
+    }
   },
   {
     "productId": "rimi_lv:4010979",
@@ -110691,7 +111555,16 @@
     "saltG": 0,
     "saturatedFatG": 0.1,
     "carbohydrateG": 21,
-    "fatG": 0.5
+    "fatG": 0.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 72,
+      "packageVolumeMl": 70,
+      "factor": 0.972222,
+      "sourceTitle": "Saldējums Twister Freeze NPD 70ml/72g"
+    }
   },
   {
     "productId": "rimi_lv:4010985",
@@ -110710,7 +111583,16 @@
     "saltG": 0.1,
     "saturatedFatG": 12,
     "carbohydrateG": 32,
-    "fatG": 14
+    "fatG": 14,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 93,
+      "packageVolumeMl": 170,
+      "factor": 1.827957,
+      "sourceTitle": "Saldējums Super Viva Cott.cand.170ml/93g"
+    }
   },
   {
     "productId": "rimi_lv:4010986",
@@ -110729,7 +111611,16 @@
     "saltG": 0,
     "saturatedFatG": 0.1,
     "carbohydrateG": 30,
-    "fatG": 0.5
+    "fatG": 0.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 105,
+      "packageVolumeMl": 105,
+      "factor": 1,
+      "sourceTitle": "Saldējums Calippo Cola 105 ml/105g"
+    }
   },
   {
     "productId": "rimi_lv:4010992",
@@ -110748,7 +111639,16 @@
     "saltG": 0.5,
     "saturatedFatG": 8.9,
     "carbohydrateG": 29,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 360,
+      "packageVolumeMl": 465,
+      "factor": 1.291667,
+      "sourceTitle": "Saldējums Ben&Jerry's Churros 465ml/360g"
+    }
   },
   {
     "productId": "rimi_lv:4010993",
@@ -110786,7 +111686,16 @@
     "saltG": 0,
     "saturatedFatG": 4.5,
     "carbohydrateG": 26,
-    "fatG": 5.2
+    "fatG": 5.2,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 51,
+      "packageVolumeMl": 45,
+      "factor": 0.882353,
+      "sourceTitle": "Sorbets Kaktus persiku, aveņu 45ml/51g"
+    }
   },
   {
     "productId": "rimi_lv:4011007",
@@ -111033,7 +111942,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 25,
-    "fatG": 0
+    "fatG": 0,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 80,
+      "packageVolumeMl": 80,
+      "factor": 1,
+      "sourceTitle": "Saldējums Jungle pop tutti frutti 80ml/80g"
+    }
   },
   {
     "productId": "rimi_lv:4011366",
@@ -114643,7 +115561,16 @@
     "saltG": 0.2,
     "saturatedFatG": 8.7,
     "carbohydrateG": 29.3,
-    "fatG": 12.9
+    "fatG": 12.9,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 65,
+      "packageVolumeMl": 120,
+      "factor": 1.846154,
+      "sourceTitle": "Šokol. saldējums Rimi ar šok. gab. 120ml/65g"
+    }
   },
   {
     "productId": "rimi_lv:808822",
@@ -114662,7 +115589,16 @@
     "saltG": 0.1,
     "saturatedFatG": 7.2,
     "carbohydrateG": 29.4,
-    "fatG": 9.1
+    "fatG": 9.1,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 72,
+      "packageVolumeMl": 120,
+      "factor": 1.666667,
+      "sourceTitle": "Sal.Rimi van.ar mež.ogu pil.120ml/72g"
+    }
   },
   {
     "productId": "rimi_lv:808827",
@@ -115213,7 +116149,16 @@
     "saltG": 0.2,
     "saturatedFatG": 4.5,
     "carbohydrateG": 27.2,
-    "fatG": 10
+    "fatG": 10,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 65,
+      "packageVolumeMl": 120,
+      "factor": 1.846154,
+      "sourceTitle": "Sald.van.garš.Rimi Smart glāz.120ml/65g"
+    }
   },
   {
     "productId": "rimi_lv:810575",
@@ -115327,7 +116272,16 @@
     "saltG": 0.1,
     "saturatedFatG": 6.7,
     "carbohydrateG": 24.5,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 1000,
+      "factor": 2,
+      "sourceTitle": "Saldējums Rimi šokolādes 1l/500g"
+    }
   },
   {
     "productId": "rimi_lv:810859",
@@ -115346,7 +116300,16 @@
     "saltG": 0.1,
     "saturatedFatG": 7,
     "carbohydrateG": 24,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 1000,
+      "factor": 2,
+      "sourceTitle": "Saldējums Rimi Smart vaniļas 1l/500g"
+    }
   },
   {
     "productId": "rimi_lv:810930",
@@ -116581,7 +117544,16 @@
     "saltG": 0.2,
     "saturatedFatG": 6.1,
     "carbohydrateG": 33.1,
-    "fatG": 10.1
+    "fatG": 10.1,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 120,
+      "packageVolumeMl": 200,
+      "factor": 1.666667,
+      "sourceTitle": "Saldējums Rimi ar meža ogu pildīj. 200ml/120g"
+    }
   },
   {
     "productId": "rimi_lv:813470",
@@ -116600,7 +117572,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7.9,
     "carbohydrateG": 34.2,
-    "fatG": 10.4
+    "fatG": 10.4,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 110,
+      "packageVolumeMl": 200,
+      "factor": 1.818182,
+      "sourceTitle": "Saldējums Rimi karameļu 200ml/110g"
+    }
   },
   {
     "productId": "rimi_lv:813471",
@@ -116619,7 +117600,16 @@
     "saltG": 0.2,
     "saturatedFatG": 5.7,
     "carbohydrateG": 33.3,
-    "fatG": 9.4
+    "fatG": 9.4,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 110,
+      "packageVolumeMl": 200,
+      "factor": 1.818182,
+      "sourceTitle": "Saldējums Rimi šokolādes 200ml/110g"
+    }
   },
   {
     "productId": "rimi_lv:813525",
@@ -117132,7 +118122,16 @@
     "saltG": 0.1,
     "saturatedFatG": 6,
     "carbohydrateG": 23,
-    "fatG": 6.7
+    "fatG": 6.7,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 450,
+      "packageVolumeMl": 1000,
+      "factor": 2.222222,
+      "sourceTitle": "Saldējums Rimi Smart šokolādes 1l/450g"
+    }
   },
   {
     "productId": "rimi_lv:814756",
@@ -117151,7 +118150,16 @@
     "saltG": 0.1,
     "saturatedFatG": 8.4,
     "carbohydrateG": 24,
-    "fatG": 9.3
+    "fatG": 9.3,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 450,
+      "packageVolumeMl": 1000,
+      "factor": 2.222222,
+      "sourceTitle": "Saldējums Rimi Smart vaniļas 1l/450g"
+    }
   },
   {
     "productId": "rimi_lv:814763",
@@ -118500,7 +119508,16 @@
     "saltG": 0.1,
     "saturatedFatG": 9.8,
     "carbohydrateG": 23,
-    "fatG": 14
+    "fatG": 14,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 400,
+      "packageVolumeMl": 500,
+      "factor": 1.25,
+      "sourceTitle": "Šok. sald. Rimi brownie cep. gab. 500ml/400g"
+    }
   },
   {
     "productId": "rimi_lv:816036",
@@ -118519,7 +119536,16 @@
     "saltG": 0.2,
     "saturatedFatG": 10,
     "carbohydrateG": 32,
-    "fatG": 14
+    "fatG": 14,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 400,
+      "packageVolumeMl": 500,
+      "factor": 1.25,
+      "sourceTitle": "Van.sald.Rimi ar cep.mīk.,šok.gab. 500ml/400g"
+    }
   },
   {
     "productId": "rimi_lv:816070",
@@ -118918,7 +119944,16 @@
     "saltG": 0.1,
     "saturatedFatG": 16,
     "carbohydrateG": 21,
-    "fatG": 21
+    "fatG": 21,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 120,
+      "factor": 1.714286,
+      "sourceTitle": "Saldējums Frostivo zemesr., van. g. 120ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:816529",
@@ -118937,7 +119972,16 @@
     "saltG": 0.1,
     "saturatedFatG": 16,
     "carbohydrateG": 22,
-    "fatG": 19
+    "fatG": 19,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 34,
+      "packageVolumeMl": 52,
+      "factor": 1.529412,
+      "sourceTitle": "Saldējums Frostivo ar kokosr. garšu 52ml/34g"
+    }
   },
   {
     "productId": "rimi_lv:816535",
@@ -118956,7 +120000,16 @@
     "saltG": 0.1,
     "saturatedFatG": 16,
     "carbohydrateG": 22,
-    "fatG": 19
+    "fatG": 19,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 34,
+      "packageVolumeMl": 52,
+      "factor": 1.529412,
+      "sourceTitle": "Saldējums Frostivo van.g., kakao gl. 52ml/34g"
+    }
   },
   {
     "productId": "rimi_lv:816536",
@@ -118975,7 +120028,16 @@
     "saltG": 0.2,
     "saturatedFatG": 17,
     "carbohydrateG": 22,
-    "fatG": 23
+    "fatG": 23,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 73,
+      "packageVolumeMl": 120,
+      "factor": 1.643836,
+      "sourceTitle": "Plombīrs Frostivo zemesr., van. g. 120ml/73g"
+    }
   },
   {
     "productId": "rimi_lv:816593",
@@ -120229,7 +121291,16 @@
     "saltG": 0.3,
     "saturatedFatG": 14,
     "carbohydrateG": 32,
-    "fatG": 19
+    "fatG": 19,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 72,
+      "packageVolumeMl": 100,
+      "factor": 1.388889,
+      "sourceTitle": "Sald. Salling van., piena šok.gl.4x72g/100ml"
+    }
   },
   {
     "productId": "rimi_lv:817528",
@@ -121236,7 +122307,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 22.1,
-    "fatG": 23.1
+    "fatG": 23.1,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 120,
+      "factor": 1.6,
+      "sourceTitle": "Plomb. sald. Pols šok. gl. uz koc. 120ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:902088",
@@ -121388,7 +122468,16 @@
     "saltG": 0.1,
     "saturatedFatG": 12,
     "carbohydrateG": 34,
-    "fatG": 19
+    "fatG": 19,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 85,
+      "packageVolumeMl": 110,
+      "factor": 1.294118,
+      "sourceTitle": "Sald. Ekselence aveņu-granātābolu 110ml/85g"
+    }
   },
   {
     "productId": "rimi_lv:903391",
@@ -121711,7 +122800,16 @@
     "saltG": 0.1,
     "saturatedFatG": 8.1,
     "carbohydrateG": 20,
-    "fatG": 12.5
+    "fatG": 12.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 1000,
+      "factor": 2,
+      "sourceTitle": "Plombīra saldējums Rūjienas 1l/500g"
+    }
   },
   {
     "productId": "rimi_lv:906674",
@@ -122547,7 +123645,16 @@
     "saltG": 0.2,
     "saturatedFatG": 13,
     "carbohydrateG": 22.5,
-    "fatG": 23.8
+    "fatG": 23.8,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 90,
+      "packageVolumeMl": 150,
+      "factor": 1.666667,
+      "sourceTitle": "Vaniļas krējuma saldējums glazūrā 150ml/90g"
+    }
   },
   {
     "productId": "rimi_lv:917903",
@@ -122566,7 +123673,16 @@
     "saltG": 0.1,
     "saturatedFatG": 9,
     "carbohydrateG": 32,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 120,
+      "factor": 1.714286,
+      "sourceTitle": "Saldējums Pols vaniļas vafeļu glāzē 120ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:918382",
@@ -123421,7 +124537,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 24.5,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 1000,
+      "factor": 2,
+      "sourceTitle": "Saldējums Zemnieku plūmju 1000ml/500g"
+    }
   },
   {
     "productId": "rimi_lv:928181",
@@ -123440,7 +124565,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 24.5,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 600,
+      "packageVolumeMl": 1200,
+      "factor": 2,
+      "sourceTitle": "Saldējums Zemnieku plombīra 1200ml/600g"
+    }
   },
   {
     "productId": "rimi_lv:928753",
@@ -123953,7 +125087,16 @@
     "saltG": 0.1,
     "saturatedFatG": 12.1,
     "carbohydrateG": 22.3,
-    "fatG": 23.9
+    "fatG": 23.9,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 90,
+      "packageVolumeMl": 150,
+      "factor": 1.666667,
+      "sourceTitle": "Vaniļas, šok. kr. saldējums glazūrā 150ml/90g"
+    }
   },
   {
     "productId": "rimi_lv:937539",
@@ -123972,7 +125115,16 @@
     "saltG": 0.2,
     "saturatedFatG": 0,
     "carbohydrateG": 29,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 66,
+      "packageVolumeMl": 120,
+      "factor": 1.818182,
+      "sourceTitle": "Saldējums Mājas konfekte gotiņa 120ml/66g"
+    }
   },
   {
     "productId": "rimi_lv:937833",
@@ -124732,7 +125884,16 @@
     "saltG": 0.1,
     "saturatedFatG": 13.5,
     "carbohydrateG": 22.3,
-    "fatG": 22.7
+    "fatG": 22.7,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 110,
+      "factor": 1.571429,
+      "sourceTitle": "Saldējums Eskimos plombīra van.110ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:947219",
@@ -124751,7 +125912,16 @@
     "saltG": 0.2,
     "saturatedFatG": 9,
     "carbohydrateG": 41,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 90,
+      "packageVolumeMl": 200,
+      "factor": 2.222222,
+      "sourceTitle": "Sald.Pols ar Bubble gum garšu 200ml/90g"
+    }
   },
   {
     "productId": "rimi_lv:947223",
@@ -124770,7 +125940,16 @@
     "saltG": 0.1,
     "saturatedFatG": 15,
     "carbohydrateG": 21,
-    "fatG": 23
+    "fatG": 23,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 120,
+      "factor": 1.6,
+      "sourceTitle": "Sald.Pols šokolādes šok. glaz.120ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:947228",
@@ -124789,7 +125968,16 @@
     "saltG": 0.2,
     "saturatedFatG": 10,
     "carbohydrateG": 38,
-    "fatG": 15
+    "fatG": 15,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 90,
+      "packageVolumeMl": 200,
+      "factor": 2.222222,
+      "sourceTitle": "Sald.Pols plombīra cukur.vaf.k.200ml/90g"
+    }
   },
   {
     "productId": "rimi_lv:947305",
@@ -124808,7 +125996,16 @@
     "saltG": 0,
     "saturatedFatG": 0.3,
     "carbohydrateG": 38,
-    "fatG": 0.3
+    "fatG": 0.3,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 85,
+      "packageVolumeMl": 125,
+      "factor": 1.470588,
+      "sourceTitle": "Saldēj.Lukss sorbets mango g.125 ml/85g"
+    }
   },
   {
     "productId": "rimi_lv:947475",
@@ -124846,7 +126043,16 @@
     "saltG": 0.3,
     "saturatedFatG": 18,
     "carbohydrateG": 45,
-    "fatG": 23
+    "fatG": 23,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 141,
+      "packageVolumeMl": 200,
+      "factor": 1.41844,
+      "sourceTitle": "Saldējums Milka ar piena šok. 200ml/141g"
+    }
   },
   {
     "productId": "rimi_lv:948041",
@@ -125302,7 +126508,16 @@
     "saltG": 0.1,
     "saturatedFatG": 9.5,
     "carbohydrateG": 26.2,
-    "fatG": 11.1
+    "fatG": 11.1,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 1000,
+      "factor": 2,
+      "sourceTitle": "Saldē. Druva svētku ar marmelā. 1000ml/500g"
+    }
   },
   {
     "productId": "rimi_lv:953861",
@@ -125492,7 +126707,16 @@
     "saltG": 0,
     "saturatedFatG": 0.4,
     "carbohydrateG": 45,
-    "fatG": 1.3
+    "fatG": 1.3,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 210,
+      "packageVolumeMl": 216,
+      "factor": 1.028571,
+      "sourceTitle": "Saldējums Mochi mango 6x35g 216ml/210g"
+    }
   },
   {
     "productId": "rimi_lv:959240",
@@ -125549,7 +126773,16 @@
     "saltG": 0.2,
     "saturatedFatG": 9,
     "carbohydrateG": 30,
-    "fatG": 15
+    "fatG": 15,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 406,
+      "packageVolumeMl": 465,
+      "factor": 1.14532,
+      "sourceTitle": "Saldēj. B&J ar cepum. un šok. gab. 465ml/406g"
+    }
   },
   {
     "productId": "rimi_lv:961224",
@@ -125587,7 +126820,16 @@
     "saltG": 0.2,
     "saturatedFatG": 8.1,
     "carbohydrateG": 32,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 406,
+      "packageVolumeMl": 465,
+      "factor": 1.14532,
+      "sourceTitle": "Saldēj. B&J šokolādes un vaniļas 465ml/406g"
+    }
   },
   {
     "productId": "rimi_lv:962064",
@@ -125625,7 +126867,16 @@
     "saltG": 0.1,
     "saturatedFatG": 19.1,
     "carbohydrateG": 21.9,
-    "fatG": 22
+    "fatG": 22,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 110,
+      "factor": 1.571429,
+      "sourceTitle": "Saldējums Eskimos šokolādes šok.gl. 110ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:962357",
@@ -125644,7 +126895,16 @@
     "saltG": 0.2,
     "saturatedFatG": 11,
     "carbohydrateG": 40,
-    "fatG": 14
+    "fatG": 14,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 75,
+      "packageVolumeMl": 140,
+      "factor": 1.866667,
+      "sourceTitle": "Saldējums Pols vaniļas ar cepumiem 140ml/75g"
+    }
   },
   {
     "productId": "rimi_lv:962477",
@@ -125701,7 +126961,16 @@
     "saltG": 0.1,
     "saturatedFatG": 28.6,
     "carbohydrateG": 10.7,
-    "fatG": 4.2
+    "fatG": 4.2,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 90,
+      "packageVolumeMl": 200,
+      "factor": 2.222222,
+      "sourceTitle": "Sald. Eskimos krēma-brulē sendvičs 200ml/90g"
+    }
   },
   {
     "productId": "rimi_lv:963470",
@@ -125720,7 +126989,16 @@
     "saltG": 0.1,
     "saturatedFatG": 23.7,
     "carbohydrateG": 9.4,
-    "fatG": 4.2
+    "fatG": 4.2,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 90,
+      "packageVolumeMl": 200,
+      "factor": 2.222222,
+      "sourceTitle": "Saldējums Eskimos vaniļas sendvičs 200ml/90g"
+    }
   },
   {
     "productId": "rimi_lv:964133",
@@ -126005,7 +127283,16 @@
     "saltG": 0.3,
     "saturatedFatG": 8.3,
     "carbohydrateG": 37.3,
-    "fatG": 11.8
+    "fatG": 11.8,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 65,
+      "packageVolumeMl": 110,
+      "factor": 1.692308,
+      "sourceTitle": "Sald. Rūjienas šok. ar brūkleņu p. 110ml/65g"
+    }
   },
   {
     "productId": "rimi_lv:968568",
@@ -126328,7 +127615,16 @@
     "saltG": 0.3,
     "saturatedFatG": 12,
     "carbohydrateG": 38,
-    "fatG": 17
+    "fatG": 17,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 71,
+      "packageVolumeMl": 85,
+      "factor": 1.197183,
+      "sourceTitle": "Sald. Magnum Billionaire ar karameli 85ml/71g"
+    }
   },
   {
     "productId": "rimi_lv:974551",
@@ -126385,7 +127681,16 @@
     "saltG": 0.1,
     "saturatedFatG": 5.9,
     "carbohydrateG": 26,
-    "fatG": 8.3
+    "fatG": 8.3,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 705,
+      "packageVolumeMl": 1400,
+      "factor": 1.985816,
+      "sourceTitle": "Saldēj. Manhattan šokolādes - kar. 1,4L/705g"
+    }
   },
   {
     "productId": "rimi_lv:974819",
@@ -126442,7 +127747,16 @@
     "saltG": 0,
     "saturatedFatG": 7.7,
     "carbohydrateG": 28,
-    "fatG": 8.6
+    "fatG": 8.6,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 432,
+      "packageVolumeMl": 387,
+      "factor": 0.895833,
+      "sourceTitle": "Saldējums Nesquik 387ml/432g"
+    }
   },
   {
     "productId": "rimi_lv:975907",
@@ -126480,7 +127794,16 @@
     "saltG": 0.3,
     "saturatedFatG": 6.4,
     "carbohydrateG": 19,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 320,
+      "packageVolumeMl": 450,
+      "factor": 1.40625,
+      "sourceTitle": "Saldēj. Snickers Tube ar karameli 450ml/320g"
+    }
   },
   {
     "productId": "rimi_lv:975998",
@@ -126499,7 +127822,16 @@
     "saltG": 0,
     "saturatedFatG": 0.3,
     "carbohydrateG": 37.2,
-    "fatG": 0.3
+    "fatG": 0.3,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 85,
+      "packageVolumeMl": 125,
+      "factor": 1.470588,
+      "sourceTitle": "Sorbets Rūjienas Lukss ķiršu 125ml/85g"
+    }
   },
   {
     "productId": "rimi_lv:976535",
@@ -126537,7 +127869,16 @@
     "saltG": 0.2,
     "saturatedFatG": 8.9,
     "carbohydrateG": 33,
-    "fatG": 11
+    "fatG": 11,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 68,
+      "packageVolumeMl": 120,
+      "factor": 1.764706,
+      "sourceTitle": "Saldējums Mājas Minis vafeļu glāz. 120ml/68g"
+    }
   },
   {
     "productId": "rimi_lv:976606",
@@ -126556,7 +127897,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 21,
-    "fatG": 0
+    "fatG": 0,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 70,
+      "factor": 1,
+      "sourceTitle": "Sulas saldējums Jungle Pop limonādes 70ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:976964",
@@ -126575,7 +127925,16 @@
     "saltG": 1,
     "saturatedFatG": 7.5,
     "carbohydrateG": 43,
-    "fatG": 11
+    "fatG": 11,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 110,
+      "factor": 1.571429,
+      "sourceTitle": "Saldējums Oreo sendvičs 110ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:976969",
@@ -126632,7 +127991,16 @@
     "saltG": 0.2,
     "saturatedFatG": 9.1,
     "carbohydrateG": 26,
-    "fatG": 17
+    "fatG": 17,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 74,
+      "packageVolumeMl": 91,
+      "factor": 1.22973,
+      "sourceTitle": "Saldējums Snickers uz kociņa 91ml/74g"
+    }
   },
   {
     "productId": "rimi_lv:977170",
@@ -126651,7 +128019,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 13,
-    "fatG": 0.5
+    "fatG": 0.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 80,
+      "factor": 1.142857,
+      "sourceTitle": "Sorbets Sun365 mango 80ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:977171",
@@ -126670,7 +128047,16 @@
     "saltG": 0,
     "saturatedFatG": 1.4,
     "carbohydrateG": 11.8,
-    "fatG": 2
+    "fatG": 2,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 80,
+      "factor": 1.142857,
+      "sourceTitle": "Sorbets Sun365 kokosriekstu 80ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:977375",
@@ -126689,7 +128075,16 @@
     "saltG": 0.2,
     "saturatedFatG": 12.3,
     "carbohydrateG": 20.7,
-    "fatG": 21.9
+    "fatG": 21.9,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 78,
+      "packageVolumeMl": 90,
+      "factor": 1.153846,
+      "sourceTitle": "Saldējums Dione zemesriekstu sviesta 90ml/78g"
+    }
   },
   {
     "productId": "rimi_lv:977381",
@@ -126708,7 +128103,16 @@
     "saltG": 0,
     "saturatedFatG": 13.3,
     "carbohydrateG": 20.2,
-    "fatG": 21.7
+    "fatG": 21.7,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 79,
+      "packageVolumeMl": 90,
+      "factor": 1.139241,
+      "sourceTitle": "Saldējums Dione vaniļas - karameļu 90ml/79g"
+    }
   },
   {
     "productId": "rimi_lv:977562",
@@ -126727,7 +128131,16 @@
     "saltG": 0.1,
     "saturatedFatG": 8.4,
     "carbohydrateG": 27,
-    "fatG": 9.4
+    "fatG": 9.4,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 742,
+      "packageVolumeMl": 1400,
+      "factor": 1.886792,
+      "sourceTitle": "Sald. Manhattan banānu - šokolādes 1,4L/742g"
+    }
   },
   {
     "productId": "rimi_lv:977886",
@@ -126898,7 +128311,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7.8,
     "carbohydrateG": 36.5,
-    "fatG": 11.2
+    "fatG": 11.2,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 65,
+      "packageVolumeMl": 110,
+      "factor": 1.692308,
+      "sourceTitle": "Sald. Rūjienas piparmētru vaf. kon. 110ml/65g"
+    }
   },
   {
     "productId": "rimi_lv:979037",
@@ -126917,7 +128339,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7.1,
     "carbohydrateG": 35.5,
-    "fatG": 9.9
+    "fatG": 9.9,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 65,
+      "packageVolumeMl": 110,
+      "factor": 1.692308,
+      "sourceTitle": "Sald. Rūjienas meža zemeņu vaf. kon.110ml/65g"
+    }
   },
   {
     "productId": "rimi_lv:979210",
@@ -127601,7 +129032,16 @@
     "saltG": 0.1,
     "saturatedFatG": 4.5,
     "carbohydrateG": 46,
-    "fatG": 6.2
+    "fatG": 6.2,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 210,
+      "packageVolumeMl": 216,
+      "factor": 1.028571,
+      "sourceTitle": "Saldējums Wao mochi pistāciju 216ml/210g"
+    }
   },
   {
     "productId": "rimi_lv:986413",
@@ -127715,7 +129155,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7.7,
     "carbohydrateG": 27,
-    "fatG": 15
+    "fatG": 15,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 95,
+      "packageVolumeMl": 170,
+      "factor": 1.789474,
+      "sourceTitle": "Saldējums Super Viva karameļu 170ml/95g"
+    }
   },
   {
     "productId": "rimi_lv:987182",
@@ -127734,7 +129183,16 @@
     "saltG": 0.1,
     "saturatedFatG": 4.5,
     "carbohydrateG": 21,
-    "fatG": 8.6
+    "fatG": 8.6,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 100,
+      "packageVolumeMl": 170,
+      "factor": 1.7,
+      "sourceTitle": "Saldējums Super Viva Creme brulee 170ml/100g"
+    }
   },
   {
     "productId": "rimi_lv:987207",
@@ -127867,7 +129325,16 @@
     "saltG": 0,
     "saturatedFatG": 0,
     "carbohydrateG": 21,
-    "fatG": 0
+    "fatG": 0,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 70,
+      "factor": 1,
+      "sourceTitle": "Sulas saldējums Jungle Pop kolas 70ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:988053",
@@ -127905,7 +129372,16 @@
     "saltG": 0.2,
     "saturatedFatG": 7,
     "carbohydrateG": 28,
-    "fatG": 11
+    "fatG": 11,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 98,
+      "packageVolumeMl": 170,
+      "factor": 1.734694,
+      "sourceTitle": "Saldēj. Super Viva vaniļas - zemeņu 170ml/98g"
+    }
   },
   {
     "productId": "rimi_lv:988144",
@@ -127924,7 +129400,16 @@
     "saltG": 0.2,
     "saturatedFatG": 6.7,
     "carbohydrateG": 33,
-    "fatG": 12
+    "fatG": 12,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 96,
+      "packageVolumeMl": 170,
+      "factor": 1.770833,
+      "sourceTitle": "Saldējums Super Viva Stracciatella 170ml/96g"
+    }
   },
   {
     "productId": "rimi_lv:988179",
@@ -127962,7 +129447,16 @@
     "saltG": 0.1,
     "saturatedFatG": 7.8,
     "carbohydrateG": 34,
-    "fatG": 14
+    "fatG": 14,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 110,
+      "packageVolumeMl": 220,
+      "factor": 2,
+      "sourceTitle": "Saldējums Ekselence valriekstu 220ml/110g"
+    }
   },
   {
     "productId": "rimi_lv:988764",
@@ -127981,7 +129475,16 @@
     "saltG": 0,
     "saturatedFatG": 9.6,
     "carbohydrateG": 25.5,
-    "fatG": 11.9
+    "fatG": 11.9,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 120,
+      "factor": 1.714286,
+      "sourceTitle": "Saldējums Druvas cigoriņu 120ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:989336",
@@ -128133,7 +129636,16 @@
     "saltG": 0.1,
     "saturatedFatG": 8.9,
     "carbohydrateG": 28.3,
-    "fatG": 11.1
+    "fatG": 11.1,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 120,
+      "factor": 1.714286,
+      "sourceTitle": "Saldējums Druva ar rozīnēm 120ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:993298",
@@ -128456,7 +129968,16 @@
     "saltG": 0.1,
     "saturatedFatG": 8.9,
     "carbohydrateG": 28.3,
-    "fatG": 10.7
+    "fatG": 10.7,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 1000,
+      "factor": 2,
+      "sourceTitle": "Saldējums Druva dzērveņu - Maskarpone 1L/500g"
+    }
   },
   {
     "productId": "rimi_lv:995487",
@@ -128494,7 +130015,16 @@
     "saltG": 0.3,
     "saturatedFatG": 10,
     "carbohydrateG": 28,
-    "fatG": 13
+    "fatG": 13,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 500,
+      "packageVolumeMl": 800,
+      "factor": 1.6,
+      "sourceTitle": "Saldējums Barattolino Croccantino 800ml/500g"
+    }
   },
   {
     "productId": "rimi_lv:995852",
@@ -128950,7 +130480,16 @@
     "saltG": 0.1,
     "saturatedFatG": 3.9,
     "carbohydrateG": 26.7,
-    "fatG": 6.3
+    "fatG": 6.3,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 70,
+      "packageVolumeMl": 120,
+      "factor": 1.714286,
+      "sourceTitle": "Citronu sorbeta-plombīra saldējums 120ml/70g"
+    }
   },
   {
     "productId": "rimi_lv:997604",
@@ -129064,7 +130603,16 @@
     "saltG": 0.2,
     "saturatedFatG": 13,
     "carbohydrateG": 24,
-    "fatG": 21
+    "fatG": 21,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 84,
+      "packageVolumeMl": 150,
+      "factor": 1.785714,
+      "sourceTitle": "Krējuma saldējums ar cit.-van. g. 150ml/84g"
+    }
   },
   {
     "productId": "rimi_lv:997709",
@@ -129178,7 +130726,16 @@
     "saltG": 0,
     "saturatedFatG": 0.4,
     "carbohydrateG": 22,
-    "fatG": 0.5
+    "fatG": 0.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 71,
+      "packageVolumeMl": 80,
+      "factor": 1.126761,
+      "sourceTitle": "Saldējums Twister Green Pineapple 80ml/71g"
+    }
   },
   {
     "productId": "rimi_lv:998009",
@@ -129197,7 +130754,16 @@
     "saltG": 0.2,
     "saturatedFatG": 12,
     "carbohydrateG": 30,
-    "fatG": 18
+    "fatG": 18,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 100,
+      "packageVolumeMl": 190,
+      "factor": 1.9,
+      "sourceTitle": "Saldēj. Pols Gotiņa vafeļu glāzītē 190ml/100g"
+    }
   },
   {
     "productId": "rimi_lv:998033",
@@ -129216,7 +130782,16 @@
     "saltG": 0.1,
     "saturatedFatG": 12,
     "carbohydrateG": 28,
-    "fatG": 16
+    "fatG": 16,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 100,
+      "packageVolumeMl": 190,
+      "factor": 1.9,
+      "sourceTitle": "Šok. saldējums ar banānu pild. 190ml/100g"
+    }
   },
   {
     "productId": "rimi_lv:998052",
@@ -129273,7 +130848,16 @@
     "saltG": 0.3,
     "saturatedFatG": 13,
     "carbohydrateG": 35,
-    "fatG": 21
+    "fatG": 21,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 64,
+      "packageVolumeMl": 90,
+      "factor": 1.40625,
+      "sourceTitle": "Saldējums Oreo 90ml/64g"
+    }
   },
   {
     "productId": "rimi_lv:998544",
@@ -129292,7 +130876,16 @@
     "saltG": 0,
     "saturatedFatG": 0.1,
     "carbohydrateG": 19,
-    "fatG": 0.5
+    "fatG": 0.5,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 100,
+      "packageVolumeMl": 99,
+      "factor": 0.99,
+      "sourceTitle": "Saldējums Pirulo Cool Cola Tut 99ml/100g"
+    }
   },
   {
     "productId": "rimi_lv:998545",
@@ -129311,7 +130904,16 @@
     "saltG": 0.5,
     "saturatedFatG": 14,
     "carbohydrateG": 36,
-    "fatG": 21
+    "fatG": 21,
+    "basisConversion": {
+      "sourceBasis": "100ml",
+      "targetBasis": "100g",
+      "method": "exact_package_mass_volume",
+      "packageMassG": 62,
+      "packageVolumeMl": 90,
+      "factor": 1.451613,
+      "sourceTitle": "Saldējums Milka Karameles kraukšķis 90ml/62g"
+    }
   },
   {
     "productId": "rimi_lv:998829",

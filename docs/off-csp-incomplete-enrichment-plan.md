@@ -36,4 +36,5 @@ This work stays on `codex/personal-fit-catalog-preview` and the isolated Railway
 - CSP: no source file or credentials have been issued. Code readiness does not count as a connected feed.
 - Completed exact-source pass: all 3,605 frozen IDs are accounted for through 3,600 terminal fetch attempts and 5 pre-existing exact observations. The pass added 2,343 observations and 1,897 assessments without changing a previous rating outcome.
 - The final 591-card Barbora cohort was resumed only after the recorded cooldown. It produced 544 accepted exact observations, 27 changed-SKU rejections and 20 HTTP 404 rejections. Its single temporary HTTP 429 was retried once after the next recorded cooldown; no rate-limited or unattempted row remains.
-- Current audit: 7,493 observations, 5,609 assessable source rows and 1,700 supported-type rows still missing sufficient exact evidence.
+- Current audit after the exact mass/volume basis pass: 7,493 observations, 5,703 assessable source rows and 1,784 supported-type rows still missing sufficient exact evidence.
+- A frozen 100-GTIN internet pilot added no catalog rows: exact OFF refreshes produced 11 assessable whole observations and 56 exact but incomplete observations; grounded search found 81 URLs on unreviewed/unsupported hosts but supplied no accepted nutrient facts.

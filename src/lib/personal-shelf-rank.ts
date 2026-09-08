@@ -1,7 +1,8 @@
 import type { ProductRecord, ScoredProduct } from "./types";
 import { reviewedIngredientBase } from "./personal-shelf-ingredient-aliases";
+import { shelfEvidencePer100g, type ExactPackageBasisConversion } from "./personal-shelf-basis-conversion";
 
-export const SHELF_MODEL_VERSION = "personal-shelf-v1.5-bounded";
+export const SHELF_MODEL_VERSION = "personal-shelf-v1.6-exact-basis";
 export type ShelfCategory = "chips" | "savory-snack" | "crackers" | "yogurt" | "dairy-dessert" | "ice-cream" |
   "bar" | "cookie" | "breakfast-cereal" | "bread" | "pasta" | "nuts-seeds" | "dried-fruit" | "chocolate" |
   "candy" | "cheese" | "meat-product" | "fish-product" | "sauce";
@@ -16,6 +17,8 @@ export interface ShelfEvidence {
   gtin: string | null;
   category: string;
   nutritionBasis: "100g" | "100ml";
+  /** Raw values stay in source units; this metadata permits an exact scoring-only 100 g conversion. */
+  basisConversion?: ExactPackageBasisConversion;
   ingredientsText: string | null;
   ingredientsLanguage: string | null;
   energyKcal: number | null;
@@ -218,14 +221,15 @@ const round = (n: number) => Math.round(n * 10) / 10;
 const inverse = (value: number, low: number, high: number) => 100 * Math.max(0, Math.min(1, (high - value) / (high - low)));
 
 export function assessPersonalShelfProduct(product: Pick<ProductRecord, "id" | "gtin" | "category" | "format" | "shelfEvidence">): ShelfAssessment {
-  const evidence = product.shelfEvidence;
-  const category = shelfCategory(evidence?.category || product.category, product.format);
+  const sourceEvidence = product.shelfEvidence;
+  const category = shelfCategory(sourceEvidence?.category || product.category, product.format);
   const result: ShelfAssessment = { modelVersion: SHELF_MODEL_VERSION, category, status: "missing_data", score: null, scoreRange: null, missing: [], components: [], reasons: [], tradeoffs: [], cap: null };
   if (!category) return { ...result, status: "unsupported" };
-  if (!evidence || evidence.productId !== product.id || (product.gtin && evidence.gtin && product.gtin !== evidence.gtin)) {
+  if (!sourceEvidence || sourceEvidence.productId !== product.id || (product.gtin && sourceEvidence.gtin && product.gtin !== sourceEvidence.gtin)) {
     return { ...result, missing: ["exact ingredient and nutrition source"] };
   }
-  if (evidence.nutritionBasis !== "100g") return { ...result, status: "unsupported" };
+  const evidence = shelfEvidencePer100g(sourceEvidence);
+  if (!evidence) return { ...result, status: "unsupported" };
   const config = SHELF_CATEGORIES[category];
   if (!hasSafeShelfSource(evidence) || !Number.isFinite(Date.parse(evidence.checkedAt))) result.missing.push("dated source");
   const ingredients = analyzeIngredients(evidence.ingredientsText, evidence.ingredientsLanguage, category);
@@ -281,6 +285,9 @@ export function assessPersonalShelfProduct(product: Pick<ProductRecord, "id" | "
   result.cap = high.length ? `Pilot ceiling 59/100: high ${high.join(" and ")} per 100 g. Protein cannot cancel this limit.` : null;
   result.status = missingFiber ? "provisional" : "scored";
   result.reasons = [`${sugar} g sugar per 100 g`, `${evidence.proteinG} g protein (${round(proteinShare)}% of energy)`, `First ingredient: ${ingredients!.firstIngredient}`];
+  if (sourceEvidence.nutritionBasis === "100ml" && sourceEvidence.basisConversion) {
+    result.reasons.push(`Converted from the source's 100 ml values using its exact ${sourceEvidence.basisConversion.packageMassG} g / ${sourceEvidence.basisConversion.packageVolumeMl} ml pack declaration`);
+  }
   result.tradeoffs = [
     ...(high.length ? [`Higher ${high.join(" and ")} per 100 g`] : []),
     ...(ingredients!.sugarNearStart ? ["Sugar, honey or syrup listed within the first three ingredients (including compound ingredients)"] : []),

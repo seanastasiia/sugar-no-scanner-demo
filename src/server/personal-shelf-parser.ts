@@ -1,5 +1,6 @@
 import type { ShelfEvidence } from "@/lib/personal-shelf-rank";
 import { normalizeIngredientText } from "@/lib/personal-shelf-rank";
+import { exactPackageBasisConversion } from "@/lib/personal-shelf-basis-conversion";
 import type { BarboraPageProduct } from "./barbora-catalog";
 import { parseLivinnProductIdentity, parseRimiProductPage, rimiDetails } from "./retailer-page-parser";
 
@@ -137,6 +138,8 @@ export function rimiShelfEvidence(html: string, url: string, expectedSku: string
     productId: `rimi_lv:${expectedSku}`, source: "rimi_lv", sourceUrl: url, checkedAt,
     gtin: product.gtin, category: rimiShelfCategory(url),
     nutritionBasis: mixedBasis ? solidPack ? "100g" : "100ml" : /100\s*ml\b/i.test(tableText) ? "100ml" : "100g",
+    ...((mixedBasis ? solidPack ? "100g" : "100ml" : /100\s*ml\b/i.test(tableText) ? "100ml" : "100g") === "100ml"
+      ? { basisConversion: exactPackageBasisConversion(product.title) || undefined } : {}),
     ingredientsText: ingredients ? ingredientPlainText(ingredients) : null, ingredientsLanguage: "lv",
     energyKcal: amount(/^energetiska vertiba$/, true), proteinG: amount(/^olbaltumvielas$/),
     totalSugarG: amount(/^(?:tostarp|t\.\s*sk\.)\s+cukuri$/), fiberG: amount(/^skiedrvielas$/),
