@@ -2007,7 +2007,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
             <div className={styles.demoChoices}>
               {personalRankAvailable ? <Link href="/demo/personal-shelf" prefetch={false}>
                 <List aria-hidden="true" size={22} />
-                  <span><strong>New rating demo</strong><small>4 real products with score breakdowns</small></span>
+                  <span><strong>New rating demo</strong><small>3 real products with Personal Fit</small></span>
               </Link> : null}
               <button type="button" onClick={startShelf}>
                 <Layers3 aria-hidden="true" size={22} />

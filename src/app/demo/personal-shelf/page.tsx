@@ -5,6 +5,7 @@ import { personalShelfDemoProducts } from "@/server/personal-shelf-demo";
 
 export const metadata: Metadata = {
   title: "New rating demo | Sugar.no",
+  description: "Compare real catalog products with the Sugar.no Personal Shelf Rank demo.",
   robots: { index: false, follow: false }
 };
 

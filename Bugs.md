@@ -44,6 +44,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-08, preview: the standalone Personal Shelf demo had drifted from the real scan cards.** It now reuses the same presentational results renderer with `Best products`, the six-signal criteria line, one page-level method disclosure, neutral cards, gradient Fit badges, ranks, compact sugar/protein values and `Why?` reasons. The contradictory unscored fixture is filtered out before rendering. The fixed route still makes no camera, recognition, API or database request, and scoring/evidence are unchanged.
+
 - **2026-09-08: camera demo access competed with the header and did not read as part of the active scan controls.** `Show demo` now sits below the status/loading pill, spans the same safe-area width and keeps a 12 px gap; `Leave feedback` remains alone in the top-right. Small-phone and landscape tests verify alignment, touch size, viewport containment and no overlap.
 
 - **2026-09-08: the demo chooser and Personal Shelf summary had inconsistent visual hierarchy.** The chooser now uses one-line `See how it works` copy and gives `New rating demo` the same row design as the other demo actions. Personal Shelf adds breathing room around its criteria and method summary, and every card uses one stable `Why?` label before the unchanged reason instead of repeating its score or range.

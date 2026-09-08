@@ -18,10 +18,11 @@ export function ShelfRankToggle({ enabled, onChange }: { enabled: boolean; onCha
   );
 }
 
-export function PersonalShelfResults({ products, thumbnail, context = "scan" }: {
+export function PersonalShelfResults({ products, thumbnail, context = "scan", headingLevel = "h2" }: {
   products: ProductRecord[];
   thumbnail: (id: string) => ReactNode;
   context?: "scan" | "demo";
+  headingLevel?: "h1" | "h2";
 }) {
   const [managed, setManaged] = useState<Record<string, ShelfEvidence>>({});
   const ids = JSON.stringify([...new Set(products.map((p) => p.id).filter((id) => /^(?:barbora:[a-z0-9-]+|(?:rimi_lv|livinn_lt):[A-Za-z0-9._~-]+|off:\d{8,14})$/.test(id)))].sort());
@@ -53,11 +54,12 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan" }: 
     entries: group.entries.filter(({ assessment }) => shelfScoreLabel(assessment) !== null)
   })).filter((group) => group.entries.length > 0);
   const ratedEntries = ratedGroups.flatMap((group) => group.entries.map((entry) => ({ ...entry, group })));
+  const ResultsHeading = headingLevel;
   return (
     <section className={styles.results} aria-label="Personal Shelf Rank results">
       {ratedEntries.length ? <>
         <header className={styles.resultsHeader}>
-          <h2>{ratedEntries.length === 1 ? "Best product" : "Best products"}</h2>
+          <ResultsHeading>{ratedEntries.length === 1 ? "Best product" : "Best products"}</ResultsHeading>
           <p className={styles.criteria}>Sugar · Protein · Ingredients · Salt · Saturated fat · Fiber</p>
           <details className={styles.method}>
             <summary>How scores work</summary>
