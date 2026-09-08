@@ -44,6 +44,10 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-08: camera demo access competed with the header and did not read as part of the active scan controls.** `Show demo` now sits below the status/loading pill, spans the same safe-area width and keeps a 12 px gap; `Leave feedback` remains alone in the top-right. Small-phone and landscape tests verify alignment, touch size, viewport containment and no overlap.
+
+- **2026-09-08: the demo chooser and Personal Shelf summary had inconsistent visual hierarchy.** The chooser now uses one-line `See how it works` copy and gives `New rating demo` the same row design as the other demo actions. Personal Shelf adds breathing room around its criteria and method summary, and every card uses one stable `Why?` label before the unchanged reason instead of repeating its score or range.
+
 - **2026-09-07: an identity-only Open Food Facts Pringles match could terminate enrichment before a verified Rimi/Barbora card was tried.** Identity-only candidates now supply aliases only and never count as completed nutrition. The resolver retries the exact observed brand, flavour and pack against confirmed Barbora/Rimi cards, then continues through shared verified cards, complete OFF nutrition and grounded web evidence until a fully rated result is found or every bounded path is exhausted. Reviewed English/Latvian sour-cream-and-onion wording joins the exact 70 g and 165 g Pringles packs to their own retailer cards; a name-only OFF row cannot inject its unobserved pack or GTIN. Formula, weights, evidence records and Personal Fit scoring are unchanged.
 
 - **2026-09-07: recovery's red `Not sure — try again` action looked like an error banner and was shorter than `Show demo`.** Reused the Sugar.no large tinted button treatment from Figma: both recovery actions are 56 px high with the same pill geometry, rounded type, gradient rim and shadow, while retry uses the established action-blue gradient. Copy and retry behavior are unchanged.
