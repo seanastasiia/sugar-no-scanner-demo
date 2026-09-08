@@ -41,6 +41,12 @@ async function siblingsDoNotOverlap(container: Locator) {
   expect(overlaps).toEqual([]);
 }
 
+async function openOnboardingSample(page: Page) {
+  await page.getByRole("button", { name: "Try it on this shelf", exact: true }).click();
+  await page.getByRole("button", { name: "Scan this shelf", exact: true }).click();
+  await page.getByRole("button", { name: "Explore all 4 results", exact: true }).click();
+}
+
 test("Pen screens remain readable and actionable across iPhone sizes and rotation", async ({ page }) => {
   test.setTimeout(100_000);
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -51,15 +57,15 @@ test("Pen screens remain readable and actionable across iPhone sizes and rotatio
       await page.goto("about:blank");
       await page.setViewportSize(viewport);
       await page.goto("/?onboarding=1");
-      await expect(page.getByRole("heading", { name: "A faster way to choose from the shelf." })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Compare the shelf, not the labels." })).toBeVisible();
       // A new landscape srcset can require a cold image-optimizer request.
       // Every displayed image must finish loading, not merely have an img node.
       await expect.poll(() => page.locator("img:visible").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0)), { timeout: 10_000 }).toBe(true);
-      await unobstructed(page.getByRole("button", { name: "Show me how", exact: true }));
-      await unobstructed(page.getByRole("button", { name: "Try a sample shelf", exact: true }));
+      await unobstructed(page.getByRole("button", { name: "Try it on this shelf", exact: true }));
+      await unobstructed(page.getByRole("button", { name: "Scan my shelf now", exact: true }));
       await noOverflow(page);
       await page.screenshot({ scale: "css", path: `test-results/pen-welcome-${viewport.width}x${viewport.height}.png` });
-      await page.getByRole("button", { name: "Try a sample shelf", exact: true }).click();
+      await openOnboardingSample(page);
       await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
       const preview = page.getByLabel("Product result preview");
       if (viewport.width < viewport.height) {
@@ -132,7 +138,7 @@ test("Pen feedback keeps close and submit clear when iPhone space shrinks", asyn
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.route("**/api/feedback", (route) => route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true }) }));
   await page.goto("/?onboarding=1");
-  await page.getByRole("button", { name: "Try a sample shelf", exact: true }).click();
+  await openOnboardingSample(page);
   await expect(page.getByRole("status")).toContainText("4 products · 4 with Sugar.no fit");
   for (const viewport of [...viewports, { width: 390, height: 360 }]) {
     await test.step(`${viewport.width}x${viewport.height}`, async () => {

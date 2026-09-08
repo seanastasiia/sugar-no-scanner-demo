@@ -139,7 +139,7 @@ const CAMERA_FORCE_CAPTURE_MS = 1_250;
 const CAMERA_MIN_EDGE_SCORE = 4.1;
 const CAMERA_SAMPLE_WIDTH = 96;
 const CAMERA_SAMPLE_HEIGHT = 72;
-const ONBOARDING_VERSION = 5;
+const ONBOARDING_VERSION = 6;
 
 interface NativeBarcodeDetector {
   detect(source: ImageBitmapSource): Promise<Array<{ rawValue?: string }>>;
@@ -1523,7 +1523,7 @@ export function ScannerApp({
   }, []);
 
   const finishOnboarding = useCallback(
-    (destination: "camera" | "sample", skipped = false, completedAtStep = 4) => {
+    (destination: "camera" | "sample", skipped = false, completedAtStep = 3) => {
       saveOnboardingCompletion(window.localStorage, skipped ? "skipped" : "completed");
       track(skipped ? "onboarding_skipped" : "onboarding_completed", destination === "sample" ? "sample-shelf" : "camera", undefined, {
         onboardingVersion: ONBOARDING_VERSION,

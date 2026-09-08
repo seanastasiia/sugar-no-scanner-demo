@@ -10,7 +10,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 Branch `codex/selling-onboarding-preview` is an isolated experiment based on the live-pilot commit `f4c185d`. It does not change the current pilot, staging or production deployments.
 
-The experiment replaces the one-screen welcome with a four-step, sub-one-minute story: explain the shelf problem, ask one shopper-friction question, let the shopper reveal a sample comparison, then reflect the answer and explain the existing offer (3 free successful scans, followed by a one-time €2.99 payment for 7 days). `Skip` and the final CTA are the only paths that request the live camera; the sample path does not. Completion still uses `sugar_scanner_onboarding_v1`, while anonymous funnel events report onboarding version `5`.
+The experiment replaces the one-screen welcome with a three-step, sub-one-minute story: state the shelf outcome, let the shopper reveal a sample comparison with real confirmed sugar/protein values, then explain the existing offer (3 free successful scans, followed by a one-time €2.99 payment for 7 days). An express path lets someone already in the aisle reach the offer immediately. A decorative preference question was removed after a Claude growth-design review because it did not actually change the fixed two-factor Sugar.no ranking. `Skip` and the final CTA are the only paths that request the live camera; opening all four sample results does not. Completion still uses `sugar_scanner_onboarding_v1`, while anonymous funnel events report onboarding version `6`.
 
 The visual language comes from the Sugar.no Figma paywall and shared design system: SF Pro Rounded/system typography, pale-blue product surfaces, coral primary action, blue progress, rounded white cards, the official Sugar.no mark and the existing shelf scan motif. The implementation deliberately omits invented reviews, medical claims, auto-renewal language and artificial urgency. Research notes, product hypotheses and the measurement plan live in [`docs/onboarding-selling-flow.md`](docs/onboarding-selling-flow.md).
 
@@ -354,6 +354,8 @@ Technical validation uses `npm run verify` and the Mobile Safari suite (`CI=1 E2
 ## Supporting docs
 
 - [Acceptance criteria](docs/acceptance.md)
+- [Selling onboarding research, Claude critique and experiment plan](docs/onboarding-selling-flow.md)
+- [Selling onboarding preview test evidence](docs/test-runs/2026-09-08-selling-onboarding-preview.md)
 - [Architecture and file map](docs/architecture.md)
 - [Product QA](docs/product-qa.md)
 - [Team handoff](docs/team-handoff.md)

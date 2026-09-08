@@ -24,15 +24,15 @@ Sources:
 
 ## Adaptation for Sugar.no
 
-The PrayerLock flow is a 10–15 minute native-app journey with a free trial. Shelf Scanner is a mobile-web utility opened from a Meta ad, often while the shopper is standing in a store. Copying 30 screens would delay the first useful result and camera permission. The experiment therefore keeps the psychology but compresses it into four steps designed to take less than one minute.
+The PrayerLock flow is a 10–15 minute native-app journey with a free trial. Shelf Scanner is a mobile-web utility opened from a Meta ad, often while the shopper is standing in a store. Copying 30 screens would delay the first useful result and camera permission. The experiment therefore keeps the useful psychology but compresses it into three steps designed to take less than one minute. A Claude growth-design review challenged the original question because its answer did not change the ranking. We removed that decorative personalization instead of pretending it configured the product.
 
 | Source principle | Shelf Scanner implementation | Why |
 | --- | --- | --- |
-| Problem and solution first | “A faster way to choose from the shelf” plus a real shelf comparison | Makes the ad-to-product promise explicit |
-| User convinces themselves | One question: label reading, language or comparing products | Captures the concrete shopping friction without a survey |
-| Reflect the answer | Step 3 and the final summary change copy from the selected friction | Adds relevance without pretending the nutrition data is personalized |
-| Try the core feature | Tap `Scan this shelf` to reveal product boxes and the best fit | Creates the aha moment before camera permission |
-| Summarize the bridge | “Your shelf shortcut is ready” plus the reflected problem | Repeats the value at the purchase decision point |
+| Problem and solution first | “Compare the shelf, not the labels” plus an annotated real shelf | Completes the ad-to-product promise immediately |
+| User convinces themselves | The shopper chooses between an embedded sample and an express real-shelf path | Uses behavior rather than a cosmetic survey answer |
+| Reflect the answer | Not included in v1 | Honest omission: the scanner does not change its fixed two-factor ranking from a preference answer |
+| Try the core feature | Tap `Scan this shelf` to reveal a real product name and confirmed sugar/protein values | Creates the aha moment before camera permission |
+| Summarize the bridge | The result names the evidence and the offer states exactly what counts | Connects the demo to the paid product without a generic congratulations screen |
 | Be clear that it is paid | Final card explains 3 free successful scans, then €2.99 for 7 days | Avoids surprise and matches the current experiment |
 | Use social proof | Not included yet | No verified Shelf Scanner testimonial or review count exists |
 | Review at emotional peak | Defer to existing feedback after the first successful real result | Web feedback is more useful than an App Store prompt here |
@@ -40,20 +40,19 @@ The PrayerLock flow is a 10–15 minute native-app journey with a free trial. Sh
 
 ## Screen flow
 
-1. **Promise.** Shelf Scanner compares confirmed sugar and protein data and shows the best fit first. Primary action continues; secondary action opens the deterministic sample without camera access.
-2. **Self-identification.** The shopper selects the one shelf problem that feels most familiar. Continue stays disabled until a choice is made.
-3. **Aha moment.** The selected problem is reflected back. A deliberate tap animates a scan and reveals the result; the next action appears only after the reveal.
-4. **Offer and trust.** The selected problem is reflected again, the allowance and price are stated, and trust details explain that only successful results count, the payment is one-time and photos are not saved. The final tap opens the camera.
+1. **Promise and route choice.** Shelf Scanner compares confirmed sugar and protein data with no account. The primary action opens the embedded sample; an express action takes an in-store shopper directly to the transparent offer without requesting the camera.
+2. **Aha moment.** A deliberate tap animates the scan and reveals the actual sample winner with 2.3 g sugar and 36 g protein per 100 g. The shopper can continue to their own shelf or open all four deterministic results without camera access.
+3. **Offer and trust.** The allowance and price are stated before camera permission: a free scan counts only when at least one product gets a Sugar.no fit, unverified scans are free, and €2.99 is a one-time payment for seven days with no subscription. The camera/privacy note sits directly above the final action.
 
 ## Measurement plan
 
-Treat the reported PrayerLock numbers as inspiration, not a forecast. Compare onboarding version 5 against the current flow using Meta traffic with the same targeting and creative mix.
+Treat the reported PrayerLock numbers as inspiration, not a forecast. Compare onboarding version 6 against the current flow using Meta traffic with the same targeting and creative mix.
 
 Primary funnel:
 
 1. `app_opened`
 2. `onboarding_started`
-3. `onboarding_step_viewed` steps 2, 3 and 4
+3. `onboarding_step_viewed` steps 2 and 3 (absence of step 2 identifies the express path)
 4. `onboarding_completed` or `onboarding_skipped`
 5. camera permission granted
 6. first successful `scan_completed`
@@ -70,4 +69,4 @@ Guardrails:
 - feedback reasons and support complaints;
 - paid activation per ad click and acquisition cost.
 
-Do not call a winner on a handful of purchases. First verify event integrity, then run both variants on comparable traffic and make the decision from paid activation per visitor, with scan-success and time-to-value as guardrails.
+Do not call a winner on a handful of purchases. First verify event integrity, then run both variants on comparable traffic and make the decision from paid activation per visitor, with scan-success and time-to-value as guardrails. Claude suggested roughly 250 purchases per arm before a confident winner; that is a statistical planning target, not a prerequisite for learning from directional pilot data.

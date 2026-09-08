@@ -12,7 +12,7 @@
 .iconButton { display: grid; place-items: center; }
 .skip { border-radius: 999px; background: transparent; color: #565c66; font: 700 14px/18px var(--font-display); }
 .headerSpacer { width: 44px; height: 44px; }
-.progress { display: grid; width: min(100%, 420px); margin: 10px auto 0; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.progress { display: grid; width: min(100%, 420px); margin: 10px auto 0; grid-template-columns: repeat(3, 1fr); gap: 7px; }
 .progress span { height: 4px; border-radius: 999px; background: #ffffffad; transition: background-color 180ms ease, transform 180ms ease; }
 .progress .progressActive { background: #0a84ff; transform: scaleY(1.15); }
 .screen { display: flex; width: min(100%, 420px); min-height: calc(100dvh - max(18px, env(safe-area-inset-top)) - max(22px, env(safe-area-inset-bottom)) - 58px); margin: 0 auto; flex-direction: column; justify-content: space-between; gap: 22px; padding-top: clamp(24px, 5vh, 50px); }
@@ -27,7 +27,7 @@
 .secondary { border: 1px solid #dce0e5; background: #fff; color: #25272b; }
 .privacy { margin: 0; color: #707680; font-size: 12px; line-height: 17px; text-align: center; }
 .preview { position: relative; width: 100%; margin: 0; padding: 6px; overflow: hidden; border-radius: 32px; background: #fff; box-shadow: 0 14px 36px #233a541c; }
-.previewImage { position: relative; height: clamp(210px, 38vh, 300px); overflow: hidden; border-radius: 26px; background: #16202b; }
+.previewImage { position: relative; height: clamp(210px, 35vh, 280px); overflow: hidden; border-radius: 26px; background: #16202b; }
 .previewImage img { object-fit: cover; object-position: 50% 35%; }
 .productBox { position: absolute; z-index: 2; top: 22%; width: 24%; height: 47%; border: 2px solid #ffffffc4; border-radius: 18px; opacity: 0; transform: translateY(7px); }
 .productBox:first-of-type { border-color: #20a35a; background: #20a35a1f; }
@@ -39,12 +39,10 @@
 .previewResult strong, .previewResult small { display: block; }
 .previewResult strong { font: 700 15px/20px var(--font-display); }
 .previewResult small { margin-top: 2px; color: #69717d; font-size: 13px; line-height: 17px; }
+.sampleRanking { display: grid; width: 100%; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 9px; }
+.rankNumber { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; background: #16181d; color: #fff; font: 800 12px/16px var(--font-display); }
+.sampleRanking strong, .sampleRanking small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fitBadge { display: inline-flex; align-items: center; min-height: 27px; padding: 4px 10px; border-radius: 999px; background: #167b48; color: #fff; font: 700 12px/16px var(--font-display); white-space: nowrap; }
-.optionList { display: grid; gap: 12px; margin-block: auto; }
-.option { display: flex; width: 100%; min-height: 72px; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px 14px 20px; border: 1.5px solid #dfe4e9; border-radius: 22px; background: #fff; color: #22252a; font: 700 16px/21px var(--font-display); text-align: left; box-shadow: 0 7px 22px #233a540c; }
-.optionSelected { border-color: #0a84ff; background: #f1f8ff; box-shadow: 0 8px 24px #0a84ff1d; }
-.radio { display: grid; width: 28px; height: 28px; flex: none; place-items: center; border: 1.5px solid #cdd3da; border-radius: 50%; color: #fff; }
-.optionSelected .radio { border-color: #0a84ff; background: #0a84ff; }
 .offerCard { display: grid; gap: 14px; padding: 20px; border: 1px solid #dcecff; border-radius: 28px; background: #fff; box-shadow: 0 14px 36px #233a5418; }
 .offerIcon { display: grid; width: 54px; height: 54px; place-items: center; border-radius: 18px; background: #e6f3ff; color: #0a6fcc; }
 .offerCard strong { font: 700 19px/24px var(--font-display); }
@@ -53,9 +51,9 @@
 .offerCard li { display: flex; align-items: center; gap: 9px; color: #3d444d; font-size: 14px; font-weight: 650; line-height: 19px; }
 .offerCard li svg { flex: none; color: #14834b; }
 @keyframes scan-pass { 0% { top: 12%; opacity: 0; } 14% { opacity: 1; } 82% { opacity: 1; } 100% { top: 76%; opacity: 0; } }
-@media (prefers-reduced-motion: no-preference) { .screen { animation: screen-in 260ms ease-out both; } .primary, .secondary, .option { transition: transform 130ms ease, background-color 160ms ease, border-color 160ms ease; } .primary:active, .secondary:active, .option:active { transform: scale(.985); } }
+@media (prefers-reduced-motion: no-preference) { .screen { animation: screen-in 260ms ease-out both; } .primary, .secondary { transition: transform 130ms ease, background-color 160ms ease, border-color 160ms ease; } .primary:active, .secondary:active { transform: scale(.985); } }
 @keyframes screen-in { from { opacity: 0; transform: translateY(8px); } }
 @media (prefers-reduced-motion: reduce) { .previewRevealed .scanLine { display: none; } }
-@media (max-height: 720px) { .screen { gap: 10px; padding-top: 8px; } .copyBlock h1 { font-size: 27px; } .copyBlock > p:not(.eyebrow) { margin-top: 7px; font-size: 15px; line-height: 20px; } .previewImage { height: 174px; } .previewResult { min-height: 62px; padding-block: 8px; } .offerCard { padding: 15px; gap: 9px; } .option { min-height: 60px; } }
-@media (max-height: 600px) { .onboarding { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); } .header { min-height: 38px; } .headerSpacer, .iconButton, .skip { min-height: 38px; height: 38px; } .progress { margin-top: 3px; } .screen { min-height: 0; gap: 6px; padding-top: 2px; } .copyBlock h1 { font-size: 24px; line-height: 26px; } .copyBlock > p:not(.eyebrow) { margin-top: 5px; font-size: 13px; line-height: 16px; } .eyebrow { font-size: 11px; line-height: 14px; } .preview { padding: 4px; border-radius: 24px; } .previewImage { height: 105px; border-radius: 20px; } .previewResult { min-height: 50px; padding: 5px 8px; } .previewResult strong { font-size: 13px; line-height: 17px; } .previewResult small { font-size: 11px; line-height: 14px; } .primary, .secondary { min-height: 48px; border-radius: 16px; font-size: 15px; } .offerCard { padding: 12px; gap: 6px; } .offerIcon { width: 40px; height: 40px; border-radius: 13px; } .offerCard strong { font-size: 15px; line-height: 19px; } .offerCard p, .offerCard li { font-size: 12px; line-height: 15px; } .offerCard ul { gap: 4px; padding-top: 7px; } .optionList { gap: 7px; } .option { min-height: 48px; padding-block: 8px; font-size: 14px; } }
-@media (orientation: landscape) and (max-height: 520px) { .onboarding { min-height: 100dvh; height: 100dvh; } .screen { display: grid; min-height: 0; grid-template-columns: minmax(0, 1.25fr) minmax(220px, .75fr); grid-template-rows: auto 1fr; column-gap: 16px; padding-top: 4px; } .copyBlock { grid-column: 1; grid-row: 1; } .copyBlock h1 { font-size: 22px; line-height: 23px; } .copyBlock > p:not(.eyebrow) { display: none; } .preview, .optionList, .offerCard { grid-column: 1; grid-row: 2; } .actions { grid-column: 2; grid-row: 1 / span 2; align-self: center; margin-top: 0; } .previewImage { height: 88px; } .previewResult { min-height: 42px; } }
+@media (max-height: 720px) { .screen { gap: 10px; padding-top: 8px; } .copyBlock h1 { font-size: 27px; } .copyBlock > p:not(.eyebrow) { margin-top: 7px; font-size: 15px; line-height: 20px; } .previewImage { height: 174px; } .previewResult { min-height: 62px; padding-block: 8px; } .offerCard { padding: 15px; gap: 9px; } }
+@media (max-height: 600px) { .onboarding { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); } .header { min-height: 38px; } .headerSpacer, .iconButton, .skip { min-height: 38px; height: 38px; } .progress { margin-top: 3px; } .screen { min-height: 0; gap: 6px; padding-top: 2px; } .copyBlock h1 { font-size: 24px; line-height: 26px; } .copyBlock > p:not(.eyebrow) { margin-top: 5px; font-size: 13px; line-height: 16px; } .eyebrow { font-size: 11px; line-height: 14px; } .preview { padding: 4px; border-radius: 24px; } .previewImage { height: 105px; border-radius: 20px; } .previewResult { min-height: 50px; padding: 5px 8px; } .previewResult strong { font-size: 13px; line-height: 17px; } .previewResult small { font-size: 11px; line-height: 14px; } .primary, .secondary { min-height: 48px; border-radius: 16px; font-size: 15px; } .offerCard { padding: 12px; gap: 6px; } .offerIcon { width: 40px; height: 40px; border-radius: 13px; } .offerCard strong { font-size: 15px; line-height: 19px; } .offerCard p, .offerCard li { font-size: 12px; line-height: 15px; } .offerCard ul { gap: 4px; padding-top: 7px; } }
+@media (orientation: landscape) and (max-height: 520px) { .onboarding { min-height: 100dvh; height: 100dvh; } .screen { display: grid; min-height: 0; grid-template-columns: minmax(0, 1.25fr) minmax(220px, .75fr); grid-template-rows: auto 1fr; column-gap: 16px; padding-top: 4px; } .copyBlock { grid-column: 1; grid-row: 1; } .copyBlock h1 { font-size: 22px; line-height: 23px; } .copyBlock > p:not(.eyebrow) { display: none; } .preview, .offerCard { grid-column: 1; grid-row: 2; } .actions { grid-column: 2; grid-row: 1 / span 2; align-self: center; margin-top: 0; } .previewImage { height: 88px; } .previewResult { min-height: 42px; } }

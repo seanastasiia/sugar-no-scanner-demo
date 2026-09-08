@@ -190,3 +190,5 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **2026-08-25: active live-camera work could overwrite Checkout demo.** Source changes abort and ignore stale camera requests before deterministic scenes start.
 
 When a new regression is fixed, add one concise entry here. Put detailed evidence in a test log only for release-critical work.
+
+- **2026-09-08: the selling-onboarding question added friction but did not change the scanner result.** The isolated preview now uses a three-screen path with an embedded evidence-based sample, a separate express route and a transparent offer. The fixed Sugar.no fit still uses confirmed sugar and protein; no fake preference-based ranking was added.

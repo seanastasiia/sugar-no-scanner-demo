@@ -110,6 +110,12 @@ async function expectOfficialSugarNoLogo(page: Page) {
   await expectInsideViewport(page, logo);
 }
 
+async function openOnboardingSample(page: Page) {
+  await page.getByRole("button", { name: "Try it on this shelf", exact: true }).click();
+  await page.getByRole("button", { name: "Scan this shelf", exact: true }).click();
+  await page.getByRole("button", { name: "Explore all 4 results", exact: true }).click();
+}
+
 async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   await page.getByRole("button", { name: "Show demo" }).click();
   const chooser = page.getByRole("dialog", { name: "See how it works" });
@@ -579,30 +585,28 @@ test("first visit explains the pilot before requesting camera permission", async
   });
   await page.goto("/");
   await expect(page.getByLabel("Demo access code")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "A faster way to choose from the shelf." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Compare the shelf, not the labels." })).toBeVisible();
   await expectOfficialSugarNoLogo(page);
-  await expect(page.getByText("Point your camera at similar products. We compare confirmed sugar and protein data, then show the best fit first.")).toBeVisible();
+  await expect(page.getByText("We compare confirmed sugar and protein, then show your Sugar.no fit. No account.")).toBeVisible();
   await expect(page.getByTestId("onboarding-preview")).toBeVisible();
-  await expect(page.getByAltText("Protein bars on a shop shelf. After scanning, four products are outlined and the best fit appears first.")).toBeVisible();
-  await expect(page.getByText("4 products compared")).toBeVisible();
-  await expect(page.getByText("Best Sugar.no fit appears first")).toBeVisible();
-  const openCameraBox = await page.getByRole("button", { name: "Show me how" }).boundingBox();
-  const sampleBox = await page.getByRole("button", { name: "Try a sample shelf" }).boundingBox();
+  await expect(page.getByAltText("Protein bars on a shop shelf. After scanning, four products are outlined and ranked using confirmed sugar and protein data.")).toBeVisible();
+  await expect(page.getByText("BAREBELLS Salty Peanut")).toBeVisible();
+  await expect(page.getByText("Sugar 2.3 g · Protein 36 g per 100 g")).toBeVisible();
+  const sampleBox = await page.getByRole("button", { name: "Try it on this shelf" }).boundingBox();
+  const openCameraBox = await page.getByRole("button", { name: "Scan my shelf now" }).boundingBox();
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   expect(openCameraBox?.y).toBeGreaterThan(0);
   expect((sampleBox?.y ?? viewportHeight) + (sampleBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
   await expectNoDocumentOverflow(page);
   await expectVisibleTouchTargets(page);
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
-  await page.getByRole("button", { name: "Show me how" }).click();
-  await page.getByRole("radio", { name: "Reading every label" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Try it on this shelf" }).click();
   await page.getByRole("button", { name: "Scan this shelf" }).click();
-  await expect(page.getByText("Best Sugar.no fit appears first")).toBeVisible();
-  await page.getByRole("button", { name: "That makes sense" }).click();
-  await expect(page.getByText("Start with 3 free successful scans")).toBeVisible();
-  await expect(page.getByText("One payment, no subscription")).toBeVisible();
-  await expect(page.getByText("Camera opens after this tap. Photos are not saved.")).toBeVisible();
+  await expect(page.getByText("Sugar 2.3 g · Protein 36 g per 100 g")).toBeVisible();
+  await page.getByRole("button", { name: "Try my own shelf" }).click();
+  await expect(page.getByRole("heading", { name: "Start with 3 free scans." })).toBeVisible();
+  await expect(page.getByText("Then €2.99 once for 7 days")).toBeVisible();
+  await expect(page.getByText("The next tap opens your camera. Photos are not saved.")).toBeVisible();
   await page.getByRole("button", { name: "Start my 3 free scans" }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expectOfficialSugarNoLogo(page);
@@ -647,10 +651,10 @@ test("completed onboarding stays hidden unless QA forces it", async ({ page }) =
     });
   });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "A faster way to choose from the shelf." })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Compare the shelf, not the labels." })).toHaveCount(0);
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await page.goto("/?onboarding=1");
-  await expect(page.getByRole("heading", { name: "A faster way to choose from the shelf." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Compare the shelf, not the labels." })).toBeVisible();
 });
 
 test("sample shelf dismisses onboarding without requesting camera permission", async ({ page }) => {
@@ -666,13 +670,36 @@ test("sample shelf dismisses onboarding without requesting camera permission", a
     });
   });
   await page.goto("/?onboarding=1");
-  await expect(page.getByRole("heading", { name: "A faster way to choose from the shelf." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Compare the shelf, not the labels." })).toBeVisible();
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
-  await page.getByRole("button", { name: "Try a sample shelf" }).click();
+  await openOnboardingSample(page);
   await expect(page.getByLabel("Shelf photo scanner")).toBeVisible();
   await expect(page.getByText("Shelf photo", { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem("sugar_scanner_onboarding_v1"))).toBe("completed");
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
+});
+
+test("express onboarding reaches the transparent offer before requesting camera permission", async ({ page }) => {
+  await page.addInitScript(() => {
+    let cameraRequests = 0;
+    Object.defineProperty(window, "__cameraRequests", { configurable: true, get: () => cameraRequests });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: () => {
+        cameraRequests += 1;
+        return Promise.reject(new DOMException("Denied in test", "NotAllowedError"));
+      } }
+    });
+  });
+  await page.goto("/?onboarding=1");
+  await page.getByRole("button", { name: "Scan my shelf now", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Start with 3 free scans." })).toBeVisible();
+  await expect(page.getByText("A scan counts only when at least one product gets a Sugar.no fit. Unverified scans are free.")).toBeVisible();
+  await expect(page.getByText("Then €2.99 once for 7 days")).toBeVisible();
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
+  await page.getByRole("button", { name: "Start my 3 free scans", exact: true }).click();
+  await expect(page.getByText("Camera permission is off")).toBeVisible();
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(1);
 });
 
 test("anonymous analytics visit spans onboarding, multiple scans and reload", async ({ page }) => {
@@ -682,7 +709,7 @@ test("anonymous analytics visit spans onboarding, multiple scans and reload", as
     await route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
   });
   await page.goto("/?onboarding=1");
-  await page.getByRole("button", { name: "Try a sample shelf" }).click();
+  await openOnboardingSample(page);
   await expect.poll(() => events.filter((event) => event.name === "scan_completed").length).toBe(1);
   await page.getByRole("button", { name: "Scan again", exact: true }).click();
   await openDemoScene(page, "Checkout demo");
@@ -699,7 +726,7 @@ test("anonymous analytics visit spans onboarding, multiple scans and reload", as
 test("sample overlays track the contained photo after onboarding and resizing", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/?onboarding=1");
-  await page.getByRole("button", { name: "Try a sample shelf", exact: true }).click();
+  await openOnboardingSample(page);
   await expect(page.getByTestId("rated-detection-marker")).toHaveCount(4);
 
   for (const viewport of [{ width: 1280, height: 720 }, { width: 402, height: 874 }, { width: 1280, height: 720 }]) {
@@ -729,9 +756,7 @@ test("sample overlays track the contained photo after onboarding and resizing", 
 test("onboarding motion is one-time and respects reduced motion", async ({ page }) => {
   await page.goto("/?onboarding=1");
   await expectOfficialSugarNoLogo(page);
-  await page.getByRole("button", { name: "Show me how" }).click();
-  await page.getByRole("radio", { name: "Comparing similar products" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Try it on this shelf" }).click();
   const preview = page.getByTestId("onboarding-preview");
   await expect(preview).toBeVisible();
   await page.getByRole("button", { name: "Scan this shelf" }).click();
@@ -742,14 +767,12 @@ test("onboarding motion is one-time and respects reduced motion", async ({ page 
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.reload();
-  await page.getByRole("button", { name: "Show me how" }).click();
-  await page.getByRole("radio", { name: "Comparing similar products" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Try it on this shelf" }).click();
   await page.getByRole("button", { name: "Scan this shelf" }).click();
   await expect(preview).toBeVisible();
   expect(await preview.evaluate((element) => getComputedStyle(element).animationName)).toBe("none");
   expect(await scanLine.evaluate((element) => getComputedStyle(element).display)).toBe("none");
-  expect(await page.getByRole("button", { name: "That makes sense" }).evaluate((element) =>
+  expect(await page.getByRole("button", { name: "Try my own shelf" }).evaluate((element) =>
     getComputedStyle(element).transitionDuration
       .split(",")
       .every((value) => Number.parseFloat(value) <= 0.001)
