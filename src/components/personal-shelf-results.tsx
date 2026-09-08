@@ -97,7 +97,7 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan" }: 
                       <span><small>Protein</small><b>{evidence.proteinG} g</b></span>
                       <small className={styles.basis}>per 100 g</small>
                     </div> : null}
-                    {reason ? <p className={styles.reason}><b>{assessment.status === "provisional" ? "Why this range" : `Why ${scoreLabel}`}</b><span>{reason}</span></p> : null}
+                    {reason ? <p className={styles.reason}><b>Why?</b><span>{reason}</span></p> : null}
                   </li>
                 );
               })}
