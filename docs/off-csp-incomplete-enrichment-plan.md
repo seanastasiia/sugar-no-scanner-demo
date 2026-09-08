@@ -1,6 +1,6 @@
 # OFF identity, CSP and incomplete-evidence execution plan
 
-Checked: 2026-09-07
+Checked: 2026-09-08
 
 This work stays on `codex/personal-fit-catalog-preview` and the isolated Railway preview. Production and `main` require the owner's explicit `ПУБЛИКУЙ` instruction.
 
@@ -34,5 +34,7 @@ This work stays on `codex/personal-fit-catalog-preview` and the isolated Railway
 - OFF identity-only layer accepted in step 1: 9,626 rows; no duplicate conflicts; no aliases were invented because the preserved CSV does not expose labelled translations.
 - Existing Personal Shelf audit queue for step 3: 3,605 supported-type source records without sufficient exact evidence.
 - CSP: no source file or credentials have been issued. Code readiness does not count as a connected feed.
-- First exact-source pass: 3,009 attempts and 2,508 successful refreshes; 1,799 net-new observations; 1,444 net-new assessments; no previous rating outcome changed. Rimi, Livinn and OFF completed. Barbora stopped at HTTP 429 with 591 rows unattempted until `2026-09-07T17:27:58.859Z`.
-- Current audit after the saved pass: 6,949 observations, 5,156 assessable source rows and 2,153 supported-type rows still missing sufficient exact evidence.
+- Completed exact-source pass: all 3,605 frozen IDs are accounted for through 3,600 terminal fetch attempts and 5 pre-existing exact observations. The pass added 2,343 observations and 1,897 assessments without changing a previous rating outcome.
+- The final 591-card Barbora cohort was resumed only after the recorded cooldown. It produced 544 accepted exact observations, 27 changed-SKU rejections and 20 HTTP 404 rejections. Its single temporary HTTP 429 was retried once after the next recorded cooldown; no rate-limited or unattempted row remains.
+- Current audit after the exact mass/volume basis pass: 7,493 observations, 5,703 assessable source rows and 1,784 supported-type rows still missing sufficient exact evidence.
+- A frozen 100-GTIN internet pilot added no catalog rows: exact OFF refreshes produced 11 assessable whole observations and 56 exact but incomplete observations; grounded search found 81 URLs on unreviewed/unsupported hosts but supplied no accepted nutrient facts.

@@ -30,6 +30,11 @@ const evidenceSchema = z.object({
   productId: z.string().min(1).max(240), source: z.enum(["barbora_lv", "rimi_lv", "livinn_lt", "open_food_facts"]),
   sourceUrl: z.string().max(2_000), checkedAt: z.string().refine((s) => Number.isFinite(Date.parse(s))),
   gtin: z.string().regex(/^\d{8,14}$/).nullable(), category: z.string().max(2_000), nutritionBasis: z.enum(["100g", "100ml"]),
+  basisConversion: z.object({
+    sourceBasis: z.literal("100ml"), targetBasis: z.literal("100g"), method: z.literal("exact_package_mass_volume"),
+    packageMassG: z.number().finite().positive().max(10_000), packageVolumeMl: z.number().finite().positive().max(10_000),
+    factor: z.number().finite().positive().max(10), sourceTitle: z.string().min(1).max(500)
+  }).optional(),
   ingredientsText: z.string().max(12_000).nullable(), ingredientsLanguage: z.string().max(10).nullable(),
   energyKcal: nullableAmount, proteinG: nullableAmount, totalSugarG: nullableAmount, fiberG: nullableAmount,
   saltG: nullableAmount, saturatedFatG: nullableAmount, carbohydrateG: nullableAmount.optional(), fatG: nullableAmount.optional()
