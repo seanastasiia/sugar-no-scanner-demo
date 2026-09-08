@@ -244,7 +244,7 @@ function aliasCoverage(query: string[], name: string, excluded: Set<string>): nu
   if (!isReviewedPackageAlias(name)) return balancedCoverage(query, candidate);
   // A reviewed label is not permission to ignore an extra flavour. Allow only
   // generic label words and pack numbers (the separate pack guard checks those).
-  const generic = new Set(["organic", "cereal", "cereals", "breakfast"]);
+  const generic = new Set(["organic", "cereal", "cereals", "breakfast", "protein", "bar", "chocolate"]);
   const clean = (values: string[]) => values.filter((token) => !generic.has(token) && !/^\d+$/.test(token));
   const cleanQuery = clean(query);
   const cleanCandidate = clean(candidate);

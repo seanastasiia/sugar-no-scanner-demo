@@ -6,6 +6,7 @@ import {
   listIndexedBarboraNutrition,
   type BarboraNutritionIndexProduct
 } from "./barbora-nutrition-index";
+import { reviewedBarboraPackageIdentity } from "./reviewed-package-aliases";
 
 export interface BarboraLookupInput {
   brand: string;
@@ -372,7 +373,8 @@ function prepareBarboraIndex(products: BarboraNutritionIndexProduct[]): Prepared
   if (cached) return cached;
   const candidateTokens = products.map((product) => {
     const candidateBrandTokens = new Set(expandedTokens(product.brand));
-    return expandedTokens(`${product.title} ${product.slug.replaceAll("-", " ")}`)
+    const reviewed = reviewedBarboraPackageIdentity(product);
+    return expandedTokens(`${product.title} ${product.slug.replaceAll("-", " ")} ${reviewed?.labels.join(" ") || ""}`)
       .filter((token) => !candidateBrandTokens.has(token) && !/^\d+$/.test(token));
   });
   const frequencies = new Map<string, number>();
@@ -413,7 +415,9 @@ export function rankIndexedBarboraCandidates(
       const titleContainsObservedBrand =
         observedBrandTokens.length > 0 &&
         observedBrandTokens.every((token) => titleTokens.some((candidateToken) => tokenMatches(token, candidateToken)));
-      if (!retailerBrandMatches(input.brand, product.brand) && !titleContainsObservedBrand) return [];
+      const reviewed = reviewedBarboraPackageIdentity(product);
+      const reviewedBrandMatches = reviewed?.brandAliases.some((brand) => retailerBrandMatches(input.brand, brand)) || false;
+      if (!retailerBrandMatches(input.brand, product.brand) && !reviewedBrandMatches && !titleContainsObservedBrand) return [];
       const candidateQuantity = canonicalQuantity(`${product.packSize} ${product.title}`);
       if (observedQuantity && candidateQuantity) {
         if (observedQuantity.dimension !== candidateQuantity.dimension) return [];

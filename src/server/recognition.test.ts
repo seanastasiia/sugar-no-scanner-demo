@@ -16,6 +16,7 @@ import {
   recognitionModel,
   recognitionRequestTimeoutMs,
   recognitionThinkingLevel,
+  exactBarboraSlugFromRetailerUrl,
   recognizeProducts,
   resolveVisibleDetections,
   type ProviderDetection
@@ -37,6 +38,14 @@ describe("candidate packshot trust boundary", () => {
     expect(isTrustedCandidateImageUrl("http://cdn.barbora.lv/products/example.jpg")).toBe(false);
     expect(isTrustedCandidateImageUrl("https://cdn.barbora.lv.attacker.example/image.jpg")).toBe(false);
     expect(isTrustedCandidateImageUrl("not-a-url")).toBe(false);
+  });
+});
+
+describe("exact retailer source links", () => {
+  it("accepts only a direct canonical Barbora product URL", () => {
+    expect(exactBarboraSlugFromRetailerUrl("https://barbora.lv/produkti/prot-bat-nutego-45-g")).toBe("prot-bat-nutego-45-g");
+    expect(exactBarboraSlugFromRetailerUrl("https://barbora.lv.evil.example/produkti/prot-bat-nutego-45-g")).toBeNull();
+    expect(exactBarboraSlugFromRetailerUrl("https://barbora.lv/produkti/prot-bat-nutego-45-g?variant=other")).toBeNull();
   });
 });
 
@@ -345,6 +354,31 @@ describe("candidate confirmation", () => {
 });
 
 describe("resolveVisibleDetections", () => {
+  it("promotes a curated card's exact Barbora source to its canonical evidence ID", async () => {
+    const curated = getCatalog().find((product) => product.id === "prot-bat-kokosr-un-karamele-nutego-45-g")!;
+    const canonical = { ...curated, id: "barbora:prot-bat-kokosr-un-karamele-nutego-45-g" };
+    const detections = await resolveVisibleDetections(
+      [providerDetection(1, { brand: "NUTEGO", productName: curated.name,
+        searchQuery: `NUTEGO ${curated.name}` })],
+      [curated],
+      {
+        getOfferBySlug: async () => null,
+        resolveOffer: async () => null,
+        resolveOpenFoodFacts: async () => null,
+        getIndexedProduct: (slug) => slug === "prot-bat-kokosr-un-karamele-nutego-45-g"
+          ? { product: canonical, alternatives: [] } : null
+      },
+      3,
+      "fast"
+    );
+
+    expect(detections[0]).toMatchObject({
+      productId: canonical.id,
+      catalogProductId: canonical.id,
+      identity: { matchKind: "barbora" }
+    });
+  });
+
   it("recovers the exact verified Lakto cherry yogurt when a protein claim was mistaken for its pack size", async () => {
     const observed = providerDetection(1, {
       brand: "LAKTO",

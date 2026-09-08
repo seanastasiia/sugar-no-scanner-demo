@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeIngredients, applyShelfNutritionTrustGuard, assessPersonalShelfProduct, hasContradictoryShelfNutrition, rankPersonalShelfProducts, shelfCategory, splitIngredients, SHELF_CATEGORIES } from "./personal-shelf-rank";
+import { analyzeIngredients, applyShelfNutritionTrustGuard, assessPersonalShelfProduct, hasContradictoryShelfNutrition, rankPersonalShelfProducts, reviewedShelfProductCategory, shelfCategory, splitIngredients, SHELF_CATEGORIES } from "./personal-shelf-rank";
 import { scoreBarboraProduct } from "./scoring";
 import { shelfFixture } from "../../tests/fixtures/personal-shelf";
 
@@ -95,6 +95,12 @@ describe("Personal Shelf Rank, independent pilot", () => {
     expect(shelfCategory("Dzeramais jogurts")).toBeNull();
     expect(shelfCategory("Grocery")).toBeNull();
   });
+  it("classifies only reviewed photographed SKUs when a retailer aisle is too broad", () => {
+    expect(shelfCategory("Bakaleja/Speciālā pārtika/Produkti ar augstu proteīna saturu")).toBeNull();
+    expect(reviewedShelfProductCategory("barbora:prot-bat-kokosr-un-karamele-nutego-45-g")).toBe("bar");
+    expect(reviewedShelfProductCategory("rimi_lv:103191")).toBe("sauce");
+    expect(reviewedShelfProductCategory("barbora:unreviewed-high-protein-product")).toBeNull();
+  });
   it.each(["Breakfast cereals", "Maistas > Dribsniai, košės, sausi pusryčiai > Sausi pusryčiai", "Brokastu pārslas", "iepakota-partika > brokastu-parslas-un-musli > musli", "Müsli", "Granola", "Сухие завтраки", "Мюсли", "Hommikuhelbed"])("recognizes a dry breakfast source category: %s", (category) => {
     expect(shelfCategory(category)).toBe("breakfast-cereal");
   });
@@ -144,6 +150,18 @@ describe("Personal Shelf Rank, independent pilot", () => {
   ])("recognizes an explicit whole/refined food base without translation: %s", (text, language, score) => {
     expect(analyzeIngredients(text, language, "sauce")?.score).toBe(score);
   });
+  it("uses the first substantive sauce ingredient while preserving ingredient order", () => {
+    expect(analyzeIngredients("Ūdens, tomātu biezenis 14%, cukurs, sāls", "lv", "sauce")).toMatchObject({
+      score: 40,
+      firstIngredient: "tomātu biezenis 14%",
+      sugarNearStart: true
+    });
+    expect(analyzeIngredients("Water, sugar, tomato paste, salt", "en", "sauce")).toMatchObject({
+      score: 0,
+      firstIngredient: "sugar",
+      sugarNearStart: true
+    });
+  });
   it("v1.4 allows reviewed fruit aliases in explicit legacy categories, not without a category", () => {
     expect(analyzeIngredients("Dates, cocoa", "en")?.score).toBeNull();
     expect(analyzeIngredients("Dates, cocoa", "en", "cookie")?.score).toBe(100);
@@ -158,6 +176,8 @@ describe("Personal Shelf Rank, independent pilot", () => {
     expect(result.missing).toContain("consistent zero saturated fat and total fat");
     const fish = assessPersonalShelfProduct(shelfFixture("fish", { category: "Canned fish", ingredientsText: "Tuna, salt", totalSugarG: 0, saltG: 0, saturatedFatG: 1, fatG: 10 }));
     expect(fish.missing).toContain("consistent zero salt and ingredient list");
+    const sauce = assessPersonalShelfProduct(shelfFixture("sauce", { category: "Sauces", ingredientsText: "Water, tomatoes, salt", saltG: 0 }));
+    expect(sauce.missing).toContain("consistent zero salt and ingredient list");
   });
   it("does not retroactively apply new-family placeholder rules to the original seven categories", () => {
     expect(assessPersonalShelfProduct(shelfFixture("chips", { category: "Chips", ingredientsText: "Potatoes, sunflower oil, salt", saltG: 0, saturatedFatG: 0, fatG: 30 })).status).toBe("scored");

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getExternalCatalogProductById, resolveExternalCatalogProduct, resolveExternalCatalogIdentity } from "./external-catalog";
 import { assessPersonalShelfProduct, rankPersonalShelfProducts } from "../lib/personal-shelf-rank";
-import { REVIEWED_CEREAL_LABELS, withReviewedPackageAliases } from "./reviewed-package-aliases";
+import { REVIEWED_CEREAL_LABELS, REVIEWED_RETAIL_LABELS, withReviewedPackageAliases } from "./reviewed-package-aliases";
 import snapshot from "../../data/livinn-catalog.generated.json";
 import type { ExternalCatalogProduct } from "./external-catalog-types";
 
@@ -55,5 +55,14 @@ describe("exact Turtle cereal shelf evidence", () => {
     expect(ranked.groups[0].scoredCount).toBe(8);
     expect(ranked.groups[0].entries.map((entry) => entry.rank)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
     expect(ranked.groups[0].entries[0].product.id).toBe("livinn_lt:TURT3044");
+  });
+});
+
+describe("exact photographed retailer labels", () => {
+  it.each(REVIEWED_RETAIL_LABELS)("matches the reviewed package label for $sku", ({ sku, pack, labels }) => {
+    for (const name of labels) {
+      expect(resolveExternalCatalogProduct({ brand: "NICK'S", name, variant: "", packSize: pack, searchTerms: [name] })?.product.id)
+        .toBe(`rimi_lv:${sku}`);
+    }
   });
 });

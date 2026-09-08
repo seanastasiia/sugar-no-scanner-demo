@@ -351,8 +351,6 @@
 }
 .stageBottomControls > .stageDemoTrigger {
   width: 100%;
-  min-height: 44px;
-  padding: 10px 16px;
 }
 .stageStatus svg {
   flex: none;
@@ -824,20 +822,42 @@
   font: 700 18px/23px var(--font-display);
 }
 .rankedProductMeta {
-  display: flex;
+  display: grid;
   grid-column: 1 / -1;
   grid-row: 2;
   align-items: center;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 8px;
+  justify-items: start;
+  gap: 10px;
 }
-.rankedProductMeta > small {
+.rankedNutritionRow {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  width: 100%;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: 18px;
+  background: var(--canvas);
+}
+.rankedNutritionMetric {
+  display: grid;
   min-width: 0;
-  flex: 1 1 140px;
+  gap: 1px;
+}
+.rankedNutritionMetric > small,
+.rankedNutritionBasis {
+  color: var(--muted);
+  font: 500 10px/13px var(--font-display);
+  white-space: nowrap;
+}
+.rankedNutritionMetric > strong {
+  font: 700 13px/16px var(--font-display);
+  white-space: nowrap;
+}
+.rankedNutritionBasis {
+  align-self: center;
+  justify-self: end;
   text-align: right;
-  overflow-wrap: anywhere;
-  font: 600 12px/16px var(--font-display);
 }
 .rankedPriceRow {
   display: flex;
@@ -1785,9 +1805,6 @@
 
 .sheetContent:has(.rankingSection) {
   padding-inline: 16px;
-}
-.rankedProductMeta > small {
-  margin-left: auto;
 }
 .rankedProductMeta > .compactProductPrice {
   margin-left: auto;

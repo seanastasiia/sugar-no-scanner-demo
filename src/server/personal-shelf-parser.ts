@@ -50,12 +50,25 @@ export function barboraShelfEvidence(product: BarboraPageProduct, checkedAt: str
     const amount = row?.Amounts.find((entry) => entry.UnitName.toLowerCase() === unit)?.Amount;
     return typeof amount === "number" && Number.isFinite(amount) && amount >= 0 ? amount : null;
   };
+  const sourceKcal = nutrient(/energetiska vertiba/, "kcal");
+  const sourceKj = nutrient(/energetiska vertiba/, "kj");
+  // A few exact Barbora rows have the kJ/kcal unit labels transposed. Repair
+  // only when both source numbers prove the swap through their energy ratio;
+  // otherwise the original labelled value remains subject to the trust guard.
+  const energyKcal = sourceKcal !== null && sourceKj !== null && sourceKcal > 900 && sourceKj >= 20 && sourceKj <= 900 &&
+    Math.abs(sourceKcal / 4.184 - sourceKj) / sourceKj <= 0.05
+      ? sourceKj
+      : sourceKcal;
+  const solidPack = /(?:^|\s)\d+(?:[.,]\d+)?\s*(?:kg|g)(?:\b|$)/i.test(product.title);
+  const liquidPack = /(?:^|\s)\d+(?:[.,]\d+)?\s*(?:ml|cl|l)(?:\b|$)/i.test(product.title);
+  const nutritionBasis = solidPack && !liquidPack ? "100g" : liquidPack && !solidPack ? "100ml"
+    : product.comparative_unit === "l" ? "100ml" : "100g";
   return {
     productId: `barbora:${product.Url}`, source: "barbora_lv", sourceUrl: `https://barbora.lv/produkti/${product.Url}`,
     checkedAt, gtin: null, category: product.category_name_full_path || "",
-    nutritionBasis: product.comparative_unit === "l" ? "100ml" : "100g",
+    nutritionBasis,
     ingredientsText: product.ingredients ? ingredientPlainText(product.ingredients) : null, ingredientsLanguage: "lv",
-    energyKcal: nutrient(/energetiska vertiba/, "kcal"), proteinG: nutrient(/^olbaltumvielas$/),
+    energyKcal, proteinG: nutrient(/^olbaltumvielas$/),
     totalSugarG: nutrient(/^cukuri$/), fiberG: nutrient(/skiedrvielas/),
     saltG: nutrient(/^sals$/), saturatedFatG: nutrient(/piesatinatas taukskabes/), carbohydrateG: nutrient(/^oglhidrati$/), fatG: nutrient(/^tauki$/)
   };

@@ -1,6 +1,6 @@
 import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { assessPersonalShelfProduct, shelfCategory, SHELF_CATEGORIES, type ShelfEvidence } from "../src/lib/personal-shelf-rank";
+import { assessPersonalShelfProduct, reviewedShelfProductCategory, shelfCategory, SHELF_CATEGORIES, type ShelfEvidence } from "../src/lib/personal-shelf-rank";
 import { barboraShelfEvidence, livinnShelfEvidence, rimiShelfCategory, rimiShelfEvidence } from "../src/server/personal-shelf-parser";
 import { exactOffEvidence } from "../src/server/off-exact-evidence";
 import { parseBarboraProductPage } from "../src/server/barbora-catalog";
@@ -47,7 +47,7 @@ const candidates: Candidate[] = [
   }))
 ];
 const selected = [...new Map(candidates.filter((p) => {
-  const category = shelfCategory(p.category);
+  const category = shelfCategory(p.category) || reviewedShelfProductCategory(p.id);
   return category && (!categoryScope || categoryScope.includes(category)) && (!scopedIds || scopedIds.has(p.id));
 }).map((p) => [p.id, p])).values()];
 if (scopedIds && selected.length !== scopedIds.size) throw new Error("Scoped IDs contain an unavailable or unsupported candidate");

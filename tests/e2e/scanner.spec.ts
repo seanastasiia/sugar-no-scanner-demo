@@ -224,6 +224,56 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   expect(await original.innerText()).toBe(originalText);
 });
 
+test("original Fit keeps protein, sugar, carbs and nutrition basis in one compact row", async ({ page }, testInfo) => {
+  const perGram = shelfFixture("barbora:qa-nutrition-row-g");
+  const perMilliliter = shelfFixture("barbora:qa-nutrition-row-ml");
+  const samples = [
+    {
+      ...perGram,
+      nutrientsPer100g: { ...perGram.nutrientsPer100g, proteinG: 5.8, totalSugarG: 4.4, carbohydrateG: 5.8 }
+    },
+    {
+      ...perMilliliter,
+      nutritionBasis: "100ml" as const,
+      shelfEvidence: { ...perMilliliter.shelfEvidence!, nutritionBasis: "100ml" as const },
+      nutrientsPer100g: { ...perMilliliter.nutrientsPer100g, proteinG: .95, totalSugarG: 1.1, carbohydrateG: 1.55 }
+    }
+  ];
+  await page.setViewportSize({ width: 320, height: 568 });
+  await openPersonalShelfFixture(page, samples);
+
+  const rows = page.getByTestId("ranked-nutrition-row");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0)).toHaveAttribute(
+    "aria-label",
+    "Protein 5.8g · Sugar 4.4g · Carbs 5.8g per 100 g"
+  );
+  await expect(rows.nth(1)).toHaveAttribute(
+    "aria-label",
+    "Protein 0.95g · Sugar 1.1g · Carbs 1.55g per 100 ml"
+  );
+  for (const row of await rows.all()) {
+    const layout = await row.evaluate((element) => {
+      const rowRect = element.getBoundingClientRect();
+      const childRects = Array.from(element.children).map((child) => child.getBoundingClientRect());
+      const firstCenter = childRects[0].top + childRects[0].height / 2;
+      return {
+        fits: element.scrollWidth <= element.clientWidth + 1,
+        oneRow: childRects.every((rect) => Math.abs(rect.top + rect.height / 2 - firstCenter) <= 1),
+        contained: childRects.every((rect) => rect.left >= rowRect.left - 1 && rect.right <= rowRect.right + 1)
+      };
+    });
+    expect(layout).toEqual({ fits: true, oneRow: true, contained: true });
+  }
+  await expectNoDocumentOverflow(page);
+  await page.waitForTimeout(250);
+  await page.screenshot({
+    path: testInfo.outputPath("ranked-nutrition-row-320.png"),
+    fullPage: true,
+    animations: "disabled"
+  });
+});
+
 test("personal shelf pilot remains accessible on small phones, dark mode and enlarged text", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
@@ -1180,9 +1230,13 @@ test("checkout photo recognizes and rates three products on the belt", async ({ 
   await page.screenshot({ path: "test-results/checkout-results-mobile.png" });
   await expect(page.getByText("Best fit in this scan", { exact: true })).toHaveCount(0);
   await expect(page.getByLabel("Sugar.no badge")).toHaveCount(0);
-  await expect(ranking.getByText(/Sugar \d+(?:\.\d+)?g/)).toHaveCount(3);
-  await expect(ranking.getByText(/Protein \d+(?:\.\d+)?g/)).toHaveCount(3);
-  await expect(ranking.getByText(/Carbs \d+(?:\.\d+)?g/)).toHaveCount(0);
+  const nutritionRows = ranking.getByTestId("ranked-nutrition-row");
+  await expect(nutritionRows).toHaveCount(3);
+  for (const row of await nutritionRows.all()) {
+    const label = await row.getAttribute("aria-label");
+    expect(label).toMatch(/^Protein \d+(?:\.\d+)?g · Sugar \d+(?:\.\d+)?g per 100 (?:g|ml)$/);
+    expect(label).not.toContain("Carbs");
+  }
   await expect(page.getByText("Needs nutrition label", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Scan nutrition label" })).toHaveCount(0);
   await ranking.getByRole("button", { name: /STOCKMANN Fresh chanterelles/ }).click();
@@ -1593,6 +1647,7 @@ test("fullscreen camera keeps its overlay controls and reading status clear on s
           demoAlignedWithStatus: Math.abs(demoRect.left - statusRect.left) <= 1
             && Math.abs(demoRect.right - statusRect.right) <= 1
             && Math.abs(demoRect.width - statusRect.width) <= 1,
+          demoHeight: demoRect.height,
           obstructed: buttons.some((button) => {
             const rect = button.getBoundingClientRect();
             return !button.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
@@ -1604,6 +1659,7 @@ test("fullscreen camera keeps its overlay controls and reading status clear on s
       expect(layout.overlapping).toBe(false);
       expect(layout.demoBelowStatus).toBe(true);
       expect(layout.demoAlignedWithStatus).toBe(true);
+      expect(layout.demoHeight).toBe(56);
       expect(layout.obstructed).toBe(false);
       expect(layout.statusColor).toBe("rgb(255, 255, 255)");
       expect(layout.statusBackground).toBe("rgba(34, 34, 40, 0.93)");

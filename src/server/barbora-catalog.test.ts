@@ -12,6 +12,16 @@ import {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Barbora product lookup", () => {
+  it.each([
+    ["NUTEGO", "Protein Bar Crunchy Cookies & Caramel", "45g", "prot-bat-cepums-un-karamele-nutego-45-g"],
+    ["NUTEGO", "Protein Bar Crunchy Coconut & Caramel", "45g", "prot-bat-kokosr-un-karamele-nutego-45-g"],
+    ["FLAPJACKS", "Peanut Butter", "60g", "zemesr-bat-the-beginnings-flapjack-60-g"],
+    ["FLAPJACKS", "Chocolate", "60g", "sokolad-bat-the-beginnings-flapjack-60-g"]
+  ])("links the reviewed photographed %s label to one exact source SKU", (brand, name, packSize, slug) => {
+    expect(rankIndexedBarboraCandidates({ brand, name, variant: "", packSize, searchTerms: [name] }, undefined, 2)[0]?.slug)
+      .toBe(slug);
+  });
+
   it("normalizes Latvian diacritics and Russian Cyrillic without losing identity", () => {
     expect(normalizeRetailText("Sālsstandziņas")).toBe("salsstandzinas");
     expect(normalizeRetailText("Кока-Кола")).toBe("koka kola");

@@ -101,6 +101,22 @@ describe("independent exact-source shelf evidence", () => {
     expect(row?.fiberG).toBeNull();
     expect(row?.totalSugarG).toBeNull();
   });
+  it("uses the package's explicit mass or volume for Barbora's ambiguous 100 g/ml table", () => {
+    const base = { Url: "qa", brand_name: "QA", price: 1, ingredients: "Ūdens, tomāti", nutrients: [], comparative_unit: "l" };
+    expect(barboraShelfEvidence({ ...base, title: "Stir fry sauce 120g" }, time)?.nutritionBasis).toBe("100g");
+    expect(barboraShelfEvidence({ ...base, title: "Soy sauce 500ml" }, time)?.nutritionBasis).toBe("100ml");
+    expect(barboraShelfEvidence({ ...base, title: "Sauce" }, time)?.nutritionBasis).toBe("100ml");
+  });
+  it("repairs Barbora energy only when the exact kJ and kcal numbers prove their labels were swapped", () => {
+    const base = { Url: "qa", title: "QA bar 60g", brand_name: "QA", price: 1, ingredients: "Auzas, sāls" };
+    const row = (kcal: number, kj: number) => ({
+      Name: "Enerģētiskā vērtība",
+      Amounts: [{ Amount: kcal, UnitName: "Kcal" }, { Amount: kj, UnitName: "kJ" }]
+    });
+    expect(barboraShelfEvidence({ ...base, nutrients: [row(1976, 471)] }, time)?.energyKcal).toBe(471);
+    expect(barboraShelfEvidence({ ...base, nutrients: [row(1976, 300)] }, time)?.energyKcal).toBe(1976);
+    expect(barboraShelfEvidence({ ...base, nutrients: [row(471, 1976)] }, time)?.energyKcal).toBe(471);
+  });
   it("keeps OFF language and data nullable, including documented sodium-to-salt conversion", () => {
     const raw = { code: "1234567890123", product_name: "QA chips", brands: "QA", categories: "Chips", ingredients_text_lt: "Bulvės, druska", nutriments: { "energy-kcal_100g": 400, proteins_100g: 4, sugars_100g: 1, sodium_100g: .2, "saturated-fat_100g": 1 } };
     const e = offShelfEvidence(raw, time);

@@ -1848,6 +1848,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
                         const presentation = isRated ? overlayMatchPresentation(item) : null;
                         const onlineOffer = scanOfferForId(id);
                         const nutritionLabel = item ? compactNutritionLabel(item.nutrientsPer100g) : null;
+                        const nutritionBasis = item?.nutritionBasis === "100ml" ? "100 ml" : "100 g";
                         return (
                           <li className={`${styles.rankedProductCard}`} key={id}>
                             <button
@@ -1892,12 +1893,30 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
                                   {isRated ? (
                                     <>
                                       <MatchPill product={item} />
-                                      <small>
-                                        {nutritionLabel}
-                                        {visibleBases.size > 1
-                                          ? ` / ${item?.nutritionBasis === "100ml" ? "100 ml" : "100 g"}`
-                                          : ""}
-                                      </small>
+                                      {nutritionLabel ? (
+                                        <span
+                                          className={styles.rankedNutritionRow}
+                                          data-testid="ranked-nutrition-row"
+                                          aria-label={`${nutritionLabel} per ${nutritionBasis}`}
+                                        >
+                                          <span className={styles.rankedNutritionMetric}>
+                                            <small>Protein</small>
+                                            <strong>{item.nutrientsPer100g.proteinG} g</strong>
+                                          </span>
+                                          <span className={styles.rankedNutritionMetric}>
+                                            <small>Sugar</small>
+                                            <strong>{item.nutrientsPer100g.totalSugarG} g</strong>
+                                          </span>
+                                          {item.nutrientsPer100g.carbohydrateG !== null &&
+                                          item.nutrientsPer100g.carbohydrateG !== undefined ? (
+                                            <span className={styles.rankedNutritionMetric}>
+                                              <small>Carbs</small>
+                                              <strong>{item.nutrientsPer100g.carbohydrateG} g</strong>
+                                            </span>
+                                          ) : null}
+                                          <small className={styles.rankedNutritionBasis}>per {nutritionBasis}</small>
+                                        </span>
+                                      ) : null}
                                     </>
                                   ) : (
                                     <small>

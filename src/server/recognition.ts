@@ -179,6 +179,18 @@ function normalizeIdentityText(value: string): string {
     .trim();
 }
 
+export function exactBarboraSlugFromRetailerUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" || url.username || url.password || url.port || url.search || url.hash ||
+      !["barbora.lv", "www.barbora.lv"].includes(url.hostname)) return null;
+    return url.pathname.match(/^\/produkti\/([a-z0-9-]+)\/?$/i)?.[1] || null;
+  } catch {
+    return null;
+  }
+}
+
 function identityTokens(value: string): Set<string> {
   return new Set(normalizeIdentityText(value).split(" ").filter((token) => token.length >= 3));
 }
@@ -556,6 +568,23 @@ export async function resolveVisibleDetections(
           catalogProductId: initialCatalogMatch.product.id
         }
       : null;
+    // Curated cards predate canonical source-prefixed IDs. When their reviewed
+    // retailer URL points to an exact indexed Barbora SKU, promote that source
+    // card so Personal Shelf evidence can be loaded for the same product.
+    const sourceLinkedBarboraSlug = initialCatalogCandidate && !initialCatalogCandidate.product.id.startsWith("barbora:")
+      ? exactBarboraSlugFromRetailerUrl(initialCatalogCandidate.product.retailerUrl)
+      : null;
+    const sourceLinkedBarboraProduct = sourceLinkedBarboraSlug
+      ? (dependencies.getIndexedProduct || getIndexedBarboraProductWithAlternatives)(sourceLinkedBarboraSlug)?.product || null
+      : null;
+    const sourceLinkedBarboraCandidate: DetectionResolutionCandidate | null = sourceLinkedBarboraProduct
+      ? {
+          product: sourceLinkedBarboraProduct,
+          confidence: initialCatalogMatch?.confidence || null,
+          matchKind: "barbora",
+          catalogProductId: sourceLinkedBarboraProduct.id
+        }
+      : null;
     const indexedBarboraMatch = hasConfirmedNutrition(initialCatalogCandidate)
       ? null
       : detection.confirmedBarboraSlug
@@ -592,7 +621,7 @@ export async function resolveVisibleDetections(
           retailerOffer: exactRetailerOffer
         }
       : null;
-    const initialRetailerCandidates = [initialCatalogCandidate, indexedBarboraCandidate, exactOfferCandidate]
+    const initialRetailerCandidates = [sourceLinkedBarboraCandidate, initialCatalogCandidate, indexedBarboraCandidate, exactOfferCandidate]
       .filter((candidate): candidate is DetectionResolutionCandidate => Boolean(candidate));
     const confirmedInitialRetailer = initialRetailerCandidates.find(hasConfirmedNutrition) || null;
     // The vision response may keep the concise UI label in productName while

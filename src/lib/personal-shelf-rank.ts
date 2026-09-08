@@ -83,6 +83,43 @@ export const SHELF_CATEGORIES: Record<ShelfCategory, {
   sauce: { label: "Sauces & spreads", weights: { sugar: 25, protein: 5, composition: 30, balance: 40 }, balance: { salt: .55, saturatedFat: .35, fiber: .1 } }
 };
 
+// Some retailer taxonomies stop at a broad aisle such as "high-protein food"
+// or "Japanese cuisine". These exact SKU overrides were reviewed against the
+// named product and source page; the broad aisle itself remains unsupported so
+// it cannot silently classify unrelated products.
+const REVIEWED_SHELF_PRODUCT_CATEGORIES: Readonly<Record<string, ShelfCategory>> = {
+  "barbora:prot-bat-cepums-un-karamele-nutego-45-g": "bar",
+  "barbora:prot-bat-kokosr-un-karamele-nutego-45-g": "bar",
+  "barbora:sok-trif-prot-zemesr-pure-chocolate-40-g": "chocolate",
+  "barbora:sokolad-bat-the-beginnings-flapjack-60-g": "bar",
+  "barbora:karamelu-bat-the-beginnings-flapjack-60-g": "bar",
+  "barbora:upenu-baton-the-beginnings-flapjack-60-g": "bar",
+  "barbora:zemesr-bat-the-beginnings-flapjack-60-g": "bar",
+  "barbora:protein-baton-sal-kar-the-beginnings-50-g": "bar",
+  "barbora:prot-bat-van-bez-cuk-the-beginnings-50-g": "bar",
+  "barbora:kakao-proteina-baton-the-beginnings-40-g": "bar",
+  "barbora:ananasu-protein-bat-the-beginnings-40-g": "bar",
+  "rimi_lv:1016943": "bar",
+  "rimi_lv:1016952": "bar",
+  "rimi_lv:1016960": "bar",
+  "rimi_lv:1001786": "bar",
+  "rimi_lv:1002611": "bar",
+  "barbora:gaisa-sojas-merce-pearl-river-500-ml": "sauce",
+  "barbora:merce-santa-maria-wok-pad-thai-150-g": "sauce",
+  "barbora:stirfryhoisin-kipl-merce-bluedragon-120-g": "sauce",
+  "rimi_lv:100238": "sauce",
+  "rimi_lv:103191": "sauce",
+  "rimi_lv:110936": "sauce",
+  "rimi_lv:132592": "sauce",
+  "rimi_lv:155910": "sauce",
+  "rimi_lv:172970": "sauce",
+  "off:08853662057866": "sauce"
+};
+
+export function reviewedShelfProductCategory(productId: string): ShelfCategory | null {
+  return REVIEWED_SHELF_PRODUCT_CATEGORIES[productId] || null;
+}
+
 export function normalizeIngredientText(text: string): string {
   return text.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/ё/g, "е");
 }
@@ -159,7 +196,7 @@ const word = (pattern: string) => new RegExp(`(?:^|[^\\p{L}])(?:${pattern})(?=$|
 const sugars = word("sugar|sugars|sucrose|glucose|fructose|dextrose|syrup|honey|cukurs|cukura|cukuri|cukrus|cukraus|sirupas|sirupo|sirups|sirupa|medus|medaus|сахар|сахара|сироп|сиропа|мед|меда|suhkur|suhkru|siirup|mesi");
 const sweeteners = word("sucralose|aspartame|acesulfame|stevia|steviol|sukraloze|sukraloze|aspartamas|steviolio|stevija|сукралоза|аспартам|стевия|e950|e951|e952|e954|e955|e960|erythritol|maltitol|maltitols|maltits|maltita|sorbitol|ksilitols|eritritols|эритрит|мальтит|сорбит");
 const wholeBase = /whole[ -]?grain|whole[ -]?wheat|brown rice|pilngraud|pilnagrud|pilno grudo|viso grudo|цельнозер|taitera|chickpea|lentil|nut[sz]?\b|almond|oat flakes|avizu dribs|auzu parsl|avizirn|zirni|zirniu|lesiu|lesiai|migdol|lazdyn|riesut|riekst|миндал|нут\b|чечевиц|орех|kaerahelb|\bseeds?\b|sekl|semen|семен|seemn/;
-const extendedWholeBase = /tomato|tomat|помидор|dates?\b|datel|datul|finik|финик|raisins?|razin|изюм|apricot|abrikos|абрикос|plum|slyv|слив|figs?\b|figos|инжир|cranberr|dzerven|клюкв|blueberr|mellen|черник|mango|pineapple|ananas|apple|aboli|яблок|banana|banan|банан|cocoa mass|kakao mas|какао масс/;
+const extendedWholeBase = /tomato|tomat|помидор|soy\s*beans?|sojas?\s+pup|soju\s+pup|соев.*боб|dates?\b|datel|datul|finik|финик|raisins?|razin|изюм|apricot|abrikos|абрикос|plum|slyv|слив|figs?\b|figos|инжир|cranberr|dzerven|клюкв|blueberr|mellen|черник|mango|pineapple|ananas|apple|aboli|яблок|banana|banan|банан|cocoa mass|kakao mas|какао масс/;
 const potatoCornBase = /potato|bulv|kartupel|картоф|kartul|corn|kukuruz|kukuruzu|kukuruzu|кукуруз|mais/;
 const dairyBase = /^(?:organic |ekologisk\p{L}* |bio )?(?:milk|skimmed milk|pasteuri[sz]ed milk|piens|piena|vajpiens|biezpiens|pienas|pieno|молоко|молока|piim|yogurt|jogurt|йогурт|cheese|sier|suris|сыр)/u;
 const refinedBase = /flour|starch|miltai|miltu|milti\b|krakmol|ciete|мука|муки|крахмал|jahu|tarklis|rice|ryz|risi|рис|riis|protein|olbaltum|baltym|белок/;
@@ -175,14 +212,21 @@ export function analyzeIngredients(text: string | null, language: string | null,
   if (!text?.trim() || text.length > 12000 || !["en", "lv", "lt", "ru", "et"].includes(language || "")) return null;
   const parts = splitIngredients(text);
   if (!parts.length) return null;
-  const first = normalizeIngredientText(parts[0]).split(/[([]/)[0];
+  const listedFirst = normalizeIngredientText(parts[0]).split(/[([]/)[0].trim();
+  // Water is a carrier rather than the recipe-defining food base in sauces.
+  // Keep it in the ingredient order for sugar-near-start checks, while using
+  // the next explicitly listed ingredient for the composition component.
+  const firstPart = category === "sauce" && /^(?:water|udens|vanduo|вода|vesi)$/.test(listedFirst) && parts[1]
+    ? parts[1]
+    : parts[0];
+  const first = normalizeIngredientText(firstPart).split(/[([]/)[0].trim();
   // Score explicit positive/negative evidence only. Unrecognized base is unknown, not clean.
   const extended = Boolean(category && !legacyIngredientCategories.has(category));
   let base = sugars.test(first) ? 0 : fatBase.test(first) ? null : isolatedBase.test(first) || chocolateBase.test(first) ? 25
     : wholeBase.test(first) || (extended && extendedWholeBase.test(first)) ? 100
       : dairyBase.test(first) || (extended && animalBase.test(first)) ? 85
         : potatoCornBase.test(first) ? 75 : refinedBase.test(first) || (extended && extendedRefinedBase.test(first)) ? 25 : null;
-  const alias = base === null && category ? reviewedIngredientBase(normalizeIngredientText(parts[0]), language!, category) : null;
+  const alias = base === null && category ? reviewedIngredientBase(normalizeIngredientText(firstPart), language!, category) : null;
   if (alias) base = alias.score;
   if (base !== null && category && ["meat-product", "fish-product"].includes(category)) {
     const percent = first.match(/(\d+(?:[.,]\d+)?)\s*%/)?.[1];
@@ -193,7 +237,7 @@ export function analyzeIngredients(text: string | null, language: string | null,
   }
   const sugarNearStart = parts.slice(0, 3).some((part) => sugars.test(normalizeIngredientText(part)));
   return {
-    firstIngredient: parts[0],
+    firstIngredient: firstPart,
     aliasRule: alias?.rule ?? null,
     score: base === null ? null : sugarNearStart ? Math.min(base, 40) : base,
     sugarNearStart,
@@ -222,7 +266,8 @@ const inverse = (value: number, low: number, high: number) => 100 * Math.max(0, 
 
 export function assessPersonalShelfProduct(product: Pick<ProductRecord, "id" | "gtin" | "category" | "format" | "shelfEvidence">): ShelfAssessment {
   const sourceEvidence = product.shelfEvidence;
-  const category = shelfCategory(sourceEvidence?.category || product.category, product.format);
+  const category = shelfCategory(sourceEvidence?.category || product.category, product.format) ||
+    reviewedShelfProductCategory(product.id);
   const result: ShelfAssessment = { modelVersion: SHELF_MODEL_VERSION, category, status: "missing_data", score: null, scoreRange: null, missing: [], components: [], reasons: [], tradeoffs: [], cap: null };
   if (!category) return { ...result, status: "unsupported" };
   if (!sourceEvidence || sourceEvidence.productId !== product.id || (product.gtin && sourceEvidence.gtin && product.gtin !== sourceEvidence.gtin)) {
@@ -247,7 +292,7 @@ export function assessPersonalShelfProduct(product: Pick<ProductRecord, "id" | "
   if ((!legacyIngredientCategories.has(category) || ingredients?.aliasRule) && evidence.ingredientsText) {
     const ingredientText = normalizeIngredientText(evidence.ingredientsText);
     if (evidence.totalSugarG === 0 && sugars.test(ingredientText)) result.missing.push("consistent zero sugar and ingredient list");
-    if (evidence.saltG === 0 && saltIngredient.test(ingredientText) && ["cheese", "meat-product", "fish-product"].includes(category)) result.missing.push("consistent zero salt and ingredient list");
+    if (evidence.saltG === 0 && saltIngredient.test(ingredientText) && ["cheese", "meat-product", "fish-product", "sauce"].includes(category)) result.missing.push("consistent zero salt and ingredient list");
     if (evidence.saturatedFatG === 0 && valid(evidence.fatG) && evidence.fatG >= 10) result.missing.push("consistent zero saturated fat and total fat");
   }
   for (const [key, label] of [["energyKcal", "energy"], ["proteinG", "protein"], ["totalSugarG", "sugar"], ["saltG", "salt"], ["saturatedFatG", "saturated fat"]] as const) {
