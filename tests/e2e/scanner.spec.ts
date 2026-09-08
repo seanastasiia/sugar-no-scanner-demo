@@ -1569,6 +1569,9 @@ test("fullscreen camera keeps its overlay controls and reading status clear on s
             rect.left < other.right && rect.right > other.left && rect.top < other.bottom && rect.bottom > other.top
           )),
           demoBelowStatus: demoRect.top >= statusRect.bottom + 8,
+          demoAlignedWithStatus: Math.abs(demoRect.left - statusRect.left) <= 1
+            && Math.abs(demoRect.right - statusRect.right) <= 1
+            && Math.abs(demoRect.width - statusRect.width) <= 1,
           obstructed: buttons.some((button) => {
             const rect = button.getBoundingClientRect();
             return !button.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
@@ -1579,6 +1582,7 @@ test("fullscreen camera keeps its overlay controls and reading status clear on s
       });
       expect(layout.overlapping).toBe(false);
       expect(layout.demoBelowStatus).toBe(true);
+      expect(layout.demoAlignedWithStatus).toBe(true);
       expect(layout.obstructed).toBe(false);
       expect(layout.statusColor).toBe("rgb(255, 255, 255)");
       expect(layout.statusBackground).toBe("rgba(34, 34, 40, 0.93)");
