@@ -1242,13 +1242,7 @@
   margin: 0;
   font: 700 32px/38px var(--font-display);
   letter-spacing: -0.5px;
-}
-.demoHeading p {
-  margin: 20px 0 0;
-  color: var(--muted);
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 22px;
+  white-space: nowrap;
 }
 .demoChoices {
   display: grid;
