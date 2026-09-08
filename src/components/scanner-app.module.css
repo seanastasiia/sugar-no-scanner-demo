@@ -317,9 +317,6 @@
 .stageActions > .feedbackTrigger {
   min-width: 135px;
 }
-.stageActions > .demoTrigger {
-  min-width: 124px;
-}
 .cameraViewport,
 .cameraViewportMediaRatio,
 .cameraViewport.cameraViewportLive {
@@ -360,13 +357,20 @@
   background: #ffffff05;
   pointer-events: none;
 }
-.stageStatus {
+.stageBottomControls {
   position: absolute;
   z-index: 10;
   left: 24px;
   right: 24px;
   bottom: 42px;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.stageStatus {
+  display: flex;
+  width: 100%;
   min-height: 50px;
   align-items: center;
   gap: 12px;
@@ -378,6 +382,11 @@
   font-size: 15px;
   font-weight: 500;
   line-height: 21px;
+}
+.stageBottomControls > .stageDemoTrigger {
+  width: auto;
+  min-height: 44px;
+  padding: 10px 16px;
 }
 .stageStatus svg {
   flex: none;
@@ -1781,7 +1790,7 @@
   .resultsCollapsed {
     max-height: 55dvh;
   }
-  .stageStatus {
+  .stageBottomControls {
     bottom: 12px;
   }
   .cameraError,
@@ -1831,10 +1840,7 @@
 .photoStage .stageActions {
   gap: 112px;
 }
-.photoStage .demoTrigger {
-  margin-right: 16px;
-}
-.photoStage .stageStatus {
+.photoStage .stageBottomControls {
   bottom: 16px;
   left: 16px;
   right: 16px;
@@ -2001,11 +2007,10 @@
   color: #fff;
   backdrop-filter: blur(12px);
 }
-.liveCamera .stageStatus {
+.liveCamera .stageBottomControls {
   left: max(12px, env(safe-area-inset-left));
   right: max(12px, env(safe-area-inset-right));
   bottom: max(14px, env(safe-area-inset-bottom));
-  justify-content: center;
 }
 .resultsCollapsed .sheetChrome,
 .resultsCollapsed .sheetActions {

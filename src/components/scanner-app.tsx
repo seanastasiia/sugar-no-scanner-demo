@@ -1622,18 +1622,6 @@ export function ScannerApp({
               <button ref={feedbackFocusRef} className={styles.feedbackTrigger} type="button" onClick={openFeedback}>
                 <span>Leave feedback</span>
               </button>
-              {source === "camera" && !showRecovery ? (
-                <button
-                  ref={demoTriggerRef}
-                  className={styles.demoTrigger}
-                  type="button"
-                  onClick={openDemo}
-                  aria-label="Show demo"
-                >
-                  <Layers3 aria-hidden="true" size={20} />
-                  Show demo
-                </button>
-              ) : null}
             </div>
           </div>
 
@@ -1779,32 +1767,46 @@ export function ScannerApp({
             })}
 
             {!showRecovery ? (
-              <div
-                className={`${styles.stageStatus} ${showRecognitionRetry ? styles.stageStatusRetry : ""} ${visibleTrayIds.length > 0 && ["matched", "retained"].includes(recognitionState) ? styles.stageStatusResultHidden : ""}`}
-                role="status"
-                aria-live="polite"
-              >
-                {showRecognitionRetry ? (
-                  <button className={styles.recognitionRetry} type="button" onClick={scanAgain}>
-                    <RefreshCw aria-hidden="true" size={17} />
-                    <span>Not sure — try again</span>
+              <div className={styles.stageBottomControls}>
+                <div
+                  className={`${styles.stageStatus} ${showRecognitionRetry ? styles.stageStatusRetry : ""} ${visibleTrayIds.length > 0 && ["matched", "retained"].includes(recognitionState) ? styles.stageStatusResultHidden : ""}`}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {showRecognitionRetry ? (
+                    <button className={styles.recognitionRetry} type="button" onClick={scanAgain}>
+                      <RefreshCw aria-hidden="true" size={17} />
+                      <span>Not sure — try again</span>
+                    </button>
+                  ) : (
+                    <>
+                      {recognitionState === "scanning" ? (
+                        <LoaderCircle className={styles.spin} aria-hidden="true" size={17} />
+                      ) : recognitionState === "matched" || recognitionState === "retained" ? (
+                        <Check aria-hidden="true" size={17} />
+                      ) : recognitionState === "not_sure" ||
+                        recognitionState === "error" ||
+                        recognitionState === "rate_limited" ? (
+                        <Info aria-hidden="true" size={17} />
+                      ) : (
+                        <ScanLine aria-hidden="true" size={17} />
+                      )}
+                      <span>{networkOnline ? displayedStatusMessage : "Offline — recognition paused"}</span>
+                    </>
+                  )}
+                </div>
+                {source === "camera" ? (
+                  <button
+                    ref={demoTriggerRef}
+                    className={`${styles.demoTrigger} ${styles.stageDemoTrigger}`}
+                    type="button"
+                    onClick={openDemo}
+                    aria-label="Show demo"
+                  >
+                    <Layers3 aria-hidden="true" size={20} />
+                    Show demo
                   </button>
-                ) : (
-                  <>
-                    {recognitionState === "scanning" ? (
-                      <LoaderCircle className={styles.spin} aria-hidden="true" size={17} />
-                    ) : recognitionState === "matched" || recognitionState === "retained" ? (
-                      <Check aria-hidden="true" size={17} />
-                    ) : recognitionState === "not_sure" ||
-                      recognitionState === "error" ||
-                      recognitionState === "rate_limited" ? (
-                      <Info aria-hidden="true" size={17} />
-                    ) : (
-                      <ScanLine aria-hidden="true" size={17} />
-                    )}
-                    <span>{networkOnline ? displayedStatusMessage : "Offline — recognition paused"}</span>
-                  </>
-                )}
+                ) : null}
               </div>
             ) : null}
             {cameraState !== "denied" && cameraState !== "error" && showRecovery ? (
