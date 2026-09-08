@@ -250,13 +250,13 @@
 }
 .freeScanAllowance {
   position: absolute;
-  top: calc(67px + env(safe-area-inset-top));
+  top: calc(88px + env(safe-area-inset-top));
   left: max(24px, env(safe-area-inset-left));
   display: inline-flex;
   min-height: 28px;
   align-items: center;
   gap: 7px;
-  margin: 10px 0 12px;
+  margin: 0;
   padding: 0 10px;
   border: 1px solid #ffffff8f;
   border-radius: 999px;
@@ -1845,6 +1845,15 @@
 }
 .photoStage .stageGuidance {
   bottom: max(60px, env(safe-area-inset-bottom));
+}
+.withAccessBadge .cameraViewport {
+  top: calc(124px + env(safe-area-inset-top));
+}
+.withAccessBadge .photoTitle {
+  top: calc(128px + env(safe-area-inset-top));
+}
+.withAccessBadge .photoStage .cameraViewport {
+  top: calc(174px + env(safe-area-inset-top));
 }
 @media (prefers-reduced-motion: reduce) {
   .onboardingPreview::before {

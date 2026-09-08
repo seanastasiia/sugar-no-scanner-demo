@@ -1,6 +1,30 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
+const onePixelPng = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+  "base64"
+);
+
+async function expectSeparated(
+  first: import("@playwright/test").Locator,
+  second: import("@playwright/test").Locator,
+  minimumGap = 0
+) {
+  const [firstBox, secondBox] = await Promise.all([first.boundingBox(), second.boundingBox()]);
+  expect(firstBox).not.toBeNull();
+  expect(secondBox).not.toBeNull();
+  const horizontalGap = Math.max(
+    (secondBox?.x ?? 0) - ((firstBox?.x ?? 0) + (firstBox?.width ?? 0)),
+    (firstBox?.x ?? 0) - ((secondBox?.x ?? 0) + (secondBox?.width ?? 0))
+  );
+  const verticalGap = Math.max(
+    (secondBox?.y ?? 0) - ((firstBox?.y ?? 0) + (firstBox?.height ?? 0)),
+    (firstBox?.y ?? 0) - ((secondBox?.y ?? 0) + (secondBox?.height ?? 0))
+  );
+  expect(Math.max(horizontalGap, verticalGap)).toBeGreaterThanOrEqual(minimumGap);
+}
+
 async function authenticate(page: import("@playwright/test").Page) {
   const response = await page.request.post("/api/auth", {
     headers: { origin: `http://127.0.0.1:${process.env.E2E_PORT || "3000"}` },
@@ -42,6 +66,59 @@ test("three successful scans lead to a clear one-time offer", async ({ page }, t
 test("the remaining free-scan allowance is visible before the paywall", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("3 free scans left", { exact: true })).toBeVisible();
+});
+
+test("the access badge never overlaps camera or saved-photo content", async ({ page }) => {
+  await page.route("**/api/recognize", (route) => route.fulfill({
+    contentType: "application/json",
+    body: JSON.stringify({
+      requestId: "badge-layout-check",
+      status: "not_sure",
+      latencyMs: 1,
+      model: "qa-mock",
+      imageStored: false,
+      detections: []
+    })
+  }));
+  await page.goto("/");
+
+  const badge = page.getByText("3 free scans left", { exact: true });
+  for (const viewport of [
+    { width: 320, height: 568 },
+    { width: 375, height: 667 },
+    { width: 390, height: 844 },
+    { width: 430, height: 932 },
+    { width: 844, height: 390 }
+  ]) {
+    await page.setViewportSize(viewport);
+    await expectSeparated(badge, page.getByAltText("Sugar.no"), 8);
+    await expectSeparated(badge, page.getByRole("button", { name: "Leave feedback" }));
+    await expectSeparated(badge, page.getByRole("button", { name: "Show demo" }));
+    await expectSeparated(badge, page.getByTestId("camera-viewport"), 8);
+  }
+
+  await page.getByRole("button", { name: "Show demo" }).click();
+  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  await chooser.locator('input[type="file"]').setInputFiles({
+    name: "badge-layout-check.png",
+    mimeType: "image/png",
+    buffer: onePixelPng
+  });
+  await expect(page.getByRole("heading", { name: "Read a saved photo" })).toBeVisible();
+
+  for (const viewport of [
+    { width: 320, height: 568 },
+    { width: 375, height: 667 },
+    { width: 390, height: 844 },
+    { width: 430, height: 932 },
+    { width: 844, height: 390 }
+  ]) {
+    await page.setViewportSize(viewport);
+    await expectSeparated(badge, page.getByAltText("Sugar.no"), 8);
+    await expectSeparated(badge, page.getByRole("button", { name: "Leave feedback" }));
+    await expectSeparated(badge, page.getByRole("heading", { name: "Read a saved photo" }), 8);
+    await expectSeparated(badge, page.getByTestId("camera-viewport"), 8);
+  }
 });
 
 test("a successful checkout confirms access before starting the camera", async ({ page }) => {

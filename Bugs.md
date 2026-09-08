@@ -1,5 +1,7 @@
 # Bugs
 
+- **2026-09-08: the access badge covered the saved-photo heading on mobile.** The badge had an absolute position in the scanner header while `Read a saved photo` began in the same vertical band. Staging now reserves a dedicated badge row and offsets both the live camera and saved-photo viewport below it. An automated geometry check verifies that the longest allowance label does not overlap the logo, feedback/demo controls, saved-photo heading or media viewport at 320, 375, 390, 430 and landscape 844 px widths. Production remains unchanged.
+
 - **2026-09-08: the access badge looked like a camera action, covered demo content and disappeared after payment; expired buyers had no explicit renewal state.** Staging now uses a compact light status badge only on real camera/upload screens, shows whole paid days remaining, switches access off while an open page crosses its server expiry, and opens a distinct repeat-purchase version of the one-time seven-day paywall. Deterministic demos remain unmetered and badge-free; production remains unchanged.
 
 - **2026-09-08: some devices kept showing the pre-paywall staging UI after a successful deployment.** The root page was statically rendered with a year-long shared edge cache, so a normal Safari refresh could still receive stale HTML. The scanner root is now dynamic and navigation remains network-first through the service worker, allowing the current Railway deployment and its feature flags to appear after a normal reload. Production remains unchanged.

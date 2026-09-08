@@ -1586,7 +1586,9 @@ export function ScannerApp({
   }
 
   return (
-    <main className={`${styles.app} ${source === "camera" && !showRecovery ? styles.liveCamera : ""}`}>
+    <main
+      className={`${styles.app} ${source === "camera" && !showRecovery ? styles.liveCamera : ""} ${showAccessBadge ? styles.withAccessBadge : ""}`}
+    >
       {!resultsAreExpanded && !demoOpen ? (
         <header className={`${styles.header} ${styles.scannerHeader}`} inert={feedbackOpen || paywallOpen || paymentSuccessOpen}>
           <Image
