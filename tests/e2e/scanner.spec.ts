@@ -179,6 +179,29 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   await expect(results.getByText("Score only · Spoonable yogurts", { exact: true })).toHaveCount(0);
   await expect(results.getByText("Best products", { exact: true })).toBeVisible();
   await expect(results.getByText("Sugar · Protein · Ingredients · Salt · Saturated fat · Fiber", { exact: true })).toBeVisible();
+  const spacing = await results.evaluate((root) => {
+    const toggle = root.previousElementSibling;
+    const heading = root.querySelector("header h2");
+    const criteria = root.querySelector("header p");
+    const method = root.querySelector("details summary");
+    const firstCard = root.querySelector("li");
+    if (!toggle || !heading || !criteria || !method || !firstCard) throw new Error("Personal rank layout is incomplete");
+    const toggleBox = toggle.getBoundingClientRect();
+    const headingBox = heading.getBoundingClientRect();
+    const criteriaBox = criteria.getBoundingClientRect();
+    const methodBox = method.getBoundingClientRect();
+    const cardBox = firstCard.getBoundingClientRect();
+    return {
+      afterToggle: headingBox.top - toggleBox.bottom,
+      afterHeading: criteriaBox.top - headingBox.bottom,
+      beforeMethod: methodBox.top - criteriaBox.bottom,
+      beforeCard: cardBox.top - methodBox.bottom
+    };
+  });
+  expect(spacing.afterToggle).toBeGreaterThanOrEqual(23);
+  expect(spacing.afterHeading).toBeGreaterThanOrEqual(9);
+  expect(spacing.beforeMethod).toBeGreaterThanOrEqual(11);
+  expect(spacing.beforeCard).toBeGreaterThanOrEqual(23);
   await page.setViewportSize({ width: 320, height: 568 });
   await expectNoDocumentOverflow(page);
   await results.getByText("How scores work", { exact: true }).click();
