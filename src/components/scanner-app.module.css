@@ -384,7 +384,7 @@
   line-height: 21px;
 }
 .stageBottomControls > .stageDemoTrigger {
-  width: auto;
+  width: 100%;
   min-height: 44px;
   padding: 10px 16px;
 }
