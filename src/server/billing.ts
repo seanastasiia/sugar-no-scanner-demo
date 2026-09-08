@@ -65,7 +65,7 @@ export async function activateCheckout(session: Stripe.Checkout.Session, accessT
   return { expiresAt: entitlement.expires_at as string };
 }
 
-export async function readActiveAccess(accessTokenHash: string) {
+export async function readAccessStatus(accessTokenHash: string) {
   const supabase = getSupabaseAdmin();
   if (!supabase) return null;
   const { data, error } = await supabase
@@ -77,6 +77,13 @@ export async function readActiveAccess(accessTokenHash: string) {
   const entitlement = Array.isArray(data.scanner_entitlements)
     ? data.scanner_entitlements[0]
     : data.scanner_entitlements;
-  if (!entitlement || entitlement.status !== "active" || new Date(entitlement.expires_at).getTime() <= Date.now()) return null;
-  return { expiresAt: entitlement.expires_at as string };
+  if (!entitlement || entitlement.status !== "active") return null;
+  const expiresAt = entitlement.expires_at as string;
+  const active = new Date(expiresAt).getTime() > Date.now();
+  return { active, expired: !active, expiresAt };
+}
+
+export async function readActiveAccess(accessTokenHash: string) {
+  const access = await readAccessStatus(accessTokenHash);
+  return access?.active ? { expiresAt: access.expiresAt } : null;
 }

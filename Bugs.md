@@ -1,5 +1,7 @@
 # Bugs
 
+- **2026-09-08: the access badge looked like a camera action, covered demo content and disappeared after payment; expired buyers had no explicit renewal state.** Staging now uses a compact light status badge only on real camera/upload screens, shows whole paid days remaining, switches access off while an open page crosses its server expiry, and opens a distinct repeat-purchase version of the one-time seven-day paywall. Deterministic demos remain unmetered and badge-free; production remains unchanged.
+
 - **2026-09-08: some devices kept showing the pre-paywall staging UI after a successful deployment.** The root page was statically rendered with a year-long shared edge cache, so a normal Safari refresh could still receive stale HTML. The scanner root is now dynamic and navigation remains network-first through the service worker, allowing the current Railway deployment and its feature flags to appear after a normal reload. Production remains unchanged.
 
 - **2026-09-07: identity-only results used a free scan, and successful checkout returned to an idle camera.** The staging WTP counter now advances only after a real camera/upload session produces at least one confirmed Sugar.no rating. `Nutrition not verified` alone keeps the allowance unchanged. A server-verified Stripe return now shows a payment success screen; `Start scanning` then requests the camera with paid access already active. Production remains unchanged.

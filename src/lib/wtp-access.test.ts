@@ -3,6 +3,8 @@ import {
   captureAttribution,
   FREE_REAL_SCANS,
   freeScanAllowanceLabel,
+  paidAccessAllowanceLabel,
+  paidAccessDaysRemaining,
   readFreeScanCount,
   readOrCreateAccessToken,
   recordFreeScan,
@@ -17,6 +19,13 @@ describe("WTP access storage", () => {
     expect(freeScanAllowanceLabel(1)).toBe("2 free scans left");
     expect(freeScanAllowanceLabel(2)).toBe("1 free scan left");
     expect(freeScanAllowanceLabel(3)).toBe("Free scans used");
+  });
+
+  it("shows paid access in whole days without making a new purchase look one day shorter", () => {
+    const now = Date.parse("2026-09-08T10:00:00.000Z");
+    expect(paidAccessDaysRemaining("2026-09-15T10:00:00.000Z", now)).toBe(7);
+    expect(paidAccessAllowanceLabel("2026-09-09T09:59:59.000Z", now)).toBe("1 day left");
+    expect(paidAccessAllowanceLabel("2026-09-08T09:59:59.000Z", now)).toBe("0 days left");
   });
 
   it("keeps one anonymous access token on the device", () => {

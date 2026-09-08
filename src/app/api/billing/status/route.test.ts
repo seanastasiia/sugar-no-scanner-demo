@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const helpers = vi.hoisted(() => ({
   activateCheckout: vi.fn(), billingEnabled: vi.fn(), getStripe: vi.fn(),
-  hashAccessToken: vi.fn(() => "b".repeat(64)), readActiveAccess: vi.fn()
+  hashAccessToken: vi.fn(() => "b".repeat(64)), readAccessStatus: vi.fn()
 }));
 vi.mock("@/server/billing", () => helpers);
 
@@ -12,7 +12,7 @@ describe("POST /api/billing/status", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     helpers.billingEnabled.mockReturnValue(true);
-    helpers.readActiveAccess.mockResolvedValue(null);
+    helpers.readAccessStatus.mockResolvedValue(null);
   });
 
   it("does not unlock from the success URL without server-verified payment", async () => {
@@ -22,7 +22,7 @@ describe("POST /api/billing/status", () => {
       method: "POST", headers: { origin: "https://staging.example", "content-type": "application/json" },
       body: JSON.stringify({ accessToken: "11111111-1111-4111-8111-111111111111", sessionId: "cs_test" })
     }));
-    expect(await response.json()).toEqual({ active: false });
+    expect(await response.json()).toEqual({ active: false, expired: false });
   });
 
   it("returns access only after the paid session is activated", async () => {
@@ -36,6 +36,23 @@ describe("POST /api/billing/status", () => {
       active: true,
       expiresAt: "2026-09-14T12:00:00.000Z",
       scanSource: "camera"
+    });
+  });
+
+  it("marks a previous purchase as expired so the client can offer another pass", async () => {
+    helpers.readAccessStatus.mockResolvedValue({
+      active: false,
+      expired: true,
+      expiresAt: "2026-09-07T12:00:00.000Z"
+    });
+    const response = await POST(new Request("https://staging.example/api/billing/status", {
+      method: "POST", headers: { origin: "https://staging.example", "content-type": "application/json" },
+      body: JSON.stringify({ accessToken: "11111111-1111-4111-8111-111111111111" })
+    }));
+    expect(await response.json()).toEqual({
+      active: false,
+      expired: true,
+      expiresAt: "2026-09-07T12:00:00.000Z"
     });
   });
 });

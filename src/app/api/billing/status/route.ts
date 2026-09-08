@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { activateCheckout, billingEnabled, getStripe, hashAccessToken, readActiveAccess } from "@/server/billing";
+import { activateCheckout, billingEnabled, getStripe, hashAccessToken, readAccessStatus } from "@/server/billing";
 import { readBoundedJson } from "@/server/request-body";
 import { hasTrustedBrowserOrigin } from "@/server/request-origin";
 import { createRecognitionRateLimiter, recognitionClientKey } from "@/server/rate-limit";
@@ -29,8 +29,8 @@ export async function POST(request: Request) {
         scanSource: session.metadata?.scan_source === "upload" ? "upload" : "camera"
       });
     }
-    const access = await readActiveAccess(accessTokenHash);
-    return NextResponse.json({ active: Boolean(access), ...access }, { headers: { "cache-control": "no-store" } });
+    const access = await readAccessStatus(accessTokenHash);
+    return NextResponse.json(access || { active: false, expired: false }, { headers: { "cache-control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "access_check_failed" }, { status: 503 });
   }

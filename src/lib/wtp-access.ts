@@ -43,6 +43,17 @@ export function freeScanAllowanceLabel(completedScans: number): string {
   return `${remaining} free ${remaining === 1 ? "scan" : "scans"} left`;
 }
 
+export function paidAccessDaysRemaining(expiresAt: string, now = Date.now()): number {
+  const expiry = Date.parse(expiresAt);
+  if (!Number.isFinite(expiry)) return 0;
+  return Math.max(0, Math.ceil((expiry - now) / (24 * 60 * 60 * 1_000)));
+}
+
+export function paidAccessAllowanceLabel(expiresAt: string, now = Date.now()): string {
+  const remaining = paidAccessDaysRemaining(expiresAt, now);
+  return `${remaining} ${remaining === 1 ? "day" : "days"} left`;
+}
+
 export function recordFreeScan(storage: Pick<Storage, "getItem" | "setItem">): number {
   const next = Math.min(FREE_REAL_SCANS, readFreeScanCount(storage) + 1);
   try {

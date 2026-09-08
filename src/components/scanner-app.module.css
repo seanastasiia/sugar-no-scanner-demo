@@ -250,18 +250,39 @@
 }
 .freeScanAllowance {
   position: absolute;
-  top: calc(56px + env(safe-area-inset-top));
+  top: calc(67px + env(safe-area-inset-top));
   left: max(24px, env(safe-area-inset-left));
-  margin: 0;
-  padding: 6px 11px;
-  border: 1px solid #ffffff52;
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 7px;
+  margin: 10px 0 12px;
+  padding: 0 10px;
+  border: 1px solid #ffffff8f;
   border-radius: 999px;
-  background: #222228d9;
-  color: #fff;
-  font: 600 13px/18px var(--font-display);
+  background: #ffffffe0;
+  color: #1c1c1e;
+  font: 650 13px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
   letter-spacing: 0.1px;
-  box-shadow: 0 3px 12px #0000001f;
-  backdrop-filter: blur(10px);
+  box-shadow: 0 1px 3px #00000024;
+  backdrop-filter: blur(14px) saturate(1.2);
+  white-space: nowrap;
+}
+.freeScanAllowance::before {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: #0a84ff;
+  content: "";
+}
+.paidAccessAllowance {
+  background: #e9f4fef0;
+  border-color: #c7e4ff;
+}
+.noFreeScanAllowance::before {
+  background: #f14e58;
 }
 .experience {
   --collapsed-sheet-height: 324px;

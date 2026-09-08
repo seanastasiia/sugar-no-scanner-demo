@@ -63,6 +63,7 @@ import {
   captureAttribution,
   FREE_REAL_SCANS,
   freeScanAllowanceLabel,
+  paidAccessAllowanceLabel,
   readFreeScanCount,
   readOrCreateAccessToken,
   recordFreeScan,
@@ -355,6 +356,9 @@ export function ScannerApp({
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [paymentSuccessOpen, setPaymentSuccessOpen] = useState(false);
   const [paidAccess, setPaidAccess] = useState(false);
+  const [accessExpiresAt, setAccessExpiresAt] = useState<string | null>(null);
+  const [accessExpired, setAccessExpired] = useState(false);
+  const [accessClock, setAccessClock] = useState(() => Date.now());
   const [accessCheckPending, setAccessCheckPending] = useState(paywallEnabled);
   const [freeScanCount, setFreeScanCount] = useState(0);
   const feedbackFocusRef = useRef<HTMLButtonElement>(null);
@@ -404,6 +408,10 @@ export function ScannerApp({
   }, [freeScanCount, track]);
 
   const realScanRequiresPayment = paywallEnabled && !paidAccess && freeScanCount >= FREE_REAL_SCANS;
+  const showAccessBadge = paywallEnabled && ["camera", "upload"].includes(source) && (!paidAccess || Boolean(accessExpiresAt));
+  const accessAllowanceLabel = paidAccess && accessExpiresAt
+    ? paidAccessAllowanceLabel(accessExpiresAt, accessClock)
+    : freeScanAllowanceLabel(freeScanCount);
 
   const hydrateProducts = useCallback(async (ids: string[]) => {
     const uniqueIds = [...new Set(ids)].filter((id) => !productFetchesRef.current.has(id));
@@ -1223,17 +1231,27 @@ export function ScannerApp({
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body)
     }).then(async (response) => {
       if (!response.ok) throw new Error("access_check_failed");
-      const result = await response.json() as { active?: boolean; scanSource?: ScanSource };
+      const result = await response.json() as {
+        active?: boolean;
+        expired?: boolean;
+        expiresAt?: string;
+        scanSource?: ScanSource;
+      };
       if (result.active) {
         setPaidAccess(true);
+        setAccessExpiresAt(result.expiresAt || null);
+        setAccessExpired(false);
         setPaywallOpen(false);
         if (restoreToken) track("access_restored", "camera");
         else if (checkout === "success") {
           setPaymentSuccessOpen(true);
           track("checkout_completed", result.scanSource || "camera");
         }
-      } else if (checkout === "success") {
-        setPaywallOpen(true);
+      } else {
+        setPaidAccess(false);
+        setAccessExpiresAt(result.expiresAt || null);
+        setAccessExpired(Boolean(result.expired));
+        if (checkout === "success") setPaywallOpen(true);
       }
     }).catch(() => {
       if (checkout === "success" || restoreToken) setPaywallOpen(true);
@@ -1248,6 +1266,25 @@ export function ScannerApp({
       }
     });
   }, [paywallEnabled, track]);
+
+  useEffect(() => {
+    if (!paidAccess || !accessExpiresAt) return;
+    const refresh = () => {
+      const now = Date.now();
+      setAccessClock(now);
+      if (Date.parse(accessExpiresAt) <= now) {
+        setPaidAccess(false);
+        setAccessExpired(true);
+      }
+    };
+    refresh();
+    const interval = window.setInterval(refresh, 60_000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [accessExpiresAt, paidAccess]);
 
   const beginCheckout = useCallback(async () => {
     const accessToken = accessTokenRef.current || readOrCreateAccessToken(window.localStorage);
@@ -1561,9 +1598,12 @@ export function ScannerApp({
             priority
             unoptimized
           />
-          {paywallEnabled && !paidAccess ? (
-            <p className={styles.freeScanAllowance} aria-live="polite">
-              {freeScanAllowanceLabel(freeScanCount)}
+          {showAccessBadge ? (
+            <p
+              className={`${styles.freeScanAllowance} ${paidAccess ? styles.paidAccessAllowance : ""} ${!paidAccess && freeScanCount >= FREE_REAL_SCANS ? styles.noFreeScanAllowance : ""}`}
+              aria-live="polite"
+            >
+              {accessAllowanceLabel}
             </p>
           ) : null}
         </header>
@@ -2210,13 +2250,17 @@ export function ScannerApp({
       ) : null}
       {paywallOpen ? (
         <PaywallDialog
+          variant={accessExpired ? "renewal" : "initial"}
           onClose={() => setPaywallOpen(false)}
           onCheckout={beginCheckout}
           onRestore={requestAccessRestore}
         />
       ) : null}
       {paymentSuccessOpen ? (
-        <PaymentSuccessDialog onContinue={() => setPaymentSuccessOpen(false)} />
+        <PaymentSuccessDialog
+          expiresAt={accessExpiresAt}
+          onContinue={() => setPaymentSuccessOpen(false)}
+        />
       ) : null}
     </main>
   );
