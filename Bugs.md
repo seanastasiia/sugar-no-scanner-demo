@@ -1,5 +1,7 @@
 # Bugs
 
+- **2026-09-08: some devices kept showing the pre-paywall staging UI after a successful deployment.** The root page was statically rendered with a year-long shared edge cache, so a normal Safari refresh could still receive stale HTML. The scanner root is now dynamic and navigation remains network-first through the service worker, allowing the current Railway deployment and its feature flags to appear after a normal reload. Production remains unchanged.
+
 - **2026-09-07: identity-only results used a free scan, and successful checkout returned to an idle camera.** The staging WTP counter now advances only after a real camera/upload session produces at least one confirmed Sugar.no rating. `Nutrition not verified` alone keeps the allowance unchanged. A server-verified Stripe return now shows a payment success screen; `Start scanning` then requests the camera with paid access already active. Production remains unchanged.
 
 - **2026-09-07: staging did not show how many free scans remained.** The allowance existed only in browser storage, so users could not tell whether a recognition attempt had counted or when the paywall would appear. When the staging paywall experiment is enabled and access is unpaid, the scanner now shows the live remaining allowance with singular/plural wording. Production remains unchanged.
