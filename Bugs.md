@@ -50,6 +50,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-08, staging: shared AR visual polish was missing from the willingness-to-pay build.** Ported the compact demo chooser, moved the camera demo action below the status panel at full width, and made the official Sugar.no wordmark a labelled 44 px home link in onboarding, camera, expanded results and the demo chooser. Personal Shelf Rank remains outside the launch entry points; recognition, scoring, free-scan allowance and Stripe behavior are unchanged.
+
 - **2026-09-03: production feedback had no enabled email delivery or Amplitude project.** Added explicit matching production/staging email targets with separate subject labels and production-isolation tests. Production has separate integration keys; local/preview mail stays disabled and E2E clears both provider keys. Existing staging configuration remains compatible.
 - **2026-09-03: new scans broke anonymous onboarding funnels.** Amplitude previously used the rotating scan ID as device ID. It now uses a separate anonymous tab-visit UUID across onboarding, sample/upload/repeat scans and reloads; Supabase retains individual scan IDs and the validated visit link. Old clients remain accepted. This is not cross-day unique-person or retention tracking.
 - **2026-09-03: the experimental rating appeared in AR (Launch).** A separate main-page entry flag hides the switch and New rating demo link only in launch. Direct rating demo/API, independent preview, evidence and scoring code are retained. Test the launch entry flag false and the preview/default true independently.

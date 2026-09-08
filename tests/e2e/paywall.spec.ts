@@ -98,7 +98,7 @@ test("the access badge never overlaps camera or saved-photo content", async ({ p
   }
 
   await page.getByRole("button", { name: "Show demo" }).click();
-  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  const chooser = page.getByRole("dialog", { name: "See how it works" });
   await chooser.locator('input[type="file"]').setInputFiles({
     name: "badge-layout-check.png",
     mimeType: "image/png",

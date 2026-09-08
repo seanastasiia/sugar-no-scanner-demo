@@ -29,6 +29,8 @@ The isolated `codex/wtp-stripe-staging` experiment keeps three successful real c
 
 The scanner root is rendered dynamically so Railway deployment swaps and environment flags are not hidden behind a stale edge-cached HTML shell. The service worker remains network-first for navigation and falls back to `/offline.html` only when the network is unavailable.
 
+The staging interface also carries the shared AR visual polish from 8 September 2026: the demo chooser uses the compact single-line heading and matching action rows, the live camera places a full-width `Show demo` action below the status panel, and the official Sugar.no wordmark is a labelled 44 px home link from onboarding, camera, expanded results and the demo chooser. Personal Shelf Rank remains hidden from the launch entry points, and these presentation changes do not alter recognition, rating, allowance or payment behavior.
+
 - Stripe Checkout collects payment and email. The client never receives a Stripe secret.
 - A success URL alone never unlocks the scanner. The server retrieves the Checkout Session and the signed webhook provides the independent fulfilment path.
 - Supabase stores the entitlement and only one-way hashes of browser/restore tokens. Apply `supabase/migrations/202609070001_scanner_wtp_billing.sql` and then `supabase/migrations/202609070002_scanner_wtp_service_role_grants.sql` only to the approved staging project before enabling the flag. The second migration grants the minimum table operations required by the server-only role; browser roles retain no access.
