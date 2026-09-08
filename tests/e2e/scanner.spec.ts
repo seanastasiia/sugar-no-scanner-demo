@@ -106,7 +106,7 @@ async function expectOfficialSugarNoLogo(page: Page) {
 
 async function openDemoScene(page: Page, name: "Shelf demo" | "Checkout demo") {
   await page.getByRole("button", { name: "Show demo" }).click();
-  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  const chooser = page.getByRole("dialog", { name: "See how it works" });
   await expect(chooser).toBeVisible();
   await chooser.getByRole("button", { name: new RegExp(name) }).click();
   await expect(page.getByText(/^(Shelf photo|Checkout photo)$/)).toHaveCount(0);
@@ -408,7 +408,7 @@ const onePixelPng = Buffer.from(
 async function chooseSavedPhoto(page: Page, name = "qa-shelf.png") {
   const showDemo = page.getByRole("button", { name: "Show demo" });
   await showDemo.click();
-  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  const chooser = page.getByRole("dialog", { name: "See how it works" });
   await page.waitForTimeout(150);
   if (!(await chooser.isVisible())) await showDemo.click();
   await expect(chooser).toBeVisible({ timeout: 10_000 });
@@ -434,7 +434,7 @@ async function chooseLandscapeSavedPhoto(page: Page, name = "qa-landscape-shelf.
     return canvas.toDataURL("image/jpeg", 0.8).split(",")[1];
   });
   await page.getByRole("button", { name: "Show demo" }).click();
-  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  const chooser = page.getByRole("dialog", { name: "See how it works" });
   await expect(chooser).toBeVisible();
   await chooser.locator('input[type="file"]').setInputFiles({
     name,
@@ -462,7 +462,7 @@ async function chooseLongPortraitSavedPhoto(page: Page, name = "qa-online-store-
     return canvas.toDataURL("image/jpeg", 0.8).split(",")[1];
   });
   await page.getByRole("button", { name: "Show demo" }).click();
-  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  const chooser = page.getByRole("dialog", { name: "See how it works" });
   await expect(chooser).toBeVisible();
   await chooser.locator('input[type="file"]').setInputFiles({
     name,
@@ -1185,13 +1185,18 @@ test("checkout demo cancels an in-flight live-camera read before showing determi
 });
 
 test("demo chooser supports shelf, checkout and a clear return to live camera", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
   await unlock(page);
   await page.getByRole("button", { name: "Show demo" }).click();
   await expect(page.getByText("Investor test aisles", { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "See how a shelf scan works" })).toBeVisible();
+  const demoHeading = page.getByRole("heading", { name: "See how it works" });
+  await expect(demoHeading).toBeVisible();
+  await expect(page.getByText("Compare the example products or try a saved photo.", { exact: true })).toHaveCount(0);
+  const headingBox = await demoHeading.boundingBox();
+  expect(headingBox?.height).toBeLessThanOrEqual(38);
   await expect(page.getByRole("button", { name: "Shelf demo" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Checkout demo" })).toBeVisible();
-  const chooser = page.getByRole("dialog", { name: "See how a shelf scan works" });
+  const chooser = page.getByRole("dialog", { name: "See how it works" });
   await expect(chooser).toHaveCSS("background-color", "rgb(242, 242, 247)");
   expect(await chooser.getByRole("button", { name: "Back to live camera" }).evaluate((element) => getComputedStyle(element).backgroundImage)).toContain("linear-gradient");
   await page.getByRole("button", { name: "Shelf demo" }).click();
@@ -1554,7 +1559,7 @@ test("fullscreen camera keeps its overlay controls and reading status clear on s
       await page.screenshot({ path: `test-results/fullscreen-camera-reading-${viewport.width}.png` });
     }
     await page.getByRole("button", { name: "Show demo" }).click();
-    await expect(page.getByRole("dialog", { name: "See how a shelf scan works" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "See how it works" })).toBeVisible();
   } finally {
     releaseRecognition();
   }

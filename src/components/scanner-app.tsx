@@ -1999,8 +1999,7 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
             </div>
             <div className={styles.demoHeading}>
               <div>
-                <h2 id="demo-title">See how a shelf scan works</h2>
-                <p>Compare the example products or try a saved photo.</p>
+                <h2 id="demo-title">See how it works</h2>
               </div>
             </div>
             <div className={styles.demoChoices}>
