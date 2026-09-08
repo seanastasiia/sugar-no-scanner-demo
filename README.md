@@ -159,9 +159,9 @@ Core runtime values:
 - `GEMINI_WEB_NUTRITION_TIMEOUT_MS`: optional grounded-search deadline in milliseconds; defaults to `12000` and is clamped to Google's supported `10000` to `30000` range.
 - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: optional server-only catalog and metadata analytics configuration. The service role key must never be exposed through a `NEXT_PUBLIC_` variable.
 - `AMPLITUDE_API_KEY`: optional server-only Amplitude project key. When present, `/api/events` mirrors approved anonymous properties to the EU ingestion endpoint after storing the complete event in Supabase. Amplitude failure is non-blocking.
-- `AMPLITUDE_ENVIRONMENT`: environment label attached to Amplitude events; use `production` for AR Launch and `staging` for the isolated staging project. Never point production at the staging project key.
-- `WTP_PAYWALL_ENABLED`: defaults off. The isolated staging test leaves three successful real scans free before showing the one-time offer.
-- `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`: staging test-mode Checkout configuration. Never use a `NEXT_PUBLIC_` variable or commit these values.
+- `AMPLITUDE_ENVIRONMENT`: environment label attached to Amplitude events; use `production` for AR Launch, `pilot` for the paid pilot and `staging` for the isolated test project. Never point staging at the production project key.
+- `WTP_PAYWALL_ENABLED`: defaults off. Staging and the separate paid pilot leave three successful real scans free before showing the one-time offer; the main production environment remains off.
+- `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`: server-only Checkout configuration. Staging uses test-mode values; the separate pilot uses live-mode values. Never use a `NEXT_PUBLIC_` variable or commit these values.
 - `BILLING_EMAIL_FROM`: optional verified Resend sender for access restoration; it falls back to the environment's feedback sender.
 - `DEMO_ACCESS_CODE` and `DEMO_SESSION_SECRET`: server-only signing inputs for the silent 12-hour same-site session. Their presence does not create a user-facing access gate.
 - `COMMIT_SHA`: fallback health metadata for direct Railway uploads.

@@ -50,6 +50,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-08, pilot preparation: feedback delivery rejected the new isolated Railway environment.** Added an explicit `pilot` environment target with a distinct subject/body label while preserving exact Railway-environment matching. Staging and production notification configurations cannot leak into the pilot.
+
 - **2026-09-08, staging: shared AR visual polish was missing from the willingness-to-pay build.** Ported the compact demo chooser, moved the camera demo action below the status panel at full width, and made the official Sugar.no wordmark a labelled 44 px home link in onboarding, camera, expanded results and the demo chooser. Personal Shelf Rank remains outside the launch entry points; recognition, scoring, free-scan allowance and Stripe behavior are unchanged.
 
 - **2026-09-03: production feedback had no enabled email delivery or Amplitude project.** Added explicit matching production/staging email targets with separate subject labels and production-isolation tests. Production has separate integration keys; local/preview mail stays disabled and E2E clears both provider keys. Existing staging configuration remains compatible.
