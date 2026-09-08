@@ -38,7 +38,13 @@ Verified locally on branch `codex/demo-button-row-preview`, based on `be79bb9` b
 - `railway run npm run build` — the independent production build also passed with preview environment variables.
 - `git diff --check` — passed.
 
-Production commit, Railway deployment and live health are recorded below after release.
+## Production release
+
+- Application commit: `c5e9d020f0214a90f188d47f4e096b3c7ca658c1` on GitHub `main`.
+- Railway production deployment: `146fb719-c8b3-47cf-a1d7-d18763cd8ed6`, status `SUCCESS`.
+- Live `/api/health` returned the exact application commit and 7,512 Personal Shelf observations: 2,334 complete, 3,426 provisional and 1,752 unscored.
+- Production `/` and `/demo/personal-shelf` both returned HTTP 200.
+- Immediate rollback tag: `production-before-stockmann-personal-rank-2026-09-08` at `be79bb9`.
 
 ## Owner acceptance
 
