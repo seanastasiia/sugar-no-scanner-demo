@@ -2583,4 +2583,7 @@ test("saved-photo recovery retries the same prepared image without reopening the
   expect(submittedImages).toHaveLength(2);
   expect(submittedImages[1]).toBe(submittedImages[0]);
   await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
+  if (process.env.WTP_PAYWALL_ENABLED === "true") {
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("sugar_scanner_free_scans_v1"))).toBe("1");
+  }
 });
