@@ -44,6 +44,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-08: the Sugar.no wordmark did not consistently act as home navigation.** Onboarding, camera, expanded results, the demo chooser and standalone Personal Rank demo now reuse one labelled home-link component. It targets `/`, performs a clean root reload when already inside scanner state, keeps a 44 px minimum touch target and preserves the existing logo artwork and layout.
+
 - **2026-09-08, preview: the standalone Personal Shelf demo had drifted from the real scan cards.** It now reuses the same presentational results renderer with `Best products`, the six-signal criteria line, one page-level method disclosure, neutral cards, gradient Fit badges, ranks, compact sugar/protein values and `Why?` reasons. The contradictory unscored fixture is filtered out before rendering. The fixed route still makes no camera, recognition, API or database request, and scoring/evidence are unchanged.
 
 - **2026-09-08: camera demo access competed with the header and did not read as part of the active scan controls.** `Show demo` now sits below the status/loading pill, spans the same safe-area width and keeps a 12 px gap; `Leave feedback` remains alone in the top-right. Small-phone and landscape tests verify alignment, touch size, viewport containment and no overlap.

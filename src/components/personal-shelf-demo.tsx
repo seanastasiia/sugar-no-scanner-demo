@@ -1,10 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, Package } from "lucide-react";
 import { useState } from "react";
+import Image from "next/image";
 import type { ProductRecord, ScoredProduct } from "@/lib/types";
+import { ScannerHomeLogo } from "./scanner-home-logo";
 import { PersonalShelfResults } from "./personal-shelf-results";
 import styles from "./personal-shelf-demo.module.css";
 
@@ -33,14 +34,7 @@ export function PersonalShelfDemo({ products }: { products: ScoredProduct[] }) {
   return (
     <main className={styles.page}>
       <header className={styles.topbar}>
-        <Image
-          className={styles.wordmark}
-          src="/brand/sugar-no-logo-white.svg"
-          alt="Sugar.no"
-          width={137}
-          height={26.07}
-          unoptimized
-        />
+        <ScannerHomeLogo imageClassName={styles.wordmark} />
         <Link className={styles.back} href="/" prefetch={false} aria-label="Back to scanner">
           <ChevronDown aria-hidden="true" size={22} />
         </Link>

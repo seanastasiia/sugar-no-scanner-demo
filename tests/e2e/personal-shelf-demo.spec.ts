@@ -103,7 +103,11 @@ test("rating demo is reachable from Show demo and can return to the unchanged sc
   await expect(page).toHaveURL(new RegExp(`${demoPath}$`));
   await expect(page.getByRole("heading", { name: "Best products", exact: true, level: 1 })).toBeVisible();
   await expect(page.getByText("64/100", { exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "Back to scanner", exact: true }).click();
+  const logoHome = page.getByRole("link", { name: "Sugar.no scanner home", exact: true });
+  await expect(logoHome).toHaveAttribute("href", "/");
+  const logoTarget = await logoHome.boundingBox();
+  expect(logoTarget?.height).toBeGreaterThanOrEqual(44);
+  await logoHome.click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await expect(page.getByRole("button", { name: "Enable camera", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Show demo", exact: true }).click();
