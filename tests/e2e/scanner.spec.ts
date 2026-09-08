@@ -74,7 +74,10 @@ async function expectVisibleTouchTargets(page: Page) {
 }
 
 async function expectOfficialSugarNoLogo(page: Page) {
-  const logo = page.getByAltText("Sugar.no", { exact: true });
+  const homeLink = page.getByRole("link", { name: "Sugar.no scanner home", exact: true });
+  const logo = homeLink.locator("img");
+  await expect(homeLink).toHaveCount(1);
+  await expect(homeLink).toHaveAttribute("href", "/");
   await expect(logo).toHaveCount(1);
   await expect(logo).toBeVisible();
   await expect
@@ -101,6 +104,9 @@ async function expectOfficialSugarNoLogo(page: Page) {
   expect(details.naturalWidth).toBeGreaterThan(0);
   expect(details.naturalHeight).toBeGreaterThan(0);
   expect(details.ratio).toBeCloseTo(137 / 26.07, 2);
+  const homeTarget = await homeLink.boundingBox();
+  expect(homeTarget?.width).toBeGreaterThanOrEqual(44);
+  expect(homeTarget?.height).toBeGreaterThanOrEqual(44);
   await expectInsideViewport(page, logo);
 }
 
@@ -574,6 +580,7 @@ test("first visit explains the pilot before requesting camera permission", async
   await page.goto("/");
   await expect(page.getByLabel("Demo access code")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Find a better fit." })).toBeVisible();
+  await expectOfficialSugarNoLogo(page);
   await expect(page.getByText("Point your camera at a shelf.Compare similar productsby sugar and protein.")).toBeVisible();
   await expect(page.getByTestId("onboarding-preview")).toBeVisible();
   await expect(page.getByAltText("Protein bars on a shop shelf. Four products are outlined and one is labelled Great fit.")).toBeVisible();
@@ -609,6 +616,20 @@ test("first visit explains the pilot before requesting camera permission", async
   await expect(page.getByText(/Sent to Google Gemini/i)).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem("sugar_scanner_onboarding_v1"))).toBe("completed");
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(1);
+});
+
+test("Sugar.no logo returns to a clean scanner home from an open demo chooser", async ({ page }) => {
+  await unlock(page);
+  await page.getByRole("button", { name: "Show demo", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "See how it works", exact: true })).toBeVisible();
+
+  const logoHome = page.getByRole("link", { name: "Sugar.no scanner home", exact: true });
+  await expect(logoHome).toHaveAttribute("href", "/");
+  await logoHome.click();
+
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("dialog", { name: "See how it works", exact: true })).toHaveCount(0);
+  await expect(page.getByLabel("Live camera scanner")).toBeVisible();
 });
 
 test("completed onboarding stays hidden unless QA forces it", async ({ page }) => {

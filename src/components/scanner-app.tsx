@@ -50,6 +50,7 @@ import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from
 import { productDisplayName, productDisplayImage } from "@/lib/product-display";
 import { compactNutritionLabel } from "@/lib/nutrition-display";
 import { PersonalShelfResults, ShelfRankToggle } from "./personal-shelf-results";
+import { ScannerHomeLogo } from "./scanner-home-logo";
 import { isExactOnlineSaving, retailerOfferKey } from "@/lib/online-offer";
 import {
   readOnboardingCompletion,
@@ -1591,15 +1592,7 @@ export function ScannerApp({
     >
       {!resultsAreExpanded && !demoOpen ? (
         <header className={`${styles.header} ${styles.scannerHeader}`} inert={feedbackOpen || paywallOpen || paymentSuccessOpen}>
-          <Image
-            className={styles.wordmark}
-            src="/brand/sugar-no-logo-white.svg"
-            alt="Sugar.no"
-            width={137}
-            height={26.07}
-            priority
-            unoptimized
-          />
+          <ScannerHomeLogo imageClassName={styles.wordmark} priority />
           {showAccessBadge ? (
             <p
               className={`${styles.freeScanAllowance} ${paidAccess ? styles.paidAccessAllowance : ""} ${!paidAccess && freeScanCount >= FREE_REAL_SCANS ? styles.noFreeScanAllowance : ""}`}
@@ -1883,14 +1876,7 @@ export function ScannerApp({
             <div className={styles.sheetChrome}>
               {resultsAreExpanded ? (
                 <>
-                  <Image
-                    className={styles.wordmark}
-                    src="/brand/sugar-no-logo-white.svg"
-                    alt="Sugar.no"
-                    width={137}
-                    height={26.07}
-                    unoptimized
-                  />
+                  <ScannerHomeLogo imageClassName={styles.wordmark} />
                   <button
                     className={styles.sheetIconButton}
                     type="button"
@@ -2198,7 +2184,7 @@ export function ScannerApp({
             tabIndex={-1}
           >
             <div className={styles.demoNavigation}>
-              <Image className={styles.wordmark} src="/brand/sugar-no-logo-white.svg" alt="Sugar.no" width={137} height={26.07} unoptimized />
+              <ScannerHomeLogo imageClassName={styles.wordmark} />
               <button type="button" onClick={closeDemo} aria-label="Close demo chooser">
                 <X aria-hidden="true" size={20} />
               </button>

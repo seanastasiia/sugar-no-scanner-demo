@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef } from "react";
+import { ScannerHomeLogo } from "./scanner-home-logo";
 import styles from "./scanner-app.module.css";
 
 export function PilotOnboarding({ onComplete, onTrySample }: { onComplete: () => void; onTrySample: () => void }) {
@@ -14,17 +15,7 @@ export function PilotOnboarding({ onComplete, onTrySample }: { onComplete: () =>
   return (
     <section className={styles.onboarding} aria-labelledby="onboarding-title">
       <div className={styles.onboardingHeader}>
-        <div className={styles.onboardingBrand}>
-          <Image
-            className={styles.onboardingLogo}
-            src="/brand/sugar-no-logo-white.svg"
-            alt="Sugar.no"
-            width={137}
-            height={26.07}
-            priority
-            unoptimized
-          />
-        </div>
+        <ScannerHomeLogo imageClassName={styles.onboardingLogo} priority />
       </div>
       <div className={styles.onboardingContent}>
         <div className={styles.onboardingMain}>

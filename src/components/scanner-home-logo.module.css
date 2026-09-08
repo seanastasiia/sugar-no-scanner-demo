@@ -1,0 +1,10 @@
+.link {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  flex: none;
+  align-items: center;
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+}
