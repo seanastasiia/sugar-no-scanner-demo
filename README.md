@@ -6,6 +6,14 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Repository: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
 - Status: public investor concept with same-origin API safeguards, not a medical device or production-wide grocery catalog.
 
+## Selling onboarding preview
+
+Branch `codex/selling-onboarding-preview` is an isolated experiment based on the live-pilot commit `f4c185d`. It does not change the current pilot, staging or production deployments.
+
+The experiment replaces the one-screen welcome with a four-step, sub-one-minute story: explain the shelf problem, ask one shopper-friction question, let the shopper reveal a sample comparison, then reflect the answer and explain the existing offer (3 free successful scans, followed by a one-time €2.99 payment for 7 days). `Skip` and the final CTA are the only paths that request the live camera; the sample path does not. Completion still uses `sugar_scanner_onboarding_v1`, while anonymous funnel events report onboarding version `5`.
+
+The visual language comes from the Sugar.no Figma paywall and shared design system: SF Pro Rounded/system typography, pale-blue product surfaces, coral primary action, blue progress, rounded white cards, the official Sugar.no mark and the existing shelf scan motif. The implementation deliberately omits invented reviews, medical claims, auto-renewal language and artificial urgency. Research notes, product hypotheses and the measurement plan live in [`docs/onboarding-selling-flow.md`](docs/onboarding-selling-flow.md).
+
 ## Approved Pen release
 
 The scanner implements the approved Pen screen/state designs from 3 September 2026. Open [production with welcome forced](https://sugar-no-scanner-demo-production.up.railway.app/?onboarding=1). The release combines Pen `c151e92` with the existing production catalog, shared web cards and opt-in Personal Shelf Rank, rather than reverting production to the old staging baseline.

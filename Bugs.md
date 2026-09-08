@@ -50,6 +50,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-08, isolated preview: the pilot welcome explained the scanner but did not build a clear path from ad click to perceived value and the paid offer.** A separate branch now tests a four-step selling flow with one self-identification question, a hands-on sample scan, answer reflection and transparent price framing. Camera permission stays gesture-gated, only successful results consume the allowance, and no unverified testimonial or health claim was added. Current pilot, staging and production remain unchanged.
+
 - **2026-09-08, pilot preparation: feedback delivery rejected the new isolated Railway environment.** Added an explicit `pilot` environment target with a distinct subject/body label while preserving exact Railway-environment matching. Staging and production notification configurations cannot leak into the pilot.
 
 - **2026-09-08, staging: shared AR visual polish was missing from the willingness-to-pay build.** Ported the compact demo chooser, moved the camera demo action below the status panel at full width, and made the official Sugar.no wordmark a labelled 44 px home link in onboarding, camera, expanded results and the demo chooser. Personal Shelf Rank remains outside the launch entry points; recognition, scoring, free-scan allowance and Stripe behavior are unchanged.
