@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 const ACCESS_COOKIE = "sugar_scanner_access";
-const PUBLIC_PATHS = new Set(["/access", "/api/auth", "/api/health", "/offline.html"]);
+const PUBLIC_PATHS = new Set(["/access", "/api/auth", "/api/health", "/api/billing/webhook", "/offline.html"]);
 
 function expectedToken() {
   const code = process.env.DEMO_ACCESS_CODE?.trim();

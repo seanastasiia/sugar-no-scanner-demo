@@ -5,6 +5,7 @@ import {
   parseBarboraProductPage,
   rankBarboraCandidates,
   rankIndexedBarboraCandidates,
+  resolveIndexedBarboraCandidate,
   normalizeRetailText,
   retailerBrandMatches
 } from "./barbora-catalog";
@@ -202,6 +203,18 @@ describe("Barbora product lookup", () => {
       ]
     );
     expect(candidates[0]?.slug).toBe("cepumi-selga-ar-iebiez-pienu-180-g");
+  });
+
+  it("keeps an exact Fazer bread match when search terms contain text from a neighbouring pack", () => {
+    expect(
+      resolveIndexedBarboraCandidate({
+        brand: "Fazer",
+        name: "Sēklu bagātīgā Tostermaize",
+        variant: "",
+        packSize: "",
+        searchTerms: ["Fazer Fazer Sēklu bagātīgā Tostermaize Crunchy fruit"]
+      })
+    ).toMatchObject({ slug: "tostermaize-fazer-seklu-bagatiga-450-g" });
   });
 
   it("uses the supported dairy-dessert pack when the front sub-brand differs from the manufacturer brand", () => {

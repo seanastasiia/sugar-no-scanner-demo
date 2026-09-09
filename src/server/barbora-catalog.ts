@@ -470,10 +470,25 @@ export function visualBarboraCandidates(input: BarboraLookupInput, limit = 3): V
 }
 
 export function resolveIndexedBarboraCandidate(input: BarboraLookupInput): RankedBarboraCandidate | null {
-  const candidates = rankIndexedBarboraCandidates(input, listIndexedBarboraNutrition(), 2);
-  const best = candidates[0];
-  if (!best || !isExactBarboraMatch(best.score, candidates[1]?.score || 0)) return null;
-  return best;
+  const products = listIndexedBarboraNutrition();
+  const exactCandidate = (candidates: RankedBarboraCandidate[]) => {
+    const best = candidates[0];
+    return best && isExactBarboraMatch(best.score, candidates[1]?.score || 0) ? best : null;
+  };
+  const fullIdentityMatch = exactCandidate(rankIndexedBarboraCandidates(input, products, 2));
+
+  // Vision search terms can contain readable text from a neighbouring pack.
+  // Check the primary brand + product identity independently so that noisy
+  // context cannot hide an otherwise exact catalog match. Both paths retain
+  // the same confidence and candidate-margin gates, so ambiguous products
+  // still fail closed instead of inheriting nutrition from a similar SKU.
+  const primaryIdentityMatch = input.searchTerms.length
+    ? exactCandidate(rankIndexedBarboraCandidates({ ...input, searchTerms: [] }, products, 2))
+    : null;
+
+  if (!fullIdentityMatch) return primaryIdentityMatch;
+  if (!primaryIdentityMatch) return fullIdentityMatch;
+  return fullIdentityMatch.score >= primaryIdentityMatch.score ? fullIdentityMatch : primaryIdentityMatch;
 }
 
 export function rankBarboraCandidates(

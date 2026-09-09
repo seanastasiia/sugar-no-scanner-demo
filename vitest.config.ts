@@ -14,6 +14,7 @@ export default defineConfig({
     // Several integration files dynamically load the full 20k-record catalog.
     // One worker avoids CPU contention crossing Vitest's per-test deadline.
     maxWorkers: 1,
+    testTimeout: 15_000,
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary", "html"],

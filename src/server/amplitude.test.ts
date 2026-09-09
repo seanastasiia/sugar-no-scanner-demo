@@ -114,4 +114,23 @@ describe("Amplitude analytics", () => {
       error_category: "recognition_http_error"
     });
   });
+
+  it("keeps only an approved onboarding path", () => {
+    expect(amplitudeEventProperties({
+      ...event,
+      name: "onboarding_path_selected",
+      metadata: { onboardingVersion: 7, path: "in_store" }
+    })).toEqual({
+      source: "camera",
+      environment: "staging",
+      onboarding_version: 7,
+      onboarding_path: "in_store"
+    });
+    expect(amplitudeEventProperties({ ...event, metadata: { path: "unexpected" } })).not.toHaveProperty("onboarding_path");
+  });
+
+  it("keeps only approved save actions", () => {
+    expect(amplitudeEventProperties({ ...event, metadata: { action: "copied" } })).toHaveProperty("onboarding_save_action", "copied");
+    expect(amplitudeEventProperties({ ...event, metadata: { action: "emailed" } })).not.toHaveProperty("onboarding_save_action");
+  });
 });

@@ -4,6 +4,10 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Open
 
+- **The willingness-to-pay gate is an experiment, not strong access control.** The three free successful scans are counted in browser storage, so clearing site data, Private Browsing, an in-app browser or another browser can reset the allowance. Paid access is server-verified and restorable by email. Keep this low-friction trade-off for the initial paid-acquisition pilot and monitor it before adding sign-in.
+
+- **A long local Mobile Safari run can occasionally retry before the feedback assertions start.** In the 9 September production-candidate run, all 71 scenarios passed, but the feedback case's first attempt timed out while opening the local page and passed on its automatic retry. The focused onboarding/layout checks passed cleanly. This is treated as harness startup flakiness, not hidden as a clean first-attempt pass; production HTTPS smoke remains required.
+
 - **2026-09-07, preview: 9,626 valid regional OFF products were discarded only because their rating data was incomplete.** They now live in a separate ODbL identity-only layer after GTIN, market, brand, name, food and source-quality checks. Exact barcode/source-name recognition can reuse them, but they carry no nutrition, ingredients, score or image and do not overlap the 1,096 nutrition-complete OFF rows. The preserved CSV has no labelled translations, so zero aliases are invented; multilingual name coverage still needs a richer exact source.
 
 - **2026-09-07, staging: the unified external-catalog seed sent a null alias for Barbora after the Livinn alias migration.** Mixed retailer upsert rows now carry an explicit empty Barbora alias array, preserving the database's non-null identity contract. The failed transaction did not reach the new OFF identity batch; the repeat seed is verified separately.
@@ -43,6 +47,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **Amplitude Starter limits Funnel charts to two steps.** The saved activation chart measures `app_opened` to `scan_completed`; onboarding, camera-permission, scan-start and feedback events remain available in Live Events and can be explored in separate charts without upgrading.
 
 ## Recently resolved
+
+- **2026-09-09: the first live Stripe payment completed but did not grant scanner access.** The billing migrations are now applied, the mismatched webhook endpoint is disabled, the replacement signed endpoint accepted the paid event, and Supabase stores the seven-day entitlement. The owner also verified that `Restore purchase` restores paid access in another browser without another charge.
 
 - **2026-09-09: the collapsed `Why this score` row had visibly more space below its label than above.** Its closed-state bottom margin now compensates for the parent card padding, making the visual space above and below the label equal while preserving the 44 px touch target. The expanded point grid, card width and scoring behavior are unchanged; the demo and real recognition renderer share the fix.
 

@@ -31,7 +31,7 @@ describe("feedback email", () => {
     vi.restoreAllMocks();
   });
 
-  it.each(["production", "local", ""]) ("does not send outside staging (%s)", async (environment) => {
+  it.each(["production", "pilot", "local", ""]) ("does not send when the default staging target does not match (%s)", async (environment) => {
     vi.stubEnv("RAILWAY_ENVIRONMENT_NAME", environment);
     expect(await sendFeedbackEmail(feedback)).toBe("disabled");
     expect(fetchMock).not.toHaveBeenCalled();
@@ -55,7 +55,18 @@ describe("feedback email", () => {
     expect(body.text).not.toContain("staging");
   });
 
-  it.each(["staging", "personal-rank-preview", "local", ""]) ("never leaks a production mail config into %s", async (environment) => {
+  it("sends pilot mail only with an explicitly matching target", async () => {
+    vi.stubEnv("RAILWAY_ENVIRONMENT_NAME", "pilot");
+    vi.stubEnv("FEEDBACK_EMAIL_ENVIRONMENT", "pilot");
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ id: "pilot-email" }), { status: 200 }));
+    expect(await sendFeedbackEmail(feedback)).toBe("sent");
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.subject).toBe("[Sugar.no pilot] Новый отзыв: Нужно улучшить");
+    expect(body.text).toContain("платном пилоте");
+    expect(body.text).toContain("Supabase pilot");
+  });
+
+  it.each(["staging", "pilot", "personal-rank-preview", "local", ""]) ("never leaks a production mail config into %s", async (environment) => {
     vi.stubEnv("RAILWAY_ENVIRONMENT_NAME", environment);
     vi.stubEnv("FEEDBACK_EMAIL_ENVIRONMENT", "production");
     expect(await sendFeedbackEmail(feedback)).toBe("disabled");

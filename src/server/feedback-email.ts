@@ -29,7 +29,7 @@ const contexts: Record<string, string> = {
 export async function sendFeedbackEmail(feedback: FeedbackEmail): Promise<FeedbackEmailDelivery> {
   const environment = process.env.FEEDBACK_EMAIL_ENVIRONMENT?.trim() || "staging";
   if (process.env.FEEDBACK_EMAIL_ENABLED !== "true"
-    || !["staging", "production"].includes(environment)
+    || !["staging", "pilot", "production"].includes(environment)
     || process.env.RAILWAY_ENVIRONMENT_NAME !== environment) {
     return "disabled";
   }
@@ -50,7 +50,11 @@ export async function sendFeedbackEmail(feedback: FeedbackEmail): Promise<Feedba
     to: [to],
     subject: `[Sugar.no ${environment}] Новый отзыв: ${rating}`,
     text: [
-      environment === "production" ? "Новый отзыв в основной версии Sugar.no Scanner" : "Новый отзыв в тестовой версии Sugar.no Scanner",
+      environment === "production"
+        ? "Новый отзыв в основной версии Sugar.no Scanner"
+        : environment === "pilot"
+          ? "Новый отзыв в платном пилоте Sugar.no Scanner"
+          : "Новый отзыв в тестовой версии Sugar.no Scanner",
       "",
       `Оценка: ${rating}`,
       `Причина: ${feedback.reason ? reasons[feedback.reason] || "Другое" : "Не указана"}`,

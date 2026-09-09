@@ -6,6 +6,18 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Repository: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
 - Status: public investor concept with same-origin API safeguards, not a medical device or production-wide grocery catalog.
 
+## Selling onboarding and paid launch
+
+On 9 September 2026 the owner approved onboarding version 7 and the willingness-to-pay experiment for the existing Railway production service. The production release merges the tested onboarding/payment work with the newer `main` catalog and opt-in Personal Shelf lane; it does not replace production with the older pilot branch.
+
+The experiment replaces the one-screen welcome with a context-aware, sub-one-minute story. Someone already in a shop goes from the promise directly to the transparent offer and camera. Someone who saw the Meta ad at home can reveal a real sample comparison, learn that a cupboard photo works too, and save a clean scanner link through the device share sheet for the next shop. The offer remains 3 free successful scans followed by a one-time €2.99 payment for 7 days. A decorative preference question was removed after a Claude growth-design review because it did not actually change the fixed two-factor Sugar.no ranking. The first screen shows only that four packages were found; the named winner and nutrition proof appear only after the shopper deliberately runs the sample scan. `Skip` and the final CTA are the only paths that request the live camera. Saving or opening all four sample results does not. Completion still uses `sugar_scanner_onboarding_v1`, while anonymous funnel events report onboarding version `7`, explicit `at_home`/`in_store` context, sample reveal, save prompt/action and saved-link return.
+
+The visual language comes from the Sugar.no Figma paywall and shared design system: SF Pro Rounded/system typography, pale-blue product surfaces, coral primary action, blue progress, rounded white cards, the official Sugar.no mark and the existing shelf scan motif. The implementation deliberately omits invented reviews, medical claims, auto-renewal language and artificial urgency. Research notes, product hypotheses and the measurement plan live in [`docs/onboarding-selling-flow.md`](docs/onboarding-selling-flow.md).
+
+The first screen uses the official Sugar.no wordmark and begins directly with `Compare the shelf, not the labels.`; the redundant `Sugar.no Shelf Scanner` eyebrow is intentionally omitted.
+
+The pre-release candidate is recorded in [`docs/launch-selling-onboarding.md`](docs/launch-selling-onboarding.md). Final production tests, deployment SHA, health evidence and rollback instructions are recorded in [`docs/test-runs/2026-09-09-wtp-production-launch.md`](docs/test-runs/2026-09-09-wtp-production-launch.md).
+
 ## Approved Pen release
 
 The scanner implements the approved Pen screen/state designs from 3 September 2026. Open [production with welcome forced](https://sugar-no-scanner-demo-production.up.railway.app/?onboarding=1). The release combines Pen `c151e92` with the existing production catalog, shared web cards and opt-in Personal Shelf Rank, rather than reverting production to the old staging baseline.
@@ -22,6 +34,21 @@ The scanner implements the approved Pen screen/state designs from 3 September 20
 - Accepted anonymous events and feedback use each environment's own Supabase. AR Launch production uses its own EU Amplitude project `Shelf Scanner Production` and a separate Resend sending-only key. Staging retains its own analytics project and key. Feedback comments never enter Amplitude; emails notify the configured owner after feedback is saved.
 
 The owner approved publishing this release on 3 September 2026. Future production releases still require explicit approval. Immediate rollback is `production-before-pen-2026-09-03` (`f8b760e`), preserving the latest catalog and ranking. Older fallbacks `production-baseline-2026-08-31` and `scanner-golden-3c83a65` remain available. Apply the additive `supabase/migrations/202608310002_pilot_feedback.sql` to the production Supabase before publishing the feedback UI. Never replace production Supabase credentials with staging credentials.
+
+## Willingness-to-pay production experiment
+
+The production experiment keeps three successful real camera/upload scans free, then offers seven days of scanner access for a one-time €2.99 payment. A compact light status badge shows the remaining free scans on live camera and uploaded-photo screens; it occupies a reserved row above camera/photo content so it cannot cover headings or media, while deterministic demos hide it. Paid access shows whole days remaining (`7 days left` through `1 day left`). An attempt counts only after at least one product has a confirmed Sugar.no rating; failed recognition, identity-only results and deterministic demos do not use the allowance. After verified Stripe checkout, a success screen confirms the seven-day access before the user starts the camera. When the server-verified access expires, the next real scan opens the renewal version of the paywall and the same browser can buy another independent seven-day pass for €2.99. The offer has no subscription or automatic renewal. `WTP_PAYWALL_ENABLED` keeps a safe code default of `false` and is enabled explicitly in Railway production for this approved experiment.
+
+The scanner root is rendered dynamically so Railway deployment swaps and environment flags are not hidden behind a stale edge-cached HTML shell. The service worker remains network-first for navigation and falls back to `/offline.html` only when the network is unavailable.
+
+The release also carries the shared AR visual polish from 8 September 2026: the demo chooser uses the compact single-line heading and matching action rows, the live camera places a full-width `Show demo` action below the status panel, and the official Sugar.no wordmark is a labelled 44 px home link from onboarding, camera, expanded results and the demo chooser. It preserves the current production opt-in Personal Shelf entry and original Fit default; the presentation changes do not alter recognition, rating, allowance or payment behavior.
+
+- Stripe Checkout collects payment and email. The client never receives a Stripe secret.
+- A success URL alone never unlocks the scanner. The server retrieves the Checkout Session and the signed webhook provides the independent fulfilment path.
+- Supabase stores the entitlement and only one-way hashes of browser/restore tokens. Apply `supabase/migrations/202609070001_scanner_wtp_billing.sql` and then `supabase/migrations/202609070002_scanner_wtp_service_role_grants.sql` before enabling the flag. Both additive migrations were applied to the Supabase project used by the isolated live pilot on 9 September 2026. The second migration grants the minimum table operations required by the server-only role; browser roles retain no access.
+- Paid access lasts seven days from the Checkout Session creation time. A buyer can request a 15-minute, one-time restoration link at the email used for payment.
+- Amplitude receives `paywall_viewed`, `checkout_started`, `checkout_completed`, `checkout_cancelled` and `access_restored`, together with bounded UTM fields. It receives no email, Stripe identifier, product identity, photo or health data.
+- `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET` and environment-specific Supabase, Amplitude and Resend values stay in Railway. Staging uses Stripe test mode. Production uses live-mode credentials and its own signed webhook endpoint; secrets are never committed or shared between environment-specific analytics projects.
 
 ## Current product behavior
 
@@ -196,7 +223,10 @@ Core runtime values:
 - `GEMINI_WEB_NUTRITION_TIMEOUT_MS`: optional grounded-search deadline in milliseconds; defaults to `12000` and is clamped to Google's supported `10000` to `30000` range.
 - `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`: optional server-only catalog and metadata analytics configuration. The service role key must never be exposed through a `NEXT_PUBLIC_` variable.
 - `AMPLITUDE_API_KEY`: optional server-only Amplitude project key. When present, `/api/events` mirrors approved anonymous properties to the EU ingestion endpoint after storing the complete event in Supabase. Amplitude failure is non-blocking.
-- `AMPLITUDE_ENVIRONMENT`: environment label attached to Amplitude events; use `production` for AR Launch and `staging` for the isolated staging project. Never point production at the staging project key.
+- `AMPLITUDE_ENVIRONMENT`: environment label attached to Amplitude events; use `production` for AR Launch, `pilot` for the paid pilot and `staging` for the isolated test project. Never point staging at the production project key.
+- `WTP_PAYWALL_ENABLED`: defaults off in code. Set it explicitly to `true` in the approved production experiment or an isolated test environment; three successful real scans remain free before the one-time offer.
+- `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`: server-only Checkout configuration. Staging uses test-mode values; production uses live-mode values and its own webhook signing secret. Never use a `NEXT_PUBLIC_` variable or commit these values.
+- `BILLING_EMAIL_FROM`: optional verified Resend sender for access restoration; it falls back to the environment's feedback sender.
 - `DEMO_ACCESS_CODE` and `DEMO_SESSION_SECRET`: server-only signing inputs for the silent 12-hour same-site session. Their presence does not create a user-facing access gate.
 - `COMMIT_SHA`: fallback health metadata for direct Railway uploads.
 
@@ -236,10 +266,14 @@ The standard Mobile Safari suite starts the development server over local HTTP. 
 
 - `POST /api/recognize`: image data URL plus source type, returns bounded detections.
 - `POST /api/barcode`: exact EAN/UPC without an image, resolved against local retailer/OFF layers.
-- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products. Brand-only identities never start the slow network fallbacks; a distinctive product/variant query can be resolved even when the concise UI label omits its pack details. Exact verified web results persist in Supabase and are served immediately while due rechecks run without blocking (six hours for unverified misses).
+- `POST /api/resolve-products`: up to ten image-free identities, returns optional exact retailer/nutrition enrichment. The client resolves up to five identities concurrently and applies each response independently, so one slow lookup does not hold already verified products. Brand-only identities never start the slow network fallbacks; a distinctive product/variant query can be resolved even when the concise UI label omits its pack details. For the local retailer index, the strict matcher also evaluates the primary brand + product name without optional vision search terms, because those terms can contain text from a neighbouring package; the same confidence and candidate-margin gates still apply. Exact verified web results persist in Supabase and are served immediately while due rechecks run without blocking (six hours for unverified misses).
 - `POST /api/offers`: bounded exact retailer keys for the displayed products and alternatives, returning current Barbora offers plus reproducible exact Rimi/Livin snapshot offers without blocking recognition.
 - `POST /api/events`: metadata-only product events with image-like values rejected.
 - `POST /api/feedback`: bounded anonymous pilot feedback; comments are optional, limited to 300 characters, and image-like content is rejected.
+- `POST /api/billing/checkout`: creates the configured one-time Stripe Checkout Session when the pilot is enabled.
+- `POST /api/billing/status`: checks a hashed browser token and server-verifies a returned Checkout Session before access.
+- `POST /api/billing/webhook`: public only for Stripe's signed webhook; invalid signatures fail closed.
+- `POST /api/billing/restore/request` and `/claim`: privacy-preserving request response and one-time paid-access restoration.
 - `GET /api/health`: service, catalog and deployed commit status.
 
 ## Data and Supabase
@@ -317,7 +351,7 @@ The approved Pen release uses GitHub `main` and the existing Railway production 
 
 After `pilot_feedback` is saved, a Next.js `after()` callback sends a plain-text email through Resend. It includes the rating, reason, optional comment, screen context, UTC timestamp and feedback ID, but no session identifier, photos, OCR, or browser fingerprint. Recipients and sender are server configuration only; user input cannot change them. Amplitude still never receives the comment.
 
-Set `FEEDBACK_EMAIL_ENABLED=true`, `RESEND_API_KEY`, `FEEDBACK_EMAIL_FROM` (a bare address on the verified domain), `FEEDBACK_EMAIL_TO` (one owner address), and `FEEDBACK_EMAIL_ENVIRONMENT` in the selected Railway environment. The target must be `production` or `staging` and match `RAILWAY_ENVIRONMENT_NAME` exactly. The legacy default is `staging`, so copying only a key cannot enable production sending. Preview/local environments remain disabled. Use a dedicated sending-only key for each environment, restricted to the verified sender domain. Disable notifications without affecting feedback storage by setting `FEEDBACK_EMAIL_ENABLED=false` and deploying only that environment.
+Set `FEEDBACK_EMAIL_ENABLED=true`, `RESEND_API_KEY`, `FEEDBACK_EMAIL_FROM` (a bare address on the verified domain), `FEEDBACK_EMAIL_TO` (one owner address), and `FEEDBACK_EMAIL_ENVIRONMENT` in the selected Railway environment. The target must be `production`, `pilot`, or `staging` and match `RAILWAY_ENVIRONMENT_NAME` exactly. The legacy default is `staging`, so copying only a key cannot enable production or pilot sending. Preview/local environments remain disabled. Use a dedicated sending-only key for each environment, restricted to the verified sender domain. Disable notifications without affecting feedback storage by setting `FEEDBACK_EMAIL_ENABLED=false` and deploying only that environment.
 
 The approved setup uses `scanner@marketing.intend.com` to notify `anastasiia@sugar.no`, with a separate key and the existing Resend account's shared quota. No paid plan or pay-as-you-go is required or enabled by this integration. There are two bounded attempts for transient failures using the same [Resend idempotency key](https://resend.com/docs/dashboard/emails/idempotency-keys). A notification failure never changes the successful feedback response. Delivery is best-effort, not a durable queue: crashes or quota exhaustion can prevent an email; the saved feedback remains in Supabase. Metadata-only `feedback_email` logs record success/failure and the feedback ID; `sent` means accepted by Resend, not confirmed inbox delivery.
 
@@ -390,6 +424,9 @@ Technical validation uses `npm run verify` and the Mobile Safari suite (`CI=1 E2
 ## Supporting docs
 
 - [Acceptance criteria](docs/acceptance.md)
+- [Selling onboarding research, Claude critique and experiment plan](docs/onboarding-selling-flow.md)
+- [Selling onboarding preview test evidence](docs/test-runs/2026-09-08-selling-onboarding-preview.md)
+- [WTP production launch evidence](docs/test-runs/2026-09-09-wtp-production-launch.md)
 - [Architecture and file map](docs/architecture.md)
 - [Product QA](docs/product-qa.md)
 - [Team handoff](docs/team-handoff.md)

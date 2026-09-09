@@ -124,7 +124,7 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
 test("rating demo is reachable from Show demo and can return to the unchanged scanner", async ({ page }) => {
   await observeCamera(page);
   await page.goto("/");
-  await page.getByRole("button", { name: "Open camera", exact: true }).click();
+  await page.getByRole("button", { name: "Skip", exact: true }).click();
   await expect(page.getByRole("button", { name: "Enable camera", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Show demo", exact: true }).click();
   const entry = page.getByRole("link", { name: /^New rating demo 3 real products with Personal Fit/ });
