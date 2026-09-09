@@ -8,13 +8,13 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 ## Selling onboarding preview
 
-Branch `codex/selling-onboarding-preview` is an isolated experiment based on the live-pilot commit `f4c185d`. It does not change the current pilot, staging or production deployments.
+Branch `codex/selling-onboarding-preview` is an isolated experiment based on the live-pilot commit `f4c185d`. Onboarding version 7 is deployed only to Railway staging for owner testing. The separate pilot and production deployments remain unchanged.
 
 The experiment replaces the one-screen welcome with a context-aware, sub-one-minute story. Someone already in a shop goes from the promise directly to the transparent offer and camera. Someone who saw the Meta ad at home can reveal a real sample comparison, learn that a cupboard photo works too, and save a clean scanner link through the device share sheet for the next shop. The offer remains 3 free successful scans followed by a one-time €2.99 payment for 7 days. A decorative preference question was removed after a Claude growth-design review because it did not actually change the fixed two-factor Sugar.no ranking. The first screen shows only that four packages were found; the named winner and nutrition proof appear only after the shopper deliberately runs the sample scan. `Skip` and the final CTA are the only paths that request the live camera. Saving or opening all four sample results does not. Completion still uses `sugar_scanner_onboarding_v1`, while anonymous funnel events report onboarding version `7`, explicit `at_home`/`in_store` context, sample reveal, save prompt/action and saved-link return.
 
 The visual language comes from the Sugar.no Figma paywall and shared design system: SF Pro Rounded/system typography, pale-blue product surfaces, coral primary action, blue progress, rounded white cards, the official Sugar.no mark and the existing shelf scan motif. The implementation deliberately omits invented reviews, medical claims, auto-renewal language and artificial urgency. Research notes, product hypotheses and the measurement plan live in [`docs/onboarding-selling-flow.md`](docs/onboarding-selling-flow.md).
 
-The latest tested launch-candidate revision is recorded in [`docs/launch-selling-onboarding.md`](docs/launch-selling-onboarding.md), together with the exact release boundary, required pilot variables, pre-advertising smoke and rollback steps. The public pilot remains on `f4c185d` with `wtpPaywall: false`; preparing this candidate does not authorize a Railway deployment or live charge.
+The latest tested launch-candidate revision and staging deployment are recorded in [`docs/launch-selling-onboarding.md`](docs/launch-selling-onboarding.md), together with the exact release boundary, required pilot variables, pre-advertising smoke and rollback steps. The public pilot remains on `f4c185d` with `wtpPaywall: false`; staging review does not authorize a pilot/production deployment or live charge.
 
 ## Approved Pen release
 

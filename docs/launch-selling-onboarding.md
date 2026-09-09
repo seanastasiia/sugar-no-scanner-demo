@@ -5,6 +5,11 @@ Candidate branch: `codex/selling-onboarding-preview`
 Implementation commit: `a277de1`
 Target after owner approval: existing Railway `pilot` environment only
 
+Owner-test staging was updated on 9 September with branch head `61d352e`. Railway deployment
+`e4b64ac8-a70c-461a-bbf9-694b3b4a6b1f` reached `SUCCESS`; staging health reported that exact SHA
+with the test paywall enabled. The public pilot remained `f4c185d` with the paywall disabled and
+production remained `08a5338`.
+
 ## Release boundary
 
 This candidate is the existing live-pilot application plus selling onboarding version `7`. It does
@@ -12,7 +17,7 @@ not include a merge from the newer production `main`, does not expose the separa
 Rank entry, and does not change recognition, the fixed sugar-plus-protein Sugar.no Fit, catalog data,
 prices, feedback storage or the payment model.
 
-No current environment is changed by preparation. On 9 September, read-only health checks showed:
+The owner-test staging environment is the only environment changed by this iteration. Health checks showed:
 
 - pilot URL: commit `f4c185d`, `wtpPaywall: false`;
 - production URL: commit `08a5338`, production remains a separate release lane.

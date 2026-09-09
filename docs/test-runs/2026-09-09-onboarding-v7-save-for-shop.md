@@ -2,7 +2,7 @@
 
 Date: 2026-09-09
 Branch: `codex/selling-onboarding-preview`
-Public deployment: none
+Deployment: Railway staging only
 
 ## Technical checks
 
@@ -37,3 +37,10 @@ Use the local preview with `?onboarding=1`:
 6. Confirm the copy, spacing and primary action feel clear on the real iPhone.
 
 Do not start Meta spend until the same checks pass on the HTTPS pilot and its live paywall is explicitly enabled and verified.
+
+## Staging release check
+
+- Railway deployment `e4b64ac8-a70c-461a-bbf9-694b3b4a6b1f`: `SUCCESS`.
+- `/api/health`: branch head `61d352e`, test paywall enabled.
+- Remote Mobile Safari smoke reached the at-home offer and save dialog with zero camera requests.
+- Control checks: pilot stayed on `f4c185d` with paywall disabled; production stayed on `08a5338`.
