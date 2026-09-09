@@ -44,6 +44,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-09: the collapsed `Why this score` row had visibly more space below its label than above.** Its closed-state bottom margin now compensates for the parent card padding, making the visual space above and below the label equal while preserving the 44 px touch target. The expanded point grid, card width and scoring behavior are unchanged; the demo and real recognition renderer share the fix.
+
 - **2026-09-09: Personal Shelf cards still felt crowded and the demo could drift from real recognition results.** Removed the always-visible Sugar/Protein/per-100-g strip and standalone reason. The shared renderer now uses one compact 44 px `Why this score` row with the label on the left, arrow on the right and a collapsed four-component point grid. Demo and real scan behavior are checked against that same component. Scoring, evidence, score bands, ranks and the 59-point ceiling are unchanged; only its dedicated explanation panel was removed from `How scores work`.
 
 - **2026-09-09: first-time visitors could start the camera or sample, but could not choose an existing shelf photo from the welcome screen.** Added a dedicated `Choose photo` action beside `Sample shelf`. It uses the existing saved-photo recognition pipeline, records onboarding completion once, accepts the same JPEG/PNG/WebP formats and never requests camera permission. Mobile layout, increased-contrast accessibility and the no-camera upload path have regression coverage.

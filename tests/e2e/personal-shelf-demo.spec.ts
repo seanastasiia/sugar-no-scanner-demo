@@ -57,6 +57,18 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
   await expect(chips.getByText("Why this score", { exact: true })).toHaveCount(3);
   await expect(chips.getByLabel("Score breakdown", { exact: true })).toHaveCount(2);
   await expect(chips.getByLabel("Provisional score breakdown", { exact: true })).toHaveCount(1);
+  const closedDisclosureSpacing = await cards.first().evaluate((card) => {
+    const disclosure = card.querySelector("details[data-score-breakdown]")!;
+    const label = disclosure.querySelector("summary > span")!;
+    const cardBox = card.getBoundingClientRect();
+    const disclosureBox = disclosure.getBoundingClientRect();
+    const labelBox = label.getBoundingClientRect();
+    return {
+      above: labelBox.top - disclosureBox.top,
+      below: cardBox.bottom - labelBox.bottom
+    };
+  });
+  expect(Math.abs(closedDisclosureSpacing.above - closedDisclosureSpacing.below)).toBeLessThanOrEqual(2);
   const criterionLists = breakdowns.locator('[role="list"][aria-label="Points by criterion"]');
   await expect(criterionLists).toHaveCount(3);
   await expect(criterionLists.first()).toBeHidden();
