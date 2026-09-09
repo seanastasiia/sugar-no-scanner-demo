@@ -2,7 +2,7 @@
 
 Date: 2026-09-09  
 Candidate branch: `codex/selling-onboarding-preview`  
-Candidate commit: pending final verified branch commit
+Implementation commit: `a277de1`
 Target after owner approval: existing Railway `pilot` environment only
 
 ## Release boundary
