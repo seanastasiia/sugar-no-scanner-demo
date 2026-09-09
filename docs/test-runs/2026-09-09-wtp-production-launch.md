@@ -20,12 +20,13 @@ This release merges the tested selling onboarding and one-time seven-day scanner
 
 ## Production deployment
 
-To be completed after the reviewed commit is pushed to GitHub `main`:
-
-- release commit: pending;
-- Railway deployment: pending;
-- `/api/health` exact SHA and `wtpPaywall: true`: pending;
-- HTTPS onboarding, root and checkout-creation smoke: pending.
+- GitHub `main` application release: `8643584570a35a4adf64c9eca9b3db3add83dea7`.
+- GitHub-triggered Railway deployment `71462aac-d842-4edf-8c28-db78f64eca47`: `SUCCESS` with the exact application SHA.
+- Explicit Railway CLI deployment `8cf3bf89-c294-46e1-bf65-c3a9e6ea2f17`: `SUCCESS` after production Stripe variables and the paywall flag were applied.
+- Live `/api/health`: `status: ok`, exact application SHA and `wtpPaywall: true`; catalog counts remained 9,707 active Barbora foods, 7,433 automatic Fits and 7,512 Personal Shelf observations.
+- Production root and `?onboarding=1`: HTTP 200. A clean WebKit session displayed `Compare the shelf, not the labels.` at 390 x 844.
+- Protected checkout smoke authenticated with the production server-side access configuration and returned HTTP 200 with a `checkout.stripe.com` URL. No payment was submitted.
+- Dedicated live Stripe webhook `we_1UDmQcITPocOQHP2hM51CMkJ` is enabled only for the production billing URL and the two supported Checkout completion events. Its signing secret remains only in Railway production.
 
 ## Product acceptance
 
