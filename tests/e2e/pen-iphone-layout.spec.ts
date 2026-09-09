@@ -56,6 +56,7 @@ test("Pen screens remain readable and actionable across iPhone sizes and rotatio
       // Every displayed image must finish loading, not merely have an img node.
       await expect.poll(() => page.locator("img:visible").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0)), { timeout: 10_000 }).toBe(true);
       await unobstructed(page.getByRole("button", { name: "Open camera", exact: true }));
+      await unobstructed(page.getByLabel("Choose from gallery", { exact: true }));
       await unobstructed(page.getByRole("button", { name: "Try a sample shelf", exact: true }));
       await noOverflow(page);
       await page.screenshot({ scale: "css", path: `test-results/pen-welcome-${viewport.width}x${viewport.height}.png` });

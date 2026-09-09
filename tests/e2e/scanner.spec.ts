@@ -211,8 +211,10 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   await page.setViewportSize({ width: 320, height: 568 });
   await expectNoDocumentOverflow(page);
   await results.getByText("How scores work", { exact: true }).click();
-  await expect(results.locator("details[open]")).toContainText("Scores compare products within the same category");
-  await expect(results.locator("details[open]")).toContainText("Missing facts stay unknown");
+  await expect(results.locator("details[open]")).toContainText("We compare only products of the same type");
+  await expect(results.locator("details[open]")).toContainText("below 12% is called out in Why?");
+  await expect(results.locator("details[open]")).toContainText("salt above 1.5 g");
+  await expect(results.locator("details[open]")).toContainText("Missing required data means no score");
   await expect(results.locator("dt")).toHaveCount(0);
   await expect(results.getByRole("link", { includeHidden: true })).toHaveCount(0);
   await expect(results).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Potatoes, sunflower oil, salt/);
@@ -317,7 +319,9 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn.png"), fullPage: true, animations: "disabled" });
   await expect(chips.getByText("Why?", { exact: true })).toHaveCount(2);
   await page.getByText("How scores work", { exact: true }).click();
-  await expect(page.locator('details[open]')).toContainText("Great 75–100 · Moderate 50–74 · Low 0–49");
+  await expect(page.getByRole("list", { name: "Personal Fit score bands", exact: true })).toContainText("Great 75–100");
+  await expect(page.getByRole("list", { name: "Personal Fit score bands", exact: true })).toContainText("Moderate 50–74");
+  await expect(page.getByRole("list", { name: "Personal Fit score bands", exact: true })).toContainText("Low 0–49");
   await expect(chips).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Sudedamosios dalys/);
   await expect(chips.getByText("View available evidence", { exact: true })).toHaveCount(0);
   await expect(chips.getByRole("link", { includeHidden: true })).toHaveCount(0);
@@ -742,14 +746,22 @@ test("first visit explains the pilot before requesting camera permission", async
   await expect(page.getByText("Best fit appears first")).toBeVisible();
   await expect(page.getByText("Camera opens only after you choose Open camera. Photos are not saved.")).toBeVisible();
   const openCameraBox = await page.getByRole("button", { name: "Open camera" }).boundingBox();
+  const galleryBox = await page.getByLabel("Choose from gallery").boundingBox();
   const sampleBox = await page.getByRole("button", { name: "Try a sample shelf" }).boundingBox();
   const privacyBox = await page.getByText("Camera opens only after you choose Open camera. Photos are not saved.").boundingBox();
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   expect(openCameraBox?.y).toBeGreaterThan(0);
+  expect((galleryBox?.y ?? viewportHeight) + (galleryBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
   expect((sampleBox?.y ?? viewportHeight) + (sampleBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
   expect((privacyBox?.y ?? viewportHeight) + (privacyBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
   await expectNoDocumentOverflow(page);
   await expectVisibleTouchTargets(page);
+  await page.emulateMedia({ contrast: "more" });
+  const onboardingAccessibility = await new AxeBuilder({ page })
+    .include('[aria-labelledby="onboarding-title"]')
+    .withTags(["wcag2a", "wcag2aa"])
+    .analyze();
+  expect(onboardingAccessibility.violations).toEqual([]);
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
   await page.getByRole("button", { name: "Open camera" }).click();
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
@@ -819,6 +831,46 @@ test("sample shelf dismisses onboarding without requesting camera permission", a
   await page.getByRole("button", { name: "Try a sample shelf" }).click();
   await expect(page.getByLabel("Shelf photo scanner")).toBeVisible();
   await expect(page.getByText("Shelf photo", { exact: true })).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem("sugar_scanner_onboarding_v1"))).toBe("completed");
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
+});
+
+test("gallery photo dismisses onboarding without requesting camera permission", async ({ page }) => {
+  let recognitionSource = "";
+  await page.route("**/api/recognize", async (route) => {
+    recognitionSource = route.request().postDataJSON().source;
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: "onboarding-upload",
+        status: "no_products",
+        latencyMs: 1,
+        model: "qa-mock",
+        imageStored: false,
+        detections: []
+      })
+    });
+  });
+  await page.addInitScript(() => {
+    let cameraRequests = 0;
+    Object.defineProperty(window, "__cameraRequests", { configurable: true, get: () => cameraRequests });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: () => {
+        cameraRequests += 1;
+        return Promise.reject(new DOMException("Denied in test", "NotAllowedError"));
+      } }
+    });
+  });
+  await page.goto("/?onboarding=1");
+  await expect(page.getByText("Choose photo", { exact: true })).toBeVisible();
+  await page.getByLabel("Choose from gallery").setInputFiles({
+    name: "onboarding-shelf.png",
+    mimeType: "image/png",
+    buffer: onePixelPng
+  });
+  await expect(page.getByRole("heading", { name: "Read a saved photo", exact: true })).toBeVisible();
+  await expect.poll(() => recognitionSource).toBe("upload");
   expect(await page.evaluate(() => localStorage.getItem("sugar_scanner_onboarding_v1"))).toBe("completed");
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
 });
@@ -1038,7 +1090,8 @@ test("ordinary Shelf demo rates all four bars in Personal Shelf without evidence
   await expect(personal.getByRole("img", { name: "Not scored", exact: true })).toHaveCount(0);
   await expect(personal.locator("strong").filter({ hasText: "59/100" })).toHaveCount(4);
   await personal.getByText("How scores work", { exact: true }).click();
-  await expect(personal).toContainText("Scores compare products within the same category");
+  await expect(personal).toContainText("We compare only products of the same type");
+  await expect(personal.locator("details[open] li[data-signal]")).toHaveCount(4);
   await expectNoDocumentOverflow(page);
   await page.screenshot({ path: test.info().outputPath("shelf-demo-personal-rank.png"), fullPage: true, animations: "disabled" });
   expect(evidenceRequests).toBe(0);

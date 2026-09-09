@@ -8,6 +8,15 @@ export type ShelfCategory = "chips" | "savory-snack" | "crackers" | "yogurt" | "
   "candy" | "cheese" | "meat-product" | "fish-product" | "sauce";
 export type ShelfComponentKey = "sugar" | "protein" | "composition" | "balance";
 
+/** Shared with the explanation UI so its numbers cannot drift from the scoring formula. */
+export const PERSONAL_SHELF_THRESHOLDS = {
+  sugar: { fullAtOrBelowG: 5, zeroAtOrAboveG: 22.5, ceilingAboveG: 22.5 },
+  protein: { kcalPerGram: 4, fullAtEnergyPercent: 20, calloutBelowEnergyPercent: 12 },
+  salt: { fullAtOrBelowG: 0.3, zeroAtOrAboveG: 1.5, ceilingAboveG: 1.5 },
+  saturatedFat: { fullAtOrBelowG: 1.5, zeroAtOrAboveG: 5, ceilingAboveG: 5 },
+  fiber: { fullAtG: 6, calloutBelowG: 3 }
+} as const;
+
 /** A single source observation, not a mixture of similar products or estimated nutrients. */
 export interface ShelfEvidence {
   productId: string;
@@ -307,15 +316,26 @@ export function assessPersonalShelfProduct(product: Pick<ProductRecord, "id" | "
   const sugar = evidence.totalSugarG!;
   const salt = evidence.saltG!;
   const fat = evidence.saturatedFatG!;
-  const proteinShare = evidence.proteinG! * 4 / evidence.energyKcal! * 100;
-  const fiberScore = config.balance.fiber && !missingFiber ? Math.min(100, evidence.fiberG! / 6 * 100) : 0;
-  const balance = inverse(salt, .3, 1.5) * config.balance.salt + inverse(fat, 1.5, 5) * config.balance.saturatedFat + fiberScore * config.balance.fiber;
+  const proteinShare = evidence.proteinG! * PERSONAL_SHELF_THRESHOLDS.protein.kcalPerGram / evidence.energyKcal! * 100;
+  const fiberScore = config.balance.fiber && !missingFiber
+    ? Math.min(100, evidence.fiberG! / PERSONAL_SHELF_THRESHOLDS.fiber.fullAtG * 100)
+    : 0;
+  const balance = inverse(salt, PERSONAL_SHELF_THRESHOLDS.salt.fullAtOrBelowG, PERSONAL_SHELF_THRESHOLDS.salt.zeroAtOrAboveG) * config.balance.salt +
+    inverse(fat, PERSONAL_SHELF_THRESHOLDS.saturatedFat.fullAtOrBelowG, PERSONAL_SHELF_THRESHOLDS.saturatedFat.zeroAtOrAboveG) * config.balance.saturatedFat +
+    fiberScore * config.balance.fiber;
   const raw: Record<ShelfComponentKey, number> = {
-    sugar: inverse(sugar, 5, 22.5), protein: Math.min(100, proteinShare / 20 * 100), composition: ingredients!.score!, balance
+    sugar: inverse(sugar, PERSONAL_SHELF_THRESHOLDS.sugar.fullAtOrBelowG, PERSONAL_SHELF_THRESHOLDS.sugar.zeroAtOrAboveG),
+    protein: Math.min(100, proteinShare / PERSONAL_SHELF_THRESHOLDS.protein.fullAtEnergyPercent * 100),
+    composition: ingredients!.score!,
+    balance
   };
   const labels: Record<ShelfComponentKey, string> = { sugar: "Sugar", protein: "Protein", composition: "Food base", balance: "Salt, saturates & fiber" };
   result.components = (Object.keys(raw) as ShelfComponentKey[]).map((key) => ({ key, label: key === "balance" && !config.balance.fiber ? "Salt & saturates" : labels[key], points: round(raw[key] * config.weights[key] / 100), weight: config.weights[key] }));
-  const high = [sugar > 22.5 ? "sugar" : null, salt > 1.5 ? "salt" : null, fat > 5 ? "saturated fat" : null].filter(Boolean);
+  const high = [
+    sugar > PERSONAL_SHELF_THRESHOLDS.sugar.ceilingAboveG ? "sugar" : null,
+    salt > PERSONAL_SHELF_THRESHOLDS.salt.ceilingAboveG ? "salt" : null,
+    fat > PERSONAL_SHELF_THRESHOLDS.saturatedFat.ceilingAboveG ? "saturated fat" : null
+  ].filter(Boolean);
   // Sum integer tenths: 6.1 + 6.3 + 2.1 must round 14.5 to 15, never 14.
   const totalTenths = result.components.reduce((sum, part) => sum + Math.round(part.points * 10), 0);
   const bounded = (tenths: number) => Math.min(high.length ? 59 : 100, Math.round(tenths / 10));
@@ -337,9 +357,13 @@ export function assessPersonalShelfProduct(product: Pick<ProductRecord, "id" | "
     ...(high.length ? [`Higher ${high.join(" and ")} per 100 g`] : []),
     ...(ingredients!.sugarNearStart ? ["Sugar, honey or syrup listed within the first three ingredients (including compound ingredients)"] : []),
     ...(ingredients!.sweetenersDetected ? ["Sweetener listed; disclosed without a safety penalty"] : []),
-    ...(proteinShare < 12 ? ["Less than 12% of energy from protein"] : []),
+    ...(proteinShare < PERSONAL_SHELF_THRESHOLDS.protein.calloutBelowEnergyPercent
+      ? [`Less than ${PERSONAL_SHELF_THRESHOLDS.protein.calloutBelowEnergyPercent}% of energy from protein`]
+      : []),
     ...(missingFiber ? ["Fiber not listed. The range covers its possible contribution, not estimated grams."] : []),
-    ...(config.balance.fiber && !missingFiber && evidence.fiberG! < 3 ? ["Less than 3 g fiber per 100 g"] : [])
+    ...(config.balance.fiber && !missingFiber && evidence.fiberG! < PERSONAL_SHELF_THRESHOLDS.fiber.calloutBelowG
+      ? [`Less than ${PERSONAL_SHELF_THRESHOLDS.fiber.calloutBelowG} g fiber per 100 g`]
+      : [])
   ];
   if (!result.tradeoffs.length) result.tradeoffs.push("Portion size and the rest of your diet still matter");
   return result;

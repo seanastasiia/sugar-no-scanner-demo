@@ -1105,6 +1105,18 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
     }
   }
 
+  function uploadImageFromOnboarding(event: ChangeEvent<HTMLInputElement>) {
+    if (!event.target.files?.[0]) return;
+    saveOnboardingCompletion(window.localStorage, "completed");
+    track("onboarding_completed", "upload", undefined, {
+      onboardingVersion: ONBOARDING_VERSION,
+      step: 1
+    });
+    cameraStartedFromOnboardingRef.current = true;
+    setOnboardingState("complete");
+    void uploadImage(event);
+  }
+
   const retryCurrentScan = useCallback(() => {
     if (!navigator.onLine) return;
     if (source === "upload" && uploadFramesRef.current.length) {
@@ -1402,7 +1414,11 @@ export function ScannerApp({ personalRankAvailable = true }: { personalRankAvail
 
   if (onboardingState === "showing") {
     return (
-      <PilotOnboarding onComplete={() => finishOnboarding("camera")} onTrySample={() => finishOnboarding("sample")} />
+      <PilotOnboarding
+        onComplete={() => finishOnboarding("camera")}
+        onChoosePhoto={uploadImageFromOnboarding}
+        onTrySample={() => finishOnboarding("sample")}
+      />
     );
   }
 

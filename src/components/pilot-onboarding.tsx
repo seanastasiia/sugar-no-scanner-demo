@@ -1,11 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { FileImage, Layers3 } from "lucide-react";
+import { type ChangeEvent, useEffect, useRef } from "react";
 import { ScannerHomeLogo } from "./scanner-home-logo";
 import styles from "./scanner-app.module.css";
 
-export function PilotOnboarding({ onComplete, onTrySample }: { onComplete: () => void; onTrySample: () => void }) {
+export function PilotOnboarding({
+  onComplete,
+  onChoosePhoto,
+  onTrySample
+}: {
+  onComplete: () => void;
+  onChoosePhoto: (event: ChangeEvent<HTMLInputElement>) => void;
+  onTrySample: () => void;
+}) {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -59,9 +68,27 @@ export function PilotOnboarding({ onComplete, onTrySample }: { onComplete: () =>
           <button className={styles.onboardingPrimary} type="button" onClick={onComplete}>
             Open camera
           </button>
-          <button className={styles.secondaryButton} type="button" onClick={onTrySample}>
-            Try a sample shelf
-          </button>
+          <div className={styles.onboardingSecondaryActions}>
+            <label className={`${styles.secondaryButton} ${styles.onboardingUpload}`}>
+              <FileImage aria-hidden="true" size={19} />
+              <span>Choose photo</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                aria-label="Choose from gallery"
+                onChange={onChoosePhoto}
+              />
+            </label>
+            <button
+              className={styles.secondaryButton}
+              type="button"
+              aria-label="Try a sample shelf"
+              onClick={onTrySample}
+            >
+              <Layers3 aria-hidden="true" size={19} />
+              <span>Sample shelf</span>
+            </button>
+          </div>
           <p className={styles.onboardingNote}>Camera opens only after you choose Open camera. Photos are not saved.</p>
         </div>
       </div>

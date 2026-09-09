@@ -147,13 +147,38 @@
   gap: 12px;
   margin: 0 auto;
 }
+.onboardingSecondaryActions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
 .onboardingActions .secondaryButton {
-  background: transparent;
-  font-size: 17px;
+  min-width: 0;
+  min-height: 48px;
+  padding-inline: 12px;
+  background: var(--surface);
+  font-size: 14px;
   font-weight: 700;
+  box-shadow: 0 4px 18px #26384e0f;
 }
 .onboardingActions .onboardingPrimary {
   font-weight: 700;
+}
+.onboardingUpload {
+  position: relative;
+  overflow: hidden;
+}
+.onboardingUpload input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  opacity: 0;
+}
+.onboardingUpload:focus-within {
+  outline: 3px solid #1588ff55;
+  outline-offset: 2px;
 }
 .onboardingNote {
   margin: 0;
@@ -1728,11 +1753,18 @@
     align-self: start;
     gap: 4px;
   }
+  .onboardingSecondaryActions {
+    gap: 8px;
+  }
   .onboardingNote {
     margin-top: 2px;
   }
   .onboardingPrimary {
     min-height: 48px;
+  }
+  .onboardingActions .secondaryButton {
+    min-height: 44px;
+    font-size: 13px;
   }
   .resultsCollapsed {
     max-height: 55dvh;
@@ -1881,6 +1913,15 @@
   .onboardingPreviewImage { height: 84px; }
   .onboardingResult { min-height: 64px; padding: 8px; }
   .onboardingNote { font-size: 11px; line-height: 16px; }
+}
+@media (max-width: 360px) {
+  .onboardingSecondaryActions svg {
+    display: none;
+  }
+  .onboardingActions .secondaryButton {
+    padding-inline: 8px;
+    font-size: 13px;
+  }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   .cameraError,

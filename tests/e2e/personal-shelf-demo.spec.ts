@@ -58,8 +58,28 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
   await expect(chips).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Pilot preference score|Sudedamosios dalys|Source table is inconsistent/);
   await expect(chips).not.toContainText("57.8");
   await page.getByText("How scores work", { exact: true }).click();
-  await expect(page.locator("details[open]")).toContainText("Missing facts stay unknown");
+  const method = page.locator("details[open]");
+  await expect(method).toContainText("Up to 100 points, shaped around your priorities");
+  await expect(method).toContainText("We compare only products of the same type");
+  await expect(method.locator("li[data-signal]")).toHaveCount(4);
+  await expect(method.getByText("5–40 pts", { exact: true })).toBeVisible();
+  await expect(method.getByText("5–30 pts", { exact: true })).toBeVisible();
+  await expect(method.getByText("20–35 pts", { exact: true })).toBeVisible();
+  await expect(method.getByText("25–50 pts", { exact: true })).toBeVisible();
+  await expect(method).toContainText("Full signal at 5 g per 100 g or less; zero at 22.5 g or more");
+  await expect(method).toContainText("protein g × 4 ÷ kcal × 100");
+  await expect(method).toContainText("below 12% is called out in Why?");
+  await expect(method).toContainText("Salt scores from full at ≤0.3 g to zero at ≥1.5 g");
+  await expect(method).toContainText("fiber reaches full credit at 6 g per 100 g");
+  await expect(method).toContainText("caps the total at 59");
+  await expect(method).toContainText("missing optional fiber creates a provisional range");
+  await expect(method).toContainText("This is a preference score, not a health rating");
   await expect(page.locator("dt")).toHaveCount(0);
+  const methodAccessibility = await new AxeBuilder({ page })
+    .include("details[open]")
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(methodAccessibility.violations).toEqual([]);
   await page.screenshot({ path: test.info().outputPath("personal-shelf-demo-shared-cards.png"), fullPage: true, animations: "disabled" });
   await expectNoOverflow(page);
   expect(await page.evaluate(() => (window as typeof window & { demoCameraRequests: number }).demoCameraRequests)).toBe(0);
@@ -132,12 +152,13 @@ test("rating demo handles broken packshots and remains accessible on small dark 
   const accessibility = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(accessibility.violations).toEqual([]);
   const backTarget = await page.getByRole("link", { name: "Back to scanner", exact: true }).boundingBox();
-  const methodTarget = await page.getByText("How scores work", { exact: true }).boundingBox();
+  const methodTarget = await page.locator("details summary").boundingBox();
   expect(backTarget?.height).toBeGreaterThanOrEqual(44);
   expect(methodTarget?.height).toBeGreaterThanOrEqual(44);
   await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
   await page.getByText("How scores work", { exact: true }).click();
   await expectNoOverflow(page);
+  await expect(page.getByRole("list", { name: "Personal Fit score bands", exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("rating-demo-dark-large-text.png"), fullPage: true, animations: "disabled" });
   await page.setViewportSize({ width: 812, height: 375 });
   await expectNoOverflow(page);

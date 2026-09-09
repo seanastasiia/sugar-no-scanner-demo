@@ -1,11 +1,24 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { rankPersonalShelfProducts, shelfScoreLabel, type ShelfEvidence } from "@/lib/personal-shelf-rank";
+import { Candy, ChevronDown, Dumbbell, Leaf, Scale, ShieldCheck, Sparkles, TriangleAlert } from "lucide-react";
+import {
+  PERSONAL_SHELF_THRESHOLDS,
+  rankPersonalShelfProducts,
+  SHELF_CATEGORIES,
+  shelfScoreLabel,
+  type ShelfComponentKey,
+  type ShelfEvidence
+} from "@/lib/personal-shelf-rank";
 import { personalShelfFit } from "@/lib/personal-shelf-fit";
 import type { ProductRecord } from "@/lib/types";
 import { PersonalShelfFitBadge } from "./personal-shelf-fit-badge";
 import styles from "./personal-shelf-results.module.css";
+
+function componentWeightRange(key: ShelfComponentKey): string {
+  const weights = Object.values(SHELF_CATEGORIES).map((category) => category.weights[key]);
+  return `${Math.min(...weights)}–${Math.max(...weights)}`;
+}
 
 export function ShelfRankToggle({ enabled, onChange }: { enabled: boolean; onChange: (enabled: boolean) => void }) {
   return (
@@ -62,10 +75,94 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan", he
           <ResultsHeading>{ratedEntries.length === 1 ? "Best product" : "Best products"}</ResultsHeading>
           <p className={styles.criteria}>Sugar · Protein · Ingredients · Salt · Saturated fat · Fiber</p>
           <details className={styles.method}>
-            <summary>How scores work</summary>
-            <div>
-              <p>Scores compare products within the same category using sugar, protein, the ingredient base and nutrient balance.</p>
-              <p>Great 75–100 · Moderate 50–74 · Low 0–49. Missing facts stay unknown. This is a preference score, not a health rating.</p>
+            <summary>
+              <span className={styles.methodSummaryIcon} aria-hidden="true"><Sparkles /></span>
+              <span className={styles.methodSummaryCopy}>
+                <strong>How scores work</strong>
+                <small>Signals, limits and missing data</small>
+              </span>
+              <span className={styles.methodChevron} aria-hidden="true"><ChevronDown /></span>
+            </summary>
+            <div className={styles.methodPanel}>
+              <header className={styles.methodHero}>
+                <span className={styles.methodHeroIcon} aria-hidden="true"><Sparkles /></span>
+                <div>
+                  <p className={styles.methodIntro}>Up to 100 points, shaped around your priorities.</p>
+                  <p>We compare only products of the same type. The mix changes by category.</p>
+                </div>
+              </header>
+              <ul className={styles.methodSignals}>
+                <li data-signal="sugar">
+                  <span className={styles.methodSignalIcon} aria-hidden="true"><Candy /></span>
+                  <div>
+                    <span className={styles.methodSignalHeading}>
+                      <strong>Sugar</strong>
+                      <small>{componentWeightRange("sugar")} pts</small>
+                    </span>
+                    <span>
+                    Full signal at {PERSONAL_SHELF_THRESHOLDS.sugar.fullAtOrBelowG} g per 100 g or less; zero at {PERSONAL_SHELF_THRESHOLDS.sugar.zeroAtOrAboveG} g or more.
+                    </span>
+                  </div>
+                </li>
+                <li data-signal="protein">
+                  <span className={styles.methodSignalIcon} aria-hidden="true"><Dumbbell /></span>
+                  <div>
+                    <span className={styles.methodSignalHeading}>
+                      <strong>Protein</strong>
+                      <small>{componentWeightRange("protein")} pts</small>
+                    </span>
+                    <span>
+                    Calculated as a share of energy: protein g × {PERSONAL_SHELF_THRESHOLDS.protein.kcalPerGram} ÷ kcal × 100. {PERSONAL_SHELF_THRESHOLDS.protein.fullAtEnergyPercent}% or more gets the full signal; below {PERSONAL_SHELF_THRESHOLDS.protein.calloutBelowEnergyPercent}% is called out in Why?.
+                    </span>
+                  </div>
+                </li>
+                <li data-signal="ingredients">
+                  <span className={styles.methodSignalIcon} aria-hidden="true"><Leaf /></span>
+                  <div>
+                    <span className={styles.methodSignalHeading}>
+                      <strong>Ingredients</strong>
+                      <small>{componentWeightRange("composition")} pts</small>
+                    </span>
+                    <span>
+                    The first recipe-defining ingredient sets the food-base score. Whole-food bases score higher; refined flour, starch and isolates score lower. Sugar, honey or syrup in the first three ingredients caps this signal at 40%. Sweeteners are disclosed without a safety penalty.
+                    </span>
+                  </div>
+                </li>
+                <li data-signal="balance">
+                  <span className={styles.methodSignalIcon} aria-hidden="true"><Scale /></span>
+                  <div>
+                    <span className={styles.methodSignalHeading}>
+                      <strong>Balance</strong>
+                      <small>{componentWeightRange("balance")} pts</small>
+                    </span>
+                    <span>
+                    Salt scores from full at ≤{PERSONAL_SHELF_THRESHOLDS.salt.fullAtOrBelowG} g to zero at ≥{PERSONAL_SHELF_THRESHOLDS.salt.zeroAtOrAboveG} g. Saturated fat scores from full at ≤{PERSONAL_SHELF_THRESHOLDS.saturatedFat.fullAtOrBelowG} g to zero at ≥{PERSONAL_SHELF_THRESHOLDS.saturatedFat.zeroAtOrAboveG} g. Where relevant, fiber reaches full credit at {PERSONAL_SHELF_THRESHOLDS.fiber.fullAtG} g per 100 g.
+                    </span>
+                  </div>
+                </li>
+              </ul>
+              <aside className={styles.methodLimit}>
+                <span aria-hidden="true"><TriangleAlert /></span>
+                <p>
+                  <strong>59-point ceiling</strong>
+                  Sugar above {PERSONAL_SHELF_THRESHOLDS.sugar.ceilingAboveG} g, salt above {PERSONAL_SHELF_THRESHOLDS.salt.ceilingAboveG} g or saturated fat above {PERSONAL_SHELF_THRESHOLDS.saturatedFat.ceilingAboveG} g per 100 g caps the total at 59. High protein cannot cancel this limit.
+                </p>
+              </aside>
+              <div className={styles.methodDataRule}>
+                <span aria-hidden="true"><ShieldCheck /></span>
+                <p className={styles.methodMissing}>
+                  <strong>Unknown stays unknown.</strong> We never guess missing facts. Missing required data means no score; missing optional fiber creates a provisional range.
+                </p>
+              </div>
+              <div className={styles.methodBands}>
+                <strong>Score bands</strong>
+                <div role="list" aria-label="Personal Fit score bands">
+                  <span role="listitem" data-band="great"><i />Great 75–100</span>
+                  <span role="listitem" data-band="moderate"><i />Moderate 50–74</span>
+                  <span role="listitem" data-band="low"><i />Low 0–49</span>
+                </div>
+              </div>
+              <p className={styles.methodDisclaimer}>This is a preference score, not a health rating.</p>
             </div>
           </details>
         </header>
