@@ -6,6 +6,8 @@ This local release candidate implements the approved Rimi refresh, keeps exact i
 
 Baseline revision: `61be6f5161e1cd111109d7809338c1afc9ae5b4f`.
 
+Tested application/data commit: `04dff621a2aff56dc9dce5c5c9adecc42305f82d`.
+
 No GitHub push, Railway deployment, Supabase write or production publication was performed. Publication remains behind the explicit `ПУБЛИКУЙ` gate.
 
 ## Data result
@@ -23,7 +25,7 @@ The reproducible comparison is checked in as `data/rimi-lidl-expansion-report.ge
 
 ## Technical checks
 
-All checks below ran on the candidate working tree based on the baseline revision above.
+All checks below ran against the tested commit above. The final documentation-only follow-up does not change the tested application or data.
 
 | Check | Result |
 | --- | --- |
