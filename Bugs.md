@@ -44,6 +44,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
+- **2026-09-09: the expanded Personal Shelf method repeated the blue Sparkles signal and made its introduction compete with the actual scoring criteria.** Converted the intro to a semantic text heading with short supporting copy and removed only its duplicate icon and tinted container. The outer 44 px `How scores work` control keeps its blue icon, and the four scoring-signal cards keep their color coding. Demo and real recognition share the component; formula, evidence, scores and ranks are unchanged.
+
 - **2026-09-09: the collapsed `Why this score` row had visibly more space below its label than above.** Its closed-state bottom margin now compensates for the parent card padding, making the visual space above and below the label equal while preserving the 44 px touch target. The expanded point grid, card width and scoring behavior are unchanged; the demo and real recognition renderer share the fix.
 
 - **2026-09-09: Personal Shelf cards still felt crowded and the demo could drift from real recognition results.** Removed the always-visible Sugar/Protein/per-100-g strip and standalone reason. The shared renderer now uses one compact 44 px `Why this score` row with the label on the left, arrow on the right and a collapsed four-component point grid. Demo and real scan behavior are checked against that same component. Scoring, evidence, score bands, ranks and the 59-point ceiling are unchanged; only its dedicated explanation panel was removed from `How scores work`.
