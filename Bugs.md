@@ -1,5 +1,6 @@
 # Bugs
 
+- **2026-09-09: the first selling-onboarding screen repeated the product name below the Sugar.no wordmark.** Removed the redundant `Sugar.no Shelf Scanner` eyebrow while preserving the share-sheet title and all onboarding behavior.
 - **2026-09-09: an at-home Meta visitor had no reliable way to remember the scanner for the next shop.** Selling onboarding version 7 now branches between an immediate in-store camera path and an at-home sample path. The at-home offer can share a clean scanner link to Messages, WhatsApp or Notes, with copy/manual fallbacks, without requesting camera, email, notifications or an account. `Add to Home Screen` remains deferred because Meta in-app browsers may not expose installation and the current local-storage allowance would not transfer reliably into an iOS Home Screen web app.
 
 - **2026-09-08: the access badge covered the saved-photo heading on mobile.** The badge had an absolute position in the scanner header while `Read a saved photo` began in the same vertical band. Staging now reserves a dedicated badge row and offsets both the live camera and saved-photo viewport below it. An automated geometry check verifies that the longest allowance label does not overlap the logo, feedback/demo controls, saved-photo heading or media viewport at 320, 375, 390, 430 and landscape 844 px widths. Production remains unchanged.

@@ -14,6 +14,8 @@ The experiment replaces the one-screen welcome with a context-aware, sub-one-min
 
 The visual language comes from the Sugar.no Figma paywall and shared design system: SF Pro Rounded/system typography, pale-blue product surfaces, coral primary action, blue progress, rounded white cards, the official Sugar.no mark and the existing shelf scan motif. The implementation deliberately omits invented reviews, medical claims, auto-renewal language and artificial urgency. Research notes, product hypotheses and the measurement plan live in [`docs/onboarding-selling-flow.md`](docs/onboarding-selling-flow.md).
 
+The first screen uses the official Sugar.no wordmark and begins directly with `Compare the shelf, not the labels.`; the redundant `Sugar.no Shelf Scanner` eyebrow is intentionally omitted.
+
 The latest tested launch-candidate revision and staging deployment are recorded in [`docs/launch-selling-onboarding.md`](docs/launch-selling-onboarding.md), together with the exact release boundary, required pilot variables, pre-advertising smoke and rollback steps. The public pilot remains on `f4c185d` with `wtpPaywall: false`; staging review does not authorize a pilot/production deployment or live charge.
 
 ## Approved Pen release

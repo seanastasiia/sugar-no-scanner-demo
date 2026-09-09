@@ -586,6 +586,7 @@ test("first visit explains the pilot before requesting camera permission", async
   await page.goto("/");
   await expect(page.getByLabel("Demo access code")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Compare the shelf, not the labels." })).toBeVisible();
+  await expect(page.getByText("Sugar.no Shelf Scanner", { exact: true })).toHaveCount(0);
   await expectOfficialSugarNoLogo(page);
   await expect(page.getByText("We compare confirmed sugar and protein, then show your Sugar.no fit. No account.")).toBeVisible();
   await expect(page.getByTestId("onboarding-preview")).toBeVisible();

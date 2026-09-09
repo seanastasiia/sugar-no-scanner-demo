@@ -81,7 +81,6 @@ export function PilotOnboarding({
       {step === 1 ? (
         <section className={styles.screen}>
           <div className={styles.copyBlock}>
-            <p className={styles.eyebrow}>Sugar.no Shelf Scanner</p>
             <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Compare the shelf, not the labels.</h1>
             <p>We compare confirmed sugar and protein, then show your Sugar.no fit. No account.</p>
           </div>
