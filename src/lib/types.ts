@@ -127,7 +127,7 @@ export interface ShelfPrice {
 }
 
 export interface RetailerOffer {
-  retailer: "Barbora" | "Rimi" | "Livin";
+  retailer: "Barbora" | "Rimi" | "Lidl" | "Livin";
   slug: string;
   title: string;
   brand: string;

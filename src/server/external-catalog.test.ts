@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import lidlFoodIdentities from "../../data/lidl-food-index.generated.json";
+import rimiFoodIdentities from "../../data/rimi-food-index.generated.json";
 import {
   dedupeExternalCatalogProducts,
   externalCatalogIdentityCounts,
@@ -294,7 +296,13 @@ describe("external retailer catalog", () => {
   });
 
   it("ships the generated OFF identity-only layer into exact runtime lookup", () => {
-    expect(externalCatalogIdentityCounts()).toMatchObject({ open_food_facts: 9626, livinn_lt: 2489, csp_lv: 0 });
+    expect(externalCatalogIdentityCounts()).toMatchObject({
+      rimi_lv: rimiFoodIdentities.length,
+      lidl_lv: lidlFoodIdentities.length,
+      open_food_facts: 9626,
+      livinn_lt: 2489,
+      csp_lv: 0
+    });
     const byBarcode = getExternalCatalogIdentityByBarcode("0000790870012");
     expect(byBarcode).toMatchObject({
       id: "off:0000790870012",
@@ -303,6 +311,22 @@ describe("external retailer catalog", () => {
       matchScore: null
     });
     expect(getExternalCatalogProductById("off:0000790870012")?.id).toBe("off:0000790870012");
+  });
+
+  it("ships incomplete Rimi and Lidl food identities without inventing nutrition", () => {
+    const rimi = rimiFoodIdentities[0];
+    const lidl = lidlFoodIdentities[0];
+    expect(rimi).toBeDefined();
+    expect(lidl).toBeDefined();
+    for (const identity of [rimi, lidl]) {
+      const product = getExternalCatalogProductById(`${identity.source}:${identity.sourceProductId}`);
+      expect(product).toMatchObject({
+        ratingStatus: "identity_only",
+        matchScore: null,
+        criterionScores: null,
+        nutrientsPer100g: { proteinG: null, totalSugarG: null }
+      });
+    }
   });
 
   it("preserves decimal packs instead of treating 0,33 l as 33 litres", () => {

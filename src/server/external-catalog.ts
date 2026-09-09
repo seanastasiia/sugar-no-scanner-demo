@@ -1,9 +1,11 @@
 import cspFoodIdentities from "../../data/csp-food-identities.generated.json";
+import lidlFoodIndex from "../../data/lidl-food-index.generated.json";
 import livinSnapshot from "../../data/livin-catalog.generated.json";
 import livinnFoodIndex from "../../data/livinn-food-index.generated.json";
 import livinnSnapshot from "../../data/livinn-catalog.generated.json";
 import offRegionalIdentities from "../../data/open-food-facts-regional-identities.generated.json";
 import rimiSnapshot from "../../data/rimi-catalog.generated.json";
+import rimiFoodIndex from "../../data/rimi-food-index.generated.json";
 import { scoreReferenceProduct } from "@/lib/scoring";
 import type { ProductRecord, RetailerOffer, ScoredProduct } from "@/lib/types";
 import {
@@ -156,6 +158,8 @@ export function dedupeExternalCatalogProducts(candidates: ExternalCatalogProduct
 
 const products = dedupeExternalCatalogProducts(rawProducts.map(withReviewedPackageAliases));
 const identities = [
+  ...(rimiFoodIndex as ExternalCatalogIdentity[]),
+  ...(lidlFoodIndex as ExternalCatalogIdentity[]),
   ...(livinnFoodIndex as ExternalCatalogIdentity[]),
   ...(offRegionalIdentities as ExternalCatalogIdentity[]),
   ...(cspFoodIdentities as ExternalCatalogIdentity[])
@@ -407,7 +411,11 @@ export function externalCatalogIdentityToScoredProduct(product: ExternalCatalogI
           ? "Open Food Facts product identity"
           : product.source === "csp_lv"
             ? "Central Statistical Bureau Latvia product identity"
-            : "Livinn Lithuania product identity",
+            : product.source === "rimi_lv"
+              ? "Rimi Latvia product identity"
+              : product.source === "lidl_lv"
+                ? "Lidl Latvia product identity"
+                : "Livinn Lithuania product identity",
         url: product.url,
         checkedAt: product.checkedAt,
         fields: ["identity", "retailerUrl"],
@@ -514,7 +522,7 @@ export function listExternalCatalogScoredProducts(): ScoredProduct[] {
 
 export function getExternalCatalogProductById(id: string): ScoredProduct | null {
   const [source, sourceProductId] = id.split(":", 2);
-  if ((source !== "rimi_lv" && source !== "livin_lv" && source !== "livinn_lt" && source !== "off" && source !== "csp_lv") || !sourceProductId) return null;
+  if ((source !== "rimi_lv" && source !== "lidl_lv" && source !== "livin_lv" && source !== "livinn_lt" && source !== "off" && source !== "csp_lv") || !sourceProductId) return null;
   const product = productsById.get(id);
   if (product) return externalCatalogToScoredProduct(product);
   const identity = identitiesById.get(id);
@@ -546,7 +554,7 @@ export function externalCatalogIdentityCounts() {
       counts[identity.source] += 1;
       return counts;
     },
-    { livinn_lt: 0, open_food_facts: 0, csp_lv: 0 } as Record<ExternalCatalogIdentity["source"], number>
+    { rimi_lv: 0, lidl_lv: 0, livinn_lt: 0, open_food_facts: 0, csp_lv: 0 } as Record<ExternalCatalogIdentity["source"], number>
   );
 }
 

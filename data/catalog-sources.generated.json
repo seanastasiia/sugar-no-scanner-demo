@@ -20,6 +20,16 @@
     "redistributable": false
   },
   {
+    "id": "lidl_lv",
+    "displayName": "Lidl Latvia",
+    "layer": "retailer_snapshot",
+    "license": "Retailer public product-page snapshot; production reuse requires retailer permission",
+    "attribution": "Product identity, availability and price from public Lidl Latvia product pages",
+    "termsUrl": "https://www.lidl.lv/c/lv-LV/lidl-majaslapas-juridiska-informacija/s10081265",
+    "dataUrl": "https://www.lidl.lv/static/sitemap.xml",
+    "redistributable": false
+  },
+  {
     "id": "livin_lv",
     "displayName": "LIVIN Latvia",
     "layer": "retailer_snapshot",

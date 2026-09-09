@@ -1,14 +1,17 @@
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { gunzipSync } from "node:zlib";
 import type { ExternalCatalogIdentity, ExternalCatalogProduct } from "../src/server/external-catalog-types";
 import {
+  parseLidlProductIdentity,
   parseLivinProductPage,
   parseLivinnProductIdentity,
   parseLivinnProductPage,
+  parseRimiProductIdentity,
   parseRimiProductPage
 } from "../src/server/retailer-page-parser";
 
-type Source = "rimi" | "livin" | "livinn";
+type Source = "rimi" | "lidl" | "livin" | "livinn";
 
 interface SyncProgress {
   source: Source;
@@ -33,6 +36,9 @@ interface SyncReport {
   processedUrls: number;
   completeProducts: number;
   foodProducts?: number;
+  identityOnlyProducts?: number;
+  historicalProductsRetained?: number;
+  historicalBaselineRevision?: string;
   nonFoodOrUnclassifiedPages?: number;
   skippedWithoutCompleteNutrition: number;
   notFoundUrls: number;
@@ -48,8 +54,8 @@ class FetchError extends Error {
 }
 
 const source = (process.env.RETAILER_SYNC_SOURCE || process.argv[2]) as Source;
-if (!("rimi livin livinn".split(" ") as string[]).includes(source)) {
-  throw new Error("Set RETAILER_SYNC_SOURCE=rimi|livin|livinn or pass one as the first argument");
+if (!("rimi lidl livin livinn".split(" ") as string[]).includes(source)) {
+  throw new Error("Set RETAILER_SYNC_SOURCE=rimi|lidl|livin|livinn or pass one as the first argument");
 }
 
 const limit = positiveInteger(process.env.RETAILER_SYNC_LIMIT, 0);
@@ -62,9 +68,12 @@ const checkedAt = process.env.CATALOG_CHECKED_AT || new Date().toISOString();
 const outputPath = path.resolve(process.env.RETAILER_SYNC_OUTPUT || `data/${source}-catalog.generated.json`);
 const reportPath = path.resolve(process.env.RETAILER_SYNC_REPORT || `data/${source}-catalog-sync-report.generated.json`);
 const progressPath = path.resolve(process.env.RETAILER_SYNC_PROGRESS || `.catalog-sync/${source}.progress.json`);
-const identityOutputPath = path.resolve(
-  process.env.RETAILER_SYNC_IDENTITY_OUTPUT || "data/livinn-food-index.generated.json"
-);
+const defaultIdentityOutput = source === "rimi"
+  ? "data/rimi-food-index.generated.json"
+  : source === "lidl"
+    ? "data/lidl-food-index.generated.json"
+    : "data/livinn-food-index.generated.json";
+const identityOutputPath = path.resolve(process.env.RETAILER_SYNC_IDENTITY_OUTPUT || defaultIdentityOutput);
 const userAgent = "Sugar.no Latvia catalog research/0.2 (https://sugar.no)";
 const defaultRimiCategories = [
   "gala-zivis-un-gatava-kulinarija",
@@ -73,7 +82,9 @@ const defaultRimiCategories = [
   "saldetie-edieni",
   "iepakota-partika",
   "saldumi-un-uzkodas",
-  "dzerieni"
+  "dzerieni",
+  "vegana-un-vegetara-partika",
+  "gatavots-rimi"
 ];
 const configuredRimiCategories = (process.env.RETAILER_SYNC_RIMI_CATEGORIES || defaultRimiCategories.join(","))
   .split(",")
@@ -130,6 +141,30 @@ async function fetchText(url: string): Promise<string> {
   throw lastError instanceof Error ? lastError : new Error(`${url}: request failed`);
 }
 
+async function fetchBytes(url: string): Promise<Buffer> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await waitForSlot();
+      const response = await fetch(url, {
+        headers: { "user-agent": userAgent },
+        signal: AbortSignal.timeout(25_000)
+      });
+      if (response.ok) return Buffer.from(await response.arrayBuffer());
+      if (response.status === 404 || response.status === 410) throw new FetchError(response.status, url);
+      if (response.status !== 429 && response.status < 500) throw new FetchError(response.status, url);
+      const retryAfter = Number.parseInt(response.headers.get("retry-after") || "", 10);
+      lastError = new FetchError(response.status, url);
+      await delay(Number.isFinite(retryAfter) ? retryAfter * 1_000 : 750 * 2 ** attempt);
+    } catch (error) {
+      if (error instanceof FetchError && (error.status === 404 || error.status === 410 || error.status < 429)) throw error;
+      lastError = error;
+      if (attempt < 2) await delay(750 * 2 ** attempt);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(`${url}: request failed`);
+}
+
 function sitemapLocations(xml: string): string[] {
   return [...xml.matchAll(/<loc>([\s\S]*?)<\/loc>/gi)].map((match) =>
     match[1].trim().replaceAll("&amp;", "&")
@@ -144,6 +179,14 @@ async function productUrls(): Promise<string[]> {
   if (source === "livinn") {
     return [...new Set(sitemapLocations(await fetchText("https://www.livinn.lt/sitemap/products.xml"))
       .filter((url) => url.startsWith("https://www.livinn.lt/p/")))];
+  }
+  if (source === "lidl") {
+    const root = sitemapLocations(await fetchText("https://www.lidl.lv/static/sitemap.xml"));
+    const productSitemap = root.find((url) => /\/product_sitemap\.xml\.gz$/i.test(url));
+    if (!productSitemap) throw new Error("Lidl public sitemap does not expose a product sitemap");
+    const body = await fetchBytes(productSitemap);
+    const xml = body[0] === 0x1f && body[1] === 0x8b ? gunzipSync(body).toString("utf8") : body.toString("utf8");
+    return [...new Set(sitemapLocations(xml).filter((url) => /^https:\/\/www\.lidl\.lv\/p\/.+\/p\d+$/i.test(url)))];
   }
   const root = sitemapLocations(await fetchText("https://www.rimi.lv/e-veikals/sitemap.xml"))
     .filter((url) => /Product_lv_\d+\.xml$/i.test(url));
@@ -196,7 +239,7 @@ async function initialProgress(urls: string[]): Promise<SyncProgress> {
     };
   }
   const existing = resume ? await readJson<ExternalCatalogProduct[]>(outputPath) : null;
-  const existingIdentities = source === "livinn" && resume
+  const existingIdentities = (source === "livinn" || source === "rimi" || source === "lidl") && resume
     ? await readJson<ExternalCatalogIdentity[]>(identityOutputPath)
     : null;
   const currentUrls = new Set(urls);
@@ -241,6 +284,7 @@ async function initialProgress(urls: string[]): Promise<SyncProgress> {
 
 async function main() {
   const urls = await productUrls();
+  const previousRimiSnapshot = source === "rimi" ? await readJson<ExternalCatalogProduct[]>(outputPath) : null;
   const progress = await initialProgress(urls);
   const processed = new Set(progress.processedUrls);
   const notFound = new Set(progress.notFoundUrls);
@@ -275,12 +319,18 @@ async function main() {
       const url = capped[index];
       try {
         const html = await fetchText(url);
-        if (source === "livinn") {
-          const identity = parseLivinnProductIdentity(html, url, checkedAt);
+        if (source === "livinn" || source === "rimi" || source === "lidl") {
+          const identity = source === "livinn"
+            ? parseLivinnProductIdentity(html, url, checkedAt)
+            : source === "rimi"
+              ? parseRimiProductIdentity(html, url, checkedAt)
+              : parseLidlProductIdentity(html, url, checkedAt);
           if (identity) identities.set(identity.sourceProductId, identity);
         }
         const product = source === "rimi"
           ? parseRimiProductPage(html, url, checkedAt)
+          : source === "lidl"
+            ? null
           : source === "livinn"
             ? parseLivinnProductPage(html, url, checkedAt)
             : parseLivinProductPage(html, url, checkedAt);
@@ -312,16 +362,26 @@ async function main() {
     throw new Error(`${source}: ${failures.size} pages still failed after retries; progress retained at ${progressPath}`);
   }
 
-  const output = dedupeProducts([...products.values()]);
+  const freshProducts = dedupeProducts([...products.values()]);
+  const retainedHistoricalProducts = source === "rimi" && fullRun
+    ? (previousRimiSnapshot || [])
+      .filter((product) => !products.has(product.sourceProductId))
+      .map((product) => ({ ...product, price: null, currency: null, available: false } as ExternalCatalogProduct))
+    : [];
+  const output = dedupeProducts([...freshProducts, ...retainedHistoricalProducts]);
   await writeJsonAtomic(outputPath, output);
-  if (source === "livinn") {
+  const completeIds = new Set(output.map((product) => product.sourceProductId));
+  const outputIdentities = [...identities.values()]
+    .filter((identity) => source === "livinn" || !completeIds.has(identity.sourceProductId))
+    .sort((left, right) => left.sourceProductId.localeCompare(right.sourceProductId));
+  if (source === "livinn" || source === "rimi" || source === "lidl") {
     await writeJsonAtomic(
       identityOutputPath,
-      [...identities.values()].sort((left, right) => left.sourceProductId.localeCompare(right.sourceProductId))
+      outputIdentities
     );
   }
   const incompleteFoodProducts = source === "livinn" ? Math.max(0, identities.size - output.length) : null;
-  const nonFoodOrUnclassifiedPages = source === "livinn"
+  const nonFoodOrUnclassifiedPages = source === "livinn" || source === "lidl"
     ? Math.max(0, processed.size - notFound.size - identities.size)
     : null;
   const report: SyncReport = {
@@ -333,10 +393,15 @@ async function main() {
     discoveredUrls: urls.length,
     processedUrls: processed.size,
     completeProducts: output.length,
-    ...(source === "livinn"
-      ? { foodProducts: identities.size, nonFoodOrUnclassifiedPages: nonFoodOrUnclassifiedPages! }
-      : {}),
-    skippedWithoutCompleteNutrition: incompleteFoodProducts ?? Math.max(0, processed.size - notFound.size - output.length),
+    ...(source === "rimi" ? { historicalProductsRetained: retainedHistoricalProducts.length } : {}),
+    ...(source === "livinn" || source === "lidl"
+      ? { foodProducts: identities.size, identityOnlyProducts: outputIdentities.length, nonFoodOrUnclassifiedPages: nonFoodOrUnclassifiedPages! }
+      : source === "rimi"
+        ? { identityOnlyProducts: outputIdentities.length }
+        : {}),
+    skippedWithoutCompleteNutrition: source === "lidl"
+      ? identities.size
+      : incompleteFoodProducts ?? Math.max(0, processed.size - notFound.size - freshProducts.length),
     notFoundUrls: notFound.size,
     failedUrls: failures.size,
     requestSpacingMs: spacingMs,
@@ -345,7 +410,9 @@ async function main() {
   await writeJsonAtomic(reportPath, report);
   if (fullRun) await rm(progressPath, { force: true });
   console.log(`Wrote ${output.length} ${source} products with protein and total sugar to ${outputPath}`);
-  if (source === "livinn") console.log(`Wrote ${identities.size} edible Livinn identities to ${identityOutputPath}`);
+  if (source === "livinn" || source === "rimi" || source === "lidl") {
+    console.log(`Wrote ${outputIdentities.length} ${source} identity-only food products to ${identityOutputPath}`);
+  }
   console.log(JSON.stringify(report));
 }
 

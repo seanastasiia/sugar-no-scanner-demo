@@ -23,6 +23,14 @@ interface JsonLdBreadcrumbList {
   itemListElement?: Array<{ name?: string; item?: string }>;
 }
 
+interface LidlDataLayerProduct {
+  brand?: string;
+  id?: string;
+  name?: string;
+  status?: string;
+  wonCategoryPrimary?: string;
+}
+
 function decodeHtml(value: string): string {
   return value
     .replace(/&nbsp;|&#160;/gi, " ")
@@ -130,8 +138,8 @@ export function parseRimiProductPage(
   url: string,
   checkedAt = new Date().toISOString()
 ): ExternalCatalogProduct | null {
-  const product = jsonLdProducts(html)[0];
-  if (!product?.name || !product.sku) return null;
+  const identity = parseRimiProductIdentity(html, url, checkedAt);
+  if (!identity) return null;
   const detailsHtml = rimiDetails(html);
   const details = plainText(detailsHtml);
   const energy = energyKcal(details);
@@ -139,28 +147,95 @@ export function parseRimiProductPage(
   const sugar = nutrient(details, [/tostarp cukuri/, /t\.\s*sk\.\s*cukuri/]);
   const carbohydrate = nutrient(details, [/ogļhidrāti/, /oglhidrati/, /carbohydrates?/]);
   if (energy === null || protein === null || sugar === null) return null;
+  const product = jsonLdProducts(html)[0]!;
   const price = finite(product.offers?.price);
+  return {
+    ...identity,
+    nutritionBasis: nutritionBasis(details),
+    energyKcal: energy,
+    proteinG: protein,
+    totalSugarG: sugar,
+    carbohydrateG: carbohydrate,
+    price,
+    currency: product.offers?.priceCurrency === "EUR" && price !== null ? "EUR" : null,
+    available: availability(product.offers?.availability),
+    checkedAt
+  };
+}
+
+export function parseRimiProductIdentity(
+  html: string,
+  url: string,
+  checkedAt = new Date().toISOString()
+): ExternalCatalogIdentity | null {
+  const product = jsonLdProducts(html)[0];
+  if (!product?.name || !product.sku) return null;
+  const detailsHtml = rimiDetails(html);
   const title = plainText(product.name);
+  const price = finite(product.offers?.price);
   return {
     source: "rimi_lv",
     sourceProductId: product.sku,
     retailer: "Rimi",
     url,
     title,
-    brand: rimiBrand(detailsHtml) || title.split(/\s+/)[0] || "Rimi",
+    aliases: [],
+    brand: rimiBrand(detailsHtml) || plainText(productBrand(product)) || title.split(/\s+/)[0] || "Rimi",
     gtin: productGtin(product),
     sku: product.sku,
     category: new URL(url).pathname.split("/p/")[0]?.split("/produkti/")[1]?.replaceAll("/", " > ") || null,
     packSize: packFromTitle(title),
-    nutritionBasis: nutritionBasis(details),
-    energyKcal: energy,
-    proteinG: protein,
-    totalSugarG: sugar,
-    carbohydrateG: carbohydrate,
     imageUrl: productImage(product),
     price,
     currency: product.offers?.priceCurrency === "EUR" && price !== null ? "EUR" : null,
     available: availability(product.offers?.availability),
+    checkedAt
+  };
+}
+
+function lidlDataLayerProduct(html: string): LidlDataLayerProduct | null {
+  const raw = html.match(/var\s+unified_datalayer_product\s*=\s*(\{[^<]+?\});?\s*<\/script>/i)?.[1];
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as LidlDataLayerProduct;
+  } catch {
+    return null;
+  }
+}
+
+function lidlPackSize(html: string, title: string): string {
+  const basePricePack = html.match(/>(\d+(?:[.,]\d+)?\s*(?:kg|g|ml|cl|l))\s*\/\s*1\s*(?:kg|l)\s*=/i)?.[1];
+  return plainText(basePricePack || "") || packFromTitle(title);
+}
+
+export function parseLidlProductIdentity(
+  html: string,
+  url: string,
+  checkedAt = new Date().toISOString()
+): ExternalCatalogIdentity | null {
+  const product = jsonLdProducts(html)[0];
+  const analytics = lidlDataLayerProduct(html);
+  const sku = product?.sku || analytics?.id || "";
+  const title = plainText(product?.name || analytics?.name || "");
+  const category = plainText(analytics?.wonCategoryPrimary || "");
+  if (!sku || !title || !category.includes("Pārtika un ēdiena tuvumā")) return null;
+  const price = finite(html.match(/ods-price__value[^>]*>(\d+(?:[.,]\d+)?)\s*€/i)?.[1]);
+  return {
+    source: "lidl_lv",
+    sourceProductId: sku,
+    retailer: "Lidl",
+    url,
+    title,
+    aliases: [],
+    brand: plainText(productBrand(product || {}) || analytics?.brand || "") || "Lidl",
+    gtin: product ? productGtin(product) : null,
+    sku,
+    category,
+    packSize: lidlPackSize(html, title),
+    imageUrl: product ? productImage(product) : null,
+    price,
+    currency: price === null ? null : "EUR",
+    available: analytics?.status === "main-product" || /InStoreOnly|>Veikalā</i.test(html) ? true : null,
     checkedAt
   };
 }

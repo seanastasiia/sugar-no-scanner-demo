@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import livinnFoodIdentities from "../data/livinn-food-index.generated.json";
+import lidlFoodIdentities from "../data/lidl-food-index.generated.json";
 import offIdentities from "../data/open-food-facts-regional-identities.generated.json";
+import rimiFoodIdentities from "../data/rimi-food-index.generated.json";
 import cspReport from "../data/csp-import-report.generated.json";
 import retailerShelfEvidence from "../data/personal-shelf-evidence.generated.json";
 import offShelfEvidence from "../data/personal-shelf-off-evidence.generated.json";
@@ -51,6 +53,22 @@ async function main() {
   const livinnIdentityCount = livinnIdentities.count ?? 0;
   const expectedLivinnIdentityCount = livinnFoodIdentities.length;
 
+  const rimiIdentities = await supabase
+    .from("retailer_catalog_food_identities")
+    .select("source_product_id", { count: "exact", head: true })
+    .eq("source_id", "rimi_lv");
+  if (rimiIdentities.error) throw rimiIdentities.error;
+  const rimiIdentityCount = rimiIdentities.count ?? 0;
+  const expectedRimiIdentityCount = rimiFoodIdentities.length;
+
+  const lidlIdentities = await supabase
+    .from("retailer_catalog_food_identities")
+    .select("source_product_id", { count: "exact", head: true })
+    .eq("source_id", "lidl_lv");
+  if (lidlIdentities.error) throw lidlIdentities.error;
+  const lidlIdentityCount = lidlIdentities.count ?? 0;
+  const expectedLidlIdentityCount = lidlFoodIdentities.length;
+
   const offIdentityRows = await supabase
     .from("open_food_facts_product_identities")
     .select("gtin", { count: "exact", head: true });
@@ -75,6 +93,10 @@ async function main() {
     dueForSilentRevalidation: staleCount,
     expectedLivinnIdentityCount,
     livinnIdentityCount,
+    expectedRimiIdentityCount,
+    rimiIdentityCount,
+    expectedLidlIdentityCount,
+    lidlIdentityCount,
     expectedOffIdentityCount,
     offIdentityCount,
     cspConnected: cspExpected.connected,
@@ -100,6 +122,12 @@ async function main() {
   }
   if (livinnIdentityCount !== expectedLivinnIdentityCount) {
     throw new Error(`Expected ${expectedLivinnIdentityCount} Livinn food identities, found ${livinnIdentityCount}`);
+  }
+  if (rimiIdentityCount !== expectedRimiIdentityCount) {
+    throw new Error(`Expected ${expectedRimiIdentityCount} Rimi food identities, found ${rimiIdentityCount}`);
+  }
+  if (lidlIdentityCount !== expectedLidlIdentityCount) {
+    throw new Error(`Expected ${expectedLidlIdentityCount} Lidl food identities, found ${lidlIdentityCount}`);
   }
   if (offIdentityCount !== expectedOffIdentityCount) {
     throw new Error(`Expected ${expectedOffIdentityCount} OFF identity-only rows, found ${offIdentityCount}`);

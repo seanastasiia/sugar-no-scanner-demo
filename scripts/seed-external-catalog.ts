@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import barboraNutritionProducts from "../data/barbora-nutrition-index.generated.json";
 import manifests from "../data/catalog-sources.generated.json";
+import lidlFoodIdentities from "../data/lidl-food-index.generated.json";
 import livinProducts from "../data/livin-catalog.generated.json";
 import livinnFoodIdentities from "../data/livinn-food-index.generated.json";
 import livinnProducts from "../data/livinn-catalog.generated.json";
@@ -9,6 +10,7 @@ import offProducts from "../data/open-food-facts-lv.generated.json";
 import offIdentities from "../data/open-food-facts-regional-identities.generated.json";
 import regionalOffProducts from "../data/open-food-facts-regional.generated.json";
 import rimiProducts from "../data/rimi-catalog.generated.json";
+import rimiFoodIdentities from "../data/rimi-food-index.generated.json";
 import { buildBarboraCatalogSnapshot } from "../src/server/barbora-supabase-catalog";
 import type { BarboraNutritionIndexProduct } from "../src/server/barbora-nutrition-index";
 import { nutritionRevalidateAfter, priceRevalidateAfter } from "../src/server/data-freshness";
@@ -70,8 +72,9 @@ async function pruneUnratedBarboraRows(
   return staleIds.length;
 }
 
-async function pruneStaleLivinnIdentityRows(
+async function pruneStaleRetailerIdentityRows(
   supabase: SupabaseClient,
+  sourceId: "rimi_lv" | "lidl_lv" | "livinn_lt",
   retainedProductIds: Set<string>
 ): Promise<number> {
   const staleIds: string[] = [];
@@ -79,7 +82,7 @@ async function pruneStaleLivinnIdentityRows(
     const { data, error } = await supabase
       .from("retailer_catalog_food_identities")
       .select("source_product_id")
-      .eq("source_id", "livinn_lt")
+      .eq("source_id", sourceId)
       .range(from, from + 999);
     if (error) throw error;
     const rows = (data || []) as Array<{ source_product_id: string }>;
@@ -90,7 +93,7 @@ async function pruneStaleLivinnIdentityRows(
     const { error } = await supabase
       .from("retailer_catalog_food_identities")
       .delete()
-      .eq("source_id", "livinn_lt")
+      .eq("source_id", sourceId)
       .in("source_product_id", staleIds.slice(index, index + BATCH_SIZE));
     if (error) throw error;
   }
@@ -129,6 +132,8 @@ async function main() {
     snapshotCheckedAt
   });
   console.log(JSON.stringify({ barbora: barbora.summary }, null, 2));
+  console.log(JSON.stringify({ rimiFoodIdentities: (rimiFoodIdentities as ExternalCatalogIdentity[]).length }));
+  console.log(JSON.stringify({ lidlFoodIdentities: (lidlFoodIdentities as ExternalCatalogIdentity[]).length }));
   console.log(JSON.stringify({ livinnFoodIdentities: (livinnFoodIdentities as ExternalCatalogIdentity[]).length }));
   console.log(JSON.stringify({ openFoodFactsIdentityOnly: (offIdentities as ExternalCatalogIdentity[]).length }));
   if (process.argv.includes("--dry-run")) return;
@@ -175,7 +180,11 @@ async function main() {
       ...(livinProducts as ExternalCatalogProduct[]),
       ...(livinnProducts as ExternalCatalogProduct[]).filter((product) => !isQuarantinedRetailerNutrition(product))
     ];
-    const livinnIdentityRows = (livinnFoodIdentities as ExternalCatalogIdentity[]).map((product) => ({
+    const retailerIdentityRows = [
+      ...(rimiFoodIdentities as ExternalCatalogIdentity[]),
+      ...(lidlFoodIdentities as ExternalCatalogIdentity[]),
+      ...(livinnFoodIdentities as ExternalCatalogIdentity[])
+    ].map((product) => ({
       source_id: product.source,
       source_product_id: product.sourceProductId,
       retailer: product.retailer,
@@ -193,17 +202,23 @@ async function main() {
       available: product.available,
       checked_at: product.checkedAt
     }));
-    for (let index = 0; index < livinnIdentityRows.length; index += BATCH_SIZE) {
+    for (let index = 0; index < retailerIdentityRows.length; index += BATCH_SIZE) {
       const { error } = await supabase.from("retailer_catalog_food_identities").upsert(
-        livinnIdentityRows.slice(index, index + BATCH_SIZE),
+        retailerIdentityRows.slice(index, index + BATCH_SIZE),
         { onConflict: "source_id,source_product_id" }
       );
       if (error) throw error;
     }
-    const prunedLivinnIdentityRows = await pruneStaleLivinnIdentityRows(
-      supabase,
-      new Set(livinnIdentityRows.map((product) => product.source_product_id))
-    );
+    const prunedRetailerIdentityRows = Object.fromEntries(await Promise.all(
+      (["rimi_lv", "lidl_lv", "livinn_lt"] as const).map(async (sourceId) => [
+        sourceId,
+        await pruneStaleRetailerIdentityRows(
+          supabase,
+          sourceId,
+          new Set(retailerIdentityRows.filter((row) => row.source_id === sourceId).map((row) => row.source_product_id))
+        )
+      ])
+    ));
     const retailerRows = [
       ...barbora.productRows,
       ...externalRetailerProducts.map((product) => ({
@@ -325,9 +340,9 @@ async function main() {
     if (completedError) throw completedError;
     console.log(
       `Seeded ${sourceRows.length} sources, ${barbora.productRows.length} rated Barbora SKUs, ` +
-      `${retailerRows.length} nutrition-complete retailer rows, ${livinnIdentityRows.length} Livinn food identities ` +
+      `${retailerRows.length} nutrition-complete retailer rows, ${retailerIdentityRows.length} retailer food identities ` +
       `${offIdentityRows.length} OFF identity-only rows and ${offRows.length} nutrition-complete ODbL rows; ` +
-      `pruned ${prunedBarboraRows} unrated Barbora rows, ${prunedLivinnIdentityRows} stale Livinn identities ` +
+      `pruned ${prunedBarboraRows} unrated Barbora rows, ${JSON.stringify(prunedRetailerIdentityRows)} stale retailer identities ` +
       `and ${prunedOffIdentityRows} stale OFF identities.`
     );
   } catch (error) {

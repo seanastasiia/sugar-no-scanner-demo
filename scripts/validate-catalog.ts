@@ -35,9 +35,9 @@ const productSchema = z.object({
 });
 
 const externalProductSchema = z.object({
-  source: z.enum(["rimi_lv", "livin_lv", "livinn_lt", "open_food_facts"]),
+  source: z.enum(["rimi_lv", "lidl_lv", "livin_lv", "livinn_lt", "open_food_facts"]),
   sourceProductId: z.string().min(1),
-  retailer: z.enum(["Rimi", "Livin"]).nullable(),
+  retailer: z.enum(["Rimi", "Lidl", "Livin"]).nullable(),
   url: z.url(),
   title: z.string().min(1),
   aliases: z.array(z.string().min(1)).optional(),
@@ -77,6 +77,18 @@ const externalIdentitySchema = z.object({
   checkedAt: z.iso.datetime()
 });
 
+const rimiIdentitySchema = externalIdentitySchema.extend({
+  source: z.literal("rimi_lv"),
+  retailer: z.literal("Rimi"),
+  category: z.string().min(1)
+});
+
+const lidlIdentitySchema = externalIdentitySchema.extend({
+  source: z.literal("lidl_lv"),
+  retailer: z.literal("Lidl"),
+  category: z.string().min(1)
+});
+
 const offIdentitySchema = z.object({
   source: z.literal("open_food_facts"),
   sourceProductId: z.string().regex(/^\d{8,14}$/),
@@ -111,7 +123,7 @@ const offIdentityReportSchema = z.object({
 }).passthrough();
 
 const catalogSourceManifestSchema = z.object({
-  id: z.enum(["barbora_lv", "rimi_lv", "livin_lv", "livinn_lt", "open_food_facts", "csp_lv"]),
+  id: z.enum(["barbora_lv", "rimi_lv", "lidl_lv", "livin_lv", "livinn_lt", "open_food_facts", "csp_lv"]),
   displayName: z.string().min(1),
   layer: z.enum(["retailer_snapshot", "odbl_bulk", "government_price_feed"]),
   license: z.string().min(1),
@@ -122,15 +134,18 @@ const catalogSourceManifestSchema = z.object({
 });
 
 const retailerSyncReportSchema = z.object({
-  source: z.enum(["rimi", "livin", "livinn"]),
+  source: z.enum(["rimi", "lidl", "livin", "livinn"]),
   categories: z.array(z.string().min(1)).min(1).nullable(),
   startedAt: z.iso.datetime(),
   completedAt: z.iso.datetime(),
   checkedAt: z.iso.datetime(),
   discoveredUrls: z.number().int().positive(),
   processedUrls: z.number().int().positive(),
-  completeProducts: z.number().int().positive(),
-  foodProducts: z.number().int().positive().optional(),
+  completeProducts: z.number().int().nonnegative(),
+  foodProducts: z.number().int().nonnegative().optional(),
+  identityOnlyProducts: z.number().int().nonnegative().optional(),
+  historicalProductsRetained: z.number().int().nonnegative().optional(),
+  historicalBaselineRevision: z.string().regex(/^[a-f0-9]{40}$/).optional(),
   nonFoodOrUnclassifiedPages: z.number().int().nonnegative().optional(),
   skippedWithoutCompleteNutrition: z.number().int().nonnegative(),
   notFoundUrls: z.number().int().nonnegative(),
@@ -139,6 +154,45 @@ const retailerSyncReportSchema = z.object({
   concurrency: z.number().int().min(1).max(8)
 });
 
+const rimiLidlExpansionReportSchema = z.object({
+  baselineRevision: z.string().regex(/^[a-f0-9]{40}$/),
+  scope: z.object({
+    cspIncluded: z.literal(false),
+    rimiCategories: z.array(z.string().min(1)).min(1),
+    expandedCategories: z.array(z.string().min(1)).length(2)
+  }),
+  rimi: z.object({
+    previousCompleteProducts: z.number().int().positive(),
+    currentCompleteProducts: z.number().int().positive(),
+    addedCompleteProducts: z.number().int().nonnegative(),
+    removedCompleteProducts: z.number().int().nonnegative(),
+    retainedCompleteProducts: z.number().int().nonnegative(),
+    addedCompleteIds: z.array(z.string().min(1)),
+    removedCompleteIds: z.array(z.string().min(1)),
+    identityOnlyProducts: z.number().int().nonnegative(),
+    identityOnlyWithValidGtin: z.number().int().nonnegative(),
+    identityOnlyBridgedToCompleteOffByGtin: z.number().int().nonnegative(),
+    currentSnapshotSha256: z.string().regex(/^[a-f0-9]{64}$/),
+    identitySnapshotSha256: z.string().regex(/^[a-f0-9]{64}$/)
+  }).passthrough(),
+  lidlPilot: z.object({
+    discoveredUrls: z.number().int().positive(),
+    processedUrls: z.number().int().positive(),
+    completeProducts: z.number().int().nonnegative(),
+    foodProducts: z.number().int().nonnegative(),
+    identityOnlyProducts: z.number().int().nonnegative(),
+    failedUrls: z.literal(0),
+    fullImportRecommended: z.literal(false),
+    decisionReason: z.string().min(1)
+  }).passthrough(),
+  personalFit: z.object({
+    baselineCatalog: z.unknown().nullable(),
+    expandedCatalog: z.unknown().nullable(),
+    assessableDelta: z.number().int().nullable()
+  }),
+  limits: z.array(z.string().min(1)).min(1)
+}).passthrough();
+
 const rimiScopedCategories = [
   "gala-zivis-un-gatava-kulinarija",
   "piena-produkti-un-olas",
@@ -146,10 +200,12 @@ const rimiScopedCategories = [
   "saldetie-edieni",
   "iepakota-partika",
   "saldumi-un-uzkodas",
-  "dzerieni"
+  "dzerieni",
+  "vegana-un-vegetara-partika",
+  "gatavots-rimi"
 ];
 
-async function externalSnapshot(file: string, source: "rimi_lv" | "livin_lv" | "livinn_lt" | "open_food_facts", minimum: number) {
+async function externalSnapshot(file: string, source: "rimi_lv" | "lidl_lv" | "livin_lv" | "livinn_lt" | "open_food_facts", minimum: number) {
   const products = z.array(externalProductSchema).min(minimum).parse(JSON.parse(await readFile(file, "utf8")));
   if (products.some((product) => product.source !== source)) throw new Error(`${file} mixes catalog source layers`);
   if (new Set(products.map((product) => product.sourceProductId)).size !== products.length) {
@@ -160,14 +216,14 @@ async function externalSnapshot(file: string, source: "rimi_lv" | "livin_lv" | "
 
 async function completedRetailerSync(
   file: string,
-  source: "rimi" | "livin" | "livinn",
+  source: "rimi" | "lidl" | "livin" | "livinn",
   completeProducts: number
 ) {
   const report = retailerSyncReportSchema.parse(JSON.parse(await readFile(file, "utf8")));
   if (report.source !== source) throw new Error(`${file} belongs to ${report.source}, not ${source}`);
   if (report.processedUrls !== report.discoveredUrls) throw new Error(`${file} does not cover its complete configured URL scope`);
   if (report.completeProducts !== completeProducts) throw new Error(`${file} does not match its generated snapshot`);
-  if (source === "livinn") {
+  if (source === "livinn" || source === "lidl") {
     if (report.foodProducts === undefined || report.nonFoodOrUnclassifiedPages === undefined) {
       throw new Error(`${file} is missing the complete food identity coverage totals`);
     }
@@ -177,7 +233,7 @@ async function completedRetailerSync(
     if (report.foodProducts + report.nonFoodOrUnclassifiedPages + report.notFoundUrls !== report.processedUrls) {
       throw new Error(`${file} page coverage totals do not reconcile`);
     }
-  } else if (report.completeProducts + report.skippedWithoutCompleteNutrition + report.notFoundUrls !== report.processedUrls) {
+  } else if (report.completeProducts - (report.historicalProductsRetained || 0) + report.skippedWithoutCompleteNutrition + report.notFoundUrls !== report.processedUrls) {
     throw new Error(`${file} coverage totals do not reconcile`);
   }
   return report;
@@ -199,6 +255,12 @@ async function main() {
   ]);
   const livinnFoodIndex = z.array(externalIdentitySchema).min(500).parse(
     JSON.parse(await readFile("data/livinn-food-index.generated.json", "utf8"))
+  );
+  const rimiFoodIndex = z.array(rimiIdentitySchema).min(1).parse(
+    JSON.parse(await readFile("data/rimi-food-index.generated.json", "utf8"))
+  );
+  const lidlFoodIndex = z.array(lidlIdentitySchema).parse(
+    JSON.parse(await readFile("data/lidl-food-index.generated.json", "utf8"))
   );
   const offIdentities = z.array(offIdentitySchema).min(1_000).parse(
     JSON.parse(await readFile("data/open-food-facts-regional-identities.generated.json", "utf8"))
@@ -256,6 +318,22 @@ async function main() {
   if (new Set(livinnFoodIndex.map((product) => product.sourceProductId)).size !== livinnFoodIndex.length) {
     throw new Error("Livinn Lithuania food index contains duplicate source product IDs");
   }
+  for (const [name, rows] of [["Rimi Latvia", rimiFoodIndex], ["Lidl Latvia", lidlFoodIndex]] as const) {
+    if (new Set(rows.map((product) => product.sourceProductId)).size !== rows.length) {
+      throw new Error(`${name} identity-only index contains duplicate source product IDs`);
+    }
+    for (const product of rows) {
+      const normalizedNames = [product.title, ...product.aliases]
+        .map((value) => value.normalize("NFKC").trim().toLocaleLowerCase());
+      if (new Set(normalizedNames).size !== normalizedNames.length) {
+        throw new Error(`${name} ${product.sourceProductId} contains duplicate names`);
+      }
+    }
+  }
+  const completeRimiIds = new Set(rimi.map((product) => product.sourceProductId));
+  if (rimiFoodIndex.some((product) => completeRimiIds.has(product.sourceProductId))) {
+    throw new Error("Rimi identity-only and nutrition-complete layers overlap");
+  }
   if (new Set(livinnFoodIndex.map((product) => product.gtin)).size !== livinnFoodIndex.length) {
     throw new Error("Livinn Lithuania food index contains duplicate GTINs");
   }
@@ -284,7 +362,7 @@ async function main() {
       throw new Error(`Livinn Lithuania representative product ${id} is missing or changed`);
     }
   }
-  const sourceManifests = z.array(catalogSourceManifestSchema).length(6).parse(
+  const sourceManifests = z.array(catalogSourceManifestSchema).length(7).parse(
     JSON.parse(await readFile("data/catalog-sources.generated.json", "utf8"))
   );
   if (new Set(sourceManifests.map((source) => source.id)).size !== sourceManifests.length) {
@@ -292,11 +370,12 @@ async function main() {
   }
   const barboraSource = sourceManifests.find((source) => source.id === "barbora_lv")!;
   const rimiSource = sourceManifests.find((source) => source.id === "rimi_lv")!;
+  const lidlSource = sourceManifests.find((source) => source.id === "lidl_lv")!;
   const livinSource = sourceManifests.find((source) => source.id === "livin_lv")!;
   const livinnSource = sourceManifests.find((source) => source.id === "livinn_lt")!;
   const offSource = sourceManifests.find((source) => source.id === "open_food_facts")!;
   const cspSource = sourceManifests.find((source) => source.id === "csp_lv")!;
-  if (barboraSource.redistributable || rimiSource.redistributable || livinSource.redistributable || livinnSource.redistributable) {
+  if (barboraSource.redistributable || rimiSource.redistributable || lidlSource.redistributable || livinSource.redistributable || livinnSource.redistributable) {
     throw new Error("Retailer snapshots must remain non-redistributable without permission");
   }
   if (!offSource.redistributable || !/ODbL|Open Database License/i.test(offSource.license) || !/CC BY-SA/i.test(offSource.license)) {
@@ -328,6 +407,8 @@ async function main() {
   }
   for (const [file, snapshot] of [
     ["Rimi", rimi],
+    ["Rimi identities", rimiFoodIndex],
+    ["Lidl identities", lidlFoodIndex],
     ["Livin", livin],
     ["Livinn Lithuania", livinn],
     ["Open Food Facts", combinedOpenFoodFacts]
@@ -336,18 +417,39 @@ async function main() {
       throw new Error(`${file} snapshot contains a non-HTTPS product image`);
     }
   }
-  const [rimiReport, livinReport, livinnReport] = await Promise.all([
+  const [rimiReport, lidlReport, livinReport, livinnReport] = await Promise.all([
     completedRetailerSync("data/rimi-catalog-sync-report.generated.json", "rimi", rimi.length),
+    completedRetailerSync("data/lidl-catalog-sync-report.generated.json", "lidl", 0),
     completedRetailerSync("data/livin-catalog-sync-report.generated.json", "livin", livin.length),
     completedRetailerSync("data/livinn-catalog-sync-report.generated.json", "livinn", livinn.length)
   ]);
   if (JSON.stringify(rimiReport.categories) !== JSON.stringify(rimiScopedCategories)) {
-    throw new Error("Rimi snapshot does not match the approved seven-category scope");
+    throw new Error("Rimi snapshot does not match the approved nine-category scope");
+  }
+  if (rimiReport.identityOnlyProducts !== rimiFoodIndex.length) {
+    throw new Error("Rimi sync report does not match its identity-only index");
+  }
+  if (lidlReport.categories !== null || lidlReport.foodProducts !== lidlFoodIndex.length || lidlReport.identityOnlyProducts !== lidlFoodIndex.length) {
+    throw new Error("Lidl pilot report does not match its public food identity index");
   }
   if (livinReport.categories !== null) throw new Error("Livin sync must cover its complete Latvia product sitemap");
   if (livinnReport.categories !== null) throw new Error("Livinn sync must cover its complete Lithuania product sitemap");
   if (livinnReport.foodProducts !== livinnFoodIndex.length) {
     throw new Error("Livinn sync report does not match its complete food identity index");
+  }
+  const expansionReport = rimiLidlExpansionReportSchema.parse(
+    JSON.parse(await readFile("data/rimi-lidl-expansion-report.generated.json", "utf8"))
+  );
+  if (expansionReport.rimi.currentCompleteProducts !== rimi.length ||
+      expansionReport.rimi.identityOnlyProducts !== rimiFoodIndex.length ||
+      expansionReport.rimi.addedCompleteProducts !== expansionReport.rimi.addedCompleteIds.length ||
+      expansionReport.rimi.removedCompleteProducts !== expansionReport.rimi.removedCompleteIds.length) {
+    throw new Error("Rimi/Lidl expansion report does not match the generated Rimi layers");
+  }
+  if (expansionReport.lidlPilot.discoveredUrls !== lidlReport.discoveredUrls ||
+      expansionReport.lidlPilot.foodProducts !== lidlFoodIndex.length ||
+      expansionReport.lidlPilot.completeProducts !== 0) {
+    throw new Error("Rimi/Lidl expansion report does not match the Lidl pilot");
   }
   const allowedRimiCategories = new Set(rimiScopedCategories);
   if (rimi.some((product) => !allowedRimiCategories.has(product.category?.split(" > ")[0] || ""))) {

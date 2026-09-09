@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.livinn.lt",
         pathname: "/**"
+      },
+      {
+        protocol: "https",
+        hostname: "imgproxy-retcat.assets.schwarz",
+        pathname: "/**"
       }
     ]
   },

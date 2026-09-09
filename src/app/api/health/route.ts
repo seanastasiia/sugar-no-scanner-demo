@@ -36,6 +36,8 @@ export function GET() {
         activeFoodProducts: foodProductIndex.length,
         productsWithAutomaticFit: nutritionIndex.length,
         connectedRetailerProducts: retailerCatalogs,
+        rimiFoodIdentities: identityCatalogs.rimi_lv,
+        lidlFoodIdentities: identityCatalogs.lidl_lv,
         livinnFoodIdentities: identityCatalogs.livinn_lt,
         openFoodFactsIdentityOnly: identityCatalogs.open_food_facts,
         cspFoodIdentities: identityCatalogs.csp_lv,

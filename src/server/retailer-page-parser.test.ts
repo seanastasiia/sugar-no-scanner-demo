@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  parseLidlProductIdentity,
   parseLivinProductPage,
   parseLivinnProductIdentity,
   parseLivinnProductPage,
+  parseRimiProductIdentity,
   parseRimiProductPage
 } from "./retailer-page-parser";
 
@@ -45,6 +47,61 @@ describe("retailer product page parsers", () => {
       price: 5.69,
       available: true
     });
+  });
+
+  it("keeps an exact Rimi identity when required nutrition is incomplete", () => {
+    const details = JSON.stringify(`<span>Zīmols</span><div><p>PILOS</p></div><span>Ražotājs</span>`);
+    const html = `${productJsonLd({
+      name: "Siera šķēles Pilos 800g",
+      sku: "10046451",
+      gtin13: "4751234567890",
+      image: "https://cdn.example/pilos.png",
+      offers: { price: "4.99", priceCurrency: "EUR", availability: "InStock" }
+    })}<script>Storefront.product_details_page={tabs:[{identifier:'details',html:${details}}]}</script>`;
+    expect(parseRimiProductIdentity(html, "https://www.rimi.lv/e-veikals/lv/produkti/vegan/p/10046451")).toMatchObject({
+      source: "rimi_lv",
+      sourceProductId: "10046451",
+      retailer: "Rimi",
+      title: "Siera šķēles Pilos 800g",
+      brand: "PILOS",
+      gtin: "4751234567890",
+      packSize: "800g",
+      price: 4.99
+    });
+    expect(parseRimiProductPage(html, "https://www.rimi.lv/e-veikals/lv/produkti/vegan/p/10046451")).toBeNull();
+  });
+
+  it("keeps only public Lidl food identities and never invents nutrition", () => {
+    const product = productJsonLd({
+      name: "Salami siera šķēles XXL",
+      sku: "10046451",
+      brand: { "@type": "Brand", name: "PILOS" },
+      image: ["https://cdn.example/pilos.png"],
+      offers: [{ priceCurrency: "EUR", availability: "InStoreOnly" }]
+    });
+    const analytics = `<script>var unified_datalayer_product = ${JSON.stringify({
+      brand: "PILOS",
+      id: "10046451",
+      name: "Salami siera šķēles XXL",
+      status: "main-product",
+      wonCategoryPrimary: "Nepieciešamības pasaules/Pārtika un ēdiena tuvumā/Siers, piena produkti un olas/Siers"
+    })}</script>`;
+    const html = `${analytics}${product}<div class="ods-price__value">4,99€</div><div>800 g /1 kg = 6,24 €</div>`;
+    expect(parseLidlProductIdentity(html, "https://www.lidl.lv/p/pilos-salami-siera-skeles-xxl/p10046451")).toMatchObject({
+      source: "lidl_lv",
+      sourceProductId: "10046451",
+      retailer: "Lidl",
+      title: "Salami siera šķēles XXL",
+      brand: "PILOS",
+      packSize: "800 g",
+      price: 4.99,
+      currency: "EUR",
+      available: true
+    });
+    expect(parseLidlProductIdentity(
+      html.replace("Pārtika un ēdiena tuvumā", "Māja un dārzs"),
+      "https://www.lidl.lv/p/non-food/p10046451"
+    )).toBeNull();
   });
 
   it("extracts GTIN, nutrition and availability from a Livin page", () => {

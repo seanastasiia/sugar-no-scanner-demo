@@ -41,19 +41,20 @@ This document separates product coverage from visual recognition. A catalog row 
 | --- | --- | --- | --- | --- |
 | 1 | Sugar.no curated catalog | deterministic demo and reviewed products | 40 records | Sugar.no-owned |
 | 2 | Barbora Latvia | exact identity, nutrition and offer | broad checked-in food snapshot | private demo snapshot; obtain permission for production reuse |
-| 3 | Rimi Latvia | exact identity, nutrition and offer | 6,822 complete products from all 7,617 pages in seven approved categories | non-redistributable retailer snapshot; obtain permission before recurring production use |
-| 4 | Livin Latvia | exact identity, nutrition and offer | 6 complete food pages from the full 169-URL public sitemap | non-redistributable retailer snapshot; obtain permission before recurring production use |
-| 5 | Livinn Lithuania | multilingual exact identity, GTIN and nutrition | 2,489 edible identities, including 1,855 nutrition-complete products, from complete 5,926-URL canonical sitemap accounting | non-redistributable retailer snapshot; obtain permission before recurring production use |
-| 6 | Open Food Facts | exact GTIN/name identity plus nutrition fallback when complete | 1,096 nutrition-complete records plus 9,626 separate identity-only records; original 119 alternate-name records retained; no guessed CSV aliases | ODbL database; attribution required; images have separate CC BY-SA terms |
-| 7 | CSP Latvia price feed | exact GTIN, Latvian product name and Rimi/Lidl/Maxima prices for a free price-comparison surface | adapter and private schema ready; 0 rows because no provider file/access has been issued | statutory free price-comparison purpose only; not nutrition evidence and not approved for unrestricted database reuse |
-| 8 | Cited web result | last-resort exact per-100 nutrition | runtime only | keep source URL and reject ambiguous variants |
+| 3 | Rimi Latvia | exact identity, nutrition and offer | 6,930 complete records, including 151 historical unavailable rows, plus 564 current identity-only products after a 7,597-URL, nine-section crawl | non-redistributable retailer snapshot; obtain permission before recurring production use |
+| 4 | Lidl Latvia | exact public-page identity only | 1 food identity from every product URL in the current 67-page official sitemap; no verified nutrition or GTIN | non-redistributable retailer snapshot; obtain permission before recurring production use |
+| 5 | Livin Latvia | exact identity, nutrition and offer | 6 complete food pages from the full 169-URL public sitemap | non-redistributable retailer snapshot; obtain permission before recurring production use |
+| 6 | Livinn Lithuania | multilingual exact identity, GTIN and nutrition | 2,489 edible identities, including 1,855 nutrition-complete products, from complete 5,926-URL canonical sitemap accounting | non-redistributable retailer snapshot; obtain permission before recurring production use |
+| 7 | Open Food Facts | exact GTIN/name identity plus nutrition fallback when complete | 1,096 nutrition-complete records plus 9,626 separate identity-only records; original 119 alternate-name records retained; no guessed CSV aliases | ODbL database; attribution required; images have separate CC BY-SA terms |
+| 8 | CSP Latvia price feed | exact GTIN, Latvian product name and Rimi/Lidl/Maxima prices for a free price-comparison surface | adapter and private schema ready; 0 rows because no provider file/access has been issued | statutory free price-comparison purpose only; not nutrition evidence and not approved for unrestricted database reuse |
+| 9 | Cited web result | last-resort exact per-100 nutrition | runtime only | keep source URL and reject ambiguous variants |
 
-The Rimi/Livin/Livinn counts are source-backed snapshot counts, not visual-recognition or market-coverage claims. Rimi covers meat/fish/prepared food, dairy/eggs, bakery, frozen food, packaged food, sweets/snacks and drinks. The Livinn identity index includes every page classified by the source under `Maistas`; only the nutrition-complete subset can receive a fit. The Open Food Facts release file is a bounded Latvia subset; the same isolated schema also accepts the official daily bulk export.
+The Rimi/Lidl/Livin/Livinn counts are source-backed observations, not visual-recognition or market-coverage claims. Rimi covers meat/fish/prepared food, dairy/eggs, bakery, frozen food, packaged food, sweets/snacks, drinks and the two newly configured vegan/vegetarian and ready-made sections. The current source exposes 24 complete ready-made records and no distinct canonical URLs under the vegan section; all 24 are outside the current 19-type Personal Shelf model. The Livinn identity index includes every page classified by the source under `Maistas`; only the nutrition-complete subset can receive a fit. The Open Food Facts release file is a bounded Latvia subset; the same isolated schema also accepts the official daily bulk export.
 
 ## Data separation
 
 - `retailer_catalog_products` contains non-redistributable, nutrition-complete Rimi/Livin/Livinn page snapshots.
-- `retailer_catalog_food_identities` contains exact Livinn edible identities and source-provided language aliases without pretending that missing nutrition is zero.
+- `retailer_catalog_food_identities` contains exact Rimi, Lidl and Livinn food identities without pretending that missing nutrition is zero. Source and retailer labels are constrained as exact pairs by migration `202609090003_retailer_identity_sources.sql`.
 - `open_food_facts_products` contains the attributed ODbL-derived subset only. Its `aliases` array stores source-provided multilingual names for the same GTIN.
 - `open_food_facts_product_identities` contains the 9,626 additional attributed ODbL identities. It deliberately has no nutrition, ingredient, score or user-image columns.
 - `csp_food_price_records` and `csp_product_identities` are server-only tables for the official daily basic-food price feed. The checked-in generated files remain empty until CSP issues a file and confirms Sugar.no's use. They contain no nutrition, ingredients, scores or user images.
@@ -63,7 +64,7 @@ The Rimi/Livin/Livinn counts are source-backed snapshot counts, not visual-recog
 - Never publish a mixed retailer/OFF derived dump. Do not copy retailer rows into the ODbL table.
 - Product images remain source URLs. Bulk image reuse needs a separate rights review.
 
-The 7 September 2026 terms review found no reusable publication grant for Barbora or Rimi retailer-page data and found Livinn's explicit written-consent requirement for copying/publishing site information. Therefore retailer-page discoveries remain current-scan evidence unless written permission is obtained. Shared persistence is enabled only for Open Food Facts under its ODbL attribution/share-alike conditions. This is a conservative source-policy decision, not legal advice.
+The 7 September 2026 terms review found no reusable publication grant for Barbora or Rimi retailer-page data and found Livinn's explicit written-consent requirement for copying/publishing site information. The Lidl pilot likewise assumes no redistribution right. Therefore retailer-page discoveries remain private scanner evidence unless written permission is obtained. Shared persistence is enabled only for Open Food Facts under its ODbL attribution/share-alike conditions. This is a conservative source-policy decision, not legal advice.
 
 The schema is reproducible through the checked-in Supabase migrations, including `202609020001_livinn_multilingual_catalog.sql` and `202609070002_open_food_facts_identities.sql`. Apply and seed it with:
 
@@ -89,23 +90,28 @@ The adapter accepts only the official Annex 2 identity/price fields, checksum-va
 
 Official scope: [CSP access announcement and request route](https://www.csp.gov.lv/lv/jaunums/cenu-salidzinasanas-riku-izstradataji-no-1-decembra-vares-sanemt-datus-no-csp) and [Cabinet Regulation No. 508, Annex 2 field specification](https://likumi.lv/ta/id/362598). The regulation limits transferred data to the statutory food-price-comparison purpose and requires consumer access without charge or other restrictions. Access readiness is not legal permission; the provider response must be retained with the import.
 
-## Rimi, Livin and Livinn refresh
+## Rimi, Lidl, Livin and Livinn refresh
 
 The sync reads public product sitemaps and then fetches product pages at a bounded global rate. It accepts a rated row only when exact identity, energy, protein and total sugar are present. It never estimates missing nutrition. Full runs checkpoint under ignored `.catalog-sync/`, resume automatically and write a generated coverage report only after every sitemap URL has been accounted for.
 
 ```bash
 RETAILER_SYNC_LIMIT=500 RETAILER_SYNC_MAX_FETCHES=1000 npm run catalog:sync:rimi
+npm run catalog:pilot:lidl
 RETAILER_SYNC_LIMIT=100 RETAILER_SYNC_MAX_FETCHES=800 npm run catalog:sync:livin
 RETAILER_SYNC_LIMIT=100 RETAILER_SYNC_MAX_FETCHES=800 npm run catalog:sync:livinn
 
-# Full resumable import of the configured seven-category Rimi scope and all Livin Latvia URLs.
+# Full fresh import of the configured nine-section Rimi scope and all Livin Latvia URLs.
 # Zero is the explicit unlimited value inside that configured scope.
-RETAILER_SYNC_LIMIT=0 RETAILER_SYNC_MAX_FETCHES=0 npm run catalog:sync:rimi
+RETAILER_SYNC_RESUME=0 RETAILER_SYNC_LIMIT=0 RETAILER_SYNC_MAX_FETCHES=0 npm run catalog:sync:rimi
+npm run catalog:merge:rimi-history
+npm run catalog:audit:personal-fit -- --write
+npm run catalog:queue:rimi-expansion
+npm run catalog:report:rimi-lidl-expansion
 RETAILER_SYNC_LIMIT=0 RETAILER_SYNC_MAX_FETCHES=0 npm run catalog:sync:livin
 RETAILER_SYNC_LIMIT=0 RETAILER_SYNC_MAX_FETCHES=0 npm run catalog:sync:livinn
 ```
 
-Review the generated snapshot and `data/*-catalog-sync-report.generated.json` for wrong brand, pack size, basis, availability, duplicate SKU, complete configured-scope accounting and source timestamp before seeding or committing. Set `RETAILER_SYNC_RIMI_CATEGORIES=all` only for an explicitly approved whole-store run. A production refresh must run only after permission from the retailer or an approved data provider.
+Review the generated snapshot and `data/*-catalog-sync-report.generated.json` for wrong brand, pack size, basis, availability, duplicate SKU, complete configured-scope accounting and source timestamp before seeding or committing. A full Rimi refresh retains a disappeared but previously verified product only as unavailable, removes its stale offer and keeps its original nutrition-check date. The separate one-time merge command is idempotent and documents the fixed pre-refresh baseline. The 9 September Lidl pilot exhausted all 67 URLs currently exposed in Lidl's official product sitemap even though the cap was 100; only one food page was present and it lacked nutrition and GTIN, so the generated report deliberately rejects a larger import through this channel. Set `RETAILER_SYNC_RIMI_CATEGORIES=all` only for an explicitly approved whole-store run. A production refresh must run only after permission from the retailer or an approved data provider.
 
 ## Open Food Facts bulk import
 
@@ -137,6 +143,8 @@ Official references:
 - [Reuse and licensing](https://openfoodfacts.github.io/openfoodfacts-server/api/tutorials/license-be-on-the-legal-side/)
 - [Rimi Latvia sitemap](https://www.rimi.lv/e-veikals/sitemap.xml)
 - [Rimi mobile-service terms](https://www.rimi.lv/lietotne/rimi-mobilas-lietotnes-lietosanas-noteikumi)
+- [Lidl Latvia sitemap index](https://www.lidl.lv/static/sitemap.xml)
+- [Lidl Latvia legal information](https://www.lidl.lv/c/lv-LV/lidl-majaslapas-juridiska-informacija/s10081265)
 - [Barbora online-store terms](https://barbora.lv/info/interneta-veikala-lietosanas-noteikumi)
 - [Livin Latvia product sitemap](https://www.livin.lv/sitemap/products.xml)
 - [Livinn Lithuania product sitemap](https://www.livinn.lt/sitemap/products.xml)
