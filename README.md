@@ -14,6 +14,8 @@ The experiment replaces the one-screen welcome with a three-step, sub-one-minute
 
 The visual language comes from the Sugar.no Figma paywall and shared design system: SF Pro Rounded/system typography, pale-blue product surfaces, coral primary action, blue progress, rounded white cards, the official Sugar.no mark and the existing shelf scan motif. The implementation deliberately omits invented reviews, medical claims, auto-renewal language and artificial urgency. Research notes, product hypotheses and the measurement plan live in [`docs/onboarding-selling-flow.md`](docs/onboarding-selling-flow.md).
 
+The tested launch candidate is commit `149b276`. The exact release boundary, required pilot variables, pre-advertising smoke and rollback steps are recorded in [`docs/launch-selling-onboarding.md`](docs/launch-selling-onboarding.md). The public pilot remains on `f4c185d` with `wtpPaywall: false`; preparing this candidate does not authorize a Railway deployment or live charge.
+
 ## Approved Pen release
 
 The scanner implements the approved Pen screen/state designs from 3 September 2026. Open [production with welcome forced](https://sugar-no-scanner-demo-production.up.railway.app/?onboarding=1). The release combines Pen `c151e92` with the existing production catalog, shared web cards and opt-in Personal Shelf Rank, rather than reverting production to the old staging baseline.
