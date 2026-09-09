@@ -6,7 +6,7 @@
 .switch > span { display: block; width: 18px; height: 18px; background: var(--muted); border-radius: 50%; transition: transform 180ms ease; }
 .switchOn { background: var(--ink); border-color: var(--ink); }
 .switchOn > span { background: var(--surface); transform: translateX(17px); }
-.mode button:focus-visible, .method summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.mode button:focus-visible, .method summary:focus-visible, .explanation summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
 .mode button:active { background: var(--canvas); }
 .results { display: grid; gap: 24px; min-width: 0; padding-top: 24px; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
 .resultsHeader { display: grid; gap: 0; min-width: 0; }
@@ -17,7 +17,7 @@
 .method summary::-webkit-details-marker { display: none; }
 .method summary::marker { display: none; }
 .method summary:active { transform: scale(.985); }
-.methodSummaryIcon, .methodHeroIcon, .methodSignalIcon, .methodLimit > span, .methodDataRule > span { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; }
+.methodSummaryIcon, .methodHeroIcon, .methodSignalIcon, .methodDataRule > span { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; }
 .methodSummaryIcon { width: 42px; height: 42px; border-radius: 15px; background: var(--accent-soft); color: var(--accent); }
 .methodSummaryIcon svg { width: 22px; height: 22px; stroke-width: 2.2; }
 .methodSummaryCopy { display: grid; flex: 1 1 auto; gap: 1px; min-width: 0; }
@@ -51,12 +51,9 @@
 .methodSignalHeading strong { flex: 0 0 auto; color: var(--ink); font-family: var(--font-display); font-size: .875rem; font-weight: 700; line-height: 1.35; white-space: nowrap; }
 .methodSignalHeading small { flex: 0 0 auto; padding: 3px 8px; border: 1px solid rgb(255 255 255 / 80%); border-radius: 999px; background: rgb(255 255 255 / 68%); color: var(--ink); font-size: .625rem; font-weight: 700; line-height: 1.35; white-space: nowrap; }
 .methodSignals li > div > span:last-child { font-size: .75rem; line-height: 1.48; }
-.methodLimit { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; align-items: start; padding: 14px; border-radius: 22px; background: linear-gradient(145deg, #fff4df, #fff9ef); color: var(--ink); }
-.methodLimit > span { width: 40px; height: 40px; border: 1px solid rgb(255 255 255 / 88%); border-radius: 14px; background: rgb(255 255 255 / 76%); color: #b96900; }
-.methodLimit svg, .methodDataRule svg { width: 20px; height: 20px; stroke-width: 2.1; }
-.methodLimit p, .methodMissing { display: grid; gap: 3px; min-width: 0; }
-.methodLimit strong, .methodMissing strong { font-family: var(--font-display); font-size: .875rem; line-height: 1.35; }
-.methodLimit p { font-size: .75rem; line-height: 1.48; }
+.methodDataRule svg { width: 20px; height: 20px; stroke-width: 2.1; }
+.methodMissing { display: grid; gap: 3px; min-width: 0; }
+.methodMissing strong { font-family: var(--font-display); font-size: .875rem; line-height: 1.35; }
 .methodDataRule { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: start; padding: 4px 2px; color: var(--muted); }
 .methodDataRule > span { width: 36px; height: 36px; border-radius: 12px; background: var(--surface-tinted); color: var(--ink); }
 .methodMissing { font-size: .75rem; }
@@ -86,23 +83,28 @@
 .scoreRow strong > span { margin-left: 2px; font-size: .875rem; font-weight: 550; letter-spacing: 0; }
 .scoreRow > .rankLabel { margin-left: auto; color: var(--muted); font-size: .75rem; font-weight: 650; }
 .scoreRow > .unknown { font-size: 1rem; line-height: 1.4; }
-.metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 8px; align-items: end; padding: 10px 12px; border-radius: 14px; background: var(--surface-tinted); }
-.metrics > span { display: grid; gap: 1px; min-width: 0; }
-.metrics small { color: var(--muted); font-size: .6875rem; line-height: 1.3; }
-.metrics b { font-size: .875rem; font-variant-numeric: tabular-nums; line-height: 1.35; }
-.metrics .basis { align-self: center; white-space: nowrap; }
-.reason { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; margin: 0; padding-top: 11px; border-top: 1px solid var(--border); font-size: .8125rem; line-height: 1.45; }
-.reason b { white-space: nowrap; }
-.reason span { color: var(--muted); }
+.explanation { min-width: 0; margin: 0; border-top: 1px solid var(--border); font-size: .8125rem; line-height: 1.45; }
+.explanation summary { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 12px; color: var(--ink); cursor: pointer; list-style: none; touch-action: manipulation; }
+.explanation summary::-webkit-details-marker { display: none; }
+.explanation summary::marker { display: none; }
+.explanation summary:active { opacity: .7; }
+.explanationLabel { font-size: .75rem; font-weight: 700; line-height: 1.3; }
+.explanationChevron { display: inline-flex; width: 24px; height: 24px; flex: 0 0 24px; align-items: center; justify-content: center; color: var(--ink); transition: transform 180ms ease; }
+.explanationChevron svg { width: 16px; height: 16px; stroke-width: 2.25; }
+.explanation[open] .explanationChevron { transform: rotate(180deg); }
+.breakdown { display: grid; gap: 6px; padding: 0 0 12px; animation: method-enter 180ms ease-out; }
+.breakdown > p { margin: 0; color: var(--muted); font-size: .6875rem; font-weight: 650; }
+.breakdownGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.breakdownItem { display: grid; min-width: 0; gap: 1px; padding: 8px 10px; border-radius: 12px; background: var(--surface-tinted); }
+.breakdownItem > small { overflow: hidden; color: var(--muted); font-size: .625rem; font-weight: 600; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.breakdownItem > b { min-width: 0; font-size: .8125rem; font-variant-numeric: tabular-nums; line-height: 1.3; white-space: nowrap; }
+.breakdownItem > b span { color: var(--muted); font-size: .6875rem; font-weight: 600; }
 @container (max-width: 300px) {
   .scoreRow > .rankLabel { width: 100%; margin-left: 0; }
-  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .metrics .basis { grid-column: 1 / -1; }
-  .reason { grid-template-columns: 1fr; gap: 2px; }
 }
 @media (max-width: 360px) {
   .methodPanel { padding: 12px; border-radius: 24px; }
   .methodHero { padding: 12px; }
   .methodSignals li { padding: 11px; }
 }
-@media (prefers-reduced-motion: reduce) { .switch, .switch > span, .method summary, .methodChevron { transition: none; } .methodPanel { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .switch, .switch > span, .method summary, .methodChevron, .explanationChevron { transition: none; } .methodPanel, .breakdown { animation: none; } }

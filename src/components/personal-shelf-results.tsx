@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { Candy, ChevronDown, Dumbbell, Leaf, Scale, ShieldCheck, Sparkles, TriangleAlert } from "lucide-react";
+import { Candy, ChevronDown, Dumbbell, Leaf, Scale, ShieldCheck, Sparkles } from "lucide-react";
 import {
   PERSONAL_SHELF_THRESHOLDS,
   rankPersonalShelfProducts,
@@ -18,6 +18,17 @@ import styles from "./personal-shelf-results.module.css";
 function componentWeightRange(key: ShelfComponentKey): string {
   const weights = Object.values(SHELF_CATEGORIES).map((category) => category.weights[key]);
   return `${Math.min(...weights)}–${Math.max(...weights)}`;
+}
+
+const compactComponentLabels: Record<ShelfComponentKey, string> = {
+  sugar: "Sugar",
+  protein: "Protein",
+  composition: "Ingredients",
+  balance: "Balance"
+};
+
+function compactPoints(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 export function ShelfRankToggle({ enabled, onChange }: { enabled: boolean; onChange: (enabled: boolean) => void }) {
@@ -112,7 +123,7 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan", he
                       <small>{componentWeightRange("protein")} pts</small>
                     </span>
                     <span>
-                    Calculated as a share of energy: protein g × {PERSONAL_SHELF_THRESHOLDS.protein.kcalPerGram} ÷ kcal × 100. {PERSONAL_SHELF_THRESHOLDS.protein.fullAtEnergyPercent}% or more gets the full signal; below {PERSONAL_SHELF_THRESHOLDS.protein.calloutBelowEnergyPercent}% is called out in Why?.
+                    Calculated as a share of energy: protein g × {PERSONAL_SHELF_THRESHOLDS.protein.kcalPerGram} ÷ kcal × 100. {PERSONAL_SHELF_THRESHOLDS.protein.fullAtEnergyPercent}% or more gets the full signal; below {PERSONAL_SHELF_THRESHOLDS.protein.calloutBelowEnergyPercent}% is called out in the product explanation.
                     </span>
                   </div>
                 </li>
@@ -141,13 +152,6 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan", he
                   </div>
                 </li>
               </ul>
-              <aside className={styles.methodLimit}>
-                <span aria-hidden="true"><TriangleAlert /></span>
-                <p>
-                  <strong>59-point ceiling</strong>
-                  Sugar above {PERSONAL_SHELF_THRESHOLDS.sugar.ceilingAboveG} g, salt above {PERSONAL_SHELF_THRESHOLDS.salt.ceilingAboveG} g or saturated fat above {PERSONAL_SHELF_THRESHOLDS.saturatedFat.ceilingAboveG} g per 100 g caps the total at 59. High protein cannot cancel this limit.
-                </p>
-              </aside>
               <div className={styles.methodDataRule}>
                 <span aria-hidden="true"><ShieldCheck /></span>
                 <p className={styles.methodMissing}>
@@ -172,8 +176,6 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan", he
               {group.entries.map(({ product, assessment, rank, tied, rankProvisional }) => {
                 const scoreLabel = shelfScoreLabel(assessment);
                 const fit = personalShelfFit(assessment);
-                const evidence = product.shelfEvidence;
-                const reason = assessment.tradeoffs[0] || assessment.reasons[0];
                 const rankText = rank ? `${rankProvisional ? "Provisional " : tied ? "Tied " : ""}#${rank} of ${group.scoredCount}` : null;
                 return (
                   <li className={styles.card} key={product.id} data-personal-fit={fit?.tone}>
@@ -191,12 +193,33 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan", he
                         {rankText ? <span className={styles.rankLabel} aria-label={`${rankProvisional ? "Provisional " : tied ? "Tied " : ""}rank ${rank} of ${group.scoredCount} in ${group.label}`}>{rankText}</span> : null}
                       </> : <span className={styles.unknown} role="img" aria-label="Not scored">—</span>}
                     </div>
-                    {scoreLabel !== null && evidence ? <div className={styles.metrics} aria-label="Nutrition per 100 grams">
-                      <span><small>Sugar</small><b>{evidence.totalSugarG} g</b></span>
-                      <span><small>Protein</small><b>{evidence.proteinG} g</b></span>
-                      <small className={styles.basis}>per 100 g</small>
-                    </div> : null}
-                    {reason ? <p className={styles.reason}><b>Why?</b><span>{reason}</span></p> : null}
+                    {assessment.components.length ? <details className={styles.explanation} data-score-breakdown={assessment.status}>
+                      <summary aria-label={assessment.status === "provisional" ? "Provisional score breakdown" : "Score breakdown"}>
+                        <span className={styles.explanationLabel}>Why this score</span>
+                        <span className={styles.explanationChevron} aria-hidden="true"><ChevronDown /></span>
+                      </summary>
+                      <div className={styles.breakdown}>
+                        <p>Points by criterion</p>
+                        <div className={styles.breakdownGrid} role="list" aria-label="Points by criterion">
+                          {assessment.components.map((component) => {
+                            const awarded = component.maxPoints !== undefined && component.maxPoints > component.points
+                              ? `${compactPoints(component.points)}–${compactPoints(component.maxPoints)}`
+                              : compactPoints(component.points);
+                            const label = compactComponentLabels[component.key];
+                            return <span
+                              className={styles.breakdownItem}
+                              data-score-component={component.key}
+                              key={component.key}
+                              role="listitem"
+                              aria-label={`${label}: ${awarded} of ${component.weight} points`}
+                            >
+                              <small>{label}</small>
+                              <b>{awarded}<span> / {component.weight}</span></b>
+                            </span>;
+                          })}
+                        </div>
+                      </div>
+                    </details> : null}
                   </li>
                 );
               })}

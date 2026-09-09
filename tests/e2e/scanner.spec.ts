@@ -178,7 +178,9 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   const chips = results.getByRole("region", { name: "Chips", exact: true });
   await expect(chips.getByText("Provisional #1 of 3", { exact: true })).toHaveCount(2);
   await expect(chips.getByText("Not enough verified data", { exact: true })).toHaveCount(0);
-  await expect(chips.getByText("Why?", { exact: true })).toHaveCount(3);
+  await expect(chips.locator("details[data-score-breakdown]")).toHaveCount(3);
+  await expect(chips.getByLabel("Score breakdown", { exact: true })).toHaveCount(2);
+  await expect(chips.getByLabel("Provisional score breakdown", { exact: true })).toHaveCount(1);
   await expect(chips.getByText(/71–81/)).toBeVisible();
   await expect(chips.getByTestId("personal-fit-badge")).toHaveText(["Great fit", "Great fit", "Moderate to Great fit"]);
   await expect(chips.locator('li[data-personal-fit="uncertain"]')).toHaveCount(1);
@@ -212,8 +214,9 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   await expectNoDocumentOverflow(page);
   await results.getByText("How scores work", { exact: true }).click();
   await expect(results.locator("details[open]")).toContainText("We compare only products of the same type");
-  await expect(results.locator("details[open]")).toContainText("below 12% is called out in Why?");
-  await expect(results.locator("details[open]")).toContainText("salt above 1.5 g");
+  await expect(results.locator("details[open]")).toContainText("below 12% is called out in the product explanation");
+  await expect(results.locator("details[open]")).toContainText("Salt scores from full at ≤0.3 g to zero at ≥1.5 g");
+  await expect(results.getByText("59-point ceiling", { exact: true })).toHaveCount(0);
   await expect(results.locator("details[open]")).toContainText("Missing required data means no score");
   await expect(results.locator("dt")).toHaveCount(0);
   await expect(results.getByRole("link", { includeHidden: true })).toHaveCount(0);
@@ -317,7 +320,8 @@ test("personal shelf pilot shows exact Livinn observations in the mobile compari
   await expectNoDocumentOverflow(page);
   await expect.poll(() => chips.getByTestId("product-packshot").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete)), { timeout: 10_000 }).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("personal-shelf-livinn.png"), fullPage: true, animations: "disabled" });
-  await expect(chips.getByText("Why?", { exact: true })).toHaveCount(2);
+  await expect(chips.locator("details[data-score-breakdown]")).toHaveCount(2);
+  await expect(chips.getByLabel("Score breakdown", { exact: true })).toHaveCount(2);
   await page.getByText("How scores work", { exact: true }).click();
   await expect(page.getByRole("list", { name: "Personal Fit score bands", exact: true })).toContainText("Great 75–100");
   await expect(page.getByRole("list", { name: "Personal Fit score bands", exact: true })).toContainText("Moderate 50–74");
@@ -1086,7 +1090,8 @@ test("ordinary Shelf demo rates all four bars in Personal Shelf without evidence
   }
   await personal.getByRole("region", { name: "Snack bars", exact: true }).scrollIntoViewIfNeeded();
   await expect(personal.getByText("Provisional #1 of 4", { exact: true })).toHaveCount(4);
-  await expect(personal.getByText("Why?", { exact: true })).toHaveCount(4);
+  await expect(personal.locator("details[data-score-breakdown]")).toHaveCount(4);
+  await expect(personal.getByLabel("Provisional score breakdown", { exact: true })).toHaveCount(4);
   await expect(personal.getByRole("img", { name: "Not scored", exact: true })).toHaveCount(0);
   await expect(personal.locator("strong").filter({ hasText: "59/100" })).toHaveCount(4);
   await personal.getByText("How scores work", { exact: true }).click();
