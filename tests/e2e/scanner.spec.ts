@@ -111,7 +111,7 @@ async function expectOfficialSugarNoLogo(page: Page) {
 }
 
 async function openOnboardingSample(page: Page) {
-  await page.getByRole("button", { name: "Try it on this shelf", exact: true }).click();
+  await page.getByRole("button", { name: "Not shopping yet — show me a sample", exact: true }).click();
   await page.getByRole("button", { name: "Scan this shelf", exact: true }).click();
   await page.getByRole("button", { name: "Explore all 4 results", exact: true }).click();
 }
@@ -592,15 +592,15 @@ test("first visit explains the pilot before requesting camera permission", async
   await expect(page.getByAltText("Protein bars on a shop shelf. After scanning, four products are outlined and ranked using confirmed sugar and protein data.")).toBeVisible();
   await expect(page.getByText("4 products found")).toBeVisible();
   await expect(page.getByText("BAREBELLS Salty Peanut")).toHaveCount(0);
-  const sampleBox = await page.getByRole("button", { name: "Try it on this shelf" }).boundingBox();
-  const openCameraBox = await page.getByRole("button", { name: "Scan my shelf now" }).boundingBox();
+  const sampleBox = await page.getByRole("button", { name: "Not shopping yet — show me a sample" }).boundingBox();
+  const openCameraBox = await page.getByRole("button", { name: "Scan the shelf in front of me" }).boundingBox();
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   expect(openCameraBox?.y).toBeGreaterThan(0);
   expect((sampleBox?.y ?? viewportHeight) + (sampleBox?.height ?? 0)).toBeLessThanOrEqual(viewportHeight);
   await expectNoDocumentOverflow(page);
   await expectVisibleTouchTargets(page);
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
-  await page.getByRole("button", { name: "Try it on this shelf" }).click();
+  await page.getByRole("button", { name: "Not shopping yet — show me a sample" }).click();
   await page.getByRole("button", { name: "Scan this shelf" }).click();
   await expect(page.getByText("Sugar 2.3 g · Protein 36 g per 100 g")).toBeVisible();
   await page.getByRole("button", { name: "Try my own shelf" }).click();
@@ -692,7 +692,7 @@ test("express onboarding reaches the transparent offer before requesting camera 
     });
   });
   await page.goto("/?onboarding=1");
-  await page.getByRole("button", { name: "Scan my shelf now", exact: true }).click();
+  await page.getByRole("button", { name: "Scan the shelf in front of me", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Start with 3 free scans." })).toBeVisible();
   await expect(page.getByText("A scan counts only when at least one product gets a Sugar.no fit. Unverified scans are free.")).toBeVisible();
   await expect(page.getByText("Then €2.99 once for 7 days")).toBeVisible();
@@ -700,6 +700,88 @@ test("express onboarding reaches the transparent offer before requesting camera 
   await page.getByRole("button", { name: "Start my 3 free scans", exact: true }).click();
   await expect(page.getByText("Camera permission is off")).toBeVisible();
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(1);
+});
+
+test("at-home onboarding can be saved without requesting camera or exposing session data", async ({ page }) => {
+  const events: { name: string; metadata?: Record<string, unknown> }[] = [];
+  await page.route("**/api/events", async (route) => {
+    events.push(route.request().postDataJSON());
+    await route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
+  });
+  await page.addInitScript(() => {
+    let cameraRequests = 0;
+    Object.defineProperty(window, "__cameraRequests", { configurable: true, get: () => cameraRequests });
+    Object.defineProperty(window, "__sharedPayload", { configurable: true, writable: true, value: null });
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: async (payload: ShareData) => {
+        (window as Window & { __sharedPayload?: ShareData }).__sharedPayload = payload;
+      }
+    });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: () => {
+        cameraRequests += 1;
+        return Promise.reject(new DOMException("Denied in test", "NotAllowedError"));
+      } }
+    });
+  });
+  await page.goto("/?onboarding=1&utm_source=meta-secret");
+  await page.getByRole("button", { name: "Not shopping yet — show me a sample", exact: true }).click();
+  await page.getByRole("button", { name: "Scan this shelf", exact: true }).click();
+  await page.getByRole("button", { name: "Try my own shelf", exact: true }).click();
+  await expect(page.getByText("No shelf nearby? Upload a photo of anything in your cupboard.")).toBeVisible();
+  await page.getByRole("button", { name: "Save it for my next shop", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Save it for your next shop", exact: true });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveCSS("opacity", "1");
+  await expectVisibleTouchTargets(page);
+  expect(await new AxeBuilder({ page }).include('[role="dialog"]').analyze()).toMatchObject({ violations: [] });
+  expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
+  await dialog.getByRole("button", { name: "Send the link to myself", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  const payload = await page.evaluate(() => (window as Window & { __sharedPayload?: ShareData }).__sharedPayload);
+  expect(payload?.url).toBe(`${new URL(page.url()).origin}/?saved=1`);
+  expect(JSON.stringify(payload)).not.toContain("meta-secret");
+  expect(JSON.stringify(payload)).not.toContain("session");
+  await expect.poll(() => events.some((event) => event.name === "onboarding_save_prompt_viewed")).toBe(true);
+  await expect.poll(() => events.some((event) => event.name === "onboarding_save_action" && event.metadata?.action === "shared")).toBe(true);
+});
+
+test("a saved onboarding link is measured as a return visit", async ({ page }) => {
+  const events: { name: string }[] = [];
+  await page.route("**/api/events", async (route) => {
+    events.push(route.request().postDataJSON());
+    await route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
+  });
+  await page.goto("/?saved=1");
+  await expect.poll(() => events.some((event) => event.name === "onboarding_saved_link_opened")).toBe(true);
+});
+
+test("save for later falls back to a clean copied link and restores focus on close", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "__copiedLink", { configurable: true, writable: true, value: null });
+    Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: async (value: string) => {
+        (window as Window & { __copiedLink?: string }).__copiedLink = value;
+      } }
+    });
+  });
+  await page.goto("/?onboarding=1");
+  await page.getByRole("button", { name: "Not shopping yet — show me a sample", exact: true }).click();
+  await page.getByRole("button", { name: "Scan this shelf", exact: true }).click();
+  await page.getByRole("button", { name: "Try my own shelf", exact: true }).click();
+  const saveButton = page.getByRole("button", { name: "Save it for my next shop", exact: true });
+  await saveButton.click();
+  const dialog = page.getByRole("dialog", { name: "Save it for your next shop", exact: true });
+  await dialog.getByRole("button", { name: "Copy the link", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: "Link copied", exact: true })).toBeVisible();
+  expect(await page.evaluate(() => (window as Window & { __copiedLink?: string }).__copiedLink)).toBe(`${new URL(page.url()).origin}/?saved=1`);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(saveButton).toBeFocused();
 });
 
 test("anonymous analytics visit spans onboarding, multiple scans and reload", async ({ page }) => {
@@ -718,7 +800,7 @@ test("anonymous analytics visit spans onboarding, multiple scans and reload", as
   const scans = events.filter((event) => event.name === "scan_started");
   expect(new Set(scans.map((event) => event.sessionId)).size).toBe(2);
   expect(events.some((event) => event.name === "onboarding_completed")).toBe(true);
-  expect(events.some((event) => event.name === "onboarding_path_selected" && event.metadata?.path === "sample")).toBe(true);
+  expect(events.some((event) => event.name === "onboarding_path_selected" && event.metadata?.path === "at_home")).toBe(true);
   await page.reload();
   await expect.poll(() => events.filter((event) => event.name === "app_opened").length).toBe(2);
   expect(events[0].browserSessionId).toMatch(/^[0-9a-f-]{36}$/);
@@ -758,7 +840,7 @@ test("sample overlays track the contained photo after onboarding and resizing", 
 test("onboarding motion is one-time and respects reduced motion", async ({ page }) => {
   await page.goto("/?onboarding=1");
   await expectOfficialSugarNoLogo(page);
-  await page.getByRole("button", { name: "Try it on this shelf" }).click();
+  await page.getByRole("button", { name: "Not shopping yet — show me a sample" }).click();
   const preview = page.getByTestId("onboarding-preview");
   await expect(preview).toBeVisible();
   await page.getByRole("button", { name: "Scan this shelf" }).click();
@@ -769,7 +851,7 @@ test("onboarding motion is one-time and respects reduced motion", async ({ page 
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.reload();
-  await page.getByRole("button", { name: "Try it on this shelf" }).click();
+  await page.getByRole("button", { name: "Not shopping yet — show me a sample" }).click();
   await page.getByRole("button", { name: "Scan this shelf" }).click();
   await expect(preview).toBeVisible();
   expect(await preview.evaluate((element) => getComputedStyle(element).animationName)).toBe("none");

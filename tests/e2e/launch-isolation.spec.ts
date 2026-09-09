@@ -13,7 +13,7 @@ test("launch entry flag hides the pilot without removing its separate demo", asy
     });
   });
   await page.goto("/?onboarding=1");
-  await page.getByRole("button", { name: "Try it on this shelf", exact: true }).click();
+  await page.getByRole("button", { name: "Not shopping yet — show me a sample", exact: true }).click();
   await page.getByRole("button", { name: "Scan this shelf", exact: true }).click();
   await page.getByRole("button", { name: "Explore all 4 results", exact: true }).click();
   await page.getByRole("button", { name: "View all", exact: true }).click();

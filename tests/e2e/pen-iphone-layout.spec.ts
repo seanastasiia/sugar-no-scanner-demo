@@ -42,7 +42,7 @@ async function siblingsDoNotOverlap(container: Locator) {
 }
 
 async function openOnboardingSample(page: Page) {
-  await page.getByRole("button", { name: "Try it on this shelf", exact: true }).click();
+  await page.getByRole("button", { name: "Not shopping yet — show me a sample", exact: true }).click();
   await page.getByRole("button", { name: "Scan this shelf", exact: true }).click();
   await page.getByRole("button", { name: "Explore all 4 results", exact: true }).click();
 }
@@ -61,8 +61,8 @@ test("Pen screens remain readable and actionable across iPhone sizes and rotatio
       // A new landscape srcset can require a cold image-optimizer request.
       // Every displayed image must finish loading, not merely have an img node.
       await expect.poll(() => page.locator("img:visible").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0)), { timeout: 10_000 }).toBe(true);
-      await unobstructed(page.getByRole("button", { name: "Try it on this shelf", exact: true }));
-      await unobstructed(page.getByRole("button", { name: "Scan my shelf now", exact: true }));
+      await unobstructed(page.getByRole("button", { name: "Not shopping yet — show me a sample", exact: true }));
+      await unobstructed(page.getByRole("button", { name: "Scan the shelf in front of me", exact: true }));
       await noOverflow(page);
       await page.screenshot({ scale: "css", path: `test-results/pen-welcome-${viewport.width}x${viewport.height}.png` });
       await openOnboardingSample(page);

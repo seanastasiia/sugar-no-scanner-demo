@@ -59,6 +59,7 @@ export function amplitudeEventProperties(event: AmplitudeEvent): AnalyticsMetada
   const model = boundedString(metadata.model);
   const placement = boundedString(metadata.placement);
   const path = boundedString(metadata.path);
+  const action = boundedString(metadata.action);
   const errorCategory = safeErrorCategory(metadata.message);
   const freeScanCount = finiteNumber(metadata.freeScanCount);
   const utmSource = boundedString(metadata.utm_source);
@@ -71,7 +72,8 @@ export function amplitudeEventProperties(event: AmplitudeEvent): AnalyticsMetada
   if (step !== undefined) properties.step = step;
   if (typeof metadata.helpful === "boolean") properties.helpful = metadata.helpful;
   if (placement) properties.placement = placement;
-  if (path === "sample" || path === "express") properties.onboarding_path = path;
+  if (["sample", "express", "at_home", "in_store"].includes(path || "")) properties.onboarding_path = path!;
+  if (["shared", "copied", "dismissed", "failed"].includes(action || "")) properties.onboarding_save_action = action!;
   if (recognizedCount !== undefined) properties.recognized_count = recognizedCount;
   if (latencyMs !== undefined) {
     properties.recognition_latency_ms = latencyMs;

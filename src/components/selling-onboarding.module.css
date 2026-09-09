@@ -22,10 +22,12 @@
 .eyebrow { margin: 0; color: #0a6fcc; font: 800 13px/17px var(--font-display); letter-spacing: .45px; text-transform: uppercase; }
 .actions { display: grid; gap: 10px; margin-top: auto; }
 .primary, .secondary { display: inline-flex; width: 100%; min-height: 56px; align-items: center; justify-content: center; gap: 8px; border-radius: 19px; font: 700 17px/22px var(--font-display); }
-.primary { border: 0; background: #f14e58; color: #fff; box-shadow: 0 10px 24px #f14e5833; }
+.primary { border: 0; background: #d63b46; color: #fff; box-shadow: 0 10px 24px #d63b4633; }
 .primary:disabled { cursor: default; opacity: .38; box-shadow: none; }
 .secondary { border: 1px solid #dce0e5; background: #fff; color: #25272b; }
 .privacy { margin: 0; color: #707680; font-size: 12px; line-height: 17px; text-align: center; }
+.contextHint { padding: 10px 12px; border-radius: 14px; background: #ffffffa6; color: #384553 !important; font-size: 14px !important; line-height: 19px !important; }
+.textButton { min-height: 48px; border: 0; background: transparent; color: #176fac; font: 700 16px/21px var(--font-display); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .preview { position: relative; width: 100%; margin: 0; padding: 6px; overflow: hidden; border-radius: 32px; background: #fff; box-shadow: 0 14px 36px #233a541c; }
 .previewImage { position: relative; height: clamp(210px, 35vh, 280px); overflow: hidden; border-radius: 26px; background: #16202b; }
 .previewImage img { object-fit: cover; object-position: 50% 35%; }
@@ -51,10 +53,20 @@
 .offerCard ul { display: grid; gap: 9px; margin: 2px 0 0; padding: 14px 0 0; border-top: 1px solid #eaedf0; list-style: none; }
 .offerCard li { display: flex; align-items: center; gap: 9px; color: #3d444d; font-size: 14px; font-weight: 650; line-height: 19px; }
 .offerCard li svg { flex: none; color: #14834b; }
+.sheetBackdrop { position: fixed; z-index: 1000; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding: 16px max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); background: #10131899; }
+.saveSheet { position: relative; display: grid; width: min(100%, 420px); gap: 14px; padding: 28px 20px 20px; border-radius: 30px; background: #fff; box-shadow: 0 24px 70px #0005; animation: sheet-in 240ms cubic-bezier(.2,.8,.2,1) both; }
+.saveSheet h2 { margin: 0; padding-right: 42px; font: 750 25px/30px var(--font-display); letter-spacing: -.3px; }
+.saveSheet > p:not(.sheetStatus) { margin: -5px 0 4px; color: #5b6470; font-size: 16px; line-height: 23px; }
+.sheetClose { position: absolute; top: 16px; right: 16px; display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: #f0f2f5; color: #262a30; }
+.sheetIcon { display: grid; width: 52px; height: 52px; place-items: center; border-radius: 17px; background: #e7f3ff; color: #0a6fcc; }
+.sheetStatus { min-height: 18px; margin: -2px 0 0; color: #6b727c; font-size: 12px; line-height: 17px; text-align: center; }
+.urlFallback { display: grid; gap: 6px; color: #4d5560; font-size: 13px; font-weight: 650; }
+.urlFallback input { min-height: 44px; width: 100%; padding: 10px 12px; border: 1px solid #cfd5dc; border-radius: 12px; background: #f7f8fa; color: #21252a; font-size: 16px; }
+@keyframes sheet-in { from { opacity: 0; transform: translateY(20px); } }
 @keyframes scan-pass { 0% { top: 12%; opacity: 0; } 14% { opacity: 1; } 82% { opacity: 1; } 100% { top: 76%; opacity: 0; } }
 @media (prefers-reduced-motion: no-preference) { .screen { animation: screen-in 260ms ease-out both; } .primary, .secondary { transition: transform 130ms ease, background-color 160ms ease, border-color 160ms ease; } .primary:active, .secondary:active { transform: scale(.985); } }
 @keyframes screen-in { from { opacity: 0; transform: translateY(8px); } }
-@media (prefers-reduced-motion: reduce) { .previewRevealed .scanLine { display: none; } }
+@media (prefers-reduced-motion: reduce) { .previewRevealed .scanLine { display: none; } .saveSheet { animation: none; } }
 @media (max-height: 720px) { .screen { gap: 10px; padding-top: 8px; } .copyBlock h1 { font-size: 27px; } .copyBlock > p:not(.eyebrow) { margin-top: 7px; font-size: 15px; line-height: 20px; } .previewImage { height: 174px; } .previewResult { min-height: 62px; padding-block: 8px; } .offerCard { padding: 15px; gap: 9px; } }
 @media (max-height: 600px) { .onboarding { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); } .header { min-height: 38px; } .headerSpacer, .iconButton, .skip { min-height: 38px; height: 38px; } .progress { margin-top: 3px; } .screen { min-height: 0; gap: 6px; padding-top: 2px; } .copyBlock h1 { font-size: 24px; line-height: 26px; } .copyBlock > p:not(.eyebrow) { margin-top: 5px; font-size: 13px; line-height: 16px; } .eyebrow { font-size: 11px; line-height: 14px; } .preview { padding: 4px; border-radius: 24px; } .previewImage { height: 105px; border-radius: 20px; } .previewResult { min-height: 50px; padding: 5px 8px; } .previewResult strong { font-size: 13px; line-height: 17px; } .previewResult small { font-size: 11px; line-height: 14px; } .primary, .secondary { min-height: 48px; border-radius: 16px; font-size: 15px; } .offerCard { padding: 12px; gap: 6px; } .offerIcon { width: 40px; height: 40px; border-radius: 13px; } .offerCard strong { font-size: 15px; line-height: 19px; } .offerCard p, .offerCard li { font-size: 12px; line-height: 15px; } .offerCard ul { gap: 4px; padding-top: 7px; } }
 @media (orientation: landscape) and (max-height: 520px) { .onboarding { min-height: 100dvh; height: 100dvh; } .screen { display: grid; min-height: 0; grid-template-columns: minmax(0, 1.25fr) minmax(220px, .75fr); grid-template-rows: auto 1fr; column-gap: 16px; padding-top: 4px; } .copyBlock { grid-column: 1; grid-row: 1; } .copyBlock h1 { font-size: 22px; line-height: 23px; } .copyBlock > p:not(.eyebrow) { display: none; } .preview, .offerCard { grid-column: 1; grid-row: 2; } .actions { grid-column: 2; grid-row: 1 / span 2; align-self: center; margin-top: 0; } .previewImage { height: 88px; } .previewResult { min-height: 42px; } }

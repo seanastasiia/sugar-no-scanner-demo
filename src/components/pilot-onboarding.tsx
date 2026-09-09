@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowLeft, Check, ScanLine } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, Check, Copy, Send, Share2, ScanLine, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ScannerHomeLogo } from "./scanner-home-logo";
 import styles from "./selling-onboarding.module.css";
 
@@ -12,18 +12,30 @@ export function PilotOnboarding({
   onSkip,
   onStepViewed,
   onPathSelected,
-  onSampleRevealed
+  onSampleRevealed,
+  onSavePromptViewed,
+  onSaveAction
 }: {
   onComplete: () => void;
   onTrySample: () => void;
   onSkip: (step: number) => void;
   onStepViewed: (step: number) => void;
-  onPathSelected: (path: "sample" | "express") => void;
+  onPathSelected: (path: "at_home" | "in_store") => void;
   onSampleRevealed: () => void;
+  onSavePromptViewed: () => void;
+  onSaveAction: (action: "shared" | "copied" | "dismissed" | "failed") => void;
 }) {
   const [step, setStep] = useState(1);
   const [demoRevealed, setDemoRevealed] = useState(false);
+  const [entryContext, setEntryContext] = useState<"at_home" | "in_store" | null>(null);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [standalone] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean };
+    return window.matchMedia("(display-mode: standalone)").matches || navigatorWithStandalone.standalone === true;
+  });
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const saveTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     headingRef.current?.focus();
@@ -34,11 +46,27 @@ export function PilotOnboarding({
     onStepViewed(nextStep);
   }
 
+  function goBack() {
+    if (step === 3 && entryContext === "in_store") goTo(1);
+    else goTo(step - 1);
+  }
+
+  function openSave() {
+    setSaveOpen(true);
+    onSavePromptViewed();
+  }
+
+  const closeSave = useCallback((action: "dismissed" | null = "dismissed") => {
+    setSaveOpen(false);
+    if (action) onSaveAction(action);
+    window.requestAnimationFrame(() => saveTriggerRef.current?.focus());
+  }, [onSaveAction]);
+
   return (
     <main className={styles.onboarding} aria-labelledby="selling-onboarding-title">
       <header className={styles.header}>
         {step > 1 ? (
-          <button className={styles.iconButton} type="button" aria-label="Go back" onClick={() => goTo(step - 1)}>
+          <button className={styles.iconButton} type="button" aria-label="Go back" onClick={goBack}>
             <ArrowLeft aria-hidden="true" size={21} />
           </button>
         ) : <span className={styles.headerSpacer} />}
@@ -59,8 +87,8 @@ export function PilotOnboarding({
           </div>
           <ShelfPreview state="teaser" />
           <div className={styles.actions}>
-            <button className={styles.primary} type="button" onClick={() => { onPathSelected("sample"); goTo(2); }}>Try it on this shelf</button>
-            <button className={styles.secondary} type="button" onClick={() => { onPathSelected("express"); goTo(3); }}>Scan my shelf now</button>
+            <button className={styles.primary} type="button" onClick={() => { setEntryContext("in_store"); onPathSelected("in_store"); goTo(3); }}>Scan the shelf in front of me</button>
+            <button className={styles.secondary} type="button" onClick={() => { setEntryContext("at_home"); onPathSelected("at_home"); goTo(2); }}>Not shopping yet — show me a sample</button>
             <p className={styles.privacy}>Camera stays off until you tap Start my 3 free scans.</p>
           </div>
         </section>
@@ -93,6 +121,7 @@ export function PilotOnboarding({
             <p className={styles.eyebrow}>Nothing to pay now</p>
             <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Start with 3 free scans.</h1>
             <p>A scan counts only when at least one product gets a Sugar.no fit. Unverified scans are free.</p>
+            {entryContext === "at_home" ? <p className={styles.contextHint}>No shelf nearby? Upload a photo of anything in your cupboard.</p> : null}
           </div>
           <div className={styles.offerCard}>
             <div className={styles.offerIcon}><ScanLine aria-hidden="true" size={28} /></div>
@@ -109,10 +138,125 @@ export function PilotOnboarding({
           <div className={styles.actions}>
             <p className={styles.privacy}>The next tap opens your camera. Photos are not saved.</p>
             <button className={styles.primary} type="button" onClick={onComplete}>Start my 3 free scans</button>
+            {entryContext === "at_home" && !standalone ? (
+              <button ref={saveTriggerRef} className={styles.textButton} type="button" onClick={openSave}>Save it for my next shop</button>
+            ) : null}
+            {entryContext === "at_home" && !standalone ? <p className={styles.privacy}>No account, no emails, no notifications.</p> : null}
           </div>
         </section>
       ) : null}
+
+      {saveOpen ? (
+        <SaveForLaterDialog
+          onClose={closeSave}
+          onAction={onSaveAction}
+        />
+      ) : null}
     </main>
+  );
+}
+
+function SaveForLaterDialog({
+  onClose,
+  onAction
+}: {
+  onClose: (action?: "dismissed" | null) => void;
+  onAction: (action: "shared" | "copied" | "dismissed" | "failed") => void;
+}) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const [status, setStatus] = useState<"idle" | "working" | "copied" | "failed">("idle");
+  const [showUrl, setShowUrl] = useState(false);
+  const saveUrl = typeof window === "undefined" ? "" : `${window.location.origin}/?saved=1`;
+  const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const focusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>("button:not([disabled]), input") || []);
+    focusable()[0]?.focus();
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const controls = focusable();
+      if (!controls.length) return;
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  async function copyLink() {
+    setStatus("working");
+    try {
+      await navigator.clipboard.writeText(saveUrl);
+      setStatus("copied");
+      onAction("copied");
+    } catch {
+      setStatus("failed");
+      setShowUrl(true);
+      onAction("failed");
+    }
+  }
+
+  async function saveLink() {
+    if (!canShare) {
+      await copyLink();
+      return;
+    }
+    setStatus("working");
+    try {
+      await navigator.share({
+        title: "Sugar.no Shelf Scanner",
+        text: "Save Sugar.no for your next shop.",
+        url: saveUrl
+      });
+      onAction("shared");
+      onClose(null);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setStatus("idle");
+        return;
+      }
+      setStatus("failed");
+      onAction("failed");
+    }
+  }
+
+  return (
+    <div className={styles.sheetBackdrop} role="presentation" onMouseDown={(event) => {
+      if (event.target === event.currentTarget) onClose();
+    }}>
+      <div ref={dialogRef} className={styles.saveSheet} role="dialog" aria-modal="true" aria-labelledby="save-sheet-title">
+        <button className={styles.sheetClose} type="button" aria-label="Close" onClick={() => onClose()}>
+          <X aria-hidden="true" size={21} />
+        </button>
+        <div className={styles.sheetIcon}><Share2 aria-hidden="true" size={26} /></div>
+        <h2 id="save-sheet-title">Save it for your next shop</h2>
+        <p>Send the scanner link to Messages, WhatsApp or Notes, then open it when you are in store.</p>
+        <button className={styles.primary} type="button" disabled={status === "working"} onClick={() => void saveLink()}>
+          {canShare ? <Send aria-hidden="true" size={19} /> : <Copy aria-hidden="true" size={19} />}
+          {status === "working" ? "Opening…" : status === "copied" ? "Link copied" : canShare ? "Send the link to myself" : "Copy the link"}
+        </button>
+        {canShare ? <button className={styles.secondary} type="button" disabled={status === "working"} onClick={() => void copyLink()}><Copy aria-hidden="true" size={19} />Copy instead</button> : null}
+        {showUrl ? (
+          <label className={styles.urlFallback}>Copy this link manually<input readOnly value={saveUrl} onFocus={(event) => event.currentTarget.select()} /></label>
+        ) : null}
+        <p className={styles.sheetStatus} aria-live="polite">
+          {status === "copied" ? "Saved. Open the link on your next shop." : status === "failed" ? "Sharing was unavailable. You can copy the link instead." : "No account, email or notification permission needed."}
+        </p>
+      </div>
+    </div>
   );
 }
 

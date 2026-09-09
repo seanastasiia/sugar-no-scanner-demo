@@ -2,12 +2,12 @@
 
 Date: 2026-09-09  
 Candidate branch: `codex/selling-onboarding-preview`  
-Candidate commit: `149b27662fb2a1a0b7a9c9feb565708949034e72`  
+Candidate commit: pending final verified branch commit
 Target after owner approval: existing Railway `pilot` environment only
 
 ## Release boundary
 
-This candidate is the existing live-pilot application plus selling onboarding version `6`. It does
+This candidate is the existing live-pilot application plus selling onboarding version `7`. It does
 not include a merge from the newer production `main`, does not expose the separate Personal Shelf
 Rank entry, and does not change recognition, the fixed sugar-plus-protein Sugar.no Fit, catalog data,
 prices, feedback storage or the payment model.
@@ -43,19 +43,20 @@ own unchanged SHAs.
 ## Live smoke before Meta traffic
 
 1. Open a clean Safari session with the final Meta URL and bounded UTM parameters.
-2. Confirm the first screen reveals no winner, then run the sample and see the exact BAREBELLS proof.
-3. Confirm the express path reaches the transparent offer without requesting camera permission.
-4. Start the camera only from `Start my 3 free scans`; complete one rated scan and one unverified scan.
-5. Confirm only the rated scan reduces the allowance and gallery upload uses the same allowance.
-6. Reach the paywall after three rated scans and confirm EUR 2.99 once for seven days, no subscription.
-7. With explicit owner approval, make one small real live-mode purchase, verify the success screen,
+2. Confirm the first screen reveals no winner. Choose the at-home route, run the sample and see the exact BAREBELLS proof.
+3. Confirm the in-store route reaches the transparent offer without requesting camera permission.
+4. On the at-home offer, open `Save it for my next shop`, share or copy the clean link, and confirm no camera prompt. Reopen the link and confirm the onboarding starts normally.
+5. Start the camera only from `Start my 3 free scans`; complete one rated scan and one unverified scan.
+6. Confirm only the rated scan reduces the allowance and gallery upload uses the same allowance.
+7. Reach the paywall after three rated scans and confirm EUR 2.99 once for seven days, no subscription.
+8. With explicit owner approval, make one small real live-mode purchase, verify the success screen,
    entitlement, Stripe payment and webhook, then refund it from Stripe if desired.
-8. Submit one labelled QA feedback and verify its Supabase row and owner email.
-9. Verify Amplitude receives onboarding version `6`, `onboarding_path_selected`, optional
-   `onboarding_sample_revealed`, camera, scan, paywall, checkout and access events with environment
+9. Submit one labelled QA feedback and verify its Supabase row and owner email.
+10. Verify Amplitude receives onboarding version `7`, `onboarding_path_selected`, optional
+   sample/save/saved-link-return events, camera, scan, paywall, checkout and access events with environment
    `pilot`. Exclude the QA device/session from campaign analysis.
 
-Do not start Meta spend until steps 1-9 pass on the deployed HTTPS URL.
+Do not start Meta spend until steps 1-10 pass on the deployed HTTPS URL.
 
 ## Rollback
 

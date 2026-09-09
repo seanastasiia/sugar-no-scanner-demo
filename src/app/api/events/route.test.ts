@@ -157,7 +157,7 @@ describe("POST /api/events", () => {
     expect(getSupabaseAdmin).not.toHaveBeenCalled();
   });
 
-  it.each(["onboarding_path_selected", "onboarding_sample_revealed"])("accepts the %s funnel event", async (name) => {
+  it.each(["onboarding_path_selected", "onboarding_sample_revealed", "onboarding_save_prompt_viewed", "onboarding_save_action", "onboarding_saved_link_opened"])("accepts the %s funnel event", async (name) => {
     sendAmplitudeEvent.mockResolvedValue("sent");
     vi.spyOn(console, "info").mockImplementation(() => undefined);
     const response = await POST(new Request("https://scanner.example/api/events", {
@@ -168,7 +168,7 @@ describe("POST /api/events", () => {
         browserSessionId: crypto.randomUUID(),
         name,
         source: name === "onboarding_sample_revealed" ? "sample-shelf" : "camera",
-        metadata: { onboardingVersion: 6, path: "sample" }
+        metadata: { onboardingVersion: 7, path: "at_home", ...(name === "onboarding_save_action" ? { action: "shared" } : {}) }
       })
     }));
     expect(response.status).toBe(200);

@@ -113,6 +113,9 @@ type PilotEventName =
   | "onboarding_step_viewed"
   | "onboarding_path_selected"
   | "onboarding_sample_revealed"
+  | "onboarding_save_prompt_viewed"
+  | "onboarding_save_action"
+  | "onboarding_saved_link_opened"
   | "onboarding_completed"
   | "onboarding_skipped"
   | "camera_permission_requested"
@@ -141,7 +144,7 @@ const CAMERA_FORCE_CAPTURE_MS = 1_250;
 const CAMERA_MIN_EDGE_SCORE = 4.1;
 const CAMERA_SAMPLE_WIDTH = 96;
 const CAMERA_SAMPLE_HEIGHT = 72;
-const ONBOARDING_VERSION = 6;
+const ONBOARDING_VERSION = 7;
 
 interface NativeBarcodeDetector {
   detect(source: ImageBitmapSource): Promise<Array<{ rawValue?: string }>>;
@@ -1203,6 +1206,9 @@ export function ScannerApp({
       setFreeScanCount(readFreeScanCount(window.localStorage));
       setPilotSessionId(ensureSession());
       track("app_opened", "camera", undefined, { onboardingVersion: ONBOARDING_VERSION });
+      if (new URLSearchParams(window.location.search).get("saved") === "1") {
+        track("onboarding_saved_link_opened", "camera", undefined, { onboardingVersion: ONBOARDING_VERSION });
+      }
       const forceOnboarding = new URLSearchParams(window.location.search).get("onboarding") === "1";
       if (forceOnboarding || !readOnboardingCompletion(window.localStorage)) {
         setOnboardingState("showing");
@@ -1598,7 +1604,16 @@ export function ScannerApp({
         })}
         onSampleRevealed={() => track("onboarding_sample_revealed", "sample-shelf", undefined, {
           onboardingVersion: ONBOARDING_VERSION,
-          path: "sample"
+          path: "at_home"
+        })}
+        onSavePromptViewed={() => track("onboarding_save_prompt_viewed", "camera", undefined, {
+          onboardingVersion: ONBOARDING_VERSION,
+          path: "at_home"
+        })}
+        onSaveAction={(action) => track("onboarding_save_action", "camera", undefined, {
+          onboardingVersion: ONBOARDING_VERSION,
+          path: "at_home",
+          action
         })}
       />
     );
