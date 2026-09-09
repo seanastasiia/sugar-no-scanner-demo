@@ -40,7 +40,7 @@ Do not start Meta spend until the same checks pass on the HTTPS pilot and its li
 
 ## Staging release check
 
-- Railway deployment `e4b64ac8-a70c-461a-bbf9-694b3b4a6b1f`: `SUCCESS`.
-- `/api/health`: branch head `61d352e`, test paywall enabled.
+- Railway deployment `f88bef5f-66da-417f-98a6-6732e40dd4a1`: `SUCCESS`.
+- `/api/health`: deployed revision `07c9a5a`, test paywall enabled.
 - Remote Mobile Safari smoke reached the at-home offer and save dialog with zero camera requests.
 - Control checks: pilot stayed on `f4c185d` with paywall disabled; production stayed on `08a5338`.

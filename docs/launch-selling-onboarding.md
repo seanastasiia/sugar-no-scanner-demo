@@ -5,8 +5,8 @@ Candidate branch: `codex/selling-onboarding-preview`
 Implementation commit: `a277de1`
 Target after owner approval: existing Railway `pilot` environment only
 
-Owner-test staging was updated on 9 September with branch head `61d352e`. Railway deployment
-`e4b64ac8-a70c-461a-bbf9-694b3b4a6b1f` reached `SUCCESS`; staging health reported that exact SHA
+Owner-test staging was updated on 9 September with branch revision `07c9a5a`. Railway deployment
+`f88bef5f-66da-417f-98a6-6732e40dd4a1` reached `SUCCESS`; staging health reported that exact SHA
 with the test paywall enabled. The public pilot remained `f4c185d` with the paywall disabled and
 production remained `08a5338`.
 
