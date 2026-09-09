@@ -14,8 +14,9 @@ This release merges the tested selling onboarding and one-time seven-day scanner
 - `npm ci`: passed; npm reported three dependency audit findings (two high, one critical) for separate review.
 - `npm run verify`: passed — lint, TypeScript, 84 Vitest files / 732 tests, catalog validation and production build.
 - Catalog validation: 40 curated rows, 9,707 active Barbora food products, 7,433 with automatic Fit, and 7,512 Personal Shelf observations (2,334 complete, 3,426 provisional).
-- `CI=1 WTP_PAYWALL_ENABLED=true npm run test:e2e`: all 71 Mobile Safari scenarios passed; one feedback scenario timed out during its first local page navigation and passed on retry. No assertion was weakened.
+- Initial `CI=1 WTP_PAYWALL_ENABLED=true npm run test:e2e`: all 71 Mobile Safari scenarios passed; one feedback scenario timed out during its first local page navigation and passed on retry. The same scenario then passed three focused repetitions.
 - Focused rerun of the changed onboarding/accessibility and camera-control scenarios: 2/2 passed without retry.
+- After merging the concurrent production change `d5eff3f`, `npm run verify` passed again (84 Vitest files / 732 tests and production build), and the complete Mobile Safari suite passed 71/71 without retry.
 
 ## Production deployment
 
