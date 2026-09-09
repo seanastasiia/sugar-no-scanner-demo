@@ -52,7 +52,7 @@ Primary funnel:
 
 1. `app_opened`
 2. `onboarding_started`
-3. `onboarding_step_viewed` steps 2 and 3 (absence of step 2 identifies the express path)
+3. `onboarding_path_selected` (`sample` or `express`), `onboarding_sample_revealed`, and `onboarding_step_viewed` steps 2 and 3
 4. `onboarding_completed` or `onboarding_skipped`
 5. camera permission granted
 6. first successful `scan_completed`

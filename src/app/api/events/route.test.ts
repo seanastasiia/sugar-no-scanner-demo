@@ -156,4 +156,22 @@ describe("POST /api/events", () => {
     expect(sendAmplitudeEvent).not.toHaveBeenCalled();
     expect(getSupabaseAdmin).not.toHaveBeenCalled();
   });
+
+  it.each(["onboarding_path_selected", "onboarding_sample_revealed"])("accepts the %s funnel event", async (name) => {
+    sendAmplitudeEvent.mockResolvedValue("sent");
+    vi.spyOn(console, "info").mockImplementation(() => undefined);
+    const response = await POST(new Request("https://scanner.example/api/events", {
+      method: "POST",
+      headers: { origin: "https://scanner.example", "content-type": "application/json", "x-forwarded-for": crypto.randomUUID() },
+      body: JSON.stringify({
+        sessionId: crypto.randomUUID(),
+        browserSessionId: crypto.randomUUID(),
+        name,
+        source: name === "onboarding_sample_revealed" ? "sample-shelf" : "camera",
+        metadata: { onboardingVersion: 6, path: "sample" }
+      })
+    }));
+    expect(response.status).toBe(200);
+    expect(sendAmplitudeEvent).toHaveBeenCalledWith(expect.objectContaining({ name }));
+  });
 });

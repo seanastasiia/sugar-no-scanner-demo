@@ -10,12 +10,16 @@ export function PilotOnboarding({
   onComplete,
   onTrySample,
   onSkip,
-  onStepViewed
+  onStepViewed,
+  onPathSelected,
+  onSampleRevealed
 }: {
   onComplete: () => void;
   onTrySample: () => void;
   onSkip: (step: number) => void;
   onStepViewed: (step: number) => void;
+  onPathSelected: (path: "sample" | "express") => void;
+  onSampleRevealed: () => void;
 }) {
   const [step, setStep] = useState(1);
   const [demoRevealed, setDemoRevealed] = useState(false);
@@ -53,11 +57,11 @@ export function PilotOnboarding({
             <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Compare the shelf, not the labels.</h1>
             <p>We compare confirmed sugar and protein, then show your Sugar.no fit. No account.</p>
           </div>
-          <ShelfPreview revealed />
+          <ShelfPreview state="teaser" />
           <div className={styles.actions}>
-            <button className={styles.primary} type="button" onClick={() => goTo(2)}>Try it on this shelf</button>
-            <button className={styles.secondary} type="button" onClick={() => goTo(3)}>Scan my shelf now</button>
-            <p className={styles.privacy}>Your camera stays off until you choose.</p>
+            <button className={styles.primary} type="button" onClick={() => { onPathSelected("sample"); goTo(2); }}>Try it on this shelf</button>
+            <button className={styles.secondary} type="button" onClick={() => { onPathSelected("express"); goTo(3); }}>Scan my shelf now</button>
+            <p className={styles.privacy}>Camera stays off until you tap Start my 3 free scans.</p>
           </div>
         </section>
       ) : null}
@@ -69,10 +73,10 @@ export function PilotOnboarding({
             <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>The answer, not every label.</h1>
             <p>We rank only products with confirmed values and tell you when data is missing.</p>
           </div>
-          <ShelfPreview revealed={demoRevealed} />
+          <ShelfPreview state={demoRevealed ? "result" : "ready"} />
           <div className={styles.actions}>
             {!demoRevealed ? (
-              <button className={styles.primary} type="button" onClick={() => setDemoRevealed(true)}><ScanLine aria-hidden="true" size={20} />Scan this shelf</button>
+              <button className={styles.primary} type="button" onClick={() => { setDemoRevealed(true); onSampleRevealed(); }}><ScanLine aria-hidden="true" size={20} />Scan this shelf</button>
             ) : (
               <>
                 <button className={styles.primary} type="button" onClick={() => goTo(3)}>Try my own shelf</button>
@@ -112,9 +116,11 @@ export function PilotOnboarding({
   );
 }
 
-function ShelfPreview({ revealed }: { revealed: boolean }) {
+function ShelfPreview({ state }: { state: "teaser" | "ready" | "result" }) {
+  const annotated = state === "teaser" || state === "result";
+  const result = state === "result";
   return (
-    <figure className={`${styles.preview} ${revealed ? styles.previewRevealed : ""}`} data-testid="onboarding-preview">
+    <figure className={`${styles.preview} ${annotated ? styles.previewAnnotated : ""} ${result ? styles.previewRevealed : ""}`} data-testid="onboarding-preview">
       <div className={styles.previewImage}>
         <Image
           src="/samples/latvia-shelf.jpg"
@@ -126,17 +132,19 @@ function ShelfPreview({ revealed }: { revealed: boolean }) {
         <div className={styles.scanLine} data-testid="onboarding-scan-line" aria-hidden="true" />
         {[1, 26, 51, 76].map((left, index) => (
           <span key={left} className={styles.productBox} style={{ left: `${left}%` }} aria-hidden="true">
-            {index === 0 ? <span className={styles.fitBadge}>Great fit</span> : null}
+            {result && index === 0 ? <span className={styles.fitBadge}>Great fit</span> : null}
           </span>
         ))}
       </div>
       <figcaption className={styles.previewResult} aria-live="polite">
-        {revealed ? (
+        {result ? (
           <div className={styles.sampleRanking}>
             <span className={styles.rankNumber}>1</span>
             <span><strong>BAREBELLS Salty Peanut</strong><small>Sugar 2.3 g · Protein 36 g per 100 g</small></span>
             <span className={styles.fitBadge}>Great fit</span>
           </div>
+        ) : state === "teaser" ? (
+          <><span><strong>4 products found</strong><small>Tap to see the confirmed comparison</small></span><ScanLine aria-hidden="true" size={22} /></>
         ) : (
           <><span><strong>Ready to scan</strong><small>Tap once to compare all four products</small></span><ScanLine aria-hidden="true" size={22} /></>
         )}

@@ -17,6 +17,8 @@ const eventSchema = z.object({
     "app_opened",
     "onboarding_started",
     "onboarding_step_viewed",
+    "onboarding_path_selected",
+    "onboarding_sample_revealed",
     "onboarding_completed",
     "onboarding_skipped",
     "camera_permission_requested",

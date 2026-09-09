@@ -590,8 +590,8 @@ test("first visit explains the pilot before requesting camera permission", async
   await expect(page.getByText("We compare confirmed sugar and protein, then show your Sugar.no fit. No account.")).toBeVisible();
   await expect(page.getByTestId("onboarding-preview")).toBeVisible();
   await expect(page.getByAltText("Protein bars on a shop shelf. After scanning, four products are outlined and ranked using confirmed sugar and protein data.")).toBeVisible();
-  await expect(page.getByText("BAREBELLS Salty Peanut")).toBeVisible();
-  await expect(page.getByText("Sugar 2.3 g · Protein 36 g per 100 g")).toBeVisible();
+  await expect(page.getByText("4 products found")).toBeVisible();
+  await expect(page.getByText("BAREBELLS Salty Peanut")).toHaveCount(0);
   const sampleBox = await page.getByRole("button", { name: "Try it on this shelf" }).boundingBox();
   const openCameraBox = await page.getByRole("button", { name: "Scan my shelf now" }).boundingBox();
   const viewportHeight = await page.evaluate(() => window.innerHeight);
@@ -703,13 +703,14 @@ test("express onboarding reaches the transparent offer before requesting camera 
 });
 
 test("anonymous analytics visit spans onboarding, multiple scans and reload", async ({ page }) => {
-  const events: { name: string; sessionId: string; browserSessionId: string }[] = [];
+  const events: { name: string; sessionId: string; browserSessionId: string; metadata?: Record<string, unknown> }[] = [];
   await page.route("**/api/events", async (route) => {
     events.push(route.request().postDataJSON());
     await route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
   });
   await page.goto("/?onboarding=1");
   await openOnboardingSample(page);
+  await expect.poll(() => events.some((event) => event.name === "onboarding_sample_revealed")).toBe(true);
   await expect.poll(() => events.filter((event) => event.name === "scan_completed").length).toBe(1);
   await page.getByRole("button", { name: "Scan again", exact: true }).click();
   await openDemoScene(page, "Checkout demo");
@@ -717,6 +718,7 @@ test("anonymous analytics visit spans onboarding, multiple scans and reload", as
   const scans = events.filter((event) => event.name === "scan_started");
   expect(new Set(scans.map((event) => event.sessionId)).size).toBe(2);
   expect(events.some((event) => event.name === "onboarding_completed")).toBe(true);
+  expect(events.some((event) => event.name === "onboarding_path_selected" && event.metadata?.path === "sample")).toBe(true);
   await page.reload();
   await expect.poll(() => events.filter((event) => event.name === "app_opened").length).toBe(2);
   expect(events[0].browserSessionId).toMatch(/^[0-9a-f-]{36}$/);

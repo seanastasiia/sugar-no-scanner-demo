@@ -192,3 +192,4 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 When a new regression is fixed, add one concise entry here. Put detailed evidence in a test log only for release-critical work.
 
 - **2026-09-08: the selling-onboarding question added friction but did not change the scanner result.** The isolated preview now uses a three-screen path with an embedded evidence-based sample, a separate express route and a transparent offer. The fixed Sugar.no fit still uses confirmed sugar and protein; no fake preference-based ranking was added.
+- **2026-09-09: the selling-onboarding first screen revealed the sample winner before the user ran the sample scan.** The teaser now shows only four detected packages; the product name and confirmed nutrition appear after the explicit scan action. Separate anonymous path-selection and sample-reveal events make the two routes measurable in Amplitude.

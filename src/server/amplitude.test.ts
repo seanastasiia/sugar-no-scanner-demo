@@ -114,4 +114,18 @@ describe("Amplitude analytics", () => {
       error_category: "recognition_http_error"
     });
   });
+
+  it("keeps only an approved onboarding path", () => {
+    expect(amplitudeEventProperties({
+      ...event,
+      name: "onboarding_path_selected",
+      metadata: { onboardingVersion: 6, path: "express" }
+    })).toEqual({
+      source: "camera",
+      environment: "staging",
+      onboarding_version: 6,
+      onboarding_path: "express"
+    });
+    expect(amplitudeEventProperties({ ...event, metadata: { path: "unexpected" } })).not.toHaveProperty("onboarding_path");
+  });
 });

@@ -8,8 +8,8 @@ Base commit: `f4c185d4fe9665f83ec1e1ce4acd70e2c669a47e`
 
 | Check | Result |
 | --- | --- |
-| `npm run verify` | PASS — lint, typecheck, 66 unit/API files and 434 tests, all three catalog validators, production build and standalone asset preparation |
-| Claude-refined selling-onboarding Mobile Safari scenarios | PASS — 5/5: camera gating, embedded sample, express offer path, persisted/forced onboarding and reduced motion |
+| `npm run verify` | PASS — lint, typecheck, 66 unit/API files and 437 tests, all three catalog validators, production build and standalone asset preparation |
+| Selling-onboarding Mobile Safari scenarios | PASS — 6/6: camera gating, embedded sample reveal, express offer path, anonymous funnel analytics, persisted/forced onboarding and reduced motion |
 | Pen/iPhone viewport matrix | PASS — 320×568, 375×667, 390×844, 402×874, 440×956, 667×375 and 874×402 |
 | Paywall suite with `WTP_PAYWALL_ENABLED=true` | PASS — 7/7: allowance, separation, checkout success, recovery, paid days and renewal |
 | Existing large-text/dark-mode and shrinking-feedback regressions, serial | PASS — 3/3 |
@@ -25,6 +25,7 @@ The first broad browser invocation accidentally left `WTP_PAYWALL_ENABLED=false`
 - Primary and secondary actions remain visible without scrolling on the first screen.
 - Reduced motion removes the sample scan line.
 - Claude's growth-design review was applied selectively: the non-functional question and generic confirmation copy were removed, proof and price copy were strengthened, and an express route was added. Preference-based sugar-only ranking was rejected because the product uses a fixed sugar-plus-protein Sugar.no fit.
+- The first screen now keeps the result unrevealed: it confirms four packages were found, while the exact winner and nutrition values appear only after `Scan this shelf`. Anonymous analytics records the chosen sample/express path and the sample reveal without collecting product identity.
 
 ## Owner product check
 

@@ -111,6 +111,8 @@ type PilotEventName =
   | "app_opened"
   | "onboarding_started"
   | "onboarding_step_viewed"
+  | "onboarding_path_selected"
+  | "onboarding_sample_revealed"
   | "onboarding_completed"
   | "onboarding_skipped"
   | "camera_permission_requested"
@@ -1589,6 +1591,14 @@ export function ScannerApp({
         onStepViewed={(step) => track("onboarding_step_viewed", "camera", undefined, {
           onboardingVersion: ONBOARDING_VERSION,
           step
+        })}
+        onPathSelected={(path) => track("onboarding_path_selected", "camera", undefined, {
+          onboardingVersion: ONBOARDING_VERSION,
+          path
+        })}
+        onSampleRevealed={() => track("onboarding_sample_revealed", "sample-shelf", undefined, {
+          onboardingVersion: ONBOARDING_VERSION,
+          path: "sample"
         })}
       />
     );

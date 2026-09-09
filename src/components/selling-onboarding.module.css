@@ -33,7 +33,8 @@
 .productBox:first-of-type { border-color: #20a35a; background: #20a35a1f; }
 .productBox .fitBadge { position: absolute; bottom: 6px; left: 5px; }
 .scanLine { position: absolute; z-index: 3; left: 7%; right: 7%; top: 12%; height: 2px; background: linear-gradient(90deg, transparent, #fff, transparent); opacity: 0; box-shadow: 0 0 14px #0a84ff; }
-.previewRevealed .productBox { opacity: 1; transform: none; }
+.previewAnnotated .productBox { opacity: 1; transform: none; }
+.previewAnnotated:not(.previewRevealed) .productBox { border-color: #ffffffd6; background: #0a84ff14; }
 .previewRevealed .scanLine { animation: scan-pass 2600ms cubic-bezier(.32,.72,0,1) 180ms both; }
 .previewResult { display: flex; min-height: 72px; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; }
 .previewResult strong, .previewResult small { display: block; }
