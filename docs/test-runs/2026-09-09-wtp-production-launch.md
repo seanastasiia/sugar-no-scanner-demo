@@ -1,9 +1,9 @@
 # WTP production launch
 
 Date: 2026-09-09
-Previous production commit: `5f46e8b8e52220cd970836d86a567a8f5aa8d44f`
+Previous production commit: `d5eff3fd49cabef200682c33513d0b7683ef1744`
 Pilot source commit: `1a38bb5e961511212539246d17e92677e0228dcd`
-Rollback tag: `production-before-wtp-launch-2026-09-09`
+Rollback tag: `production-before-wtp-launch-2026-09-09-v2`
 
 ## Release boundary
 
@@ -36,4 +36,4 @@ To be completed after the reviewed commit is pushed to GitHub `main`:
 
 ## Rollback
 
-If production regresses, deploy tag `production-before-wtp-launch-2026-09-09` and set `WTP_PAYWALL_ENABLED=false`, then verify that `/api/health` reports the rollback SHA and the scanner opens without the WTP gate.
+If production regresses, deploy tag `production-before-wtp-launch-2026-09-09-v2` and set `WTP_PAYWALL_ENABLED=false`, then verify that `/api/health` reports the rollback SHA and the scanner opens without the WTP gate. The older tag without `-v2` remains at `5f46e8b` and is not the immediate pre-launch production revision.
