@@ -90,7 +90,8 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
   await expect(chips).not.toContainText("57.8");
   await page.getByText("How scores work", { exact: true }).click();
   const method = page.locator("details:not([data-score-breakdown])[open]");
-  await expect(method).toContainText("Up to 100 points, shaped around your priorities");
+  await expect(method.getByRole("heading", { name: "Up to 100 points, shaped around your priorities.", exact: true, level: 2 })).toBeVisible();
+  await expect(method.locator("[data-method-intro] svg")).toHaveCount(0);
   await expect(method).toContainText("We compare only products of the same type");
   await expect(method.locator("li[data-signal]")).toHaveCount(4);
   await expect(method.getByText("5–40 pts", { exact: true })).toBeVisible();

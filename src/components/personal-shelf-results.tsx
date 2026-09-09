@@ -79,6 +79,7 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan", he
   })).filter((group) => group.entries.length > 0);
   const ratedEntries = ratedGroups.flatMap((group) => group.entries.map((entry) => ({ ...entry, group })));
   const ResultsHeading = headingLevel;
+  const MethodHeading = headingLevel === "h1" ? "h2" : "h3";
   return (
     <section className={styles.results} aria-label="Personal Shelf Rank results">
       {ratedEntries.length ? <>
@@ -95,12 +96,9 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan", he
               <span className={styles.methodChevron} aria-hidden="true"><ChevronDown /></span>
             </summary>
             <div className={styles.methodPanel}>
-              <header className={styles.methodHero}>
-                <span className={styles.methodHeroIcon} aria-hidden="true"><Sparkles /></span>
-                <div>
-                  <p className={styles.methodIntro}>Up to 100 points, shaped around your priorities.</p>
-                  <p>We compare only products of the same type. The mix changes by category.</p>
-                </div>
+              <header className={styles.methodHero} data-method-intro>
+                <MethodHeading className={styles.methodIntro}>Up to 100 points, shaped around your priorities.</MethodHeading>
+                <p>We compare only products of the same type. The mix changes by category.</p>
               </header>
               <ul className={styles.methodSignals}>
                 <li data-signal="sugar">

@@ -1161,7 +1161,7 @@ test("ordinary Shelf demo rates all four bars in Personal Shelf without evidence
   const personal = page.getByRole("region", { name: "Personal Shelf Rank results", exact: true });
   await expect(personal.getByRole("region", { name: "Snack bars", exact: true })).toBeVisible();
   await expect(personal.getByRole("heading", { name: "Cookies & wafers", exact: true })).toHaveCount(0);
-  await expect(personal.locator("h3")).toHaveCount(4);
+  await expect(personal.locator("[data-personal-fit] h3")).toHaveCount(4);
   await expect(personal.locator("img")).toHaveCount(4);
   for (const image of await personal.locator("img").all()) {
     // Off-screen cards use native lazy loading; inspect each when it enters view.
