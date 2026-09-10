@@ -128,6 +128,11 @@ describe("Personal Shelf Rank, independent pilot", () => {
   ])("maps a reviewed source family without using the product name: %s", (category, expected) => {
     expect(shelfCategory(category)).toBe(expected);
   });
+  it("does not rate the mixed vegan tofu aisle as dairy cheese", () => {
+    expect(shelfCategory("veganiem-un-vegetariesiem > siers")).toBeNull();
+    expect(shelfCategory("piena-produkti-un-olas > siers")).toBe("cheese");
+    expect(shelfCategory("veganiem-un-vegetariesiem > saldeti-edieni-un-saldejums > saldejums")).toBe("ice-cream");
+  });
   it("preserves specific existing families ahead of broad fallback categories", () => {
     expect(shelfCategory("Maistas > Skanėstai > Sausainiai > Sausainiai su šokoladu")).toBe("cookie");
     expect(shelfCategory("saldumi-un-uzkodas > batonini > sokolades-auglu-un-marcipana")).toBe("bar");

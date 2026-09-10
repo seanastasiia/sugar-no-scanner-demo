@@ -4,7 +4,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Open
 
-- **Historical Rimi offers must stay unavailable.** The 10 September local candidate preserves every previous complete SKU. Its 105 rows absent from the current sitemap retain their original nutrition dates but no price/currency or availability claim. The layer now has 7,018 complete rows and 565 identity-only rows; Personal Shelf has 5,767 assessable source rows.
+- **Historical Rimi offers must stay unavailable.** The 10 September local candidate preserves every previous complete SKU. Its 105 rows absent from the current sitemap retain their original nutrition dates but no price/currency or availability claim. The layer now has 7,018 complete rows and 565 identity-only rows; Personal Shelf has 5,765 assessable source rows.
 
 - **2026-09-09, local candidate: Lidl's official current product sitemap cannot supply the requested 100-food-card pilot.** It contains only 67 product pages, of which one is classified as food. That Pilos cheese identity has a name, pack, image and price but no source GTIN or nutrition, so it remains unscored. A full Lidl import through this sitemap is deliberately not recommended; broader coverage needs a permitted structured Lidl source or exact package/web evidence, not guessed URLs.
 
@@ -54,7 +54,9 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Recently resolved
 
-- **2026-09-10, local candidate: the configured vegan Rimi section silently matched zero sitemap URLs.** Corrected its slug to `veganiem-un-vegetariesiem` in ingestion, reporting, evidence queues and validation. All 87 previously omitted products now have exact basic nutrition. Imports fail before snapshot writes if any configured section is missing; regression tests verify both a stale single section and a partially missing multi-section scope. Of 33 supported-category products, 18 have accepted composition observations and seven receive Personal Shelf assessments. The other evidence gaps remain unscored.
+- **2026-09-10, local candidate: the new vegan `siers` aisle mixed tofu and cheese substitutes under a dairy-cheese category.** Its ten products now remain unsupported in Personal Shelf, avoiding two false tofu assessments. Exact basic nutrition is preserved. Regression tests retain dairy-cheese and vegan ice-cream mappings.
+
+- **2026-09-10, local candidate: the configured vegan Rimi section silently matched zero sitemap URLs.** Corrected its slug to `veganiem-un-vegetariesiem` in ingestion, reporting, evidence queues and validation. All 87 previously omitted products now have exact basic nutrition. Imports fail before snapshot writes if any configured section is missing; regression tests verify both a stale single section and a partially missing multi-section scope. The initial 33-card check accepted 18 composition observations. Category review excludes the ten-card vegan cheese/tofu aisle from dairy-cheese scoring; five ice creams receive Personal Shelf assessments. The other evidence gaps remain unscored.
 
 - **2026-09-09: the first live Stripe payment completed but did not grant scanner access.** The billing migrations are now applied, the mismatched webhook endpoint is disabled, the replacement signed endpoint accepted the paid event, and Supabase stores the seven-day entitlement. The owner also verified that `Restore purchase` restores paid access in another browser without another charge.
 

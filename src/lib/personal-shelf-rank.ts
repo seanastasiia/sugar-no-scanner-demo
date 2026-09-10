@@ -138,6 +138,8 @@ export function shelfCategory(category: string | null | undefined, format?: stri
   const path = normalizeIngredientText(category || "");
   const leaf = path.split(/[/>]/).at(-1)?.trim() || "";
   if (/drink|dzerien|gerim|dzeram|geriam|питьев|joog|baby|kudik|bernu|детск/.test(path)) return null;
+  // This Rimi aisle mixes tofu and cheese substitutes, not reviewed dairy cheeses.
+  if (/^veganiem[- ]un[- ]vegetariesiem\s*[/>]/.test(path) && /^siers$/.test(leaf)) return null;
   // Rimi uses "musli" under both breakfast cereals and its separate cereal-bar aisle.
   if (/^(?:musli|muesli)$/.test(leaf) && /(?:^|[/>])\s*batonini\s*[/>]/.test(path)) return "bar";
   if (/(?:^|[/>])\s*batonini\s*[/>]/.test(path)) return "bar";

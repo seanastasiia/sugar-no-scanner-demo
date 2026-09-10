@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-10T05:58:14.821Z",
+  "generatedAt": "2026-09-10T06:00:23.409Z",
   "baselineRevision": "61be6f5161e1cd111109d7809338c1afc9ae5b4f",
   "scope": {
     "cspIncluded": false,
@@ -261,7 +261,7 @@
   },
   "personalFit": {
     "baselineCatalog": {
-      "checkedAt": "2026-09-10T05:58:14.186Z",
+      "checkedAt": "2026-09-10T06:00:22.769Z",
       "assessable": 5760,
       "evidenceObservations": 7530,
       "inventoryWithEvidence": 7512,
@@ -288,26 +288,26 @@
       }
     },
     "expandedCatalog": {
-      "checkedAt": "2026-09-10T05:58:14.534Z",
-      "assessable": 5767,
+      "checkedAt": "2026-09-10T06:00:23.115Z",
+      "assessable": 5765,
       "evidenceObservations": 7530,
       "inventoryWithEvidence": 7530,
       "totals": {
-        "scored": 2341,
+        "scored": 2339,
         "provisional": 3426,
-        "missing_data": 1807,
-        "unsupported": 12742,
+        "missing_data": 1799,
+        "unsupported": 12752,
         "excluded": 0
       },
       "expandedCategories": {
         "veganiem-un-vegetariesiem": {
           "records": 87,
-          "assessable": 7,
+          "assessable": 5,
           "withEvidence": 18,
           "status": {
-            "unsupported": 54,
-            "scored": 7,
-            "missing_data": 26
+            "unsupported": 64,
+            "missing_data": 18,
+            "scored": 5
           }
         },
         "gatavots-rimi": {
@@ -320,7 +320,7 @@
         }
       }
     },
-    "assessableDelta": 7
+    "assessableDelta": 5
   },
   "limits": [
     "Retailer rows are source observations, not globally unique products.",
