@@ -269,3 +269,5 @@ When a new regression is fixed, add one concise entry here. Put detailed evidenc
 - Live Meta SDK initialization: an initial queued consent revoke paused SDK startup before init/grant could run. Removed that redundant command because script loading is already blocked until consent. Withdrawal still uses revoke. A live-SDK network check is required in addition to mocked browser checks.
 
 - Meta privacy control overlapped the lower-right edge of View all on mobile. The enabled-Meta layout now reserves touch space below result actions and camera controls.
+
+- **2026-09-10: Ad privacy remained on the main screen after Allow.** Hide the entire control and its reserved spacing after acceptance, including reloads. Accepted consent can be reopened through `/?privacy=1`; withdrawal remains available.

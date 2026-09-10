@@ -20,13 +20,20 @@ test("Meta stays blocked until consent and revokes without breaking onboarding",
   await expect.poll(() => requests.length).toBe(1);
   const queue = () => page.evaluate(() => (window as unknown as { fbq: { queue: unknown[][] } }).fbq.queue);
   expect((await queue()).filter(args => args[2] === "PageView")).toHaveLength(1);
-  await page.getByRole("button", { name: "Ad privacy", exact: true }).click();
+  await expect(page.locator("[data-meta-consent]")).toHaveCount(0);
+  await page.reload();
+  await expect.poll(() => requests.length).toBe(2);
+  await expect(page.locator("[data-meta-consent]")).toHaveCount(0);
+  await page.screenshot({ path: "test-results/meta-allowed-hidden.png" });
+  await page.goto("/?privacy=1");
+  await expect(page.getByRole("button", { name: "No thanks", exact: true })).toBeVisible();
+  await expect.poll(() => requests.length).toBe(3);
   await page.getByRole("button", { name: "No thanks", exact: true }).click();
   expect((await queue()).at(-1)).toEqual(["consent", "revoke"]);
   expect((await queue()).filter(args => String(args[0]).startsWith("track"))).toEqual([]);
   await page.reload();
   await expect(page.getByRole("button", { name: "Ad privacy", exact: true })).toBeVisible();
-  expect(requests).toHaveLength(1);
+  expect(requests).toHaveLength(3);
 });
 
 test("Meta removes free text URLs before loading and keeps the consent card within a narrow screen", async ({ page }) => {

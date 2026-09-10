@@ -5,14 +5,23 @@ import { configureMeta, readMetaConsent, setMetaConsent, startMeta } from "@/lib
 import styles from "./meta-consent.module.css";
 
 export function MetaConsent({ pixelId }: { pixelId: string }) {
+  const [consent, setConsent] = useState<"granted" | "denied" | null>();
   const [open, setOpen] = useState(false);
   useEffect(() => {
     configureMeta(pixelId);
-    const timer = window.setTimeout(() => { setOpen(readMetaConsent() === null); startMeta(); }, 0);
+    const timer = window.setTimeout(() => {
+      const saved = readMetaConsent();
+      setConsent(saved);
+      setOpen(saved === null || new URLSearchParams(window.location.search).get("privacy") === "1");
+      startMeta();
+    }, 0);
     const retry = window.setInterval(startMeta, 1000);
     const sync = (event: StorageEvent) => {
       if (event.key === "sugar-scanner-meta-consent-v1" || event.key === null) {
-        setMetaConsent(readMetaConsent() || "denied");
+        const saved = readMetaConsent();
+        setConsent(saved);
+        setOpen(saved === null);
+        setMetaConsent(saved || "denied");
         startMeta();
       }
     };
@@ -20,10 +29,12 @@ export function MetaConsent({ pixelId }: { pixelId: string }) {
     return () => { clearTimeout(timer); clearInterval(retry); window.removeEventListener("storage", sync); };
   }, [pixelId]);
   const choose = (value: "granted" | "denied") => {
+    setConsent(value);
     setMetaConsent(value);
     startMeta();
     setOpen(false);
   };
+  if (consent === undefined || (consent === "granted" && !open)) return null;
   return <aside data-meta-consent className={styles.container} aria-label="Advertising privacy">
     {open ? <section className={styles.card} aria-labelledby="meta-consent-title">
       <h2 id="meta-consent-title">Help us measure our ads?</h2>
