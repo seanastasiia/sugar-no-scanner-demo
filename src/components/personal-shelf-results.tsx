@@ -174,7 +174,6 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan", he
             <ol className={styles.list}>
               {group.entries.map(({ product, assessment, rank, tied, rankProvisional }) => {
                 const evidence = product.shelfEvidence ? shelfEvidencePer100g(product.shelfEvidence) : null;
-                const balanceWeights = assessment.category ? SHELF_CATEGORIES[assessment.category].balance : null;
                 const scoreLabel = shelfScoreLabel(assessment);
                 const fit = personalShelfFit(assessment);
                 const rankText = rank ? `${rankProvisional ? "Provisional " : tied ? "Tied " : ""}#${rank} of ${group.scoredCount}` : null;
@@ -233,16 +232,6 @@ export function PersonalShelfResults({ products, thumbnail, context = "scan", he
                             </dl>
                             {product.shelfEvidence?.nutritionBasis === "100ml" ? <p>Converted from 100 ml using the exact pack’s declared weight and volume.</p> : null}
                           </> : <p>Nutrition per 100 g is unavailable.</p>}
-                          <h4>What Balance means</h4>
-                          <p>{balanceWeights?.fiber ? "Less salt and saturated fat, more fiber." : "Less salt and saturated fat. Fiber is not part of this category’s score."} These signals make up the Balance points, with weights set for this product category.</p>
-                          <h4>Ingredients on the label</h4>
-                          <p className={styles.ingredientText} lang={product.shelfEvidence?.ingredientsLanguage || undefined}>{product.shelfEvidence?.ingredientsText || "Not listed"}</p>
-                          <p>{assessment.reasons.find(reason => reason.startsWith("First ingredient:"))}. Ingredients points reflect the food base and sugar near the start of the list, not a safety rating of every ingredient.</p>
-                          <div className={styles.scoreNotes}>
-                            <h4>What affects this score</h4>
-                            <ul>{assessment.tradeoffs.map(note => <li key={note}>{note}</li>)}</ul>
-                            {assessment.cap ? <p>{assessment.cap}</p> : null}
-                          </div>
                         </div>
                       </div>
                     </details> : null}

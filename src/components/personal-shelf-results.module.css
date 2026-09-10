@@ -112,8 +112,3 @@
 .nutritionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 0; }
 .nutritionGrid dt { color: var(--muted); }
 .nutritionGrid dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; }
-.ingredientText { overflow-wrap: anywhere; }
-.scoreNotes { padding: 12px; border-inline-start: 3px solid var(--action-primary); border-radius: 8px; background: var(--surface-tinted); }
-.scoreNotes h4 { margin-top: 0; }
-.scoreNotes ul { margin: 8px 0; padding-left: 18px; }
-.scoreNotes li + li { margin-top: 6px; }

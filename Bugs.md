@@ -279,3 +279,5 @@ When a new regression is fixed, add one concise entry here. Put detailed evidenc
 - **2026-09-10: Personal Shelf criterion numbers could be mistaken for nutrient amounts.** Added explicit points units, source-backed nutrition per 100 g, label ingredients, Balance explanation and existing score notes. Scoring and ingredient classification are unchanged.
 - Meta Purchase retry: creating the loader queue used to persist a sent marker before the real SDK was ready. Purchase now waits for the SDK handler and flushes on load.
 - Railway build: corrupted Turbopack persistence caused a Rust panic after compilation. The Railway build command now clears generated `.next/cache` contents before building, preserving the Railway mount.
+
+- **2026-09-10: expanded Shelf cards contained unwanted explanatory blocks.** Removed the per-card Balance explanation, ingredients and score notes at the owner’s request; criterion points and nutrition per 100 g form the final card layout.

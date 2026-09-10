@@ -78,8 +78,7 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
   await expect(firstBreakdown.getByRole("listitem")).toHaveCount(4);
   await expect(firstBreakdown.locator('[data-score-component="sugar"]')).toContainText("points");
   await expect(breakdowns.first().getByRole("heading", { name: "Nutrition per 100 g" })).toBeVisible();
-  await expect(breakdowns.first().getByRole("heading", { name: "Ingredients on the label" })).toBeVisible();
-  await expect(breakdowns.first()).toContainText("Less salt and saturated fat, more fiber.");
+  await expect(breakdowns.first()).not.toContainText(/What Balance means|Ingredients on the label|What affects this score|First ingredient:/);
   await expect(firstBreakdown.locator('[data-score-component="sugar"]')).toHaveAccessibleName(/^Sugar: \d+(?:\.\d)? of \d+ points$/);
   await expect(firstBreakdown.locator('[data-score-component="protein"]')).toHaveAccessibleName(/^Protein: \d+(?:\.\d)? of \d+ points$/);
   await expect(firstBreakdown.locator('[data-score-component="composition"]')).toHaveAccessibleName(/^Ingredients: \d+(?:\.\d)? of \d+ points$/);
