@@ -1,5 +1,6 @@
 .container { position: fixed; z-index: 200; bottom: max(8px, env(safe-area-inset-bottom)); right: 8px; max-width: calc(100vw - 16px); }
-.card { width: 380px; max-width: 100%; padding: 20px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow); max-height: 80dvh; overflow: auto; }
+.container:has(.card)::before { content: ""; position: fixed; inset: 0; background: rgb(15 23 42 / 32%); pointer-events: none; }
+.card { position: relative; width: 380px; max-width: 100%; padding: 20px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface); color: var(--ink); box-shadow: 0 24px 64px rgb(15 23 42 / 28%), 0 4px 16px rgb(15 23 42 / 12%); max-height: 80dvh; overflow: auto; }
 .card h2 { font: 600 20px/1.3 var(--font-display); margin: 0 0 8px; }
 .card p { font-size: 14px; line-height: 1.5; margin: 0 0 16px; }
 .actions { display: flex; gap: 8px; }
