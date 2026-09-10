@@ -1,6 +1,6 @@
 # Rimi/Lidl continuation — 10 September 2026
 
-Local candidate; no production publication, Supabase write or Railway deployment. CSP remains excluded. Publication requires the owner's explicit `ПУБЛИКУЙ`.
+The initial local candidate was subsequently authorized and published on 10 September. Production deployment and live acceptance are recorded below. CSP remains excluded; no Supabase migration, seed or prune was performed.
 
 ## Result and provenance
 
@@ -45,3 +45,20 @@ Tested application/data commit: `5b98f5fe2d2b4ae54d4f2ec984d5a45e962374c0`. The 
 The owner explicitly requested `ПУБЛИКУЙ` after local candidate acceptance. GitHub and live production were independently verified at `92781e0e22a5dbb40823f4e1236af985e64ff134`; the intervening Meta consent/SDK/mobile-spacing changes were merged without conflicts. Full verification of the merged release is required before push. Catalogs are versioned application snapshots and work without a database migration or import; this release does not run the broad external seed/prune command.
 
 Rollback base: `production-before-rimi-lidl-expansion-2026-09-10`, pointing to `92781e0e22a5dbb40823f4e1236af985e64ff134`. Restore the same production environment and verify health SHA if rollback is needed.
+
+### Merged release verification and deployment
+
+Application release: `901d4286e9b51cca1e3663b5434a4a0e505772e3` (includes production Meta base `92781e0`).
+
+- `npm run verify`: passed, 87 files / 750 tests, catalog checks and production build.
+- Full `CI=1 WTP_PAYWALL_ENABLED=true E2E_PORT=3139 npm run test:e2e -- --workers=1`: 69 clean passes, two cases passed on retry, three Meta-gated cases skipped. Both retried cases (first visit and alternative carousel) passed a separate no-retry rerun, 2/2.
+- Dedicated `CI=1 E2E_PRODUCTION=1 META_PIXEL_ID=1956266218377681 WTP_PAYWALL_ENABLED=true E2E_PORT=3130 npx playwright test tests/e2e/meta-consent.spec.ts --workers=1 --retries=0`: 3/3 passed with advertising transport mocked.
+- Earlier parallel development-server runs encountered chunk-load/navigation timeouts and were interrupted; these are not counted as acceptance. A development-only Meta URL-cleanup check failed; the supported production-build suite above passed all three cases. No unrelated Meta code was modified.
+- GitHub main push: `92781e0` → `901d428`.
+- Explicit Railway production CLI deployment `a33f94c4-3c23-4bee-8a9b-15732e5fff4b`: `SUCCESS`. The GitHub deployment `6a22cf56-3181-4b89-9025-ace0bf60ccc0` was superseded by the CLI deployment of the same revision.
+- Live HTTPS health returned the exact application SHA, `status: ok`, original production feature flags and paywall enabled.
+- Live effective Rimi inventory: 7,011 eligible nutrition rows plus 565 identities; seven pre-existing quarantined records explain the difference from the 7,018 raw complete snapshot. Lidl: one identity. Personal Shelf: 7,530 observations, 2,339 complete, 3,426 provisional, 1,765 unscored.
+- Protected live product reads passed for exact SKUs `1020435`, `955679`, `4000769`. Avenei ice cream returns assessable exact evidence; Lunter tofu remains unsupported. Historical SKU `1011993` returns no current offer. Unauthenticated product read correctly returns 401.
+- Live 390×844 WebKit root/consent and Personal Shelf demo passed, no horizontal overflow or page errors. Screenshot visually inspected. Analytics and advertising requests were intercepted; no real scan, purchase or feedback message was submitted.
+
+Logs and screenshot: `.catalog-sync/release-2026-09-10/` (`verify.log`, `e2e-single-worker.log`, `recheck.log`, `meta-production.log`, `live-smoke.json`, `live-personal-shelf.png`). The documentation-only follow-up does not change tested application/data and is also pushed and deployed.
