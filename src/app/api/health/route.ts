@@ -26,6 +26,7 @@ export function GET() {
       service: "sugar-no-scanner-demo",
       commit: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.COMMIT_SHA || "local",
       features: {
+        shelfResearchQueue: process.env.SHELF_RESEARCH_QUEUE_ENABLED === "true",
         sharedWebCatalog: process.env.SHARED_WEB_CATALOG_ENABLED === "true",
         sharedWebShelfEvidence: process.env.SHARED_WEB_CATALOG_ENABLED === "true" && process.env.SHARED_WEB_SHELF_EVIDENCE_ENABLED === "true",
         sharedOpenFoodFactsCatalog: process.env.SHARED_OFF_CATALOG_ENABLED === "true",

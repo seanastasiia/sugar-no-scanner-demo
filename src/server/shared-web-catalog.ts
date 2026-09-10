@@ -19,7 +19,7 @@ const recordSchema = z.object({
     fields: z.array(z.enum(["identity", "protein", "fiber", "totalSugar", "carbohydrate"])), status: z.literal("secondary") })).min(1)
 });
 
-export function sharedRecordToProduct(value: unknown): ScoredProduct | null {
+export function sharedRecordToProduct(value: unknown, includeShelfEvidence = false): ScoredProduct | null {
   const parsed = recordSchema.safeParse(value);
   if (!parsed.success || !approvedWebProductUrl(parsed.data.retailerUrl) ||
     parsed.data.sources.some((source) => !approvedWebProductUrl(source.url))) return null;
@@ -30,7 +30,7 @@ export function sharedRecordToProduct(value: unknown): ScoredProduct | null {
     !(listed.proteinG !== null && raw.energyKcalPer100 !== null && listed.proteinG * 4 > raw.energyKcalPer100 + 5);
   const nutrients = raw.nutritionBasis && consistent ? listed : { proteinG: null, fiberG: null, totalSugarG: null, carbohydrateG: null };
   const fieldValues = { identity: true, protein: nutrients.proteinG, fiber: nutrients.fiberG, totalSugar: nutrients.totalSugarG, carbohydrate: nutrients.carbohydrateG };
-  const canonical = process.env.SHARED_WEB_SHELF_EVIDENCE_ENABLED === "true" ? parseShelfEvidence(canonicalShelfEvidence) : null;
+  const canonical = (includeShelfEvidence || process.env.SHARED_WEB_SHELF_EVIDENCE_ENABLED === "true") ? parseShelfEvidence(canonicalShelfEvidence) : null;
   const exact = canonical && canonical.sourceUrl === raw.retailerUrl && canonical.source !== "open_food_facts" &&
     (!raw.gtin || !canonical.gtin || validWebGtin(raw.gtin) === validWebGtin(canonical.gtin)) &&
     raw.sources.some((s) => s.url === canonical.sourceUrl && s.checkedAt === canonical.checkedAt) &&

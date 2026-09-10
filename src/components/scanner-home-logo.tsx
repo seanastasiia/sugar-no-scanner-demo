@@ -1,16 +1,16 @@
 import Image from "next/image";
 import styles from "./scanner-home-logo.module.css";
 
-export function ScannerHomeLogo({ imageClassName, priority = false }: {
+export function ScannerHomeLogo({ imageClassName, priority = false, href = "/" }: {
   imageClassName?: string;
   priority?: boolean;
+  href?: "/" | "/pilot/shelf";
 }) {
   return (
     // A full root navigation deliberately clears transient camera, demo and result state.
-    // eslint-disable-next-line @next/next/no-html-link-for-pages
     <a
       className={styles.link}
-      href="/"
+      href={href}
       aria-label="Sugar.no scanner home"
     >
       <Image

@@ -50,6 +50,7 @@ import { dedupeProductDetections } from "@/lib/product-detection-dedupe";
 import { displayableScanProductIds, hasSugarNoRating, ratedScanProductIds } from "@/lib/rating-visibility";
 import { productDisplayName, productDisplayImage } from "@/lib/product-display";
 import { compactNutritionLabel } from "@/lib/nutrition-display";
+import { useShelfQueue } from "./shelf-queue";
 import { PersonalShelfResults, ShelfRankToggle } from "./personal-shelf-results";
 import { ScannerHomeLogo } from "./scanner-home-logo";
 import { shelfDemoPersonalProduct } from "@/lib/shelf-demo-personal-rank";
@@ -293,10 +294,12 @@ function trapFocus(event: KeyboardEvent, container: HTMLElement) {
 
 export function ScannerApp({
   personalRankAvailable = true,
-  paywallEnabled = false
+  paywallEnabled = false,
+  shelfResearchEnabled = false
 }: {
   personalRankAvailable?: boolean;
   paywallEnabled?: boolean;
+  shelfResearchEnabled?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -338,7 +341,7 @@ export function ScannerApp({
   const barcodeDetectorRef = useRef<NativeBarcodeDetector | null | undefined>(undefined);
 
   const [source, setSource] = useState<ScanSource>("camera");
-  const [personalRankEnabled, setPersonalRankEnabled] = useState(false);
+  const [personalRankEnabled, setPersonalRankEnabled] = useState(shelfResearchEnabled);
   const [cameraState, setCameraState] = useState<CameraState>("idle");
   const [recognitionState, setRecognitionState] = useState<RecognitionState>("idle");
   const [detections, setDetections] = useState<ProductDetection[]>([]);
@@ -1374,6 +1377,7 @@ export function ScannerApp({
     () => Object.fromEntries(Object.entries(products).map(([id, payload]) => [id, payload.product])),
     [products]
   );
+  const shelfQueue = useShelfQueue(shelfResearchEnabled && (source === "camera" || source === "upload"), detections, productById);
   const pendingProductIds = useMemo(
     () => new Set([...loadingProductIds, ...enrichingProductIds]),
     [enrichingProductIds, loadingProductIds]
@@ -1639,7 +1643,7 @@ export function ScannerApp({
     >
       {!resultsAreExpanded && !demoOpen ? (
         <header className={`${styles.header} ${styles.scannerHeader}`} inert={feedbackOpen || paywallOpen || paymentSuccessOpen}>
-          <ScannerHomeLogo imageClassName={styles.wordmark} priority />
+          <ScannerHomeLogo href={shelfResearchEnabled ? "/pilot/shelf" : "/"} imageClassName={styles.wordmark} priority />
           {showAccessBadge ? (
             <p
               className={`${styles.freeScanAllowance} ${paidAccess ? styles.paidAccessAllowance : ""} ${!paidAccess && freeScanCount >= FREE_REAL_SCANS ? styles.noFreeScanAllowance : ""}`}
@@ -1659,6 +1663,7 @@ export function ScannerApp({
         >
           <div className={styles.stageTopbar}>
             <div className={styles.stageActions}>
+              {shelfResearchEnabled ? <a className={styles.feedbackTrigger} href="/pilot/shelf/queue">My products ({shelfQueue.items.length})</a> : null}
               <button ref={feedbackFocusRef} className={styles.feedbackTrigger} type="button" onClick={openFeedback}>
                 <span>Leave feedback</span>
               </button>
@@ -1920,7 +1925,7 @@ export function ScannerApp({
             <div className={styles.sheetChrome}>
               {resultsAreExpanded ? (
                 <>
-                  <ScannerHomeLogo imageClassName={styles.wordmark} />
+                  <ScannerHomeLogo href={shelfResearchEnabled ? "/pilot/shelf" : "/"} imageClassName={styles.wordmark} />
                   <button
                     className={styles.sheetIconButton}
                     type="button"
@@ -2038,15 +2043,18 @@ export function ScannerApp({
                   <ShelfRankToggle enabled={personalRankEnabled} onChange={setPersonalRankEnabled} />
                 ) : null}
                 {!productDetailsOpen && personalRankEnabled ? (
+                  <>
+                  {shelfResearchEnabled ? <p><a href="/pilot/shelf/queue">My products: {shelfQueue.items.length} saved</a>{shelfQueue.error ? ` · ${shelfQueue.error}` : " · Unrated products are checked in the background."}</p> : null}
                   <PersonalShelfResults
                     context={source === "sample-shelf" ? "demo" : "scan"}
-                    products={visibleTrayIds.flatMap((id) => products[id]?.product ? [source === "sample-shelf" ? shelfDemoPersonalProduct(products[id].product) : products[id].product] : [])}
+                    products={(shelfResearchEnabled ? [...new Set([...visibleTrayIds, ...Object.keys(shelfQueue.replacements)])] : visibleTrayIds).flatMap((id) => shelfQueue.replacements[id] ? [shelfQueue.replacements[id]] : products[id]?.product ? [source === "sample-shelf" ? shelfDemoPersonalProduct(products[id].product) : products[id].product] : [])}
                     thumbnail={(id) => {
                       const sourceId = source === "sample-shelf" ? shelfDemoOriginalId(id) : id;
                       const item = products[sourceId]?.product;
                       return <ProductThumbnail imageUrl={source === "sample-shelf" && item ? productDisplayImage(item) : item?.imageUrl} sceneImageUrl={sceneImageUrl} sceneDimensions={mediaDimensions} detection={detectionById[sourceId]} sizes="48px" targetAspect={48 / 60} />;
                     }}
                   />
+                  </>
                 ) : null}
                 {!productDetailsOpen && !personalRankEnabled && visibleTrayIds.length === 1 ? (
                   <div className={styles.scanSummary}>
@@ -2236,7 +2244,7 @@ export function ScannerApp({
             tabIndex={-1}
           >
             <div className={styles.demoNavigation}>
-              <ScannerHomeLogo imageClassName={styles.wordmark} />
+              <ScannerHomeLogo href={shelfResearchEnabled ? "/pilot/shelf" : "/"} imageClassName={styles.wordmark} />
               <button type="button" onClick={closeDemo} aria-label="Close demo chooser">
                 <X aria-hidden="true" size={20} />
               </button>

@@ -113,7 +113,7 @@ async function listVerifiedAlternativePool(): Promise<ScoredProduct[]> {
   return products;
 }
 
-async function resolveProduct(id: string): Promise<ScoredProduct | null> {
+export async function resolveProduct(id: string): Promise<ScoredProduct | null> {
   if (id.startsWith("web:shared:")) return getSharedWebProduct(id);
   if (id.startsWith("off:")) {
     return getOpenFoodFactsProductByBarcode(id.slice("off:".length));

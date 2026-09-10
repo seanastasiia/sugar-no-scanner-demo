@@ -188,7 +188,7 @@ function pageNutrition(html: string, product: JsonObject): Nutrition {
 }
 
 /** Deterministic page evidence only: model-supplied nutrient numbers are unused. */
-export function verifyWebProductPage(input: WebProductLookup, html: string, sourceUrl: string, checkedAt = new Date().toISOString()): VerifiedWebProduct | null {
+export function verifyWebProductPage(input: WebProductLookup, html: string, sourceUrl: string, checkedAt = new Date().toISOString(), includeShelfEvidence = false): VerifiedWebProduct | null {
   const url = approvedWebProductUrl(sourceUrl);
   if (!url) return null;
   const products = jsonProducts(html);
@@ -219,7 +219,7 @@ export function verifyWebProductPage(input: WebProductLookup, html: string, sour
     if (!queryWords.length || !queryWords.every((word) => pageWords.has(word))) return null;
   }
   let canonicalShelfEvidence: ShelfEvidence | null = null;
-  if (process.env.SHARED_WEB_SHELF_EVIDENCE_ENABLED === "true" && typeof page.sku === "string") {
+  if ((includeShelfEvidence || process.env.SHARED_WEB_SHELF_EVIDENCE_ENABLED === "true") && typeof page.sku === "string") {
     if (/(^|\.)rimi\.lv$/.test(new URL(url).hostname)) canonicalShelfEvidence = rimiShelfEvidence(html, url, page.sku, checkedAt);
     if (/(^|\.)livinn\.lt$/.test(new URL(url).hostname)) canonicalShelfEvidence = livinnShelfEvidence(html, url, page.sku, checkedAt);
     if (canonicalShelfEvidence?.gtin && gtin && validWebGtin(canonicalShelfEvidence.gtin) !== gtin) canonicalShelfEvidence = null;
@@ -246,7 +246,7 @@ export function verifyWebProductPage(input: WebProductLookup, html: string, sour
   } };
 }
 
-export async function fetchVerifiedWebProduct(input: WebProductLookup, sourceUrl: string): Promise<VerifiedWebProduct | null> {
+export async function fetchVerifiedWebProduct(input: WebProductLookup, sourceUrl: string, includeShelfEvidence = false): Promise<VerifiedWebProduct | null> {
   let url = approvedWebProductUrl(sourceUrl);
   if (!url) return null;
   try {
@@ -273,7 +273,7 @@ export async function fetchVerifiedWebProduct(input: WebProductLookup, sourceUrl
         if (size > 1_500_000) { await reader.cancel(); return null; }
         chunks.push(part.value);
       }
-      return verifyWebProductPage(input, Buffer.concat(chunks).toString("utf8"), url);
+      return verifyWebProductPage(input, Buffer.concat(chunks).toString("utf8"), url, new Date().toISOString(), includeShelfEvidence);
     }
   } catch { /* Network/unsupported page failure must not become a catalog fact. */ }
   return null;
