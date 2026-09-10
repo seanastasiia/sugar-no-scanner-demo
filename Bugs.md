@@ -263,3 +263,9 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **2026-08-25: active live-camera work could overwrite Checkout demo.** Source changes abort and ignore stale camera requests before deterministic scenes start.
 
 When a new regression is fixed, add one concise entry here. Put detailed evidence in a test log only for release-critical work.
+
+- Meta integration: the previously created dataset had no installed browser events. Added consent-gated funnel measurement, URL filtering, and server-verified purchase deduplication. Browser-only delivery can undercount; CAPI is still unconfigured.
+
+- Live Meta SDK initialization: an initial queued consent revoke paused SDK startup before init/grant could run. Removed that redundant command because script loading is already blocked until consent. Withdrawal still uses revoke. A live-SDK network check is required in addition to mocked browser checks.
+
+- Meta privacy control overlapped the lower-right edge of View all on mobile. The enabled-Meta layout now reserves touch space below result actions and camera controls.

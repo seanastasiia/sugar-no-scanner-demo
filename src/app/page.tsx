@@ -1,3 +1,4 @@
+import { MetaConsent } from "@/components/meta-consent";
 import { PwaRegistration } from "@/components/pwa-registration";
 import { ScannerApp } from "@/components/scanner-app";
 
@@ -13,6 +14,7 @@ export default function HomePage() {
         personalRankAvailable={process.env.PERSONAL_SHELF_RANK_ENABLED !== "false" && process.env.PERSONAL_SHELF_RANK_ENTRY_ENABLED !== "false"}
         paywallEnabled={process.env.WTP_PAYWALL_ENABLED === "true"}
       />
+      {process.env.META_PIXEL_ID && /^\d{5,25}$/.test(process.env.META_PIXEL_ID) ? <MetaConsent pixelId={process.env.META_PIXEL_ID} /> : null}
     </>
   );
 }

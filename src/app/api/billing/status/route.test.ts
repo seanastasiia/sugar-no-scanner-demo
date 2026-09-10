@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const helpers = vi.hoisted(() => ({
@@ -26,7 +27,7 @@ describe("POST /api/billing/status", () => {
   });
 
   it("returns access only after the paid session is activated", async () => {
-    helpers.getStripe.mockReturnValue({ checkout: { sessions: { retrieve: vi.fn().mockResolvedValue({ id: "cs_paid", payment_status: "paid" }) } } });
+    helpers.getStripe.mockReturnValue({ checkout: { sessions: { retrieve: vi.fn().mockResolvedValue({ id: "cs_paid", payment_status: "paid", amount_total: 299, currency: "eur" }) } } });
     helpers.activateCheckout.mockResolvedValue({ expiresAt: "2026-09-14T12:00:00.000Z" });
     const response = await POST(new Request("https://staging.example/api/billing/status", {
       method: "POST", headers: { origin: "https://staging.example", "content-type": "application/json" },
@@ -35,7 +36,8 @@ describe("POST /api/billing/status", () => {
     expect(await response.json()).toEqual({
       active: true,
       expiresAt: "2026-09-14T12:00:00.000Z",
-      scanSource: "camera"
+      scanSource: "camera",
+      purchase: { eventId: `purchase_${createHash("sha256").update("meta-purchase:cs_paid").digest("hex")}`, value: 2.99, currency: "EUR" }
     });
   });
 
