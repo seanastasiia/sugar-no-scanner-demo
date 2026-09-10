@@ -37,3 +37,10 @@ describe("Shelf research exact-evidence boundary", () => {
     await expect(researchShelfProduct(lookup)).rejects.toThrow("provider offline");
   });
 });
+
+it("uses the configured current model for queue search", async () => {
+  vi.stubEnv("GEMINI_WEB_NUTRITION_MODEL", "");
+  vi.stubEnv("GEMINI_MODEL", "gemini-3.7-flash");
+  await researchShelfProduct(lookup);
+  expect(mocks.generate).toHaveBeenCalledWith(expect.objectContaining({ model: "gemini-3.7-flash" }));
+});

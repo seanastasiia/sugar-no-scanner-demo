@@ -498,6 +498,8 @@ Server transport QA: `META_CAPI_TEST_EVENT_CODE=TEST... npx tsx scripts/check-me
 
 ## Internal Personal Shelf research queue
 
+Activated in production on 10 September 2026 after applying the additive Supabase migration and passing live transactional SQL checks. Open `/pilot/shelf` → My products. Live GO Pure submission reached Added in one attempt and survived reload with the approved nutrition card; independent browser keys see separate lists. Search uses `GEMINI_WEB_NUTRITION_MODEL`, then the existing `GEMINI_MODEL`, then the current application fallback.
+
 `SHELF_RESEARCH_QUEUE_ENABLED=true` enables `/pilot/shelf` and `/pilot/shelf/queue`. The public root does not show or submit to the queue. Existing payment/access rules remain in effect. Open the pilot scanner link for internal store testing; Personal Shelf starts enabled there. The queue is not a launch feature.
 
 Apply `supabase/migrations/202609100002_shelf_research_queue.sql` in the existing Supabase project's SQL Editor (or the Supabase CLI migration workflow) before enabling the flag in Railway. Existing `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `GEMINI_API_KEY` are required. Use the same dependency, dev, production and Railway steps above. No additional service or dependency is required. A server worker starts through Next instrumentation, claims one leased job across replicas every 15 seconds, and resumes expired leases after restart. Keep Railway's service running; sleeping/stopped services resume processing on their next start. Disable the flag to pause the worker and hide both pilot routes without deleting work.

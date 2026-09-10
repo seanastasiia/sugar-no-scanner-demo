@@ -287,3 +287,5 @@ When a new regression is fixed, add one concise entry here. Put detailed evidenc
 
 - Full browser release checks: the older Shelf test still expected no nutrition rows after their approved addition; onboarding contrast was measured during entrance opacity animation. Updated expectations and waited for finite animations before the accessibility check, without changing product styling.
 - **2026-09-10: missing Personal Shelf products had no in-product follow-up.** Added a gated internal research queue, anonymous browser receipts, durable worker leases/retries, offline submission and exact-source result persistence. No-score items have a visible follow-up state. Unreadable labels and unsupported ingredient rules still require clarification/review; images are not retained.
+
+- **2026-09-10: queue search used a retired provider model.** Live source-free lookup returned provider 404 for the hardcoded legacy model. Queue research now honors the existing configured Gemini model, with a regression check; saved failed jobs can be retried after the deployment.
