@@ -54,7 +54,8 @@
     "supabase:seed:csp": "tsx scripts/seed-csp-catalog.ts",
     "supabase:seed:livinn": "tsx scripts/seed-livinn-catalog.ts",
     "supabase:seed:external:dry-run": "tsx scripts/seed-external-catalog.ts --dry-run",
-    "supabase:verify:external": "tsx scripts/verify-external-catalog.ts"
+    "supabase:verify:external": "tsx scripts/verify-external-catalog.ts",
+    "test:meta-sdk": "node scripts/check-meta-sdk.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.18.0",
