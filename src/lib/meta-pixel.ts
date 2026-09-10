@@ -32,7 +32,9 @@ export function setMetaConsent(value: Consent) {
   if (value === "denied") {
     pendingPurchase = null;
     if (window.fbq) {
-      window.fbq.queue = window.fbq.queue.filter(args => !String(args[0]).startsWith("track") && !(args[0] === "consent" && args[1] === "grant"));
+      if (Array.isArray(window.fbq.queue)) {
+        window.fbq.queue = window.fbq.queue.filter(args => !String(args[0]).startsWith("track") && !(args[0] === "consent" && args[1] === "grant"));
+      }
       window.fbq("consent", "revoke");
     }
     for (const name of ["_fbp", "_fbc"]) {
@@ -95,7 +97,7 @@ export function startMeta(): boolean {
 
 export function trackMetaFunnel(name: string) {
   if (consent !== "granted" || !initialized) return;
-  const custom = ({ onboarding_completed: "OnboardingCompleted", paywall_viewed: "PaywallViewed" } as Record<string, string>)[name];
+  const custom = name === "onboarding_completed" ? "OnboardingCompleted" : name === "paywall_viewed" ? "PaywallViewed" : null;
   if (custom) window.fbq?.("trackSingleCustom", pixelId, custom);
   if (name === "checkout_started") window.fbq?.("trackSingle", pixelId, "InitiateCheckout", { currency: "EUR", value: 2.99 });
 }

@@ -49,7 +49,7 @@ describe("Meta privacy boundary", () => {
   it("only sends allowlisted funnel events, discards scanner events, and revokes queued events", async () => {
     const meta = await setup(true); meta.startMeta();
     const fbq = window.fbq!; fbq.queue = [];
-    for (const name of ["scan_completed", "product_clicked", "feedback_submitted", "access_restored", "checkout_completed"]) meta.trackMetaFunnel(name);
+    for (const name of ["scan_completed", "product_clicked", "feedback_submitted", "access_restored", "checkout_completed", "constructor", "__proto__"]) meta.trackMetaFunnel(name);
     expect(fbq.queue).toEqual([]);
     meta.trackMetaFunnel("onboarding_completed"); meta.trackMetaFunnel("checkout_started");
     expect(fbq.queue).toHaveLength(2);
