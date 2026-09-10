@@ -76,6 +76,10 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
   const firstBreakdown = breakdowns.first().getByRole("list", { name: "Points by criterion", exact: true });
   await expect(firstBreakdown).toBeVisible();
   await expect(firstBreakdown.getByRole("listitem")).toHaveCount(4);
+  await expect(firstBreakdown.locator('[data-score-component="sugar"]')).toContainText("points");
+  await expect(breakdowns.first().getByRole("heading", { name: "Nutrition per 100 g" })).toBeVisible();
+  await expect(breakdowns.first().getByRole("heading", { name: "Ingredients on the label" })).toBeVisible();
+  await expect(breakdowns.first()).toContainText("Less salt and saturated fat, more fiber.");
   await expect(firstBreakdown.locator('[data-score-component="sugar"]')).toHaveAccessibleName(/^Sugar: \d+(?:\.\d)? of \d+ points$/);
   await expect(firstBreakdown.locator('[data-score-component="protein"]')).toHaveAccessibleName(/^Protein: \d+(?:\.\d)? of \d+ points$/);
   await expect(firstBreakdown.locator('[data-score-component="composition"]')).toHaveAccessibleName(/^Ingredients: \d+(?:\.\d)? of \d+ points$/);
@@ -83,10 +87,14 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
   await breakdowns.last().locator("summary").click();
   const provisionalBalance = breakdowns.last().locator('[data-score-component="balance"]');
   await expect(provisionalBalance).toBeVisible();
+  await expect(breakdowns.last().locator("dl")).toContainText("Not listed");
+  await page.setViewportSize({ width: 320, height: 640 });
+  await expectNoOverflow(page);
+  expect(await provisionalBalance.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
   await expect(provisionalBalance).toHaveAttribute("aria-label", /^Balance: \d+(?:\.\d)?–\d+(?:\.\d)? of \d+ points$/);
   await expect(chips.getByRole("button")).toHaveCount(0);
   await expect(chips.getByRole("link", { includeHidden: true })).toHaveCount(0);
-  await expect(chips).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Pilot preference score|Sudedamosios dalys|Source table is inconsistent/);
+  await expect(chips).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Pilot preference score|Source table is inconsistent/);
   await expect(chips).not.toContainText("57.8");
   await page.getByText("How scores work", { exact: true }).click();
   const method = page.locator("details:not([data-score-breakdown])[open]");
@@ -106,7 +114,7 @@ test("rating demo deep link uses real catalog scores without camera or recogniti
   await expect(method.getByText("59-point ceiling", { exact: true })).toHaveCount(0);
   await expect(method).toContainText("missing optional fiber creates a provisional range");
   await expect(method).toContainText("This is a preference score, not a health rating");
-  await expect(page.locator("dt")).toHaveCount(0);
+  await expect(breakdowns.locator("dt")).toHaveCount(18);
   const methodAccessibility = await new AxeBuilder({ page })
     .include("details[open]")
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])

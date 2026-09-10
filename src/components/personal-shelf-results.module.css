@@ -95,7 +95,7 @@
 .breakdownGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .breakdownItem { display: grid; min-width: 0; gap: 1px; padding: 8px 10px; border-radius: 12px; background: var(--surface-tinted); }
 .breakdownItem > small { overflow: hidden; color: var(--muted); font-size: .625rem; font-weight: 600; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
-.breakdownItem > b { min-width: 0; font-size: .8125rem; font-variant-numeric: tabular-nums; line-height: 1.3; white-space: nowrap; }
+.breakdownItem > b { min-width: 0; font-size: .8125rem; font-variant-numeric: tabular-nums; line-height: 1.3; white-space: normal; }
 .breakdownItem > b span { color: var(--muted); font-size: .6875rem; font-weight: 600; }
 @container (max-width: 300px) {
   .scoreRow > .rankLabel { width: 100%; margin-left: 0; }
@@ -105,3 +105,15 @@
   .methodSignals li { padding: 11px; }
 }
 @media (prefers-reduced-motion: reduce) { .switch, .switch > span, .method summary, .methodChevron, .explanationChevron { transition: none; } .methodPanel, .breakdown { animation: none; } }
+
+.facts { display: grid; gap: 10px; margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--border); font-size: .8125rem; line-height: 1.5; }
+.facts h4 { margin: 6px 0 0; font-size: .875rem; }
+.facts p { margin: 0; }
+.nutritionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 0; }
+.nutritionGrid dt { color: var(--muted); }
+.nutritionGrid dd { margin: 0; font-weight: 650; font-variant-numeric: tabular-nums; }
+.ingredientText { overflow-wrap: anywhere; }
+.scoreNotes { padding: 12px; border-inline-start: 3px solid var(--action-primary); border-radius: 8px; background: var(--surface-tinted); }
+.scoreNotes h4 { margin-top: 0; }
+.scoreNotes ul { margin: 8px 0; padding-left: 18px; }
+.scoreNotes li + li { margin-top: 6px; }

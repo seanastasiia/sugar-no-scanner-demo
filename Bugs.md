@@ -275,3 +275,5 @@ When a new regression is fixed, add one concise entry here. Put detailed evidenc
 - Meta Purchase after Stripe: a detailed checkout referrer could block SDK startup after access was activated, leaving Purchase unsent. A no-referrer return boundary now protects both new and legacy successful returns. The browser regression verifies one event across reload and replay; server payment/ownership validation remains required.
 
 - **2026-09-10: advertising consent card blended into the light onboarding background.** Added a soft full-viewport scrim and stronger card shadow only while the card is open. Both consent choices retain equal styling.
+
+- **2026-09-10: Personal Shelf criterion numbers could be mistaken for nutrient amounts.** Added explicit points units, source-backed nutrition per 100 g, label ingredients, Balance explanation and existing score notes. Scoring and ingredient classification are unchanged.
