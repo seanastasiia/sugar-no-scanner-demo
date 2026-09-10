@@ -39,3 +39,9 @@ Tested application/data commit: `5b98f5fe2d2b4ae54d4f2ec984d5a45e962374c0`. The 
 2. Scan Avenei coconut/berry ice cream 80 g (Rimi SKU `955679`), then Lunter tofu 180 g (SKU `4000769`): the ice cream may receive Personal Shelf, the tofu must remain unsupported; check the score disclosure against its own source ingredients and per-100 table.
 3. Check an incomplete Rimi or Lidl Pilos card: identity alone must not invent nutrition or a score.
 4. A historical Rimi card must not show a current store price or availability claim.
+
+## Authorized production release
+
+The owner explicitly requested `ПУБЛИКУЙ` after local candidate acceptance. GitHub and live production were independently verified at `92781e0e22a5dbb40823f4e1236af985e64ff134`; the intervening Meta consent/SDK/mobile-spacing changes were merged without conflicts. Full verification of the merged release is required before push. Catalogs are versioned application snapshots and work without a database migration or import; this release does not run the broad external seed/prune command.
+
+Rollback base: `production-before-rimi-lidl-expansion-2026-09-10`, pointing to `92781e0e22a5dbb40823f4e1236af985e64ff134`. Restore the same production environment and verify health SHA if rollback is needed.
