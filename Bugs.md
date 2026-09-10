@@ -255,3 +255,5 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 When a new regression is fixed, add one concise entry here. Put detailed evidence in a test log only for release-critical work.
 
 - Meta integration: the previously created dataset had no installed browser events. Added consent-gated funnel measurement, URL filtering, and server-verified purchase deduplication. Browser-only delivery can undercount; CAPI is still unconfigured.
+
+- Live Meta SDK initialization: an initial queued consent revoke paused SDK startup before init/grant could run. Removed that redundant command because script loading is already blocked until consent. Withdrawal still uses revoke. A live-SDK network check is required in addition to mocked browser checks.

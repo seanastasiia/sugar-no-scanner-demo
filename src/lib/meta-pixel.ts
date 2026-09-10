@@ -71,7 +71,7 @@ export function startMeta(): boolean {
     }, { queue: [] as unknown[][], loaded: true, version: "2.0" });
     fbq.push = fbq;
     window.fbq = window._fbq = fbq;
-    fbq("consent", "revoke");
+    // Loading is already consent-gated. An initial revoke would pause SDK queue draining.
     fbq("set", "autoConfig", false, pixelId);
     fbq("init", pixelId);
     const script = document.createElement("script");

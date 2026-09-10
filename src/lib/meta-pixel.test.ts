@@ -28,7 +28,7 @@ describe("Meta privacy boundary", () => {
     expect(location.search).toBe(""); expect(location.hash).toBe("");
     expect(document.querySelectorAll("script")).toHaveLength(1);
     expect(window.fbq?.queue).toEqual([
-      ["consent", "revoke"], ["set", "autoConfig", false, "1956266218377681"],
+      ["set", "autoConfig", false, "1956266218377681"],
       ["init", "1956266218377681"], ["consent", "grant"],
       ["trackSingle", "1956266218377681", "PageView"]
     ]);
