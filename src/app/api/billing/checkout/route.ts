@@ -47,7 +47,7 @@ export async function POST(request: Request) {
         scan_source: parsed.data.scanSource,
         ...parsed.data.attribution
       },
-      success_url: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/api/billing/return?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?checkout=cancelled`
     });
     if (!session.url) throw new Error("checkout_url_missing");

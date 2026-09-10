@@ -47,17 +47,21 @@ export function setMetaConsent(value: Consent) {
   }
 }
 
+// Detailed referrers must never reach third-party analytics, including Stripe return paths.
+export function hasPrivateReferrer(): boolean {
+  if (!document.referrer) return false;
+  try {
+    const ref = new URL(document.referrer);
+    return ref.pathname !== "/" || !!ref.search || !!ref.hash;
+  } catch { return true; }
+}
+
 export function startMeta(): boolean {
   if (!pixelId || consent !== "granted" || location.pathname !== "/") return false;
   const url = new URL(location.href);
   // Billing must consume and remove its tokens before any third-party script loads.
   if (["checkout", "session_id", "restore"].some(key => url.searchParams.has(key))) return false;
-  if (document.referrer) {
-    try {
-      const ref = new URL(document.referrer);
-      if (ref.pathname !== "/" || ref.search || ref.hash) return false;
-    } catch { return false; }
-  }
+  if (hasPrivateReferrer()) return false;
   // Scanner captures attribution first. Never expose arbitrary URL text to Meta.
   const clickId = url.searchParams.get("fbclid");
   url.search = "";

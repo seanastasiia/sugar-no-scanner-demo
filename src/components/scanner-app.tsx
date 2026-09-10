@@ -1,6 +1,6 @@
 "use client";
 
-import { trackMetaFunnel, trackMetaPurchase } from "@/lib/meta-pixel";
+import { hasPrivateReferrer, trackMetaFunnel, trackMetaPurchase } from "@/lib/meta-pixel";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -1234,6 +1234,12 @@ export function ScannerApp({
     const checkout = params.get("checkout");
     const sessionId = params.get("session_id") || undefined;
     const restoreToken = params.get("restore");
+    // Legacy Checkout sessions can still return directly here with a private referrer.
+    // A header-only redirect clears it before payment verification and Meta startup.
+    if (checkout === "success" && sessionId && /^cs_(?:test|live)_[A-Za-z0-9]{1,160}$/.test(sessionId) && hasPrivateReferrer()) {
+      window.location.replace(`/api/billing/return?session_id=${encodeURIComponent(sessionId)}`);
+      return;
+    }
     const endpoint = restoreToken ? "/api/billing/restore/claim" : "/api/billing/status";
     const body = restoreToken ? { accessToken: token, restoreToken } : { accessToken: token, sessionId };
     if (checkout === "cancelled") {

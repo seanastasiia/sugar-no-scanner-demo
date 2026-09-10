@@ -271,3 +271,5 @@ When a new regression is fixed, add one concise entry here. Put detailed evidenc
 - Meta privacy control overlapped the lower-right edge of View all on mobile. The enabled-Meta layout now reserves touch space below result actions and camera controls.
 
 - **2026-09-10: Ad privacy remained on the main screen after Allow.** Hide the entire control and its reserved spacing after acceptance, including reloads. Accepted consent can be reopened through `/?privacy=1`; withdrawal remains available.
+
+- Meta Purchase after Stripe: a detailed checkout referrer could block SDK startup after access was activated, leaving Purchase unsent. A no-referrer return boundary now protects both new and legacy successful returns. The browser regression verifies one event across reload and replay; server payment/ownership validation remains required.

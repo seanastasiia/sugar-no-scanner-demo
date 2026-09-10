@@ -16,7 +16,7 @@ describe("private scanner proxy", () => {
     process.env.DEMO_SESSION_SECRET = originalSecret;
   });
 
-  it.each(["/access", "/api/auth", "/api/health"])(
+  it.each(["/access", "/api/auth", "/api/health", "/api/billing/return"])(
     "keeps %s public",
     (pathname) => {
       const response = proxy(new NextRequest(`https://scanner.example${pathname}`));

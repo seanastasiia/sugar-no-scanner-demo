@@ -36,6 +36,7 @@ describe("POST /api/billing/checkout", () => {
     expect(create).toHaveBeenCalledWith(expect.objectContaining({
       mode: "payment", line_items: [{ price: "price_test_299", quantity: 1 }],
       allow_promotion_codes: false,
+      success_url: "https://staging.example/api/billing/return?session_id={CHECKOUT_SESSION_ID}",
       metadata: expect.objectContaining({ access_token_hash: "a".repeat(64), scan_source: "camera", utm_source: "meta" })
     }));
   });
