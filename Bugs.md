@@ -253,3 +253,5 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **2026-08-25: active live-camera work could overwrite Checkout demo.** Source changes abort and ignore stale camera requests before deterministic scenes start.
 
 When a new regression is fixed, add one concise entry here. Put detailed evidence in a test log only for release-critical work.
+
+- Meta integration: the previously created dataset had no installed browser events. Added consent-gated funnel measurement, URL filtering, and server-verified purchase deduplication. Browser-only delivery can undercount; CAPI is still unconfigured.

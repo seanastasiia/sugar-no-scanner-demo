@@ -456,3 +456,13 @@ Technical validation uses `npm run verify` and the Mobile Safari suite (`CI=1 E2
 - [Camera retry button color release evidence](docs/test-runs/2026-09-02-camera-retry-button-color.md)
 - [Multilingual Livinn coverage and protein-card local QA](docs/test-runs/2026-09-02-multilingual-livinn-protein-local.md)
 - [Open and recent bugs](Bugs.md)
+
+## Meta advertising measurement
+
+Set Railway `META_PIXEL_ID=1956266218377681` for the Shelf Scanner dataset; leave it empty to disable the integration. Runtime configuration is read on each root request. No secret or schema change is needed.
+
+The root page offers equal Allow / No thanks choices and an Ad privacy control. No Meta script loads before affirmative consent. Withdrawal stops subsequent events and removes Meta browser cookies. Automatic configuration and advanced matching are disabled. The closed event set is PageView, OnboardingCompleted, PaywallViewed, InitiateCheckout and Purchase. No scan, product, nutrition, image, email or internal analytics metadata is passed to Meta. Meta still receives normal browser network information and its advertising identifiers after consent.
+
+Scanner captures its attribution before Meta initialization; arbitrary query/hash text is then removed, retaining only a bounded opaque fbclid. Billing return/restore parameters must be consumed first. If the incoming document referrer contains a non-root path, query or fragment, Meta stays disabled for that page to avoid leaking it. Demo routes do not load Meta. Purchase uses a server-verified paid Checkout amount/currency and a one-way event ID; local storage deduplicates returns. Consent rejection, blockers, unavailable storage, leaving before delivery, or failure to return from Stripe can reduce counts. Conversions API is not configured.
+
+Owner check: open a fresh browser on the public root, choose No thanks and confirm Scanner works; reopen Ad privacy and allow, then inspect PageView in Meta Test Events. Complete onboarding and open the paywall to inspect the corresponding events. Purchase must only appear after an actual confirmed payment; do not make a real charge solely for verification. Reloading that return must not repeat Purchase.

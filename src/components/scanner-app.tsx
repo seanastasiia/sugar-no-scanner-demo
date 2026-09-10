@@ -1,5 +1,6 @@
 "use client";
 
+import { trackMetaFunnel, trackMetaPurchase } from "@/lib/meta-pixel";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -393,6 +394,7 @@ export function ScannerApp({
       productId?: string,
       metadata: Record<string, string | number | boolean | null> = {}
     ) => {
+      if (name !== "checkout_started") trackMetaFunnel(name);
       void fetch("/api/events", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -1247,6 +1249,7 @@ export function ScannerApp({
         expired?: boolean;
         expiresAt?: string;
         scanSource?: ScanSource;
+        purchase?: { eventId: string; value: number; currency: string };
       };
       if (result.active) {
         setPaidAccess(true);
@@ -1255,6 +1258,7 @@ export function ScannerApp({
         setPaywallOpen(false);
         if (restoreToken) track("access_restored", "camera");
         else if (checkout === "success") {
+          if (result.purchase) trackMetaPurchase(result.purchase);
           setPaymentSuccessOpen(true);
           track("checkout_completed", result.scanSource || "camera");
         }
@@ -1314,6 +1318,7 @@ export function ScannerApp({
     if (!response.ok) throw new Error("checkout_failed");
     const result = await response.json() as { url?: string };
     if (!result.url) throw new Error("checkout_url_missing");
+    trackMetaFunnel("checkout_started");
     window.location.assign(result.url);
   }, [ensureBrowserSession, source, track]);
 

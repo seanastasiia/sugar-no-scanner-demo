@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { activateCheckout, billingEnabled, getStripe, hashAccessToken, readAccessStatus } from "@/server/billing";
@@ -26,7 +27,14 @@ export async function POST(request: Request) {
       if (activated) return NextResponse.json({
         active: true,
         ...activated,
-        scanSource: session.metadata?.scan_source === "upload" ? "upload" : "camera"
+        scanSource: session.metadata?.scan_source === "upload" ? "upload" : "camera",
+        ...(session.payment_status === "paid" && session.amount_total && session.currency === "eur" ? {
+          purchase: {
+            eventId: `purchase_${createHash("sha256").update(`meta-purchase:${session.id}`).digest("hex")}`,
+            value: session.amount_total / 100,
+            currency: "EUR"
+          }
+        } : {})
       });
     }
     const access = await readAccessStatus(accessTokenHash);
