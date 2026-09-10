@@ -4,11 +4,11 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Open
 
-- **2026-09-09, local candidate: replacing Rimi with only the fresh sitemap would have removed 151 previously verified products and 49 still-assessable Personal Shelf rows.** The refresh now keeps disappeared products as historical, unavailable records, clears their price/currency offer and preserves the original nutrition verification date. The resulting Rimi layer has 6,930 complete records (108 new) plus 564 current identity-only rows; Personal Shelf remains at 5,760 assessable rows instead of regressing. These historical rows must never be presented as current store availability.
+- **Historical Rimi offers must stay unavailable.** The 10 September local candidate preserves every previous complete SKU. Its 105 rows absent from the current sitemap retain their original nutrition dates but no price/currency or availability claim. The layer now has 7,018 complete rows and 565 identity-only rows; Personal Shelf has 5,767 assessable source rows.
 
 - **2026-09-09, local candidate: Lidl's official current product sitemap cannot supply the requested 100-food-card pilot.** It contains only 67 product pages, of which one is classified as food. That Pilos cheese identity has a name, pack, image and price but no source GTIN or nutrition, so it remains unscored. A full Lidl import through this sitemap is deliberately not recommended; broader coverage needs a permitted structured Lidl source or exact package/web evidence, not guessed URLs.
 
-- **2026-09-09, local candidate: current Rimi identity-only pages do not expose GTINs.** All 564 exact identities retain source name, SKU, image and current page URL; 54 also lack a parseable pack size. They improve conservative visual-name/SKU matching, but cannot be joined to OFF by barcode and cannot receive a score until an exact nutrition source is verified.
+- **2026-09-09, local candidate: current Rimi identity-only pages do not expose GTINs.** All 565 exact identities retain source name, SKU, image and current page URL; 54 also lack a parseable pack size. They improve conservative visual-name/SKU matching, but cannot be joined to OFF by barcode and cannot receive a score until an exact nutrition source is verified.
 
 - **The willingness-to-pay gate is an experiment, not strong access control.** The three free successful scans are counted in browser storage, so clearing site data, Private Browsing, an in-app browser or another browser can reset the allowance. Paid access is server-verified and restorable by email. Keep this low-friction trade-off for the initial paid-acquisition pilot and monitor it before adding sign-in.
 
@@ -53,6 +53,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 - **Amplitude Starter limits Funnel charts to two steps.** The saved activation chart measures `app_opened` to `scan_completed`; onboarding, camera-permission, scan-start and feedback events remain available in Live Events and can be explored in separate charts without upgrading.
 
 ## Recently resolved
+
+- **2026-09-10, local candidate: the configured vegan Rimi section silently matched zero sitemap URLs.** Corrected its slug to `veganiem-un-vegetariesiem` in ingestion, reporting, evidence queues and validation. All 87 previously omitted products now have exact basic nutrition. Imports fail before snapshot writes if any configured section is missing; regression tests verify both a stale single section and a partially missing multi-section scope. Of 33 supported-category products, 18 have accepted composition observations and seven receive Personal Shelf assessments. The other evidence gaps remain unscored.
 
 - **2026-09-09: the first live Stripe payment completed but did not grant scanner access.** The billing migrations are now applied, the mismatched webhook endpoint is disabled, the replacement signed endpoint accepted the paid event, and Supabase stores the seven-day entitlement. The owner also verified that `Restore purchase` restores paid access in another browser without another charge.
 

@@ -201,7 +201,7 @@ const rimiScopedCategories = [
   "iepakota-partika",
   "saldumi-un-uzkodas",
   "dzerieni",
-  "vegana-un-vegetara-partika",
+  "veganiem-un-vegetariesiem",
   "gatavots-rimi"
 ];
 

@@ -11,7 +11,7 @@ import { validWebGtin } from "../src/server/web-product-evidence";
 
 const baselineRevision = process.env.CATALOG_BASELINE_REVISION || "61be6f5161e1cd111109d7809338c1afc9ae5b4f";
 const output = process.env.RIMI_LIDL_EXPANSION_REPORT || "data/rimi-lidl-expansion-report.generated.json";
-const expandedCategories = ["vegana-un-vegetara-partika", "gatavots-rimi"];
+const expandedCategories = ["veganiem-un-vegetariesiem", "gatavots-rimi"];
 
 type ShelfAudit = {
   checkedAt: string;

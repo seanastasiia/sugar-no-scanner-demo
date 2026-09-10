@@ -1,7 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 
 const expandedCategories = new Set([
-  "vegana-un-vegetara-partika",
+  "veganiem-un-vegetariesiem",
   "gatavots-rimi"
 ]);
 

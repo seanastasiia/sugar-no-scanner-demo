@@ -83,7 +83,7 @@ const defaultRimiCategories = [
   "iepakota-partika",
   "saldumi-un-uzkodas",
   "dzerieni",
-  "vegana-un-vegetara-partika",
+  "veganiem-un-vegetariesiem",
   "gatavots-rimi"
 ];
 const configuredRimiCategories = (process.env.RETAILER_SYNC_RIMI_CATEGORIES || defaultRimiCategories.join(","))
@@ -194,6 +194,11 @@ async function productUrls(): Promise<string[]> {
   const urls = [...new Set(nested.flatMap(sitemapLocations)
     .filter((url) => /\/e-veikals\/lv\/produkti\/.+\/p\/\d+/i.test(url)))];
   if (!rimiCategories) return urls;
+  const discoveredCategories = new Set(urls.map((url) => new URL(url).pathname.split("/produkti/")[1]?.split("/")[0]));
+  const missingCategories = rimiCategories.filter((category) => !discoveredCategories.has(category));
+  if (missingCategories.length) {
+    throw new Error(`Rimi configured categories absent from sitemap: ${missingCategories.join(", ")}; review current category slugs before importing`);
+  }
   const allowed = new Set(rimiCategories);
   return urls.filter((url) => {
     const category = new URL(url).pathname.split("/produkti/")[1]?.split("/")[0];
