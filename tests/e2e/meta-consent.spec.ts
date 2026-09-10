@@ -1,3 +1,4 @@
+import { shelfFixture } from "../fixtures/personal-shelf";
 import { expect, test } from "@playwright/test";
 
 test.skip(!process.env.META_PIXEL_ID, "Meta must be enabled for its dedicated consent checks");
@@ -41,4 +42,39 @@ test("Meta removes free text URLs before loading and keeps the consent card with
   await page.getByRole("button", { name: "Allow Meta cookies", exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect.poll(() => page.evaluate(() => document.querySelectorAll("#scanner-meta-pixel").length)).toBe(1);
+});
+
+
+test("Ad privacy leaves result actions unobstructed on a small phone", async ({ page }) => {
+  const products = [shelfFixture("meta-qa-a"), shelfFixture("meta-qa-b")];
+  await page.route("**/api/recognize", route => route.fulfill({ contentType: "application/json", body: JSON.stringify({
+    requestId: "meta-layout-qa", status: "matched", latencyMs: 1, model: "qa-fixture", imageStored: false,
+    detections: products.map((product, index) => ({
+      productId: product.id, catalogProductId: product.id, confidence: .99,
+      box: { x: .1 + index * .4, y: .1, width: .3, height: .4 }, observedText: product.name,
+      identity: { brand: product.brand, name: product.name, variant: null, packSize: "100g", category: product.category, matchKind: "barbora" },
+      inlineProduct: product, shelfPrice: null, retailerOffer: null
+    }))
+  }) }));
+  await page.route("**/api/resolve-products", route => route.fulfill({ contentType: "application/json", body: JSON.stringify({ detections: route.request().postDataJSON().detections, latencyMs: 1, imageStored: false }) }));
+  await page.route("**/api/offers", route => route.fulfill({ contentType: "application/json", body: '{"offers":{}}' }));
+  await page.goto("/");
+  await page.getByRole("button", { name: "No thanks", exact: true }).click();
+  await page.getByRole("button", { name: "Not shopping yet — show me a sample", exact: true }).click();
+  await page.getByRole("button", { name: "Scan this shelf", exact: true }).click();
+  await page.getByRole("button", { name: "Explore all 4 results", exact: true }).click();
+  for (const size of [{ width: 390, height: 844 }, { width: 320, height: 640 }, { width: 844, height: 390 }]) {
+    await page.setViewportSize(size);
+    const privacy = page.getByRole("button", { name: "Ad privacy", exact: true });
+    await expect(privacy).toBeVisible();
+    const p = (await privacy.boundingBox())!;
+    for (const name of ["Scan again", "View all"]) {
+      const action = page.getByRole("button", { name, exact: true });
+      await expect(action).toBeVisible();
+      const a = (await action.boundingBox())!;
+      expect(a.x < p.x + p.width && a.x + a.width > p.x && a.y < p.y + p.height && a.y + a.height > p.y).toBe(false);
+      expect(await action.evaluate(element => { const b = element.getBoundingClientRect(); return element.contains(document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2)); })).toBe(true);
+    }
+    await page.screenshot({ path: `test-results/meta-controls-${size.width}.png` });
+  }
 });

@@ -468,3 +468,5 @@ Scanner captures its attribution before Meta initialization; arbitrary query/has
 Owner check: open a fresh browser on the public root, choose No thanks and confirm Scanner works; reopen Ad privacy and allow, then inspect PageView in Meta Test Events. Complete onboarding and open the paywall to inspect the corresponding events. Purchase must only appear after an actual confirmed payment; do not make a real charge solely for verification. Reloading that return must not repeat Purchase.
 
 For a real Meta SDK regression check, run `META_PIXEL_ID=1956266218377681 npm run test:meta-sdk`. It requires internet access for Meta public scripts and Playwright WebKit. It exercises the actual SDK rather than a stub, while intercepting all Meta event transport locally so QA does not create advertising events.
+
+With Meta enabled, scanner bottom controls reserve space for Ad privacy so it does not cover Scan again or View all. The default layout is unchanged when Meta is disabled.

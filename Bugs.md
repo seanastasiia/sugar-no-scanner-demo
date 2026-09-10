@@ -257,3 +257,5 @@ When a new regression is fixed, add one concise entry here. Put detailed evidenc
 - Meta integration: the previously created dataset had no installed browser events. Added consent-gated funnel measurement, URL filtering, and server-verified purchase deduplication. Browser-only delivery can undercount; CAPI is still unconfigured.
 
 - Live Meta SDK initialization: an initial queued consent revoke paused SDK startup before init/grant could run. Removed that redundant command because script loading is already blocked until consent. Withdrawal still uses revoke. A live-SDK network check is required in addition to mocked browser checks.
+
+- Meta privacy control overlapped the lower-right edge of View all on mobile. The enabled-Meta layout now reserves touch space below result actions and camera controls.

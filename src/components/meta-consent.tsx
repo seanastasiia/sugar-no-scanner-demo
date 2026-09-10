@@ -24,7 +24,7 @@ export function MetaConsent({ pixelId }: { pixelId: string }) {
     startMeta();
     setOpen(false);
   };
-  return <aside className={styles.container} aria-label="Advertising privacy">
+  return <aside data-meta-consent className={styles.container} aria-label="Advertising privacy">
     {open ? <section className={styles.card} aria-labelledby="meta-consent-title">
       <h2 id="meta-consent-title">Help us measure our ads?</h2>
       <p>With your permission, Meta uses cookies to measure visits and payment steps. We do not send your photos, scanned products, nutrition or email. Scanner works either way.</p>
