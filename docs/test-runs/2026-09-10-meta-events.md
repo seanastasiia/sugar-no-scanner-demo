@@ -27,3 +27,11 @@ Final verification:
 - `META_PIXEL_ID=1956266218377681 npm run test:meta-sdk`: PASS with the real public SDK in WebKit. Observed PageView and OnboardingCompleted request creation, and no further event after withdrawal; all facebook.com event transport intercepted locally. Log: `/tmp/scanner-meta-sdk-verified.log`.
 - A headless Chromium attempt initialized the pixel but produced no outgoing events. Mobile WebKit provides the SDK acceptance evidence; no Meta bot controls were disabled.
 - Final verify log: `/tmp/scanner-meta-verify-sdk-fix.log`. Full browser log: `/tmp/scanner-meta-e2e-sdk-fix.log`.
+
+## HTTPS receipt and mobile touch-space correction
+
+On production revision `3a0f7ad`, a fresh WebKit session made no Meta request before consent. After consent, Meta SDK loaded with HTTP 200 and actual `https://www.facebook.com/tr/` requests for PageView and OnboardingCompleted both returned HTTP 200 for Pixel 1956266218377681. Their page URL was the clean scanner root, referrer was empty, and neither included custom-data fields. Withdrawal was persisted; no Purchase was generated. Evidence: `/tmp/scanner-meta-live-result.json` and `/tmp/scanner-meta-live-smoke.log`. This verifies HTTP receipt, not appearance in Meta Test Events.
+
+The live screenshot exposed Ad privacy overlapping View all. Layout commit `a1d0467` reserves space only while Meta is enabled. Related lint and TypeScript checks passed, production build passed, dedicated Meta suite passed 3/3, and existing smoke suite passed 3/3. New geometry checks cover 390x844, 320x640 and 844x390, verifying non-overlap and unobstructed action centers. Portrait and landscape screenshots were visually inspected. This final change only adds a DOM marker and scoped spacing; Meta delivery and billing logic remain the already-verified code.
+
+Layout logs: `/tmp/scanner-meta-layout-build.log`, `/tmp/scanner-meta-layout-e2e.log`, `/tmp/scanner-meta-layout-smoke.log`.
