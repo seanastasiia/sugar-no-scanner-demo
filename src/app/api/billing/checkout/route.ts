@@ -1,3 +1,4 @@
+import { rememberMetaCheckout, revokeMetaConsent } from "@/server/meta-capi";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { WTP_OFFER_VERSION } from "@/lib/wtp-access";
@@ -10,6 +11,7 @@ const limiter = createRecognitionRateLimiter({ BILLING_CHECKOUT_RATE_LIMIT: "20"
 
 const schema = z.object({
   accessToken: z.uuid(),
+  metaConsent: z.boolean().default(false),
   browserSessionId: z.uuid(),
   scanSource: z.enum(["camera", "upload"]),
   attribution: z.object({
@@ -34,6 +36,7 @@ export async function POST(request: Request) {
   const origin = checkoutOrigin(request);
   const tokenHash = hashAccessToken(parsed.data.accessToken);
   try {
+    if (!parsed.data.metaConsent) await revokeMetaConsent(tokenHash);
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [{ price, quantity: 1 }],
@@ -50,6 +53,7 @@ export async function POST(request: Request) {
       success_url: `${origin}/api/billing/return?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?checkout=cancelled`
     });
+    await rememberMetaCheckout(session.id, tokenHash, parsed.data.metaConsent, request);
     if (!session.url) throw new Error("checkout_url_missing");
     return NextResponse.json({ url: session.url }, { headers: { "cache-control": "no-store" } });
   } catch {

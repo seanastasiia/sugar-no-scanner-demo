@@ -281,3 +281,8 @@ When a new regression is fixed, add one concise entry here. Put detailed evidenc
 - Railway build: corrupted Turbopack persistence caused a Rust panic after compilation. The Railway build command now clears generated `.next/cache` contents before building, preserving the Railway mount.
 
 - **2026-09-10: expanded Shelf cards contained unwanted explanatory blocks.** Removed the per-card Balance explanation, ingredients and score notes at the owner’s request; criterion points and nutrition per 100 g form the final card layout.
+
+- Purchase reliability: browser-only tracking can miss checkout payments when customers do not return. Added consent-gated server delivery with Stripe retries and shared event IDs. Activation still requires the server-only Supabase migration and a permitted Meta CAPI token.
+- Webhook processing errors were labelled invalid signatures. Signature failures remain HTTP 400; downstream activation/delivery failures now return retryable HTTP 503.
+
+- Full browser release checks: the older Shelf test still expected no nutrition rows after their approved addition; onboarding contrast was measured during entrance opacity animation. Updated expectations and waited for finite animations before the accessibility check, without changing product styling.

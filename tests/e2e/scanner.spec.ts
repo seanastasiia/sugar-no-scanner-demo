@@ -224,7 +224,7 @@ test("personal shelf pilot is opt-in, category-local, transparent and leaves ori
   await expect(results.locator("details[open]")).toContainText("Salt scores from full at ≤0.3 g to zero at ≥1.5 g");
   await expect(results.getByText("59-point ceiling", { exact: true })).toHaveCount(0);
   await expect(results.locator("details[open]")).toContainText("Missing required data means no score");
-  await expect(results.locator("dt")).toHaveCount(0);
+  await expect(results.locator("dl").first().locator("dt")).toHaveText(["Sugar", "Protein", "Salt", "Saturated fat", "Fiber", "Energy"]);
   await expect(results.getByRole("link", { includeHidden: true })).toHaveCount(0);
   await expect(results).not.toContainText(/Original ingredients|Per 100 g:|Checked \d|Model personal-shelf|Potatoes, sunflower oil, salt/);
   await expectNoDocumentOverflow(page);
@@ -763,6 +763,11 @@ test("first visit explains the pilot before requesting camera permission", async
   await expectNoDocumentOverflow(page);
   await expectVisibleTouchTargets(page);
   await page.emulateMedia({ contrast: "more" });
+  // Contrast is measured on the settled screen, not a partly transparent entrance frame.
+  await page.evaluate(async () => {
+    await Promise.all(document.getAnimations().filter(animation => animation.effect?.getTiming().iterations !== Infinity)
+      .map(animation => animation.finished.catch(() => undefined)));
+  });
   const onboardingAccessibility = await new AxeBuilder({ page })
     .include('[aria-labelledby="selling-onboarding-title"]')
     .withTags(["wcag2a", "wcag2aa"])

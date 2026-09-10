@@ -69,3 +69,7 @@ Use a narrow `jq` query or the validators in `scripts/`. Generated snapshots are
 ## Removed paths
 
 The old user-facing nutrition-label follow-up was unreachable after its UI action was removed. Its API mode, Gemini prompt, server module and tests were deleted in the cleanup release. Automatic exact online nutrition remains the only enrichment path.
+
+## Meta purchase delivery
+
+`src/server/meta-capi.ts` captures a consented Checkout matching context, claims a short Supabase lease and sends a closed Purchase payload after verified Stripe payment. `scanner_meta_purchases` is a separate server-only consent and delivery ledger, not an entitlement source. The signed webhook retries downstream failures; the owned paid-return route is a fallback. `src/lib/meta-consent-sync.ts` persists failed withdrawal requests until a subsequent visit. The browser and server share the same hashed purchase ID; production code cannot set a Meta test-event code. All server activity is disabled unless `META_CAPI_ENABLED=true`.

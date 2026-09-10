@@ -1,5 +1,6 @@
 "use client";
 
+import { syncMetaWithdrawal } from "@/lib/meta-consent-sync";
 import { useEffect, useState } from "react";
 import { configureMeta, readMetaConsent, setMetaConsent, startMeta } from "@/lib/meta-pixel";
 import styles from "./meta-consent.module.css";
@@ -11,6 +12,7 @@ export function MetaConsent({ pixelId }: { pixelId: string }) {
     configureMeta(pixelId);
     const timer = window.setTimeout(() => {
       const saved = readMetaConsent();
+      void syncMetaWithdrawal(saved === "denied");
       setConsent(saved);
       setOpen(saved === null || new URLSearchParams(window.location.search).get("privacy") === "1");
       startMeta();
@@ -22,6 +24,7 @@ export function MetaConsent({ pixelId }: { pixelId: string }) {
         setConsent(saved);
         setOpen(saved === null);
         setMetaConsent(saved || "denied");
+        void syncMetaWithdrawal(saved !== "granted");
         startMeta();
       }
     };
@@ -31,6 +34,7 @@ export function MetaConsent({ pixelId }: { pixelId: string }) {
   const choose = (value: "granted" | "denied") => {
     setConsent(value);
     setMetaConsent(value);
+    if (value === "denied") void syncMetaWithdrawal(true);
     startMeta();
     setOpen(false);
   };
@@ -38,7 +42,7 @@ export function MetaConsent({ pixelId }: { pixelId: string }) {
   return <aside data-meta-consent className={styles.container} aria-label="Advertising privacy">
     {open ? <section className={styles.card} aria-labelledby="meta-consent-title">
       <h2 id="meta-consent-title">Help us measure our ads?</h2>
-      <p>With your permission, Meta uses cookies to measure visits and payment steps. We do not send your photos, scanned products, nutrition or email. Scanner works either way.</p>
+      <p>With your permission, Meta uses cookies and receives payment confirmations from our server to measure visits and purchases. We do not send your photos, scanned products, nutrition or email. Scanner works either way.</p>
       <div className={styles.actions}>
         <button onClick={() => choose("denied")}>No thanks</button>
         <button onClick={() => choose("granted")}>Allow Meta cookies</button>

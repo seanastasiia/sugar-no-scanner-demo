@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { capiEnabled, deliverMetaPurchase, metaPurchaseId, rememberMetaCheckout, revokeMetaConsent } from "@/server/meta-capi";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { activateCheckout, billingEnabled, getStripe, hashAccessToken, readAccessStatus } from "@/server/billing";
@@ -8,7 +8,7 @@ import { createRecognitionRateLimiter, recognitionClientKey } from "@/server/rat
 
 const limiter = createRecognitionRateLimiter({ BILLING_STATUS_RATE_LIMIT: "60" });
 
-const schema = z.object({ accessToken: z.uuid(), sessionId: z.string().max(180).optional() });
+const schema = z.object({ accessToken: z.uuid(), sessionId: z.string().max(180).optional(), metaConsent: z.boolean().default(false) });
 
 export async function POST(request: Request) {
   if (!hasTrustedBrowserOrigin(request)) return NextResponse.json({ error: "untrusted_origin" }, { status: 403 });
@@ -24,13 +24,25 @@ export async function POST(request: Request) {
       if (!stripe) return NextResponse.json({ error: "billing_unavailable" }, { status: 503 });
       const session = await stripe.checkout.sessions.retrieve(parsed.data.sessionId);
       const activated = await activateCheckout(session, accessTokenHash);
+      if (activated && capiEnabled()) {
+        try {
+          if (!parsed.data.metaConsent) await revokeMetaConsent(accessTokenHash);
+          await rememberMetaCheckout(session.id, accessTokenHash, parsed.data.metaConsent, request);
+          const intentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+          if (intentId && parsed.data.metaConsent) {
+            const intent = await stripe.paymentIntents.retrieve(intentId, { expand: ["latest_charge"] });
+            const charge = intent.latest_charge;
+            if (charge && typeof charge !== "string") await deliverMetaPurchase(session, charge.created);
+          }
+        } catch { console.warn("meta_purchase_return_retry_needed"); }
+      }
       if (activated) return NextResponse.json({
         active: true,
         ...activated,
         scanSource: session.metadata?.scan_source === "upload" ? "upload" : "camera",
         ...(session.payment_status === "paid" && session.amount_total && session.currency === "eur" ? {
           purchase: {
-            eventId: `purchase_${createHash("sha256").update(`meta-purchase:${session.id}`).digest("hex")}`,
+            eventId: metaPurchaseId(session.id),
             value: session.amount_total / 100,
             currency: "EUR"
           }

@@ -1,6 +1,6 @@
 "use client";
 
-import { hasPrivateReferrer, trackMetaFunnel, trackMetaPurchase } from "@/lib/meta-pixel";
+import { hasPrivateReferrer, readMetaConsent, trackMetaFunnel, trackMetaPurchase } from "@/lib/meta-pixel";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -1241,7 +1241,7 @@ export function ScannerApp({
       return;
     }
     const endpoint = restoreToken ? "/api/billing/restore/claim" : "/api/billing/status";
-    const body = restoreToken ? { accessToken: token, restoreToken } : { accessToken: token, sessionId };
+    const body = restoreToken ? { accessToken: token, restoreToken } : { accessToken: token, sessionId, metaConsent: readMetaConsent() === "granted" };
     if (checkout === "cancelled") {
       track("checkout_cancelled", "camera");
       window.setTimeout(() => setPaywallOpen(true), 0);
@@ -1316,6 +1316,7 @@ export function ScannerApp({
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         accessToken,
+        metaConsent: readMetaConsent() === "granted",
         browserSessionId: ensureBrowserSession(),
         scanSource: source === "upload" ? "upload" : "camera",
         attribution: attributionRef.current
