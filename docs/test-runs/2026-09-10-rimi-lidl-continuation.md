@@ -23,9 +23,15 @@ Generated reproducible comparison: `data/rimi-lidl-expansion-report.generated.js
 
 ## Technical verification
 
+Tested application/data commit: `5b98f5fe2d2b4ae54d4f2ec984d5a45e962374c0`. The final follow-up changes documentation only.
+
 - Category regression integration tests: 2/2 passed; stale and partly missing scopes both preserve existing output files.
 - `npm run supabase:seed:external:dry-run`: passed; no database writes.
-- Full verification and browser results will be recorded after completion.
+- Focused category/scoring tests: 103/103 passed (`focused-tests.log`).
+- `npm run verify`: passed; lint, TypeScript, 86 Vitest files / 744 tests, all catalog validators and production build (`verify-final.log`). An earlier verification run was intentionally interrupted when product QA identified the tofu category issue; the final run above supersedes it.
+- `CI=1 WTP_PAYWALL_ENABLED=true E2E_PORT=3119 npm run test:e2e`: all 71 Mobile Safari scenarios passed in 2.7 minutes, no retries (`e2e.log`).
+- Exact prior-SKU comparison: all 6,930 previous complete rows retained with unchanged basic nutrition; 105 historical records have no price/currency and are unavailable (`integrity.json`).
+- `git diff --check`: passed. No deployment claim is made; production smoke belongs to the separately authorized publication step.
 
 ## Owner product checks
 
