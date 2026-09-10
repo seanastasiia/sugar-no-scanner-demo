@@ -83,6 +83,7 @@ export function startMeta(): boolean {
     script.async = true;
     script.src = "https://connect.facebook.net/en_US/fbevents.js";
     script.referrerPolicy = "no-referrer";
+    script.onload = () => { startMeta(); };
     document.head.appendChild(script);
     initialized = true;
   }
@@ -109,7 +110,7 @@ export function trackMetaFunnel(name: string) {
 export function trackMetaPurchase(purchase: { eventId: string; value: number; currency: string }) {
   if (consent !== "granted" || !/^purchase_[a-f0-9]{64}$/.test(purchase.eventId)
     || !Number.isFinite(purchase.value) || purchase.value <= 0 || purchase.currency !== "EUR") return;
-  if (!initialized) { pendingPurchase = purchase; return; }
+  if (!initialized || !window.fbq?.callMethod) { pendingPurchase = purchase; return; }
   const key = `sugar-meta-${purchase.eventId}`;
   try { if (localStorage.getItem(key)) return; } catch { /* In-memory deduplication remains. */ }
   if (sentPurchases.has(key)) return;

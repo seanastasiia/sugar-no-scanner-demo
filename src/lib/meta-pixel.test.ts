@@ -59,7 +59,13 @@ describe("Meta privacy boundary", () => {
   it("sends a verified pending purchase after initialization, once across reloads", async () => {
     const purchase = { eventId: `purchase_${"a".repeat(64)}`, value: 2.99, currency: "EUR" };
     const meta = await setup(true);
-    meta.trackMetaPurchase(purchase); meta.startMeta(); meta.trackMetaPurchase(purchase);
+    meta.trackMetaPurchase(purchase); meta.startMeta();
+    // Script creation/queueing alone is not successful handoff to Meta.
+    expect(localStorage.getItem(`sugar-meta-${purchase.eventId}`)).toBeNull();
+    expect(window.fbq?.queue.filter(args => args[2] === "Purchase")).toHaveLength(0);
+    window.fbq!.callMethod = (...args: unknown[]) => { window.fbq!.queue.push(args); };
+    document.querySelector("#scanner-meta-pixel")!.dispatchEvent(new Event("load"));
+    meta.trackMetaPurchase(purchase);
     expect(window.fbq?.queue.filter(args => args[2] === "Purchase")).toHaveLength(1);
     vi.resetModules();
     const reloaded = await import("./meta-pixel"); reloaded.configureMeta("1956266218377681"); reloaded.startMeta(); reloaded.trackMetaPurchase(purchase);

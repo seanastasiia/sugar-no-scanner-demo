@@ -38,8 +38,15 @@ try {
     for (let i = 0; i < 40 && !events.includes(name); i++) await page.waitForTimeout(500);
     assert(events.includes(name), `Real SDK did not emit ${name}`);
   };
+  await page.evaluate(() => {
+    window.meta.setMetaConsent("granted");
+    window.meta.trackMetaPurchase({ eventId: `purchase_${"e".repeat(64)}`, value: 2.99, currency: "EUR" });
+  });
   await page.locator("#allow").click();
   await waitForEvent("PageView");
+  await waitForEvent("Purchase");
+  await page.evaluate(() => window.meta.trackMetaPurchase({ eventId: `purchase_${"e".repeat(64)}`, value: 2.99, currency: "EUR" }));
+  assert.equal(events.filter(name => name === "Purchase").length, 1);
   await page.evaluate(() => window.meta.trackMetaFunnel("onboarding_completed"));
   await waitForEvent("OnboardingCompleted");
   await page.locator("#deny").click();

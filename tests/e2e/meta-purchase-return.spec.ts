@@ -10,11 +10,14 @@ test("paid return with a detailed referrer sends one Purchase after private redi
   });
   const delivered: unknown[][] = [];
   await page.exposeFunction("recordMetaQA", (args: unknown[]) => delivered.push(args));
-  await page.route("https://connect.facebook.net/**", route => route.fulfill({ contentType: "application/javascript", body: `
+  await page.route("https://connect.facebook.net/**", async route => {
+    expect(await page.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith("sugar-meta-purchase_")).length)).toBe(delivered.some(args => args[2] === "Purchase") ? 1 : 0);
+    return route.fulfill({ contentType: "application/javascript", body: `
     for (const args of window.fbq.queue) window.recordMetaQA(args);
     window.fbq.queue = [];
     window.fbq.callMethod = (...args) => window.recordMetaQA(args);
-  ` }));
+  ` });
+  });
   await page.route("**/api/billing/status", route => {
     const { sessionId } = route.request().postDataJSON();
     return route.fulfill({ contentType: "application/json", body: JSON.stringify({ active: true,
