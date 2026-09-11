@@ -63,7 +63,7 @@ import {
   savePilotSession
 } from "@/lib/pilot-session";
 import { mapWithConcurrency, mergeProgressiveEnrichment } from "@/lib/product-enrichment";
-import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
+import { MAX_SCAN_PRODUCTS, MAX_PILOT_SHELF_PRODUCTS } from "@/lib/scan-limits";
 import {
   captureAttribution,
   FREE_REAL_SCANS,
@@ -483,7 +483,7 @@ export function ScannerApp({
             setDetections((current) =>
               dedupeProductDetections(
                 mergeProgressiveEnrichment(current, initialDetection, result.detections[0])
-              ).slice(0, MAX_SCAN_PRODUCTS)
+              ).slice(0, shelfResearchEnabled ? MAX_PILOT_SHELF_PRODUCTS : MAX_SCAN_PRODUCTS)
             );
             setTray((current) => [
               ...new Set(current.map((id) => (id === initialDetection.productId ? enrichedDetection.productId : id)))
@@ -511,7 +511,7 @@ export function ScannerApp({
         }
       }
     },
-    [hydrateProducts]
+    [hydrateProducts, shelfResearchEnabled]
   );
 
   const pauseRecognitionLoop = useCallback(() => {
@@ -545,7 +545,7 @@ export function ScannerApp({
         setSelectedId(null);
         return;
       }
-      const uniqueDetections = dedupeProductDetections(result.detections).slice(0, MAX_SCAN_PRODUCTS);
+      const uniqueDetections = dedupeProductDetections(result.detections).slice(0, shelfResearchEnabled ? MAX_PILOT_SHELF_PRODUCTS : MAX_SCAN_PRODUCTS);
       const inlineEntries: Array<[string, ProductPayload]> = uniqueDetections.flatMap((detection) =>
         detection.inlineProduct
           ? [[detection.productId, { product: detection.inlineProduct, alternatives: [] as ScoredProduct[] }]]
@@ -591,7 +591,7 @@ export function ScannerApp({
         void enrichRecognizedProducts(uniqueDetections, cameraRequestRef.current);
       }
     },
-    [enrichRecognizedProducts, hydrateProducts, pauseRecognitionLoop, track]
+    [enrichRecognizedProducts, hydrateProducts, pauseRecognitionLoop, track, shelfResearchEnabled]
   );
 
   const recognize = useCallback(
@@ -659,7 +659,7 @@ export function ScannerApp({
         }
       }
     },
-    [applyRecognition, pauseRecognitionLoop, track]
+    [applyRecognition, pauseRecognitionLoop, track, shelfResearchEnabled]
   );
 
   const recognizeUploadFrames = useCallback(
@@ -721,7 +721,7 @@ export function ScannerApp({
           });
           return;
         }
-        const merged = mergeUploadScanResults(successful);
+        const merged = mergeUploadScanResults(successful, shelfResearchEnabled ? MAX_PILOT_SHELF_PRODUCTS : MAX_SCAN_PRODUCTS);
         applyRecognition({ ...merged, latencyMs: Math.round(performance.now() - startedAt) }, "upload");
       } finally {
         if (recognitionAbortRef.current === controller) {
@@ -730,7 +730,7 @@ export function ScannerApp({
         }
       }
     },
-    [applyRecognition, pauseRecognitionLoop, track]
+    [applyRecognition, pauseRecognitionLoop, track, shelfResearchEnabled]
   );
 
   const stopActiveCapture = useCallback(() => {

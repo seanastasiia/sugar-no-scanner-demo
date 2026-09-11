@@ -164,3 +164,10 @@ describe("multi-pass uploaded shelf recognition", () => {
     );
   });
 });
+
+ it("preserves all 34 distinct pilot candidates without changing the public ten-result default", () => {
+  const unique = Array.from({ length: 34 }, (_, i) => detection({ productId: `visual:unique-${i}`, observedText: `Brand${i} Product${i}`, identity: { brand: `Brand${i}`, name: `Product${i}`, variant: null, packSize: null, category: null, matchKind: "visual_only" } }));
+  const frames = [{ crop: { x: 0, y: 0, width: 1, height: 1 }, response: response([...unique, unique[0]]) }];
+  expect(mergeUploadScanResults(frames).detections).toHaveLength(10);
+  expect(mergeUploadScanResults(frames, 40).detections).toHaveLength(34);
+ });

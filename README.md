@@ -498,6 +498,8 @@ Server transport QA: `META_CAPI_TEST_EVENT_CODE=TEST... npx tsx scripts/check-me
 
 ## Internal Personal Shelf research queue
 
+Pilot dense uploads retain up to 40 distinct candidates across the four existing bounded passes, including after progressive enrichment. Public scans retain their existing ten-result behavior. My products queues all eligible pilot candidates in batches of ten; its browser outbox can retain 100 pending identities. Existing server daily quotas remain in force: waiting items stay in the browser for later delivery. My products shows the waiting count and continues loading saved results when the daily research allowance is full. Owner check: upload a dense shelf with more than ten readable products in `/pilot/shelf`, then verify candidates continue into My products rather than disappearing after enrichment. This removes a truncation limit, not unreadable labels or missing exact catalogue matches.
+
 Activated in production on 10 September 2026 after applying the additive Supabase migration and passing live transactional SQL checks. Open `/pilot/shelf` → My products. Live GO Pure submission reached Added in one attempt and survived reload with the approved nutrition card; independent browser keys see separate lists. Search uses `GEMINI_WEB_NUTRITION_MODEL`, then the existing `GEMINI_MODEL`, then the current application fallback.
 
 `SHELF_RESEARCH_QUEUE_ENABLED=true` enables `/pilot/shelf` and `/pilot/shelf/queue`. The public root does not show or submit to the queue. Existing payment/access rules remain in effect. Open the pilot scanner link for internal store testing; Personal Shelf starts enabled there. The queue is not a launch feature.

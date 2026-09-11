@@ -10,7 +10,7 @@ import styles from "./shelf-queue.module.css";
 
 const OUTBOX_KEY = "sugar-shelf-queue-outbox-v1";
 function readOutbox(): QueueLookup[] {
-  try { const items = JSON.parse(localStorage.getItem(OUTBOX_KEY) || "[]"); return Array.isArray(items) ? items.slice(0, 30) : []; } catch { return []; }
+  try { const items = JSON.parse(localStorage.getItem(OUTBOX_KEY) || "[]"); return Array.isArray(items) ? items.slice(0, 100) : []; } catch { return []; }
 }
 export async function shelfQueueRequest(action: "list" | "enqueue" | "retry", items?: QueueLookup[], id?: string): Promise<ShelfQueueItem[]> {
   const token = queueOwner();
@@ -18,7 +18,7 @@ export async function shelfQueueRequest(action: "list" | "enqueue" | "retry", it
     if (items.some(item => !queueLookupSchema.safeParse(item).success)) throw new Error("Check the barcode and exact product details.");
     if (items.some(item => { if (!item.sourceUrl) return false; const url = new URL(item.sourceUrl); return url.protocol !== "https:" || !["rimi.lv", "www.rimi.lv", "livinn.lt", "www.livinn.lt", "barbora.lv", "www.barbora.lv"].includes(url.hostname) || url.username || url.password || url.port || url.pathname === "/"; })) throw new Error("Use a direct HTTPS product link from Rimi, Livinn or Barbora.");
     const combined = [...new Map([...readOutbox(), ...items].map(item => [JSON.stringify(item), item])).values()];
-    if (combined.length > 30) throw new Error("Your offline queue is full. Reconnect to save it first.");
+    if (combined.length > 100) throw new Error("Your offline queue is full. Reconnect to save it first.");
     localStorage.setItem(OUTBOX_KEY, JSON.stringify(combined));
   }
   const pending = action === "retry" ? [] : readOutbox().slice(0, 10);
@@ -26,6 +26,12 @@ export async function shelfQueueRequest(action: "list" | "enqueue" | "retry", it
   const response = await fetch("/api/pilot/shelf-queue", { method: "POST", headers: { "content-type": "application/json", "x-shelf-queue-key": token }, body: JSON.stringify({ action: requestAction, ...(pending.length ? { items: pending } : {}), ...(id ? { id } : {}) }) });
   const body = await response.json();
   if (!response.ok) {
+    // A full research allowance must not hide products already saved on the server.
+    if (action === "list" && pending.length && body.error === "queue_limit") {
+      const saved = await fetch("/api/pilot/shelf-queue", { method: "POST", headers: { "content-type": "application/json", "x-shelf-queue-key": token }, body: JSON.stringify({ action: "list" }) });
+      if (!saved.ok) throw new Error("Could not load your saved products. Pending products remain in this browser.");
+      return (await saved.json()).items;
+    }
     if (response.status === 400 && pending.length) {
       // Do not let invalid barcode data permanently block every later product.
       const bad = new Set(pending.map(item => JSON.stringify(item)));
@@ -53,7 +59,7 @@ export function useShelfQueue(enabled: boolean, detections: ProductDetection[], 
     return [{ ...(/^(?:barbora:|rimi_lv:|livinn_lt:|off:|web:shared:)/.test(detection.productId) ? { productId: detection.productId } : {}),
       brand: identity.brand, name: identity.name, variant: identity.variant || "", packSize: identity.packSize || "",
       ...(identity.barcode && validQueueBarcode(identity.barcode) ? { barcode: identity.barcode } : {}) }];
-  }).slice(0, 10) : [];
+  }) : [];
   const candidateKey = JSON.stringify(candidates);
   useEffect(() => {
     if (!enabled) return;
@@ -90,9 +96,11 @@ export function ShelfQueuePage() {
   const [items, setItems] = useState<ShelfQueueItem[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [waitingCount, setWaitingCount] = useState(0);
+  const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<QueueLookup | null>(null);
   const refresh = useCallback(async () => {
-    try { setItems(await shelfQueueRequest("list")); setError(""); } catch (e) { setError(e instanceof Error ? e.message : "Queue unavailable"); }
+    try { setItems(await shelfQueueRequest("list")); setError(""); } catch (e) { setError(e instanceof Error ? e.message : "Queue unavailable"); } finally { setWaitingCount(readOutbox().length); }
   }, []);
   useEffect(() => { const t = setTimeout(() => { void refresh(); }, 0); const poll = setInterval(() => { if (!document.hidden) void refresh(); }, 10000); return () => { clearTimeout(t); clearInterval(poll); }; }, [refresh]);
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -101,15 +109,16 @@ export function ShelfQueuePage() {
     const lookup: QueueLookup = { brand: value("brand"), name: value("name"), variant: value("variant"), packSize: value("packSize"), ...(value("barcode") ? { barcode: value("barcode") } : {}), ...(value("sourceUrl") ? { sourceUrl: value("sourceUrl") } : {}) };
     if (!lookup.barcode && (!lookup.brand || !lookup.name)) { setError("Enter a barcode, or both brand and exact product name."); return; }
     setBusy(true);
-    try { setItems(await shelfQueueRequest("enqueue", [lookup])); setError(""); setEditing(null); form.reset(); } catch (e) { setError(e instanceof Error ? e.message : "Could not save"); } finally { setBusy(false); }
+    try { setItems(await shelfQueueRequest("enqueue", [lookup])); setError(""); setEditing(null); setFormOpen(false); form.reset(); } catch (e) { setError(e instanceof Error ? e.message : "Could not save"); } finally { setBusy(false); setWaitingCount(readOutbox().length); }
   };
   const ready = items.flatMap(item => item.status === "ready" && item.result ? [item.result] : []);
   return <main className={styles.page}>
     <nav><Link href="/pilot/shelf">← Back to scanner</Link><span>Personal Shelf · Pilot</span></nav>
     <h1>My products</h1>
     <p>Unreadable or unrated products belong here. We look for exact ingredient and nutrition sources in the background. Photos are not saved. This queue stays in this browser.</p>
+    {waitingCount ? <p role="status">{waitingCount} {waitingCount === 1 ? "product" : "products"} waiting to send. They are saved in this browser and retry automatically when research capacity is available.</p> : null}
     {error ? <p role="alert" className={styles.notice}>{error} <button onClick={() => void refresh()}>Retry connection</button></p> : null}
-    <details className={styles.card} open={editing ? true : undefined}>
+    <details className={styles.card} open={formOpen} onToggle={event => setFormOpen(event.currentTarget.open)}>
       <summary>{editing ? "Complete product details" : "Add a product the scanner missed"}</summary>
       <form key={JSON.stringify(editing)} onSubmit={submit} className={styles.form}>
         <p>Use the barcode or the exact name on the pack. A retailer link can help us verify the right recipe.</p>
@@ -129,7 +138,7 @@ export function ShelfQueuePage() {
       <p className={styles.status}>{statusLabels[item.status]}</p>
       <p>{item.reason || "Saved. Research continues even after you close this page."}</p>
       {item.missing.length ? <p>Missing: {item.missing.join(", ")}</p> : null}
-      {["needs_info", "review", "failed"].includes(item.status) ? <div><button onClick={() => { setEditing(item.lookup); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Add or correct details</button>{" "}<button onClick={() => { void shelfQueueRequest("retry", undefined, item.id).then(setItems).catch(e => setError(e.message)); }}>Search again</button></div> : null}
+      {["needs_info", "review", "failed"].includes(item.status) ? <div><button onClick={() => { setEditing(item.lookup); setFormOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Add or correct details</button>{" "}<button onClick={() => { void shelfQueueRequest("retry", undefined, item.id).then(setItems).catch(e => setError(e.message)); }}>Search again</button></div> : null}
     </li>)}</ul>
     {ready.length ? <PersonalShelfResults products={ready} context="demo" thumbnail={() => null} /> : null}
   </main>;
