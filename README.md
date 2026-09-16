@@ -443,6 +443,7 @@ Technical validation uses `npm run verify` and the Mobile Safari suite (`CI=1 E2
 - [Partner data request drafts](docs/partner-data-requests.md)
 - [Week-one lessons](docs/week-one-lessons.md)
 - [Latest release evidence](docs/test-runs/2026-08-27-scanner-ui-catalog-completion.md)
+- [Saved Shelf recall production release](docs/test-runs/2026-09-16-saved-shelf-recall-production.md)
 - [Production cleanup and golden-release verification](docs/test-runs/2026-08-30-production-cleanup.md)
 - [Carbohydrate display release evidence](docs/test-runs/2026-08-30-carbohydrate-display-release.md)
 - [Rounded camera viewport release evidence](docs/test-runs/2026-08-28-rounded-camera-viewport.md)
