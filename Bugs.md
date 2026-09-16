@@ -292,3 +292,5 @@ When a new regression is fixed, add one concise entry here. Put detailed evidenc
 
 - **2026-09-11: dense Personal Shelf uploads lost candidates after merging crops.** Extraction found more products, but merge, client state and queue collection retained only ten. The pilot now retains up to 40 per four-pass upload and sends all eligible identities in bounded queue batches; per-source recognition limits and server quotas are unchanged. Store-wide recall is not yet proven.
 - Queue polling could close the product-entry form; explicit disclosure state now preserves entry across asynchronous refreshes. Daily quota errors no longer hide already-saved server results, while pending items remain in the browser with a visible waiting count.
+
+- **2026-09-11: saved Shelf products could be researched again when OCR changed casing or spacing.** Added exact saved-record recall, verified barcode/ID matching and conflict rejection; matched records are excluded from new queue submissions. Similar names and ambiguous variants remain unresolved.

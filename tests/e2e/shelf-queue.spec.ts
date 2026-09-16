@@ -109,3 +109,25 @@ test("daily quota keeps pending identities and still loads saved results after r
   await expect(page.getByRole("status")).toContainText("1 product waiting to send");
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("sugar-shelf-queue-outbox-v1") || "[]").length)).toBe(1);
 });
+
+test("a repeat scan reuses saved verified nutrition despite a new visual id and does not enqueue again", async ({ page }) => {
+  const verified = { ...shelfFixture("saved-verified-chips"), brand: "Known", name: "Salted chips", shortName: "Salted chips" };
+  const visual = { ...verified, id: "visual:another-reading", shelfEvidence: undefined };
+  const detection = { productId: visual.id, confidence: .99, box: { x: .1, y: .1, width: .6, height: .6 }, observedText: "KNOWN Salted chips", inlineProduct: visual,
+    identity: { brand: "KNOWN", name: "SALTED  CHIPS", variant: null, packSize: "100g", category: "Chips", matchKind: "visual_only" } };
+  let enqueues = 0;
+  await page.addInitScript(() => localStorage.setItem("sugar_scanner_onboarding_v1", "completed"));
+  await page.route("**/api/pilot/shelf-queue", route => { if (route.request().postDataJSON().action === "enqueue") enqueues++;
+    return route.fulfill({ contentType: "application/json", body: JSON.stringify({ items: [{ id: "c".repeat(64), lookup: { brand: "Known", name: "Salted chips", variant: "", packSize: "100 g" }, status: "ready", reason: "Verified", missing: [], result: verified, updatedAt: new Date().toISOString() }] }) }); });
+  await page.route("**/api/recognize", route => route.fulfill({ contentType: "application/json", body: JSON.stringify({ requestId: "repeat", status: "matched", latencyMs: 1, model: "fixture", imageStored: false, detections: [detection] }) }));
+  await page.route("**/api/resolve-products", route => route.fulfill({ contentType: "application/json", body: JSON.stringify({ detections: [detection], latencyMs: 1, imageStored: false }) }));
+  await page.route("**/api/personal-shelf", route => route.fulfill({ contentType: "application/json", body: '{"evidence":{}}' }));
+  await page.goto("/pilot/shelf");
+  await page.getByRole("button", { name: "Show demo", exact: true }).click();
+  await page.getByRole("dialog", { name: "See how it works" }).locator('input[type="file"]').setInputFiles({ name: "repeat.png", mimeType: "image/png", buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64") });
+  await page.getByRole("button", { name: "View all", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Salted chips", exact: true })).toBeVisible();
+  await page.getByText("Why this score", { exact: true }).click();
+  await expect(page.getByText("Nutrition per 100 g", { exact: true })).toBeVisible();
+  expect(enqueues).toBe(0);
+});

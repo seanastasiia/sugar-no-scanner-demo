@@ -18,7 +18,7 @@ beforeEach(async () => {
   await db.exec("reset role; truncate scanner_restore_tokens, scanner_access_tokens, scanner_entitlements cascade;");
 });
 
-async function seedEntitlement(status = "active", expiresAt = "2026-09-14T12:00:00Z") {
+async function seedEntitlement(status = "active", expiresAt = "2099-09-14T12:00:00Z") {
   const result = await db.query<{ id: string }>(`
     insert into scanner_entitlements (
       stripe_checkout_session_id, status, starts_at, expires_at
@@ -33,7 +33,7 @@ describe("scanner willingness-to-pay migration", () => {
     const entitlementId = await seedEntitlement();
     await db.query(`
       insert into scanner_restore_tokens (token_hash, entitlement_id, expires_at)
-      values ($1, $2, '2026-09-14T12:00:00Z')
+      values ($1, $2, '2099-09-14T12:00:00Z')
     `, ["a".repeat(64), entitlementId]);
 
     const first = await db.query<{ expires_at: Date }>(
@@ -56,7 +56,7 @@ describe("scanner willingness-to-pay migration", () => {
     const entitlementId = await seedEntitlement("revoked");
     await db.query(`
       insert into scanner_restore_tokens (token_hash, entitlement_id, expires_at)
-      values ($1, $2, '2026-09-14T12:00:00Z')
+      values ($1, $2, '2099-09-14T12:00:00Z')
     `, ["d".repeat(64), entitlementId]);
     expect((await db.query(
       "select * from claim_scanner_restore_token($1, $2)",

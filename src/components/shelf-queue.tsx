@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { savedShelfMatches } from "@/lib/saved-shelf-match";
 import { assessPersonalShelfProduct } from "@/lib/personal-shelf-rank";
 import { queueLookupSchema, validQueueBarcode, queueOwner, type QueueLookup, type ShelfQueueItem } from "@/lib/shelf-queue";
 import type { ProductDetection, ProductRecord } from "@/lib/types";
@@ -48,9 +49,12 @@ export async function shelfQueueRequest(action: "list" | "enqueue" | "retry", it
 export function useShelfQueue(enabled: boolean, detections: ProductDetection[], products: Record<string, ProductRecord>) {
   const [items, setItems] = useState<ShelfQueueItem[]>([]);
   const [error, setError] = useState("");
+  const [itemsLoaded, setItemsLoaded] = useState(false);
+  const replacements = enabled ? savedShelfMatches(detections, items) : {};
   const pending = useRef(new Set<string>());
   const submitted = useRef(new Set<string>());
   const candidates = enabled ? detections.flatMap(detection => {
+    if (replacements[detection.productId]) return [];
     const product = products[detection.productId];
     const status = product && assessPersonalShelfProduct(product).status;
     if (status === "scored" || status === "provisional") return [];
@@ -64,13 +68,13 @@ export function useShelfQueue(enabled: boolean, detections: ProductDetection[], 
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
-    const refresh = () => shelfQueueRequest("list").then(rows => { if (!cancelled) { setItems(rows); setError(""); } }).catch(() => { if (!cancelled) setError("Queue unavailable. Open My products to retry."); });
+    const refresh = () => shelfQueueRequest("list").then(rows => { if (!cancelled) { setItems(rows); setItemsLoaded(true); setError(""); } }).catch(() => { if (!cancelled) { setItemsLoaded(true); setError("Queue unavailable. Open My products to retry."); } });
     void refresh();
     const timer = setInterval(() => { if (!document.hidden) void refresh(); }, 10000);
     return () => { cancelled = true; clearInterval(timer); };
   }, [enabled]);
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !itemsLoaded) return;
     const batch: QueueLookup[] = JSON.parse(candidateKey);
     const unseen = batch.filter(item => !submitted.current.has(JSON.stringify(item)) && !pending.current.has(JSON.stringify(item)));
     if (!unseen.length) return;
@@ -80,15 +84,7 @@ export function useShelfQueue(enabled: boolean, detections: ProductDetection[], 
       setItems(rows); setError("");
     }).catch(() => setError("Some products could not be saved. Open My products to retry."))
       .finally(() => unseen.forEach(item => pending.current.delete(JSON.stringify(item))));
-  }, [enabled, candidateKey]);
-  const replacements: Record<string, ProductRecord> = {};
-  for (const item of items) {
-    if (!item.result || item.status !== "ready") continue;
-    for (const detection of detections) {
-      const identity = detection.identity;
-      if (item.lookup.productId === detection.productId || (identity && item.lookup.brand === identity.brand && item.lookup.name === identity.name && item.lookup.variant === (identity.variant || "") && item.lookup.packSize === (identity.packSize || ""))) replacements[detection.productId] = item.result;
-    }
-  }
+  }, [enabled, candidateKey, itemsLoaded]);
   return { items, replacements, error };
 }
 const statusLabels = { queued: "Queued", searching: "Searching sources", ready: "Added", needs_info: "Needs your help", review: "Needs evidence review", retry: "Retrying automatically", failed: "Could not finish" };
