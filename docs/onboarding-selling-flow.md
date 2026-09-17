@@ -40,16 +40,16 @@ The PrayerLock flow is a 10–15 minute native-app journey with a free trial. Sh
 
 ## Context-aware screen flow
 
-1. **Promise and context choice.** Shelf Scanner compares confirmed sugar and protein data with no account. `Scan the shelf in front of me` identifies an in-store visitor. `Not shopping yet — show me a sample` identifies an at-home visitor.
+1. **Promise and context choice.** Shelf Scanner compares confirmed sugar and protein data with no account. `Scan the shelf in front of me` identifies an in-store visitor. An at-home visitor can immediately choose `Save for my next shop`, or use `Not shopping yet — show me a sample` before deciding.
 2. **In-store route.** The shopper reaches the transparent offer immediately, then opens the camera. There is no save prompt and no extra teaching screen.
 3. **At-home route.** A deliberate sample tap reveals the actual winner with 2.3 g sugar and 36 g protein per 100 g. The offer also explains that a photo of anything in the cupboard can be uploaded now. The shopper can start the real scanner or use `Save it for my next shop`.
-4. **Save for later.** A modal uses the browser's share sheet to send a clean `?saved=1` link to Messages, WhatsApp or Notes. If sharing is unavailable, it copies the link and exposes a selectable manual fallback. It does not request camera, email, notification or account access. Opening the saved link records a bounded anonymous return event.
+4. **Save for later.** A modal uses the browser's share sheet to send a clean `?saved=1` link to Messages, WhatsApp or Notes. If sharing is unavailable, it copies the link and exposes a selectable manual fallback. It also explains that one-tap access can be added after opening the saved link in Safari or Chrome and choosing `Add to Home Screen`. It does not request camera, email, notification or account access. Opening the saved link records a bounded anonymous return event.
 
-`Add to Home Screen` is deliberately not promoted in this version. Meta in-app browsers commonly do not expose the install prompt, and iOS Home Screen web apps do not copy Safari local storage. The current free-scan allowance lives in local storage, so installation could create a second allowance and require paid users to restore access. Share-to-self tests delayed intent without introducing that state-integrity problem.
+The page does not claim that it can install itself directly. Meta in-app browsers commonly do not expose an install prompt, so the primary action remains share-to-self; the home-screen instruction applies after the clean link is opened in Safari or Chrome. iOS Home Screen web apps can have separate local storage, so paid users may need the existing access restore path after switching contexts.
 
 ## Measurement plan
 
-Treat the reported PrayerLock numbers as inspiration, not a forecast. Compare onboarding version 7 against the current flow using Meta traffic with the same targeting and creative mix.
+Treat the reported PrayerLock numbers as inspiration, not a forecast. Onboarding version 8 moves the existing save action to the first screen; compare it with version 7 using Meta traffic with the same targeting and creative mix.
 
 Primary funnel:
 

@@ -264,6 +264,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 When a new regression is fixed, add one concise entry here. Put detailed evidence in a test log only for release-critical work.
 
+- **2026-09-17: Meta visitors who were not already shopping rarely reached the existing save-for-later action.** The first onboarding screen now offers `Save for my next shop` beside the immediate scan and sample paths. Its privacy-safe share sheet explains how to reopen the clean link later and how to add it to the phone home screen from Safari or Chrome; it never claims that an Instagram or Facebook in-app browser can install the shortcut directly. Anonymous onboarding analytics advances to version 8.
+
 - **2026-09-16: production Supabase rejected the server catalog read.** The original schema enabled RLS but did not grant `SELECT` on `products` and nested `product_sources` to `service_role`, so runtime used the checked-in fallback. An additive migration now grants only those server reads and explicitly keeps both browser roles blocked.
 
 - Meta integration: the previously created dataset had no installed browser events. Added consent-gated funnel measurement, URL filtering, and server-verified purchase deduplication. Browser-only delivery can undercount; CAPI is still unconfigured.

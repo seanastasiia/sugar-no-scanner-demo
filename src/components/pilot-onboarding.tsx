@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowLeft, Check, Copy, Send, Share2, ScanLine, X } from "lucide-react";
+import { ArrowLeft, Bookmark, Check, Copy, Send, Share2, ScanLine, Smartphone, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ScannerHomeLogo } from "./scanner-home-logo";
 import styles from "./selling-onboarding.module.css";
@@ -86,7 +86,7 @@ export function PilotOnboarding({
       </div>
 
       {step === 1 ? (
-        <section className={styles.screen}>
+        <section className={`${styles.screen} ${styles.firstScreen}`}>
           <div className={styles.copyBlock}>
             <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Compare the shelf, not the labels.</h1>
             <p>We compare confirmed sugar and protein, then show your Sugar.no fit. No account.</p>
@@ -94,7 +94,14 @@ export function PilotOnboarding({
           <ShelfPreview state="teaser" />
           <div className={styles.actions}>
             <button className={styles.primary} type="button" onClick={() => { setEntryContext("in_store"); onPathSelected("in_store"); goTo(3); }}>Scan the shelf in front of me</button>
-            <button className={styles.secondary} type="button" onClick={() => { setEntryContext("at_home"); onPathSelected("at_home"); goTo(2); }}>Not shopping yet — show me a sample</button>
+            {!standalone ? (
+              <button ref={saveTriggerRef} className={styles.secondary} type="button" onClick={() => {
+                setEntryContext("at_home");
+                onPathSelected("at_home");
+                openSave();
+              }}><Bookmark aria-hidden="true" size={19} />Save for my next shop</button>
+            ) : null}
+            <button className={styles.textButton} type="button" onClick={() => { setEntryContext("at_home"); onPathSelected("at_home"); goTo(2); }}>Not shopping yet — show me a sample</button>
             <p className={styles.privacy}>Camera stays off until you tap Start my 3 free scans.</p>
           </div>
         </section>
@@ -250,6 +257,10 @@ function SaveForLaterDialog({
         <div className={styles.sheetIcon}><Share2 aria-hidden="true" size={26} /></div>
         <h2 id="save-sheet-title">Save it for your next shop</h2>
         <p>Send the scanner link to Messages, WhatsApp or Notes, then open it when you are in store.</p>
+        <div className={styles.homeScreenHint}>
+          <Smartphone aria-hidden="true" size={21} />
+          <p><strong>Want one-tap access?</strong> Open the saved link in Safari or Chrome, then choose Add to Home Screen from the browser menu.</p>
+        </div>
         <button className={styles.primary} type="button" disabled={status === "working"} onClick={() => void saveLink()}>
           {canShare ? <Send aria-hidden="true" size={19} /> : <Copy aria-hidden="true" size={19} />}
           {status === "working" ? "Opening…" : status === "copied" ? "Link copied" : canShare ? "Send the link to myself" : "Copy the link"}
