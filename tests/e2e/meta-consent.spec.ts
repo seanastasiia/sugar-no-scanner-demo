@@ -67,9 +67,7 @@ test("Ad privacy leaves result actions unobstructed on a small phone", async ({ 
   await page.route("**/api/offers", route => route.fulfill({ contentType: "application/json", body: '{"offers":{}}' }));
   await page.goto("/");
   await page.getByRole("button", { name: "No thanks", exact: true }).click();
-  await page.getByRole("button", { name: "Not shopping yet — show me a sample", exact: true }).click();
-  await page.getByRole("button", { name: "Scan this shelf", exact: true }).click();
-  await page.getByRole("button", { name: "Explore all 4 results", exact: true }).click();
+  await page.getByRole("button", { name: "Try a sample shelf", exact: true }).click();
   for (const size of [{ width: 390, height: 844 }, { width: 320, height: 640 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(size);
     const privacy = page.getByRole("button", { name: "Ad privacy", exact: true });

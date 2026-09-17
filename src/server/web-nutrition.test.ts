@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_WEB_NUTRITION_MODEL,
   buildGroundedWebNutritionProduct,
   extractGroundedNutritionCandidate,
+  webNutritionModel,
   webNutritionTimeoutMs,
   type GroundedNutritionCandidate
 } from "./web-nutrition";
@@ -29,6 +31,12 @@ const candidate: GroundedNutritionCandidate = {
 };
 
 describe("grounded web nutrition", () => {
+  it("uses a dedicated search-compatible model instead of the generic vision model", () => {
+    expect(DEFAULT_WEB_NUTRITION_MODEL).toBe("gemini-2.5-flash");
+    expect(webNutritionModel({ GEMINI_MODEL: "gemini-3.7-flash" })).toBe("gemini-2.5-flash");
+    expect(webNutritionModel({ GEMINI_WEB_NUTRITION_MODEL: " gemini-2.5-flash-lite " })).toBe("gemini-2.5-flash-lite");
+  });
+
   it("never configures a deadline below Google's 10-second minimum", () => {
     expect(webNutritionTimeoutMs()).toBe(12_000);
     expect(webNutritionTimeoutMs("6000")).toBe(10_000);

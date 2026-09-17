@@ -527,7 +527,18 @@ export function ScannerApp({
         pauseRecognitionLoop();
         setRecognitionState("unavailable");
         setResultLocked(false);
-        setStatusMessage("Recognition is unavailable — try again or open the demo.");
+        setStatusMessage(
+          result.failureReason === "quota_exhausted"
+            ? "Today’s scanning limit has been reached. Try again tomorrow or open the demo."
+            : result.failureReason === "rate_limited"
+              ? "Scanning is busy. Wait a moment, then try again or open the demo."
+              : "Recognition is temporarily unavailable — try again or open the demo."
+        );
+        track("recognition_failed", eventSource, undefined, {
+          message: result.failureReason || "provider_unavailable",
+          model: result.model,
+          fallbackUsed: Boolean(result.fallbackUsed)
+        });
         return;
       }
       if (result.status !== "matched" || result.detections.length === 0) {
@@ -1549,11 +1560,11 @@ export function ScannerApp({
   }, []);
 
   const finishOnboarding = useCallback(
-    (destination: "camera" | "sample", skipped = false, completedAtStep = 3) => {
-      saveOnboardingCompletion(window.localStorage, skipped ? "skipped" : "completed");
-      track(skipped ? "onboarding_skipped" : "onboarding_completed", destination === "sample" ? "sample-shelf" : "camera", undefined, {
+    (destination: "camera" | "sample") => {
+      saveOnboardingCompletion(window.localStorage, "completed");
+      track("onboarding_completed", destination === "sample" ? "sample-shelf" : "camera", undefined, {
         onboardingVersion: ONBOARDING_VERSION,
-        step: completedAtStep
+        step: 1
       });
       cameraStartedFromOnboardingRef.current = true;
       setOnboardingState("complete");
@@ -1610,12 +1621,7 @@ export function ScannerApp({
     return (
       <PilotOnboarding
         onComplete={() => finishOnboarding("camera")}
-        onTrySample={() => finishOnboarding("sample", false, 1)}
-        onSkip={(step) => finishOnboarding("camera", true, step)}
-        onStepViewed={(step) => track("onboarding_step_viewed", "camera", undefined, {
-          onboardingVersion: ONBOARDING_VERSION,
-          step
-        })}
+        onTrySample={() => finishOnboarding("sample")}
         onPathSelected={(path) => track("onboarding_path_selected", "camera", undefined, {
           onboardingVersion: ONBOARDING_VERSION,
           path
@@ -1875,7 +1881,7 @@ export function ScannerApp({
                     {!networkOnline
                       ? "Check your connection, then try again."
                       : recognitionState === "unavailable"
-                        ? "The service is temporarily unavailable. Please try again in a moment."
+                        ? statusMessage
                         : recognitionState === "error"
                           ? statusMessage
                           : "Move a little closer and keep the product names in focus."}

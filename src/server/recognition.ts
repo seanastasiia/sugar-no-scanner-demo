@@ -11,6 +11,7 @@ import { MAX_SCAN_PRODUCTS } from "@/lib/scan-limits";
 import type { InvestorCategory } from "@/lib/supported-categories";
 import type {
   ProductDetection,
+  RecognitionFailureReason,
   RecognitionResponse,
   ScanSource,
   ScoredProduct
@@ -31,6 +32,7 @@ import { resolveSharedWebNutritionProduct, resolveWebNutritionProduct } from "./
 import { sampleResponse } from "./demo-scenes";
 
 export const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
+export const DEFAULT_GEMINI_FALLBACK_MODEL = "gemini-3.7-flash";
 const DEFAULT_RECOGNITION_THRESHOLD = 0.72;
 const DEFAULT_FOCUSED_RECOGNITION_THRESHOLD = 0.58;
 
@@ -38,6 +40,86 @@ export function recognitionModel(
   environment: Record<string, string | undefined> = process.env
 ): string {
   return environment.GEMINI_RECOGNITION_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
+}
+
+export function recognitionFallbackModel(
+  environment: Record<string, string | undefined> = process.env,
+  primaryModel = recognitionModel(environment)
+): string | null {
+  const fallback = environment.GEMINI_RECOGNITION_FALLBACK_MODEL?.trim() || DEFAULT_GEMINI_FALLBACK_MODEL;
+  return fallback === primaryModel ? null : fallback;
+}
+
+export function geminiErrorStatus(error: unknown): number | null {
+  if (!error || typeof error !== "object") return null;
+  const status = (error as { status?: unknown }).status;
+  if (typeof status === "number" && Number.isFinite(status)) return status;
+  const code = (error as { code?: unknown }).code;
+  if (typeof code === "number" && Number.isFinite(code)) return code;
+  const message = error instanceof Error ? error.message : String(error);
+  const matched = message.match(/(?:status|code)\D{0,12}(\d{3})/i) || message.match(/\b(429|5\d\d)\b/);
+  return matched ? Number.parseInt(matched[1], 10) : null;
+}
+
+export function recognitionFailureReason(error: unknown): RecognitionFailureReason | null {
+  const status = geminiErrorStatus(error);
+  const message = error instanceof Error ? error.message : String(error || "");
+  if (status === 429) {
+    return /quota|resource_exhausted|daily|rpd|billing/i.test(message) ? "quota_exhausted" : "rate_limited";
+  }
+  if (status === 503 || (status !== null && status >= 500)) return "provider_overloaded";
+  if (status === 400 || status === 401 || status === 403 || status === 404) return "configuration";
+  return null;
+}
+
+export async function runRecognitionWithFailover<T>(input: {
+  primaryModel: string;
+  fallbackModel: string | null;
+  generate: (model: string, retry503: boolean) => Promise<T>;
+}): Promise<
+  | { ok: true; value: T; model: string; fallbackUsed: boolean }
+  | { ok: false; model: string; fallbackUsed: boolean; failureReason: RecognitionFailureReason }
+> {
+  try {
+    return {
+      ok: true,
+      value: await input.generate(input.primaryModel, true),
+      model: input.primaryModel,
+      fallbackUsed: false
+    };
+  } catch (error) {
+    const primaryReason = recognitionFailureReason(error);
+    if (primaryReason === "provider_overloaded" && input.fallbackModel) {
+      console.warn(JSON.stringify({
+        event: "recognition_provider_fallback",
+        primaryModel: input.primaryModel,
+        fallbackModel: input.fallbackModel,
+        reason: primaryReason
+      }));
+      try {
+        return {
+          ok: true,
+          value: await input.generate(input.fallbackModel, false),
+          model: input.fallbackModel,
+          fallbackUsed: true
+        };
+      } catch (fallbackError) {
+        return {
+          ok: false,
+          model: input.fallbackModel,
+          fallbackUsed: true,
+          failureReason: recognitionFailureReason(fallbackError) || "provider_overloaded"
+        };
+      }
+    }
+    if (!primaryReason) throw error;
+    return {
+      ok: false,
+      model: input.primaryModel,
+      fallbackUsed: false,
+      failureReason: primaryReason
+    };
+  }
 }
 
 export function recognitionThinkingLevel(model: string): ThinkingLevel {
@@ -51,6 +133,25 @@ export function recognitionRequestTimeoutMs(
   return Number.isFinite(configured) && configured >= 1_000 && configured <= 60_000
     ? configured
     : 15_000;
+}
+
+export function recognitionHttpOptions(
+  retry503: boolean,
+  environment: Record<string, string | undefined> = process.env
+) {
+  return {
+    timeout: recognitionRequestTimeoutMs(environment),
+    retryOptions: retry503
+      ? {
+        attempts: 2,
+        initialDelay: 0.4,
+        maxDelay: 0.8,
+        expBase: 2,
+        jitter: 0.25,
+        httpStatusCodes: [503]
+      }
+      : { attempts: 1, httpStatusCodes: [503] }
+  };
 }
 
 const rawProviderResponseSchema = z.object({
@@ -850,7 +951,8 @@ export async function recognizeProducts(input: {
       detections: [],
       latencyMs: Math.round(performance.now() - startedAt),
       model,
-      imageStored: false
+      imageStored: false,
+      failureReason: "configuration"
     };
   }
 
@@ -859,70 +961,95 @@ export async function recognizeProducts(input: {
   const { mimeType, base64 } = imageParts(input.imageDataUrl);
   const ai = new GoogleGenAI({ apiKey });
   const providerStartedAt = performance.now();
-  const response = await ai.models.generateContent({
-    model,
-    contents: [
-      createPartFromText(
-        recognitionInstruction(focusMode, input.source === "upload" ? "saved-image" : "live-camera")
-      ),
-      createPartFromBase64(base64, mimeType)
-    ],
-    config: {
-      // Shelf recognition is a bounded visual extraction task. Minimal thinking
-      // returns the structured boxes much faster; exact nutrition matching and
-      // retailer verification still happen in the separate grounded resolver.
-      thinkingConfig: { thinkingLevel: recognitionThinkingLevel(model) },
-      httpOptions: { timeout: recognitionRequestTimeoutMs() },
-      mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
-      responseMimeType: "application/json",
-      responseJsonSchema: {
-        type: "object",
-        additionalProperties: false,
-        required: ["detections"],
-        properties: {
-          detections: {
-            type: "array",
-            maxItems: MAX_SCAN_PRODUCTS,
-            items: {
-              type: "object",
-              additionalProperties: false,
-              required: [
-                "brand",
-                "productName",
-                "searchQuery",
-                "retailCategory",
-                "barcode",
-                "confidence",
-                "box2d",
-                "shelfPriceCents",
-                "shelfPriceText",
-                "shelfPriceConfidence",
-                "shelfPriceLabelVisible"
-              ],
-              properties: {
-                brand: { type: "string", maxLength: 80 },
-                productName: { type: "string", maxLength: 180 },
-                searchQuery: { type: "string", maxLength: 240 },
-                retailCategory: { type: "string", enum: ["snack", "dairy_dessert", "other"] },
-                barcode: { type: "string", maxLength: 14 },
-                confidence: { type: "number", minimum: 0, maximum: 1 },
-                shelfPriceCents: { type: "integer", minimum: 0, maximum: 1000000 },
-                shelfPriceText: { type: "string", maxLength: 60 },
-                shelfPriceConfidence: { type: "number", minimum: 0, maximum: 1 },
-                shelfPriceLabelVisible: { type: "boolean" },
-                box2d: {
-                  type: "array",
-                  minItems: 4,
-                  maxItems: 4,
-                  items: { type: "integer", minimum: 0, maximum: 1000 }
+  const providerResult = await runRecognitionWithFailover({
+    primaryModel: model,
+    fallbackModel: input.modelOverride ? null : recognitionFallbackModel(process.env, model),
+    generate: (targetModel, retry503) => ai.models.generateContent({
+      model: targetModel,
+      contents: [
+        createPartFromText(
+          recognitionInstruction(focusMode, input.source === "upload" ? "saved-image" : "live-camera")
+        ),
+        createPartFromBase64(base64, mimeType)
+      ],
+      config: {
+        // One retry absorbs a transient overload without multiplying latency.
+        // If both primary attempts fail with 503, the caller tries one separate
+        // stable fallback model before returning a safe unavailable response.
+        thinkingConfig: { thinkingLevel: recognitionThinkingLevel(targetModel) },
+        httpOptions: recognitionHttpOptions(retry503),
+        mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
+        responseMimeType: "application/json",
+        responseJsonSchema: {
+          type: "object",
+          additionalProperties: false,
+          required: ["detections"],
+          properties: {
+            detections: {
+              type: "array",
+              maxItems: MAX_SCAN_PRODUCTS,
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: [
+                  "brand",
+                  "productName",
+                  "searchQuery",
+                  "retailCategory",
+                  "barcode",
+                  "confidence",
+                  "box2d",
+                  "shelfPriceCents",
+                  "shelfPriceText",
+                  "shelfPriceConfidence",
+                  "shelfPriceLabelVisible"
+                ],
+                properties: {
+                  brand: { type: "string", maxLength: 80 },
+                  productName: { type: "string", maxLength: 180 },
+                  searchQuery: { type: "string", maxLength: 240 },
+                  retailCategory: { type: "string", enum: ["snack", "dairy_dessert", "other"] },
+                  barcode: { type: "string", maxLength: 14 },
+                  confidence: { type: "number", minimum: 0, maximum: 1 },
+                  shelfPriceCents: { type: "integer", minimum: 0, maximum: 1000000 },
+                  shelfPriceText: { type: "string", maxLength: 60 },
+                  shelfPriceConfidence: { type: "number", minimum: 0, maximum: 1 },
+                  shelfPriceLabelVisible: { type: "boolean" },
+                  box2d: {
+                    type: "array",
+                    minItems: 4,
+                    maxItems: 4,
+                    items: { type: "integer", minimum: 0, maximum: 1000 }
+                  }
                 }
               }
             }
           }
         }
       }
-    }
+    })
   });
+  if (!providerResult.ok) {
+    console.warn(JSON.stringify({
+      event: "recognition_provider_unavailable",
+      requestId: input.requestId,
+      model: providerResult.model,
+      fallbackUsed: providerResult.fallbackUsed,
+      failureReason: providerResult.failureReason
+    }));
+    return {
+      requestId: input.requestId,
+      status: "provider_unavailable",
+      detections: [],
+      latencyMs: Math.round(performance.now() - startedAt),
+      model: providerResult.model,
+      imageStored: false,
+      failureReason: providerResult.failureReason,
+      fallbackUsed: providerResult.fallbackUsed
+    };
+  }
+  const response = providerResult.value;
+  const activeModel = providerResult.model;
   const rawParsed = rawProviderResponseSchema.parse(JSON.parse(response.text || '{"detections":[]}'));
   const parsed: { detections: ProviderDetection[] } = {
     detections: rawParsed.detections.map(({ box2d, ...detection }) => ({
@@ -955,7 +1082,7 @@ export async function recognizeProducts(input: {
     ? visible
     : await confirmAmbiguousBarboraCandidates({
         ai,
-        model,
+        model: activeModel,
         mimeType,
         base64,
         detections: visible,
@@ -985,7 +1112,8 @@ export async function recognizeProducts(input: {
     status: detections.length ? "matched" : "not_sure",
     detections,
     latencyMs: Math.round(performance.now() - startedAt),
-    model,
-    imageStored: false
+    model: activeModel,
+    imageStored: false,
+    fallbackUsed: providerResult.fallbackUsed
   };
 }

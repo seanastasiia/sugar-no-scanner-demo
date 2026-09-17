@@ -29,36 +29,36 @@ The PrayerLock flow is a 10–15 minute native-app journey with a free trial. Sh
 | Source principle | Shelf Scanner implementation | Why |
 | --- | --- | --- |
 | Problem and solution first | “Compare the shelf, not the labels” plus an annotated real shelf | Completes the ad-to-product promise immediately |
-| User convinces themselves | The shopper chooses whether a shelf is in front of them or they need a sample | Uses current context rather than a cosmetic survey answer |
+| User convinces themselves | The shopper chooses a real scan, an immediate sample, or saves the link for the next shop | Uses current context rather than a cosmetic survey answer |
 | Reflect the answer | Not included in v1 | Honest omission: the scanner does not change its fixed two-factor ranking from a preference answer |
-| Try the core feature | Tap `Scan this shelf` to reveal a real product name and confirmed sugar/protein values | Creates the aha moment before camera permission |
-| Summarize the bridge | The result names the evidence and the offer states exactly what counts | Connects the demo to the paid product without a generic congratulations screen |
-| Be clear that it is paid | Final card explains 3 free successful scans, then €2.99 for 7 days | Avoids surprise and matches the current experiment |
+| Try the core feature | Tap `Try a sample shelf` to open the complete deterministic four-product result immediately | Creates the aha moment without camera permission or an intermediate reveal screen |
+| Summarize the bridge | The preview shows four detected products and both useful actions lead directly to a result | Connects the ad promise to the product without a generic congratulations screen |
+| Be clear that it is paid | The entry screen states 3 free successful scans, then €2.99 once for 7 days | Avoids surprise and matches the current experiment |
 | Use social proof | Not included yet | No verified Shelf Scanner testimonial or review count exists |
 | Review at emotional peak | Defer to existing feedback after the first successful real result | Web feedback is more useful than an App Store prompt here |
 | Trial reminder | Not applicable | The offer is a one-time seven-day entitlement, not auto-renewing |
 
 ## Context-aware screen flow
 
-1. **Promise and context choice.** Shelf Scanner compares confirmed sugar and protein data with no account. `Scan the shelf in front of me` identifies an in-store visitor. An at-home visitor can immediately choose `Save for my next shop`, or use `Not shopping yet — show me a sample` before deciding.
-2. **In-store route.** The shopper reaches the transparent offer immediately, then opens the camera. There is no save prompt and no extra teaching screen.
-3. **At-home route.** A deliberate sample tap reveals the actual winner with 2.3 g sugar and 36 g protein per 100 g. The offer also explains that a photo of anything in the cupboard can be uploaded now. The shopper can start the real scanner or use `Save it for my next shop`.
-4. **Save for later.** A modal uses the browser's share sheet to send a clean `?saved=1` link to Messages, WhatsApp or Notes. If sharing is unavailable, it copies the link and exposes a selectable manual fallback. It also explains that one-tap access can be added after opening the saved link in Safari or Chrome and choosing `Add to Home Screen`. It does not request camera, email, notification or account access. Opening the saved link records a bounded anonymous return event.
+1. **One-screen promise and choice.** Shelf Scanner compares confirmed sugar and protein data with no account. The same screen shows the real shelf preview, the three-free-scan allowance, the one-time €2.99 price and all three actions.
+2. **In-store route.** `Start a free shelf scan` records `in_store`, completes onboarding and opens the camera immediately. The CTA is the first camera-permission boundary.
+3. **At-home route.** `Try a sample shelf` records `at_home`, records the sample reveal and opens the complete deterministic four-product result immediately. It never requests the camera.
+4. **Save for later.** `Save for my next shop` opens a modal that uses the browser's share sheet to send a clean `?saved=1` link to Messages, WhatsApp or Notes. If sharing is unavailable, it copies the link and exposes a selectable manual fallback. It also explains that one-tap access can be added after opening the saved link in Safari or Chrome and choosing `Add to Home Screen`. It does not request camera, email, notification or account access. Opening the saved link records a bounded anonymous return event.
 
 The page does not claim that it can install itself directly. Meta in-app browsers commonly do not expose an install prompt, so the primary action remains share-to-self; the home-screen instruction applies after the clean link is opened in Safari or Chrome. iOS Home Screen web apps can have separate local storage, so paid users may need the existing access restore path after switching contexts.
 
 ## Measurement plan
 
-Treat the reported PrayerLock numbers as inspiration, not a forecast. Onboarding version 8 moves the existing save action to the first screen; compare it with version 7 using Meta traffic with the same targeting and creative mix.
+Treat the reported PrayerLock numbers as inspiration, not a forecast. Onboarding version 8 removes the intermediate sample reveal and offer screens, and keeps save-for-later on the entry screen. Compare it with version 7 using Meta traffic with the same targeting and creative mix.
 
 Primary funnel:
 
 1. `app_opened`
 2. `onboarding_started`
-3. `onboarding_path_selected` (`at_home` or `in_store`), optional `onboarding_sample_revealed`, and `onboarding_step_viewed`
+3. `onboarding_path_selected` (`at_home` or `in_store`) and optional `onboarding_sample_revealed`; `onboarding_step_viewed` remains step 1 only in version 8
 4. optional `onboarding_save_prompt_viewed` and `onboarding_save_action` (`shared`, `copied`, `dismissed` or `failed`)
 5. optional `onboarding_saved_link_opened` on a later visit
-6. `onboarding_completed` or `onboarding_skipped`
+6. `onboarding_completed`
 7. camera permission granted
 8. first successful `scan_completed`
 9. paywall viewed

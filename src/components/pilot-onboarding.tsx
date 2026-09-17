@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowLeft, Bookmark, Check, Copy, Send, Share2, ScanLine, Smartphone, X } from "lucide-react";
+import { Bookmark, Copy, Send, Share2, ScanLine, Smartphone, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ScannerHomeLogo } from "./scanner-home-logo";
 import styles from "./selling-onboarding.module.css";
@@ -9,8 +9,6 @@ import styles from "./selling-onboarding.module.css";
 export function PilotOnboarding({
   onComplete,
   onTrySample,
-  onSkip,
-  onStepViewed,
   onPathSelected,
   onSampleRevealed,
   onSavePromptViewed,
@@ -18,16 +16,11 @@ export function PilotOnboarding({
 }: {
   onComplete: () => void;
   onTrySample: () => void;
-  onSkip: (step: number) => void;
-  onStepViewed: (step: number) => void;
   onPathSelected: (path: "at_home" | "in_store") => void;
   onSampleRevealed: () => void;
   onSavePromptViewed: () => void;
   onSaveAction: (action: "shared" | "copied" | "dismissed" | "failed") => void;
 }) {
-  const [step, setStep] = useState(1);
-  const [demoRevealed, setDemoRevealed] = useState(false);
-  const [entryContext, setEntryContext] = useState<"at_home" | "in_store" | null>(null);
   const [saveOpen, setSaveOpen] = useState(false);
   const [standalone] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -39,17 +32,7 @@ export function PilotOnboarding({
 
   useEffect(() => {
     headingRef.current?.focus();
-  }, [step]);
-
-  function goTo(nextStep: number) {
-    setStep(nextStep);
-    onStepViewed(nextStep);
-  }
-
-  function goBack() {
-    if (step === 3 && entryContext === "in_store") goTo(1);
-    else goTo(step - 1);
-  }
+  }, []);
 
   function openSave() {
     setSaveOpen(true);
@@ -65,99 +48,37 @@ export function PilotOnboarding({
   return (
     <main className={styles.onboarding} aria-labelledby="selling-onboarding-title">
       <header className={styles.header}>
-        {step > 1 ? (
-          <button className={styles.iconButton} type="button" aria-label="Go back" onClick={goBack}>
-            <ArrowLeft aria-hidden="true" size={21} />
-          </button>
-        ) : <span className={styles.headerSpacer} />}
+        <span className={styles.headerSpacer} />
         <ScannerHomeLogo imageClassName={styles.logo} priority />
-        {step < 3 ? <button className={styles.skip} type="button" onClick={() => onSkip(step)}>Skip</button> : <span className={styles.headerSpacer} />}
+        <span className={styles.headerSpacer} />
       </header>
 
-      <div
-        className={styles.progress}
-        role="progressbar"
-        aria-label={`Step ${step} of 3`}
-        aria-valuemin={1}
-        aria-valuemax={3}
-        aria-valuenow={step}
-      >
-        {[1, 2, 3].map((item) => <span key={item} className={item <= step ? styles.progressActive : ""} />)}
-      </div>
-
-      {step === 1 ? (
-        <section className={`${styles.screen} ${styles.firstScreen}`}>
-          <div className={styles.copyBlock}>
-            <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Compare the shelf, not the labels.</h1>
-            <p>We compare confirmed sugar and protein, then show your Sugar.no fit. No account.</p>
-          </div>
-          <ShelfPreview state="teaser" />
-          <div className={styles.actions}>
-            <button className={styles.primary} type="button" onClick={() => { setEntryContext("in_store"); onPathSelected("in_store"); goTo(3); }}>Scan the shelf in front of me</button>
-            {!standalone ? (
-              <button ref={saveTriggerRef} className={styles.secondary} type="button" onClick={() => {
-                setEntryContext("at_home");
-                onPathSelected("at_home");
-                openSave();
-              }}><Bookmark aria-hidden="true" size={19} />Save for my next shop</button>
-            ) : null}
-            <button className={styles.textButton} type="button" onClick={() => { setEntryContext("at_home"); onPathSelected("at_home"); goTo(2); }}>Not shopping yet — show me a sample</button>
-            <p className={styles.privacy}>Camera stays off until you tap Start my 3 free scans.</p>
-          </div>
-        </section>
-      ) : null}
-
-      {step === 2 ? (
-        <section className={styles.screen}>
-          <div className={styles.copyBlock}>
-            <p className={styles.eyebrow}>A real sample result</p>
-            <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>The answer, not every label.</h1>
-            <p>We rank only products with confirmed values and tell you when data is missing.</p>
-          </div>
-          <ShelfPreview state={demoRevealed ? "result" : "ready"} />
-          <div className={styles.actions}>
-            {!demoRevealed ? (
-              <button className={styles.primary} type="button" onClick={() => { setDemoRevealed(true); onSampleRevealed(); }}><ScanLine aria-hidden="true" size={20} />Scan this shelf</button>
-            ) : (
-              <>
-                <button className={styles.primary} type="button" onClick={() => goTo(3)}>Try my own shelf</button>
-                <button className={styles.secondary} type="button" onClick={onTrySample}>Explore all 4 results</button>
-              </>
-            )}
-          </div>
-        </section>
-      ) : null}
-
-      {step === 3 ? (
-        <section className={styles.screen}>
-          <div className={styles.copyBlock}>
-            <p className={styles.eyebrow}>Nothing to pay now</p>
-            <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Start with 3 free scans.</h1>
-            <p>A scan counts only when at least one product gets a Sugar.no fit. Unverified scans are free.</p>
-            {entryContext === "at_home" ? <p className={styles.contextHint}>No shelf nearby? Upload a photo of anything in your cupboard.</p> : null}
-          </div>
-          <div className={styles.offerCard}>
-            <div className={styles.offerIcon}><ScanLine aria-hidden="true" size={28} /></div>
-            <div>
-              <strong>Then €2.99 once for 7 days</strong>
-              <p>Unlimited shelf scanning after your free scans. No subscription and no account.</p>
-            </div>
-            <ul>
-              <li><Check aria-hidden="true" size={16} />Live camera and photo upload</li>
-              <li><Check aria-hidden="true" size={16} />Failed and unverified scans do not count</li>
-              <li><Check aria-hidden="true" size={16} />One payment, no recurring charge</li>
-            </ul>
-          </div>
-          <div className={styles.actions}>
-            <p className={styles.privacy}>The next tap opens your camera. Photos are not saved.</p>
-            <button className={styles.primary} type="button" onClick={onComplete}>Start my 3 free scans</button>
-            {entryContext === "at_home" && !standalone ? (
-              <button ref={saveTriggerRef} className={styles.textButton} type="button" onClick={openSave}>Save it for my next shop</button>
-            ) : null}
-            {entryContext === "at_home" && !standalone ? <p className={styles.privacy}>No account, no emails, no notifications.</p> : null}
-          </div>
-        </section>
-      ) : null}
+      <section className={`${styles.screen} ${styles.firstScreen}`}>
+        <div className={styles.copyBlock}>
+          <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Compare the shelf, not the labels.</h1>
+          <p>See which products fit you best using confirmed sugar and protein. No account.</p>
+        </div>
+        <ShelfPreview state="teaser" />
+        <div className={styles.actions}>
+          <button className={styles.primary} type="button" onClick={() => {
+            onPathSelected("in_store");
+            onComplete();
+          }}><ScanLine aria-hidden="true" size={20} />Start a free shelf scan</button>
+          <button className={styles.secondary} type="button" onClick={() => {
+            onPathSelected("at_home");
+            onSampleRevealed();
+            onTrySample();
+          }}>Try a sample shelf</button>
+          {!standalone ? (
+            <button ref={saveTriggerRef} className={styles.textButton} type="button" onClick={() => {
+              onPathSelected("at_home");
+              openSave();
+            }}><Bookmark aria-hidden="true" size={18} />Save for my next shop</button>
+          ) : null}
+          <p className={styles.offerSummary}><strong>3 successful scans free</strong> · then €2.99 once for 7 days · no subscription.</p>
+          <p className={styles.privacy}>Camera starts only when you choose the free shelf scan. Photos are not saved.</p>
+        </div>
+      </section>
 
       {saveOpen ? (
         <SaveForLaterDialog
@@ -305,7 +226,7 @@ function ShelfPreview({ state }: { state: "teaser" | "ready" | "result" }) {
             <span className={styles.fitBadge}>Great fit</span>
           </div>
         ) : state === "teaser" ? (
-          <><span><strong>4 products found</strong><small>Tap to see the confirmed comparison</small></span><ScanLine aria-hidden="true" size={22} /></>
+          <><span><strong>4 products found</strong><small>Compare a sample shelf in one tap</small></span><ScanLine aria-hidden="true" size={22} /></>
         ) : (
           <><span><strong>Ready to scan</strong><small>Tap once to compare all four products</small></span><ScanLine aria-hidden="true" size={22} /></>
         )}

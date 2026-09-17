@@ -144,6 +144,12 @@ export interface RetailerOffer {
 
 export type ScanSource = "camera" | "upload" | "sample-shelf" | "sample-conveyor";
 
+export type RecognitionFailureReason =
+  | "quota_exhausted"
+  | "rate_limited"
+  | "provider_overloaded"
+  | "configuration";
+
 export interface RecognitionResponse {
   requestId: string;
   status: "matched" | "not_sure" | "provider_unavailable";
@@ -151,4 +157,6 @@ export interface RecognitionResponse {
   latencyMs: number;
   model: string;
   imageStored: false;
+  failureReason?: RecognitionFailureReason;
+  fallbackUsed?: boolean;
 }

@@ -3,6 +3,7 @@ import { ThinkingLevel } from "@google/genai";
 import { getCatalog } from "@/lib/catalog";
 import {
   DEFAULT_GEMINI_MODEL,
+  DEFAULT_GEMINI_FALLBACK_MODEL,
   applyBarboraCandidateConfirmations,
   needsVisualCandidateConfirmation,
   fitBoxToFrame,
@@ -13,11 +14,15 @@ import {
   matchCatalogProduct,
   recognitionInstruction,
   recognitionConfidenceThreshold,
+  recognitionFailureReason,
+  recognitionFallbackModel,
+  recognitionHttpOptions,
   recognitionModel,
   recognitionRequestTimeoutMs,
   recognitionThinkingLevel,
   exactBarboraSlugFromRetailerUrl,
   recognizeProducts,
+  runRecognitionWithFailover,
   resolveVisibleDetections,
   type ProviderDetection
 } from "./recognition";
@@ -144,6 +149,12 @@ describe("recognitionModel", () => {
     ).toBe("gemini-3.6-flash");
   });
 
+  it("keeps a separate stable fallback and disables a duplicate model", () => {
+    expect(recognitionFallbackModel({}, DEFAULT_GEMINI_MODEL)).toBe(DEFAULT_GEMINI_FALLBACK_MODEL);
+    expect(recognitionFallbackModel({ GEMINI_RECOGNITION_FALLBACK_MODEL: " gemini-3.6-flash " })).toBe("gemini-3.6-flash");
+    expect(recognitionFallbackModel({ GEMINI_RECOGNITION_FALLBACK_MODEL: DEFAULT_GEMINI_MODEL })).toBeNull();
+  });
+
   it("uses only thinking levels supported by the selected stable model", () => {
     expect(recognitionThinkingLevel("gemini-3.5-flash")).toBe(ThinkingLevel.MINIMAL);
     expect(recognitionThinkingLevel("gemini-3.6-flash")).toBe(ThinkingLevel.MINIMAL);
@@ -155,6 +166,57 @@ describe("recognitionModel", () => {
     expect(recognitionRequestTimeoutMs({ GEMINI_RECOGNITION_TIMEOUT_MS: "12000" })).toBe(12_000);
     expect(recognitionRequestTimeoutMs({ GEMINI_RECOGNITION_TIMEOUT_MS: "999" })).toBe(15_000);
     expect(recognitionRequestTimeoutMs({ GEMINI_RECOGNITION_TIMEOUT_MS: "90000" })).toBe(15_000);
+    expect(recognitionHttpOptions(true, { GEMINI_RECOGNITION_TIMEOUT_MS: "12000" })).toMatchObject({
+      timeout: 12_000,
+      retryOptions: { attempts: 2, httpStatusCodes: [503] }
+    });
+    expect(recognitionHttpOptions(false)).toMatchObject({ retryOptions: { attempts: 1, httpStatusCodes: [503] } });
+  });
+});
+
+describe("Gemini recognition recovery", () => {
+  function apiError(status: number, message: string) {
+    return Object.assign(new Error(message), { status });
+  }
+
+  it("retries 503 inside the primary request, then makes one fallback-model request", async () => {
+    const generate = vi.fn(async (model: string, retry503: boolean) => {
+      if (model === DEFAULT_GEMINI_MODEL) throw apiError(503, "UNAVAILABLE: high demand");
+      return `${model}:${retry503}`;
+    });
+
+    const result = await runRecognitionWithFailover({
+      primaryModel: DEFAULT_GEMINI_MODEL,
+      fallbackModel: DEFAULT_GEMINI_FALLBACK_MODEL,
+      generate
+    });
+
+    expect(generate.mock.calls).toEqual([
+      [DEFAULT_GEMINI_MODEL, true],
+      [DEFAULT_GEMINI_FALLBACK_MODEL, false]
+    ]);
+    expect(result).toEqual({
+      ok: true,
+      value: `${DEFAULT_GEMINI_FALLBACK_MODEL}:false`,
+      model: DEFAULT_GEMINI_FALLBACK_MODEL,
+      fallbackUsed: true
+    });
+  });
+
+  it("reports daily quota separately without spending a fallback request", async () => {
+    const generate = vi.fn(async () => {
+      throw apiError(429, "RESOURCE_EXHAUSTED: You exceeded your current quota");
+    });
+    const result = await runRecognitionWithFailover({
+      primaryModel: DEFAULT_GEMINI_MODEL,
+      fallbackModel: DEFAULT_GEMINI_FALLBACK_MODEL,
+      generate
+    });
+
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({ ok: false, failureReason: "quota_exhausted", fallbackUsed: false });
+    expect(recognitionFailureReason(apiError(429, "Too many requests"))).toBe("rate_limited");
+    expect(recognitionFailureReason(apiError(401, "invalid API key"))).toBe("configuration");
   });
 });
 

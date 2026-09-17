@@ -38,9 +38,14 @@ describe("Shelf research exact-evidence boundary", () => {
   });
 });
 
-it("uses the configured current model for queue search", async () => {
+it("keeps queue search on the dedicated grounding model", async () => {
   vi.stubEnv("GEMINI_WEB_NUTRITION_MODEL", "");
   vi.stubEnv("GEMINI_MODEL", "gemini-3.7-flash");
   await researchShelfProduct(lookup);
-  expect(mocks.generate).toHaveBeenCalledWith(expect.objectContaining({ model: "gemini-3.7-flash" }));
+  expect(mocks.generate).toHaveBeenCalledWith(expect.objectContaining({ model: "gemini-2.5-flash" }));
+
+  mocks.generate.mockClear();
+  vi.stubEnv("GEMINI_WEB_NUTRITION_MODEL", "gemini-2.5-flash-lite");
+  await researchShelfProduct(lookup);
+  expect(mocks.generate).toHaveBeenCalledWith(expect.objectContaining({ model: "gemini-2.5-flash-lite" }));
 });

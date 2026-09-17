@@ -49,9 +49,9 @@ own unchanged SHAs.
 
 1. Open a clean Safari session with the final Meta URL and bounded UTM parameters.
 2. Confirm the first screen reveals no winner. Choose the at-home route, run the sample and see the exact BAREBELLS proof.
-3. Confirm the in-store route reaches the transparent offer without requesting camera permission.
-4. On the at-home offer, open `Save it for my next shop`, share or copy the clean link, and confirm no camera prompt. Reopen the link and confirm the onboarding starts normally.
-5. Start the camera only from `Start my 3 free scans`; complete one rated scan and one unverified scan.
+3. Confirm `Start a free shelf scan` opens the camera directly, with no intermediate offer screen.
+4. Reopen onboarding, use `Save for my next shop`, share or copy the clean link, and confirm no camera prompt. Reopen the link and confirm the onboarding starts normally.
+5. Reopen onboarding, use `Try a sample shelf`, and confirm the complete four-product result opens directly without camera permission.
 6. Confirm only the rated scan reduces the allowance and gallery upload uses the same allowance.
 7. Reach the paywall after three rated scans and confirm EUR 2.99 once for seven days, no subscription.
 8. With explicit owner approval, make one small real live-mode purchase, verify the success screen,

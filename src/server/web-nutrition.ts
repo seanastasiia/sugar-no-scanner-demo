@@ -9,7 +9,7 @@ import { readPersistentWebNutrition, writePersistentWebNutrition } from "./web-n
 import { fetchVerifiedWebProduct, webLookupKey, type WebProductLookup } from "./web-product-evidence";
 import { findSharedWebProduct, promoteSharedWebProduct } from "./shared-web-catalog";
 
-const DEFAULT_MODEL = "gemini-3.7-flash";
+export const DEFAULT_WEB_NUTRITION_MODEL = "gemini-2.5-flash";
 const MIN_GOOGLE_HTTP_TIMEOUT_MS = 10_000;
 const DEFAULT_WEB_NUTRITION_TIMEOUT_MS = 12_000;
 const MAX_WEB_NUTRITION_TIMEOUT_MS = 30_000;
@@ -17,6 +17,14 @@ const MISS_CACHE_TTL_MS = 6 * 60 * 60_000;
 const STALE_MEMORY_TTL_MS = 5 * 60_000;
 const responseCache = new Map<string, { expiresAt: number; result: WebNutritionResolution | null }>();
 const revalidationInFlight = new Set<string>();
+
+export function webNutritionModel(
+  environment: Record<string, string | undefined> = process.env
+): string {
+  // Keep grounded search on a dedicated model. The generic Gemini model can be
+  // a Gemini 3 vision model whose free-tier Search grounding allowance is zero.
+  return environment.GEMINI_WEB_NUTRITION_MODEL?.trim() || DEFAULT_WEB_NUTRITION_MODEL;
+}
 
 export function webNutritionTimeoutMs(raw = process.env.GEMINI_WEB_NUTRITION_TIMEOUT_MS): number {
   const parsed = Number.parseInt(raw || "", 10);
@@ -184,7 +192,7 @@ async function lookupWebNutritionRemotely(input: {
   apiKey: string;
   fallbackResult?: WebNutritionResolution;
 }): Promise<WebNutritionResolution | null> {
-  const model = process.env.GEMINI_WEB_NUTRITION_MODEL || process.env.GEMINI_MODEL || DEFAULT_MODEL;
+  const model = webNutritionModel();
   try {
     const ai = new GoogleGenAI({ apiKey: input.apiKey });
     const normalizedName = normalizeRetailText(input.lookup.name);

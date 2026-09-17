@@ -92,6 +92,7 @@ export function mergeUploadScanResults(results: UploadScanResult[], limit = MAX_
     .slice(0, limit)
     .sort((left, right) => left.box.y - right.box.y || left.box.x - right.box.x);
   const first = results[0]?.response;
+  const unavailable = results.find(({ response }) => response.status === "provider_unavailable")?.response;
   return {
     requestId: first?.requestId || crypto.randomUUID(),
     status: selected.length ? "matched" : results.some(({ response }) => response.status === "provider_unavailable")
@@ -100,6 +101,8 @@ export function mergeUploadScanResults(results: UploadScanResult[], limit = MAX_
     detections: selected,
     latencyMs: Math.max(0, ...results.map(({ response }) => response.latencyMs)),
     model: [...new Set(results.map(({ response }) => response.model))].join(" + ") || "unknown",
-    imageStored: false
+    imageStored: false,
+    failureReason: unavailable?.failureReason,
+    fallbackUsed: results.some(({ response }) => response.fallbackUsed)
   };
 }
