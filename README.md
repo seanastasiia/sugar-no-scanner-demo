@@ -8,7 +8,7 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 
 ## Selling onboarding and paid launch
 
-On 9 September 2026 the owner approved onboarding version 7 and the willingness-to-pay experiment for the existing Railway production service. On 17 September, version 8 became a tested local release candidate after the ad funnel showed that too few first-time visitors reached a scan. It is not production until the owner gives a fresh `ПУБЛИКУЙ` approval.
+On 9 September 2026 the owner approved onboarding version 7 and the willingness-to-pay experiment for the existing Railway production service. On 17 September, after the ad funnel showed that too few first-time visitors reached a scan, the owner approved publishing version 8 to production with `ПУБЛИКУЙ`.
 
 Version 8 uses one decision screen. `Start a free shelf scan` records the in-store path and immediately opens the camera. `Try a sample shelf` records the at-home path and immediately opens the deterministic four-product result without camera permission. `Save for my next shop` remains available from the same screen with honest Safari/Chrome Add to Home Screen guidance. The price is visible before any action: 3 successful scans free, then one €2.99 payment for 7 days, with no subscription. Completion still uses `sugar_scanner_onboarding_v1`; anonymous funnel events report onboarding version `8`, path, sample reveal, save prompt/action and saved-link return.
 
@@ -16,7 +16,7 @@ The visual language comes from the Sugar.no Figma paywall and shared design syst
 
 The first screen uses the official Sugar.no wordmark and begins directly with `Compare the shelf, not the labels.`; the redundant `Sugar.no Shelf Scanner` eyebrow is intentionally omitted.
 
-The pre-release candidate is recorded in [`docs/launch-selling-onboarding.md`](docs/launch-selling-onboarding.md). Final production tests, deployment SHA, health evidence and rollback instructions are recorded in [`docs/test-runs/2026-09-09-wtp-production-launch.md`](docs/test-runs/2026-09-09-wtp-production-launch.md).
+The original launch plan is recorded in [`docs/launch-selling-onboarding.md`](docs/launch-selling-onboarding.md). Version 8 implementation and release checks are recorded in [`docs/test-runs/2026-09-17-gemini-recovery-onboarding-v8.md`](docs/test-runs/2026-09-17-gemini-recovery-onboarding-v8.md); the original payment launch remains documented in [`docs/test-runs/2026-09-09-wtp-production-launch.md`](docs/test-runs/2026-09-09-wtp-production-launch.md).
 
 ## Approved Pen release
 

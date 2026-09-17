@@ -1,9 +1,11 @@
 # Save-for-later first-screen candidate
 
-Date: 2026-09-17  
-Implementation commit: `8af415f`  
-Branch: `codex/rimi-lidl-catalog-expansion`  
-Release state: local candidate only; not pushed or deployed pending explicit owner approval.
+Date: 2026-09-17
+
+Implementation commit: `8af415f`
+
+Branch: `codex/rimi-lidl-catalog-expansion`
+Release state: included in the owner-approved version 8 production release. Final deployment evidence is recorded in `2026-09-17-gemini-recovery-onboarding-v8.md`.
 
 ## Technical checks
 
