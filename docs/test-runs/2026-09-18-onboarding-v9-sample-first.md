@@ -1,4 +1,4 @@
-# Onboarding version 9 sample-first — release-candidate QA
+# Onboarding version 9 sample-first — production release QA
 
 Checked: 2026-09-18
 
@@ -11,7 +11,7 @@ Checked: 2026-09-18
 - Make `See all 4 sample results` the single coral primary action.
 - Keep `Scan my shelf now` as the direct camera action and `Save for my next shop` as the clean-link save flow.
 - Preserve the existing price, privacy, recognition, payment and analytics boundaries; anonymous onboarding events now report version 9.
-- Production is unchanged until the owner gives a fresh `ПУБЛИКУЙ` approval for this candidate.
+- The owner gave the required fresh `ПУБЛИКУЙ` approval on 18 September 2026.
 
 ## Technical checks
 
@@ -36,10 +36,19 @@ Checked: 2026-09-18
   - `test-results/pen-welcome-390x844.png`
   - `test-results/pen-welcome-667x375.png`
 
-## Product checks before release
+## Production release evidence
+
+- Tested implementation commit `2111de4603e158fdb69d4c19785a5c890534a3bb` was pushed to GitHub `main`.
+- Rollback tag `production-before-onboarding-v9-2026-09-18` points to production version 8 commit `141dc436b0082ac64951491a93dc3dca3667375b`.
+- Railway direct deployment `e094085d-3b65-4b16-a2cc-6aad8784b5a9` completed with `SUCCESS`.
+- Production `/api/health` returned `status: ok`, service `sugar-no-scanner-demo` and commit `2111de4603e158fdb69d4c19785a5c890534a3bb`.
+- Live Mobile Safari smoke returned HTTP 200 and confirmed the English headline, top product, full nutrition line and all three actions.
+- After declining Meta cookies, `See all 4 sample results` produced `4 products · 4 with Sugar.no fit` without a camera request.
+
+## Owner checks after release
 
 1. Open `/?onboarding=1` at 390×844 and confirm the English headline, top product, `Sugar 2.3 g · Protein 36 g / 100 g`, all three actions, price and privacy copy are visible.
 2. Tap `See all 4 sample results` and confirm the four ranked products open without requesting camera permission.
 3. Return to onboarding, tap `Scan my shelf now` and confirm the camera opens directly.
 4. Return again, tap `Save for my next shop` and confirm the shared or copied URL is the clean scanner link with `?saved=1` and no advertising or session parameters.
-5. After approval and deployment, confirm Railway completed the `main` build and `/api/health` reports the deployed revision before treating version 9 as live.
+5. Complete one real shelf scan on a phone in a shop; automated checks verify the flow but cannot establish real-shelf recognition accuracy.
