@@ -295,11 +295,13 @@ function trapFocus(event: KeyboardEvent, container: HTMLElement) {
 export function ScannerApp({
   personalRankAvailable = true,
   paywallEnabled = false,
-  shelfResearchEnabled = false
+  shelfResearchEnabled = false,
+  ownerAccess = false
 }: {
   personalRankAvailable?: boolean;
   paywallEnabled?: boolean;
   shelfResearchEnabled?: boolean;
+  ownerAccess?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -397,6 +399,7 @@ export function ScannerApp({
       productId?: string,
       metadata: Record<string, string | number | boolean | null> = {}
     ) => {
+      if (ownerAccess) return;
       if (name !== "checkout_started") trackMetaFunnel(name);
       void fetch("/api/events", {
         method: "POST",
@@ -412,7 +415,7 @@ export function ScannerApp({
         keepalive: true
       }).catch(() => undefined);
     },
-    [ensureSession, ensureBrowserSession]
+    [ensureSession, ensureBrowserSession, ownerAccess]
   );
 
   const openPaymentGate = useCallback((eventSource: ScanSource, placement: string) => {
@@ -1645,11 +1648,12 @@ export function ScannerApp({
 
   return (
     <main
-      className={`${styles.app} ${source === "camera" && !showRecovery ? styles.liveCamera : ""} ${showAccessBadge ? styles.withAccessBadge : ""}`}
+      className={`${styles.app} ${source === "camera" && !showRecovery ? styles.liveCamera : ""} ${showAccessBadge || ownerAccess ? styles.withAccessBadge : ""}`}
     >
       {!resultsAreExpanded && !demoOpen ? (
         <header className={`${styles.header} ${styles.scannerHeader}`} inert={feedbackOpen || paywallOpen || paymentSuccessOpen}>
           <ScannerHomeLogo href={shelfResearchEnabled ? "/pilot/shelf" : "/"} imageClassName={styles.wordmark} priority />
+          {ownerAccess ? <p className={`${styles.freeScanAllowance} ${styles.paidAccessAllowance}`}>Owner access · Free scans</p> : null}
           {showAccessBadge ? (
             <p
               className={`${styles.freeScanAllowance} ${paidAccess ? styles.paidAccessAllowance : ""} ${!paidAccess && freeScanCount >= FREE_REAL_SCANS ? styles.noFreeScanAllowance : ""}`}
