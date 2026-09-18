@@ -9,9 +9,9 @@ test("verified owner scans without billing or funnel events only on the pilot UR
   page.on("request", r => { if (/\/api\/(events|billing\/)/.test(r.url())) calls.push(r.url()); });
   await page.goto(`/pilot/shelf/owner#token=${token}`);
   await page.getByRole("button", { name: "Enable my free access" }).click();
-  await expect(page.getByText("Owner access · Free scans", { exact: true })).toBeVisible();
+  await expect(page.getByText("Owner access", { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByText("Owner access · Free scans", { exact: true })).toBeVisible();
+  await expect(page.getByText("Owner access", { exact: true })).toBeVisible();
   const product = shelfFixture("owner-qa-chips");
   const detection = { productId: product.id, catalogProductId: product.id, confidence: .99, box: { x: .1, y: .1, width: .6, height: .6 }, observedText: product.name, identity: { brand: product.brand, name: product.name, variant: null, packSize: "100g", category: "Chips", matchKind: "barbora" }, inlineProduct: product, shelfPrice: null, retailerOffer: null };
   let scans = 0;
@@ -30,7 +30,7 @@ test("verified owner scans without billing or funnel events only on the pilot UR
   const manifest = await (await page.request.get("/pilot/shelf/manifest.webmanifest")).json(); expect(manifest.start_url).toBe("/pilot/shelf");
   await page.route("**/api/billing/status", route => route.fulfill({ json: { active: false } }));
   await page.goto("/");
-  await expect(page.getByText("Owner access · Free scans", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Owner access", { exact: true })).toHaveCount(0);
   await expect.poll(() => calls.some(url => url.includes("/api/billing/status"))).toBe(true);
   await expect(page.getByRole("dialog", { name: "Keep scanning shelves" })).toBeVisible();
 });
@@ -40,6 +40,6 @@ test("visitors and forged cookies retain the pilot paywall", async ({ page, cont
   let checked = false; await page.route("**/api/billing/status", route => { checked = true; return route.fulfill({ json: { active: false } }); });
   await page.goto("/pilot/shelf");
   await expect.poll(() => checked).toBe(true);
-  await expect(page.getByText("Owner access · Free scans", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Owner access", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("dialog", { name: "Keep scanning shelves" })).toBeVisible();
 });

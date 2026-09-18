@@ -307,4 +307,4 @@ When a new regression is fixed, add one concise entry here. Put detailed evidenc
 
 ## Resolved: owner testing consumed the public free-scan allowance
 
-Email-confirmed, path-scoped owner access now bypasses the allowance only in Personal Shelf and excludes those client funnel events. The public paywall is unchanged. Personal Shelf also has its own Home Screen start URL. Browser storage/session separation on iOS can still require confirming owner access in the installed app.
+Email-confirmed, path-scoped owner access now bypasses the allowance only in Personal Shelf and excludes those client funnel events. The public paywall is unchanged. Personal Shelf also has its own Home Screen start URL. Its owner badge uses the short label “Owner access” to avoid crowding mobile actions. Browser storage/session separation on iOS can still require confirming owner access in the installed app.

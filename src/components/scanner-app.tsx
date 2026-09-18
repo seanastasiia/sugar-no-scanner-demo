@@ -1653,7 +1653,7 @@ export function ScannerApp({
       {!resultsAreExpanded && !demoOpen ? (
         <header className={`${styles.header} ${styles.scannerHeader}`} inert={feedbackOpen || paywallOpen || paymentSuccessOpen}>
           <ScannerHomeLogo href={shelfResearchEnabled ? "/pilot/shelf" : "/"} imageClassName={styles.wordmark} priority />
-          {ownerAccess ? <p className={`${styles.freeScanAllowance} ${styles.paidAccessAllowance}`}>Owner access · Free scans</p> : null}
+          {ownerAccess ? <p className={`${styles.freeScanAllowance} ${styles.paidAccessAllowance}`}>Owner access</p> : null}
           {showAccessBadge ? (
             <p
               className={`${styles.freeScanAllowance} ${paidAccess ? styles.paidAccessAllowance : ""} ${!paidAccess && freeScanCount >= FREE_REAL_SCANS ? styles.noFreeScanAllowance : ""}`}
