@@ -63,7 +63,7 @@ test("launch root does not start queue calls or expose the internal queue", asyn
   const calls: string[] = [];
   page.on("request", req => { if (req.url().includes("/api/pilot/shelf-queue")) calls.push(req.url()); });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Compare the shelf, not the labels." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Find the better fit in one shelf photo." })).toBeVisible();
   await expect(page.getByRole("link", { name: /My products/ })).toHaveCount(0);
   expect(calls).toEqual([]);
 });

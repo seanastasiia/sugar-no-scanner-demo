@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Bookmark, Copy, Send, Share2, ScanLine, Smartphone, X } from "lucide-react";
+import { ArrowRight, Bookmark, Copy, Send, Share2, ScanLine, Smartphone, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ScannerHomeLogo } from "./scanner-home-logo";
 import styles from "./selling-onboarding.module.css";
@@ -55,20 +55,20 @@ export function PilotOnboarding({
 
       <section className={`${styles.screen} ${styles.firstScreen}`}>
         <div className={styles.copyBlock}>
-          <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Compare the shelf, not the labels.</h1>
-          <p>See which products fit you best using confirmed sugar and protein. No account.</p>
+          <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Find the better fit in one shelf photo.</h1>
+          <p>Sugar.no compares confirmed sugar and protein across products. No account.</p>
         </div>
-        <ShelfPreview state="teaser" />
+        <ShelfPreview state="result" />
         <div className={styles.actions}>
           <button className={styles.primary} type="button" onClick={() => {
-            onPathSelected("in_store");
-            onComplete();
-          }}><ScanLine aria-hidden="true" size={20} />Start a free shelf scan</button>
-          <button className={styles.secondary} type="button" onClick={() => {
             onPathSelected("at_home");
             onSampleRevealed();
             onTrySample();
-          }}>Try a sample shelf</button>
+          }}>See all 4 sample results<ArrowRight aria-hidden="true" size={20} /></button>
+          <button className={styles.secondary} type="button" onClick={() => {
+            onPathSelected("in_store");
+            onComplete();
+          }}><ScanLine aria-hidden="true" size={20} />Scan my shelf now</button>
           {!standalone ? (
             <button ref={saveTriggerRef} className={styles.textButton} type="button" onClick={() => {
               onPathSelected("at_home");
@@ -76,7 +76,7 @@ export function PilotOnboarding({
             }}><Bookmark aria-hidden="true" size={18} />Save for my next shop</button>
           ) : null}
           <p className={styles.offerSummary}><strong>3 successful scans free</strong> · then €2.99 once for 7 days · no subscription.</p>
-          <p className={styles.privacy}>Camera starts only when you choose the free shelf scan. Photos are not saved.</p>
+          <p className={styles.privacy}>Camera starts only when you choose Scan my shelf now. Photos are not saved.</p>
         </div>
       </section>
 
@@ -222,8 +222,7 @@ function ShelfPreview({ state }: { state: "teaser" | "ready" | "result" }) {
         {result ? (
           <div className={styles.sampleRanking}>
             <span className={styles.rankNumber}>1</span>
-            <span><strong>BAREBELLS Salty Peanut</strong><small>Sugar 2.3 g · Protein 36 g per 100 g</small></span>
-            <span className={styles.fitBadge}>Great fit</span>
+            <span><strong>BAREBELLS Salty Peanut</strong><small>Sugar 2.3 g · Protein 36 g / 100 g</small></span>
           </div>
         ) : state === "teaser" ? (
           <><span><strong>4 products found</strong><small>Compare a sample shelf in one tap</small></span><ScanLine aria-hidden="true" size={22} /></>

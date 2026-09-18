@@ -148,7 +148,7 @@ const CAMERA_FORCE_CAPTURE_MS = 1_250;
 const CAMERA_MIN_EDGE_SCORE = 4.1;
 const CAMERA_SAMPLE_WIDTH = 96;
 const CAMERA_SAMPLE_HEIGHT = 72;
-const ONBOARDING_VERSION = 8;
+const ONBOARDING_VERSION = 9;
 
 interface NativeBarcodeDetector {
   detect(source: ImageBitmapSource): Promise<Array<{ rawValue?: string }>>;
