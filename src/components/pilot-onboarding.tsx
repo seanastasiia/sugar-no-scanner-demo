@@ -56,7 +56,7 @@ export function PilotOnboarding({
       <section className={`${styles.screen} ${styles.firstScreen}`}>
         <div className={styles.copyBlock}>
           <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Find the better fit in one shelf photo.</h1>
-          <p>Sugar.no compares confirmed sugar and protein across products. No account.</p>
+          <p>Not at a shelf? Try this four-bar example now, or save the scanner for your next shop.</p>
         </div>
         <ShelfPreview state="result" />
         <div className={styles.actions}>

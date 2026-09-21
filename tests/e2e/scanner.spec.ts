@@ -748,7 +748,7 @@ test("first visit shows a useful result before offering the full sample or camer
   await expect(page.getByRole("heading", { name: "Find the better fit in one shelf photo." })).toBeVisible();
   await expect(page.getByText("Sugar.no Shelf Scanner", { exact: true })).toHaveCount(0);
   await expectOfficialSugarNoLogo(page);
-  await expect(page.getByText("Sugar.no compares confirmed sugar and protein across products. No account.")).toBeVisible();
+  await expect(page.getByText("Not at a shelf? Try this four-bar example now, or save the scanner for your next shop.")).toBeVisible();
   await expect(page.getByTestId("onboarding-preview")).toBeVisible();
   await expect(page.getByAltText("Protein bars on a shop shelf. After scanning, four products are outlined and ranked using confirmed sugar and protein data.")).toBeVisible();
   await expect(page.getByText("BAREBELLS Salty Peanut")).toBeVisible();

@@ -24,7 +24,7 @@
 .privacy { margin: 0; color: #707680; font-size: 12px; line-height: 17px; text-align: center; }
 .offerSummary { margin: 2px 0 -3px; color: #505862; font-size: 13px; line-height: 18px; text-align: center; }
 .offerSummary strong { color: #20252b; }
-.textButton { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 7px; border: 0; background: transparent; color: #176fac; font: 700 16px/21px var(--font-display); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.textButton { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 7px; border: 1px solid #a4c9e5; border-radius: 17px; background: #f4faff; color: #125b90; font: 700 16px/21px var(--font-display); }
 .preview { position: relative; width: 100%; margin: 0; padding: 6px; overflow: hidden; border-radius: 32px; background: #fff; box-shadow: 0 14px 36px #233a541c; }
 .previewImage { position: relative; height: clamp(210px, 35vh, 280px); overflow: hidden; border-radius: 26px; background: #16202b; }
 .previewImage img { object-fit: cover; object-position: 50% 35%; }
