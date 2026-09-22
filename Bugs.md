@@ -4,7 +4,7 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 ## Open
 
-- **2026-09-21: paid visitors rarely choose an onboarding action.** In a read-only production Supabase check, 336 distinct sessions carrying `shelf_lv_pilot_02` attribution had 332 onboarding starts but only 11 path selections. These are not a strict Meta click-to-action rate because attribution persists in browser storage and includes repeat or QA visits. Version 10 is an unpublished copy/visibility candidate; whether it improves real scans must be measured after release, separately from sample scans.
+- **2026-09-21: paid visitors rarely choose an onboarding action.** In a read-only production Supabase check, 336 distinct sessions carrying `shelf_lv_pilot_02` attribution had 332 onboarding starts but only 11 path selections. These are not a strict Meta click-to-action rate because attribution persists in browser storage and includes repeat or QA visits. Version 10 clarifies the away-from-shop choice and makes Save more visible; whether it improves real scans remains open and must be measured separately from sample views.
 
 - **Historical Rimi offers must stay unavailable.** The 10 September local candidate preserves every previous complete SKU. Its 105 rows absent from the current sitemap retain their original nutrition dates but no price/currency or availability claim. The layer now has 7,018 complete rows and 565 identity-only rows; Personal Shelf has 5,765 assessable source rows.
 
