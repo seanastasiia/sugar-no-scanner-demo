@@ -186,7 +186,7 @@ Owner check: scan a known APP LITE apple bar or a supported yogurt/cheese packag
 
 ## Stack
 
-- Next.js 16, React 19, TypeScript
+- Next.js 16.3.6, React 19, TypeScript; Sharp 0.35.4 handles server-side image processing. These exact security-patched versions are locked in `package-lock.json`.
 - Gemini for visual identity and optional Google Search-grounded exact nutrition
 - Versioned curated, Barbora, Rimi, Lidl identity-only, Livin Latvia and Livinn Lithuania snapshots in `data/`
 - An isolated Open Food Facts ODbL layer with explicit attribution and separate Supabase storage
@@ -211,6 +211,13 @@ Production-style local run:
 ```bash
 npm run build
 npm run start
+```
+
+Dependency security check:
+
+```bash
+npm audit
+npm audit --omit=dev
 ```
 
 ## Environment
