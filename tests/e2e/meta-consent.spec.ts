@@ -39,7 +39,11 @@ test("Meta stays blocked until consent and revokes without breaking onboarding",
 test("Meta removes free text URLs before loading and keeps the consent card within a narrow screen", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await page.route("https://connect.facebook.net/**", route => route.fulfill({ contentType: "application/javascript", body: "" }));
-  await page.goto("/?utm_content=private%40example.com#private");
+  // Isolate URL sanitization from the separate private-referrer guard.
+  // A cold WebKit/Next reload can make the detailed entry URL its own referrer.
+  await page.goto("/");
+  await expect(page.getByRole("region", { name: "Help us measure our ads?" })).toBeVisible();
+  await page.goto("/?utm_content=private%40example.com#private", { referer: new URL("/", page.url()).href });
   const card = page.getByRole("region", { name: "Help us measure our ads?" });
   await expect(card).toBeVisible();
   const box = await card.boundingBox();
@@ -67,7 +71,7 @@ test("Ad privacy leaves result actions unobstructed on a small phone", async ({ 
   await page.route("**/api/offers", route => route.fulfill({ contentType: "application/json", body: '{"offers":{}}' }));
   await page.goto("/");
   await page.getByRole("button", { name: "No thanks", exact: true }).click();
-  await page.getByRole("button", { name: "See all 4 sample results", exact: true }).click();
+  await page.getByRole("button", { name: "Explore sample details", exact: true }).click();
   for (const size of [{ width: 390, height: 844 }, { width: 320, height: 640 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(size);
     const privacy = page.getByRole("button", { name: "Ad privacy", exact: true });

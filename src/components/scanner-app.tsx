@@ -1,6 +1,8 @@
 "use client";
 
 import { hasPrivateReferrer, readMetaConsent, trackMetaFunnel, trackMetaPurchase } from "@/lib/meta-pixel";
+import type { OnboardingProduct } from "@/lib/onboarding-comparison";
+import { readQaVisit, entryCampaign, cameraFailureCategory } from "@/lib/scan-diagnostics";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -128,11 +130,13 @@ type PilotEventName =
   | "feedback_submitted"
   | "scan_started"
   | "scan_completed"
+  | "scan_no_match"
   | "result_opened"
   | "alternative_viewed"
   | "retailer_link_clicked"
   | "permission_denied"
   | "recognition_failed"
+  | "scan_preparation_failed"
   | "paywall_viewed"
   | "checkout_started"
   | "checkout_completed"
@@ -148,7 +152,7 @@ const CAMERA_FORCE_CAPTURE_MS = 1_250;
 const CAMERA_MIN_EDGE_SCORE = 4.1;
 const CAMERA_SAMPLE_WIDTH = 96;
 const CAMERA_SAMPLE_HEIGHT = 72;
-const ONBOARDING_VERSION = 10;
+const ONBOARDING_VERSION = 11;
 
 interface NativeBarcodeDetector {
   detect(source: ImageBitmapSource): Promise<Array<{ rawValue?: string }>>;
@@ -293,11 +297,13 @@ function trapFocus(event: KeyboardEvent, container: HTMLElement) {
 }
 
 export function ScannerApp({
+  sampleComparison,
   personalRankAvailable = true,
   paywallEnabled = false,
   shelfResearchEnabled = false,
   ownerAccess = false
 }: {
+  sampleComparison: OnboardingProduct[];
   personalRankAvailable?: boolean;
   paywallEnabled?: boolean;
   shelfResearchEnabled?: boolean;
@@ -400,7 +406,8 @@ export function ScannerApp({
       metadata: Record<string, string | number | boolean | null> = {}
     ) => {
       if (ownerAccess) return;
-      if (name !== "checkout_started") trackMetaFunnel(name);
+      const isQa = readQaVisit(window.location.search, window.sessionStorage);
+      if (!isQa && name !== "checkout_started") trackMetaFunnel(name);
       void fetch("/api/events", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -410,7 +417,13 @@ export function ScannerApp({
           name,
           source: eventSource,
           productId: productId || null,
-          metadata: { ...attributionRef.current, ...metadata }
+          metadata: {
+            ...attributionRef.current,
+            onboardingVersion: ONBOARDING_VERSION,
+            ...metadata,
+            trafficType: isQa ? "qa" : "unmarked",
+            entryCampaign: entryCampaign(window.location.search, window.sessionStorage)
+          }
         }),
         keepalive: true
       }).catch(() => undefined);
@@ -545,6 +558,13 @@ export function ScannerApp({
         return;
       }
       if (result.status !== "matched" || result.detections.length === 0) {
+        track("scan_no_match", eventSource, undefined, {
+          count: 0,
+          latencyMs: result.latencyMs,
+          model: result.model,
+          // Internal diagnostics only; Amplitude intentionally omits this ID.
+          requestId: result.requestId
+        });
         if (eventSource === "camera") {
           trackingActiveRef.current = true;
           setResultLocked(true);
@@ -1030,12 +1050,15 @@ export function ScannerApp({
       scanKickoffRef.current = setTimeout(captureStableFrame, CAMERA_SCAN_KICKOFF_MS);
       scanTimerRef.current = setInterval(captureStableFrame, CAMERA_SCAN_INTERVAL_MS);
     } catch (error) {
+      if (requestId !== cameraRequestRef.current) return;
+      stopActiveCapture();
+      track("scan_preparation_failed", "camera", undefined, { message: cameraFailureCategory(error) });
       const denied = error instanceof DOMException && ["NotAllowedError", "SecurityError"].includes(error.name);
       setCameraState(denied ? "denied" : "error");
       setStatusMessage(
         denied
-          ? "Allow camera access in Safari settings, then tap Enable camera."
-          : "Camera could not start. You can retry or open the demo."
+          ? "Allow camera access in your browser settings, or choose a saved photo."
+          : "Camera could not start. Choose a saved photo, or open this page in Safari or Chrome."
       );
       if (denied) track("permission_denied", "camera");
     }
@@ -1160,6 +1183,7 @@ export function ScannerApp({
       return;
     }
     if (file.size > 12_000_000) {
+      track("scan_preparation_failed", "upload", undefined, { message: "upload_too_large" });
       setRecognitionState("error");
       setStatusMessage("Choose an image smaller than 12 MB.");
       return;
@@ -1190,6 +1214,7 @@ export function ScannerApp({
     } catch {
       setRecognitionState("error");
       setStatusMessage("This image could not be prepared. Try a JPEG or PNG.");
+      track("scan_preparation_failed", "upload", undefined, { message: "upload_decode_failed" });
     }
   }
 
@@ -1234,7 +1259,6 @@ export function ScannerApp({
       if (forceOnboarding || !readOnboardingCompletion(window.localStorage)) {
         setOnboardingState("showing");
         track("onboarding_started", "camera", undefined, { onboardingVersion: ONBOARDING_VERSION });
-        track("onboarding_step_viewed", "camera", undefined, { onboardingVersion: ONBOARDING_VERSION, step: 1 });
       } else {
         setOnboardingState("complete");
       }
@@ -1616,6 +1640,10 @@ export function ScannerApp({
     };
   }, [closeDemo, demoOpen]);
 
+  const onboardingViewed = useCallback(() => {
+    track("onboarding_step_viewed", "camera", undefined, { step: 1 });
+  }, [track]);
+
   if (onboardingState === "loading") {
     return <main className={styles.onboardingLoading} aria-label="Loading Sugar.no" />;
   }
@@ -1623,6 +1651,8 @@ export function ScannerApp({
   if (onboardingState === "showing") {
     return (
       <PilotOnboarding
+        products={sampleComparison}
+        onViewed={onboardingViewed}
         onComplete={() => finishOnboarding("camera")}
         onTrySample={() => finishOnboarding("sample")}
         onPathSelected={(path) => track("onboarding_path_selected", "camera", undefined, {

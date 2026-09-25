@@ -13,7 +13,7 @@ test("launch entry flag hides the pilot without removing its separate demo", asy
     });
   });
   await page.goto("/?onboarding=1");
-  await page.getByRole("button", { name: "See all 4 sample results", exact: true }).click();
+  await page.getByRole("button", { name: "Explore sample details", exact: true }).click();
   await page.getByRole("button", { name: "View all", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Best fit first", exact: true })).toHaveCount(0);
   await expect(page.getByRole("switch", { name: /Personal Shelf Rank/ })).toHaveCount(entryVisible ? 1 : 0);

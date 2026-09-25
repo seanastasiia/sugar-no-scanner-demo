@@ -61,6 +61,7 @@ describe("Amplitude analytics", () => {
       event_properties: {
         source: "camera",
         environment: "staging",
+      traffic_type: "unmarked",
         recognized_count: 4,
         recognition_latency_ms: 3_250,
         recognition_latency_bucket: "2_to_5s",
@@ -106,6 +107,7 @@ describe("Amplitude analytics", () => {
     expect(amplitudeEventProperties(event)).toEqual({
       source: "camera",
       environment: "staging",
+      traffic_type: "unmarked",
       recognized_count: 4,
       recognition_latency_ms: 3_250,
       recognition_latency_bucket: "2_to_5s",
@@ -123,6 +125,7 @@ describe("Amplitude analytics", () => {
     })).toEqual({
       source: "camera",
       environment: "staging",
+      traffic_type: "unmarked",
       onboarding_version: 7,
       onboarding_path: "in_store"
     });
@@ -133,4 +136,11 @@ describe("Amplitude analytics", () => {
     expect(amplitudeEventProperties({ ...event, metadata: { action: "copied" } })).toHaveProperty("onboarding_save_action", "copied");
     expect(amplitudeEventProperties({ ...event, metadata: { action: "emailed" } })).not.toHaveProperty("onboarding_save_action");
   });
+});
+
+it("forwards only bounded diagnostic categories and explicit QA labels", () => {
+  expect(amplitudeEventProperties({ ...event, metadata: { trafficType: "qa", message: "upload_decode_failed" } }))
+    .toMatchObject({ traffic_type: "qa", error_category: "upload_decode_failed" });
+  expect(amplitudeEventProperties({ ...event, metadata: { trafficType: "person@example.com", message: "private camera error" } }))
+    .toMatchObject({ traffic_type: "unmarked", error_category: "unknown" });
 });

@@ -2,6 +2,14 @@
 
 This file tracks open limitations and only recent resolved regressions. Older history remains recoverable in Git.
 
+- **Open: September 24's single real-scan start has no measured result.** Aggregate Amplitude evidence does not establish whether this was an error, abandonment or QA. Read-only Supabase now confirms a campaign-labelled visit granted camera access and started a scan. A Railway no-match response closely matches its time; the old analytics lacks a shared request ID, so the match is temporal. No historical server failure has been confirmed and the photographed scene is unknown. Read-only timeline query: `scripts/analytics/incomplete-scan-timeline.sql`. Physical Instagram/Facebook browser reproduction is still pending.
+- **Fixed in owner-approved v11 release: missing scan-preparation diagnostics.** Non-permission camera failures and upload preparation/size failures were absent from analytics. Bounded categories now identify these failures; acquired camera tracks are released on startup errors and stale errors are ignored. This is not a claimed fix for the unknown September 24 incident.
+- **Fixed in owner-approved v11 release: ambiguous onboarding denominator.** Count the mounted first screen (`onboarding_step_viewed`, step 1), not all app opens. Explicit QA and first-entry campaign labels support the ordered read-only funnel; older unlabelled traffic stays uncertain.
+
+- **Fixed in owner-approved v11 release: unmeasured no-match outcome.** `not_sure` displayed a recovery prompt without an outcome event. `scan_no_match` now records that outcome separately from success and technical failure, with a request ID retained only in internal Supabase metadata.
+
+- **Fixed in owner-approved v11 release: comparison required reading every nutrient value.** Visible places and a leader card use the existing catalog Fit scores. Equal scores share a place, and unknown scores remain unranked.
+
 ## Open
 
 - **2026-09-21: paid visitors rarely choose an onboarding action.** In a read-only production Supabase check, 336 distinct sessions carrying `shelf_lv_pilot_02` attribution had 332 onboarding starts but only 11 path selections. These are not a strict Meta click-to-action rate because attribution persists in browser storage and includes repeat or QA visits. Version 10 clarifies the away-from-shop choice and makes Save more visible; whether it improves real scans remains open and must be measured separately from sample views.
