@@ -157,7 +157,7 @@ describe("POST /api/events", () => {
     expect(getSupabaseAdmin).not.toHaveBeenCalled();
   });
 
-  it.each(["scan_preparation_failed", "onboarding_path_selected", "onboarding_sample_revealed", "onboarding_save_prompt_viewed", "onboarding_save_action", "onboarding_saved_link_opened"])("accepts the %s funnel event", async (name) => {
+  it.each(["scan_no_match", "scan_preparation_failed", "onboarding_path_selected", "onboarding_sample_revealed", "onboarding_save_prompt_viewed", "onboarding_save_action", "onboarding_saved_link_opened"])("accepts the %s funnel event", async (name) => {
     sendAmplitudeEvent.mockResolvedValue("sent");
     vi.spyOn(console, "info").mockImplementation(() => undefined);
     const response = await POST(new Request("https://scanner.example/api/events", {

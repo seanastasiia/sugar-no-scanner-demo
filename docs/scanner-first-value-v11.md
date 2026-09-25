@@ -30,13 +30,15 @@ Read-only SQL: `scripts/analytics/scanner-daily-funnel.sql`. Day defaults to yes
 
 ## Incident investigation
 
-September 24 Riga: Amplitude showed one unique real scan start and zero real completions. Source was filtered to camera/upload; aggregate data does not reveal the cause. Supabase and Railway require restored login on this Mac. The timeline query selects bounded event fields and anonymous scan/visit IDs, no photos or raw metadata. Once accessible, correlate its timestamp with recognition HTTP outcome/server error; do not infer server failure from an absent completion alone.
+September 24 Riga: Amplitude showed one unique real scan start and zero real completions. Source was filtered to camera/upload; aggregate data does not reveal the cause. Railway and production Supabase are now readable. Supabase confirms a campaign-labelled camera visit with permission granted and a scan start; a Railway response a few seconds later returned zero raw detections. This is temporal correlation, not a shared-ID join. No provider failure was logged for that response; image content and the reason for no detections remain unknown. The timeline query selects bounded event fields and anonymous scan/visit IDs, no photos or raw metadata. Do not infer server failure or voluntary abandonment from an absent completion alone. The confirmed browser class is coarse and does not establish whether this was an Instagram/Facebook embedded browser.
+
+Code inspection confirmed an independent measurement gap: no-match responses displayed a recovery state without an outcome event. The candidate adds `scan_no_match`, never counted as success or a technical error. The internal request ID allows future camera responses to be correlated with Railway; multi-pass uploads retain only the first response ID.
 
 ## Owner product checks
 
 1. Candidate preview: inspect 4 products, sugar/protein units and the dominant free-compare button. Check the full sample details and clean-link save flow.
 2. After an approved HTTPS deployment, open `/?onboarding=1&qa=1` from **both Instagram and Facebook on a real phone**. Tap Compare → allow camera → point at a shelf → wait for recognition → open a result. Repeat using a saved JPEG. Record approximate Riga time, app/OS and outcome, without private images.
-3. Deny camera, then try saved photo. If the in-app browser blocks camera, open the same page in Safari/Chrome and repeat. A Mobile Safari emulator does not validate these native embedded browsers.
+3. Also try a view with no visible packages: expect a retry prompt, `scan_no_match`, no `scan_completed` and no free-success allowance consumed. Deny camera, then try saved photo. If the in-app browser blocks camera, open the same page in Safari/Chrome and repeat. A Mobile Safari emulator does not validate these native embedded browsers.
 4. Reopen the completed visit: onboarding should be skipped; forcing it displays the comparison again. Verify QA events remain labelled and no sample appears as a real scan.
 
 ## Release gate

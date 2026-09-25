@@ -676,6 +676,11 @@ async function mockLiveCamera(page: Page) {
 }
 
 test("first live recognition waits for camera positioning before capturing", async ({ page }) => {
+  const events: Array<{ name: string; source: string; metadata: Record<string, unknown> }> = [];
+  await page.route("**/api/events", async (route) => {
+    events.push(route.request().postDataJSON());
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true }) });
+  });
   await page.addInitScript(() => {
     const originalFetch = window.fetch.bind(window);
     (window as Window & { __cameraRecognitionTimes?: number[] }).__cameraRecognitionTimes = [];
@@ -729,6 +734,12 @@ test("first live recognition waits for camera positioning before capturing", asy
     return (state.__cameraRecognitionTimes?.[1] ?? 0) - (state.__cameraRetryAt ?? 0);
   });
   expect(retryDelay).toBeLessThan(1_450);
+  await expect.poll(() => events.filter(event => event.name === "scan_no_match").length).toBe(2);
+  expect(events.filter(event => event.name === "scan_no_match")).toEqual([
+    expect.objectContaining({ source: "camera", metadata: expect.objectContaining({ count: 0, requestId: "initial-camera-delay" }) }),
+    expect.objectContaining({ source: "camera", metadata: expect.objectContaining({ count: 0, requestId: "initial-camera-delay" }) })
+  ]);
+  expect(events.some(event => ["scan_completed", "recognition_failed"].includes(event.name))).toBe(false);
 });
 
 test("first visit shows a useful result before offering the full sample or camera", async ({ page }) => {

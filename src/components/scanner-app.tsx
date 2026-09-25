@@ -130,6 +130,7 @@ type PilotEventName =
   | "feedback_submitted"
   | "scan_started"
   | "scan_completed"
+  | "scan_no_match"
   | "result_opened"
   | "alternative_viewed"
   | "retailer_link_clicked"
@@ -557,6 +558,13 @@ export function ScannerApp({
         return;
       }
       if (result.status !== "matched" || result.detections.length === 0) {
+        track("scan_no_match", eventSource, undefined, {
+          count: 0,
+          latencyMs: result.latencyMs,
+          model: result.model,
+          // Internal diagnostics only; Amplitude intentionally omits this ID.
+          requestId: result.requestId
+        });
         if (eventSource === "camera") {
           trackingActiveRef.current = true;
           setResultLocked(true);

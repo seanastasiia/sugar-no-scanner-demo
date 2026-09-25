@@ -30,6 +30,7 @@ const eventSchema = z.object({
     "feedback_submitted",
     "scan_started",
     "scan_completed",
+    "scan_no_match",
     "result_opened",
     "alternative_viewed",
     "retailer_link_clicked",
