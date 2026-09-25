@@ -55,7 +55,7 @@ Use daily SQL with `onboarding_version='11'` for the new variant, `'10'` for the
 
 ## Pre-release verification — 25 September 2026
 
-- Runtime tested at `5cbfeb0cee5171c80ae05df8096e02464e6981cc` (tree `2e33881699f084a30778a62a7ec2bc446055bd37`): `npm run verify` passed, 104 Vitest files / 842 tests, TypeScript, catalog validation, production build and standalone preparation. No lint errors; one existing unnecessary-dependency warning for `shelfResearchEnabled`. Local log: `/tmp/scanner-v11-release-verify.log`.
+- Runtime tested at `5cbfeb0cee5171c80ae05df8096e02464e6981cc` (tree `fa83b61560ceafb0fed9723d077cfbfdc2528c3b`): `npm run verify` passed, 104 Vitest files / 842 tests, TypeScript, catalog validation, production build and standalone preparation. No lint errors; one existing unnecessary-dependency warning for `shelfResearchEnabled`. Local log: `/tmp/scanner-v11-release-verify.log`.
 - `CI=1 WTP_PAYWALL_ENABLED=true E2E_PORT=3101 npm run test:e2e -- --workers=1`: 72 passed, 12 feature-gated skipped. Local log: `/tmp/scanner-v11-release-e2e.log`.
 - The subsequent changes are documentation plus optional read-only SQL version filtering and its fixture assertions. `npm test -- src/server/scanner-funnel-sql.test.ts` passed (1 test); `git diff --check` passed. Local log: `/tmp/scanner-v11-version-sql.log`.
 - Production deployment and real-device embedded-browser validation are separate from these local checks. The dated shared release record must record the deployed GitHub main SHA, health response, production smoke, event verification and remaining limitations.
