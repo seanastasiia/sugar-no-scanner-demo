@@ -1,12 +1,15 @@
 "use client";
 
 import Image from "next/image";
+import type { OnboardingProduct } from "@/lib/onboarding-comparison";
 import { ArrowRight, Bookmark, Copy, Send, Share2, ScanLine, Smartphone, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ScannerHomeLogo } from "./scanner-home-logo";
 import styles from "./selling-onboarding.module.css";
 
 export function PilotOnboarding({
+  products,
+  onViewed,
   onComplete,
   onTrySample,
   onPathSelected,
@@ -14,6 +17,8 @@ export function PilotOnboarding({
   onSavePromptViewed,
   onSaveAction
 }: {
+  products: OnboardingProduct[];
+  onViewed: () => void;
   onComplete: () => void;
   onTrySample: () => void;
   onPathSelected: (path: "at_home" | "in_store") => void;
@@ -30,9 +35,14 @@ export function PilotOnboarding({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const saveTriggerRef = useRef<HTMLButtonElement>(null);
 
+  const viewedRef = useRef(false);
   useEffect(() => {
     headingRef.current?.focus();
-  }, []);
+    if (!viewedRef.current) {
+      viewedRef.current = true;
+      onViewed();
+    }
+  }, [onViewed]);
 
   function openSave() {
     setSaveOpen(true);
@@ -55,20 +65,19 @@ export function PilotOnboarding({
 
       <section className={`${styles.screen} ${styles.firstScreen}`}>
         <div className={styles.copyBlock}>
-          <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Find the better fit in one shelf photo.</h1>
-          <p>Not at a shelf? Try this four-bar example now, or save the scanner for your next shop.</p>
+          <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>One shelf photo. Compare sugar and protein.</h1>
+          <p>See the differences before you choose. Here’s a four-bar example.</p>
         </div>
-        <ShelfPreview state="result" />
+        <ShelfPreview products={products} onDetails={() => {
+          onPathSelected("at_home");
+          onSampleRevealed();
+          onTrySample();
+        }} />
         <div className={styles.actions}>
           <button className={styles.primary} type="button" onClick={() => {
-            onPathSelected("at_home");
-            onSampleRevealed();
-            onTrySample();
-          }}>See all 4 sample results<ArrowRight aria-hidden="true" size={20} /></button>
-          <button className={styles.secondary} type="button" onClick={() => {
             onPathSelected("in_store");
             onComplete();
-          }}><ScanLine aria-hidden="true" size={20} />Scan my shelf now</button>
+          }}><ScanLine aria-hidden="true" size={20} />Compare my products — free<ArrowRight aria-hidden="true" size={18} /></button>
           {!standalone ? (
             <button ref={saveTriggerRef} className={styles.textButton} type="button" onClick={() => {
               onPathSelected("at_home");
@@ -76,7 +85,7 @@ export function PilotOnboarding({
             }}><Bookmark aria-hidden="true" size={18} />Save for my next shop</button>
           ) : null}
           <p className={styles.offerSummary}><strong>3 successful scans free</strong> · then €2.99 once for 7 days · no subscription.</p>
-          <p className={styles.privacy}>Camera starts only when you choose Scan my shelf now. Photos are not saved.</p>
+          <p className={styles.privacy}>Camera starts only when you tap Compare. Photos are not saved.</p>
         </div>
       </section>
 
@@ -198,38 +207,25 @@ function SaveForLaterDialog({
   );
 }
 
-function ShelfPreview({ state }: { state: "teaser" | "ready" | "result" }) {
-  const annotated = state === "teaser" || state === "result";
-  const result = state === "result";
+function ShelfPreview({ products, onDetails }: { products: OnboardingProduct[]; onDetails: () => void }) {
   return (
-    <figure className={`${styles.preview} ${annotated ? styles.previewAnnotated : ""} ${result ? styles.previewRevealed : ""}`} data-testid="onboarding-preview">
+    <figure className={`${styles.preview} ${styles.comparisonPreview}`} data-testid="onboarding-preview">
       <div className={styles.previewImage}>
-        <Image
-          src="/samples/latvia-shelf.jpg"
-          alt="Protein bars on a shop shelf. After scanning, four products are outlined and ranked using confirmed sugar and protein data."
-          fill
-          priority
-          sizes="(max-width: 460px) calc(100vw - 40px), 420px"
-        />
-        <div className={styles.scanLine} data-testid="onboarding-scan-line" aria-hidden="true" />
-        {[1, 26, 51, 76].map((left, index) => (
-          <span key={left} className={styles.productBox} style={{ left: `${left}%` }} aria-hidden="true">
-            {result && index === 0 ? <span className={styles.fitBadge}>Great fit</span> : null}
-          </span>
-        ))}
+        <Image src="/samples/latvia-shelf.jpg" alt="Sample shelf with the four protein bars compared below, from left to right."
+          fill priority sizes="(max-width: 460px) calc(100vw - 40px), 420px" />
       </div>
-      <figcaption className={styles.previewResult} aria-live="polite">
-        {result ? (
-          <div className={styles.sampleRanking}>
-            <span className={styles.rankNumber}>1</span>
-            <span><strong>BAREBELLS Salty Peanut</strong><small>Sugar 2.3 g · Protein 36 g / 100 g</small></span>
-          </div>
-        ) : state === "teaser" ? (
-          <><span><strong>4 products found</strong><small>Compare a sample shelf in one tap</small></span><ScanLine aria-hidden="true" size={22} /></>
-        ) : (
-          <><span><strong>Ready to scan</strong><small>Tap once to compare all four products</small></span><ScanLine aria-hidden="true" size={22} /></>
-        )}
+      <figcaption className={styles.comparisonCaption}>
+        <strong>Example · all 4 products</strong>
+        <span>Grams per 100 g · compare like for like</span>
       </figcaption>
+      <table className={styles.comparisonTable} aria-label="Sample sugar and protein comparison">
+        <thead><tr><th scope="col">Product</th><th scope="col">Sugar</th><th scope="col">Protein</th></tr></thead>
+        <tbody>{products.map((product) => <tr key={product.id}>
+          <th scope="row">{product.name}</th><td>{product.sugar ?? "—"}</td><td>{product.protein ?? "—"}</td>
+        </tr>)}</tbody>
+      </table>
+      <p className={styles.comparisonHint}>Less sugar or more protein? You choose.</p>
+      <button type="button" className={styles.sampleDetails} onClick={onDetails}>Explore sample details</button>
     </figure>
   );
 }

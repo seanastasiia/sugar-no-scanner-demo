@@ -2,6 +2,10 @@
 
 This file tracks open limitations and only recent resolved regressions. Older history remains recoverable in Git.
 
+- **Open: September 24's single real-scan start has no measured result.** Aggregate Amplitude evidence does not establish whether this was an error, abandonment or QA. Production Supabase/Railway sessions currently require login; no historical server failure has been confirmed. Read-only timeline query: `scripts/analytics/incomplete-scan-timeline.sql`. Physical Instagram/Facebook browser reproduction is still pending.
+- **Fixed in unpublished v11 candidate: missing scan-preparation diagnostics.** Non-permission camera failures and upload preparation/size failures were absent from analytics. Bounded categories now identify these failures; acquired camera tracks are released on startup errors and stale errors are ignored. This is not a claimed fix for the unknown September 24 incident.
+- **Fixed in unpublished v11 candidate: ambiguous onboarding denominator.** Count the mounted first screen (`onboarding_step_viewed`, step 1), not all app opens. Explicit QA and first-entry campaign labels support the ordered read-only funnel; older unlabelled traffic stays uncertain.
+
 ## Open
 
 - **2026-09-21: paid visitors rarely choose an onboarding action.** In a read-only production Supabase check, 336 distinct sessions carrying `shelf_lv_pilot_02` attribution had 332 onboarding starts but only 11 path selections. These are not a strict Meta click-to-action rate because attribution persists in browser storage and includes repeat or QA visits. Version 10 clarifies the away-from-shop choice and makes Save more visible; whether it improves real scans remains open and must be measured separately from sample views.

@@ -35,6 +35,7 @@ function latencyBucket(latencyMs: number): string {
 function safeErrorCategory(value: unknown): string | undefined {
   const message = boundedString(value)?.toLowerCase();
   if (!message) return undefined;
+  if (["camera_denied", "camera_not_found", "camera_busy", "camera_start_failed", "upload_too_large", "upload_decode_failed"].includes(message)) return message;
   if (message === "rate_limited") return "rate_limited";
   if (message === "upload_multi_pass_failed") return "upload_multi_pass_failed";
   if (/^recognition returned [45]\d\d$/.test(message)) return "recognition_http_error";
@@ -48,6 +49,8 @@ export function amplitudeEventProperties(event: AmplitudeEvent): AnalyticsMetada
     environment: process.env.AMPLITUDE_ENVIRONMENT?.trim() || "unknown"
   };
 
+  properties.traffic_type = metadata.trafficType === "qa" ? "qa" : "unmarked";
+  if (typeof metadata.entryCampaign === "string") properties.entry_campaign = boundedString(metadata.entryCampaign) || "none";
   const onboardingVersion = finiteNumber(metadata.onboardingVersion);
   const step = finiteNumber(metadata.step);
   const recognizedCount = finiteNumber(metadata.count);

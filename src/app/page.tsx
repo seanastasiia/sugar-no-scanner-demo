@@ -1,5 +1,6 @@
 import { MetaConsent } from "@/components/meta-consent";
 import { PwaRegistration } from "@/components/pwa-registration";
+import { onboardingComparison } from "@/server/onboarding-comparison";
 import { ScannerApp } from "@/components/scanner-app";
 
 // Scanner releases and environment flags must be read from the current deployment.
@@ -10,7 +11,7 @@ export default function HomePage() {
   return (
     <>
       <PwaRegistration />
-      <ScannerApp
+      <ScannerApp sampleComparison={onboardingComparison()}
         personalRankAvailable={process.env.PERSONAL_SHELF_RANK_ENABLED !== "false" && process.env.PERSONAL_SHELF_RANK_ENTRY_ENABLED !== "false"}
         paywallEnabled={process.env.WTP_PAYWALL_ENABLED === "true"}
       />

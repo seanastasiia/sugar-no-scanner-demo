@@ -35,6 +35,7 @@ const eventSchema = z.object({
     "retailer_link_clicked",
     "permission_denied",
     "recognition_failed",
+    "scan_preparation_failed",
     "paywall_viewed",
     "checkout_started",
     "checkout_completed",
