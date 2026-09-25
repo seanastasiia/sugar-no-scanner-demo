@@ -1,13 +1,16 @@
 -- Read-only. Change report_day to a literal DATE to reproduce a past Riga day.
+-- Set onboarding_version to '11' for the new variant, '10' for baseline, or NULL for all.
 -- Anonymous tab visits, not people. Same-day ordered funnel; no cross-midnight window.
 -- Missing historical QA labels remain unknown. Never reinterpret them as verified people.
 with params as (
-  select (current_timestamp at time zone 'Europe/Riga')::date - 1 as report_day
+  select (current_timestamp at time zone 'Europe/Riga')::date - 1 as report_day,
+    null::text as onboarding_version
 ), events as (
   select e.*, coalesce(nullif(metadata->>'browserSessionId', ''), session_id::text) as visit_id
   from public.scan_events e, params p
   where created_at >= p.report_day::timestamp at time zone 'Europe/Riga'
     and created_at < (p.report_day + 1)::timestamp at time zone 'Europe/Riga'
+    and (p.onboarding_version is null or metadata->>'onboardingVersion'=p.onboarding_version)
 ), eligible as (
   select * from events e where not exists (
     select 1 from events q where q.visit_id=e.visit_id

@@ -1,6 +1,6 @@
-# Shelf Scanner v11 candidate — 25 September 2026
+# Shelf Scanner v11 activation test — 25 September 2026
 
-Unpublished branch `codex/scanner-first-value-v11`, based on production/main `ab5d31f`.
+Owner approved publishing the ranked v11 variant on 25 September 2026. Prepared on `codex/scanner-first-value-v11`, based on production/main `ab5d31f`; record deployment verification separately.
 
 ## What this tests
 
@@ -18,7 +18,7 @@ English headline: **One shelf photo. Compare sugar and protein.**
 
 Landing CTA: **Compare my products — free**.
 
-Candidate destination after approval: the existing Scanner root with `utm_source=meta&utm_medium=paid_social&utm_campaign=shelf_lv_pilot_02&utm_content=compare_v11_en`. Do not send paid traffic to a local preview. Keep existing campaign, budget and ads unchanged until a launch decision; Static B remains off.
+Candidate destination after approval: the existing Scanner root with `utm_source=meta&utm_medium=paid_social&utm_campaign=shelf_lv_pilot_02&utm_content=compare_v11_en`. Do not send paid traffic to a local preview. Owner approved extending the existing campaign on 25 September: lifetime cap €150 (an additional €30), ending 28 September 2026 at 23:59 Europe/Riga. Keep the audience and three active creatives unchanged; Static B remains off. Verify the schedule and budget after applying them.
 
 Latvian hypothesis, **not implemented or published**: “Nofotografē plauktu. Salīdzini cukura un olbaltumvielu daudzumu produktos.” CTA: “Salīdzināt manus produktus — bez maksas”. Validate with a native speaker before creating a matched Latvian ad/landing pair. Test language separately from the new English entry screen; don't send a Latvian promise to an English variant and call that a language test.
 
@@ -43,4 +43,19 @@ Code inspection confirmed an independent measurement gap: no-match responses dis
 
 ## Release gate
 
-Review candidate and test evidence first. Production requires the explicit `ПУБЛИКУЙ` approval specified in the shared workspace AGENTS.md. Then merge/push main, deploy via Railway, wait for success, and compare `/api/health` commit with GitHub before production smoke. Do not call this candidate deployed or the incident resolved beforehand.
+The owner explicitly approved publication in the current conversation on 25 September: “Да, так супер, давай запаблишим и запустим в тесты, сравним, как такой вариант работает.” This authorizes this reviewed ranked v11 release. Future production releases still require explicit approval. Then merge/push main, deploy via Railway, wait for success, and compare `/api/health` commit with GitHub before production smoke. Do not call this candidate deployed or the incident resolved beforehand.
+
+
+## Before/after comparison
+
+This is a sequential before/after test, not a randomized A/B experiment. Keep creative/audience changes separate. Primary metric: unique campaign tab visits with a completed real camera/upload scan divided by campaign app-opening visits; also show mounted first-screen → camera choice → start → same-scan result. Report counts and denominators beside percentages. Never include sample results or explicit QA in success.
+
+Use daily SQL with `onboarding_version='11'` for the new variant, `'10'` for the previous one. Treat launch day as partial and separate the two versions. v11 entry-campaign measurement is stricter than v10's persistent UTM, so comparison retains attribution uncertainty. No significant-lift claim from a few visits or a zero baseline; no evidence of success without real completions. Track `scan_preparation_failed`, `recognition_failed` and `scan_no_match` independently to distinguish failure modes. If paid traffic ends or budget is exhausted, report insufficient traffic; do not treat no traffic as poor conversion or increase spend without an agreed cap.
+
+
+## Pre-release verification — 25 September 2026
+
+- Runtime tested at `5cbfeb0cee5171c80ae05df8096e02464e6981cc` (tree `2e33881699f084a30778a62a7ec2bc446055bd37`): `npm run verify` passed, 104 Vitest files / 842 tests, TypeScript, catalog validation, production build and standalone preparation. No lint errors; one existing unnecessary-dependency warning for `shelfResearchEnabled`. Local log: `/tmp/scanner-v11-release-verify.log`.
+- `CI=1 WTP_PAYWALL_ENABLED=true E2E_PORT=3101 npm run test:e2e -- --workers=1`: 72 passed, 12 feature-gated skipped. Local log: `/tmp/scanner-v11-release-e2e.log`.
+- The subsequent changes are documentation plus optional read-only SQL version filtering and its fixture assertions. `npm test -- src/server/scanner-funnel-sql.test.ts` passed (1 test); `git diff --check` passed. Local log: `/tmp/scanner-v11-version-sql.log`.
+- Production deployment and real-device embedded-browser validation are separate from these local checks. The dated shared release record must record the deployed GitHub main SHA, health response, production smoke, event verification and remaining limitations.
