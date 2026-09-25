@@ -208,23 +208,30 @@ function SaveForLaterDialog({
 }
 
 function ShelfPreview({ products, onDetails }: { products: OnboardingProduct[]; onDetails: () => void }) {
+  const leader = products.find((product) => product.rank === 1);
   return (
     <figure className={`${styles.preview} ${styles.comparisonPreview}`} data-testid="onboarding-preview">
-      <div className={styles.previewImage}>
-        <Image src="/samples/latvia-shelf.jpg" alt="Sample shelf with the four protein bars compared below, from left to right."
-          fill priority sizes="(max-width: 460px) calc(100vw - 40px), 420px" />
-      </div>
+      {leader ? <div className={styles.rankedHero}>
+        <div className={styles.heroCopy}>
+          <span className={styles.winnerLabel}>#1 IN THIS COMPARISON</span>
+          <strong>{leader.name}</strong>
+          <span className={styles.heroScore}>{leader.score}<small>/100</small></span>
+          <span className={styles.heroBasis}>Sugar + Protein Fit</span>
+        </div>
+        {leader.imageUrl ? <Image className={styles.winnerPack} src={leader.imageUrl} alt={`${leader.name} package`} width={180} height={180} priority /> : null}
+      </div> : null}
       <figcaption className={styles.comparisonCaption}>
-        <strong>Example · all 4 products</strong>
-        <span>Grams per 100 g · compare like for like</span>
+        <strong>Four products. Your ranking.</strong>
+        <span>Sugar + Protein Fit · nutrients per 100 g</span>
       </figcaption>
       <table className={styles.comparisonTable} aria-label="Sample sugar and protein comparison">
         <thead><tr><th scope="col">Product</th><th scope="col">Sugar</th><th scope="col">Protein</th></tr></thead>
-        <tbody>{products.map((product) => <tr key={product.id}>
-          <th scope="row">{product.name}</th><td>{product.sugar ?? "—"}</td><td>{product.protein ?? "—"}</td>
+        <tbody>{products.map((product) => <tr key={product.id} className={product.rank === 1 ? styles.winnerRow : undefined}>
+          <th scope="row"><span className={styles.rankedName}><span className={`${styles.placeBadge} ${product.rank === 1 ? styles.firstPlace : product.rank === 2 ? styles.secondPlace : product.rank === 3 ? styles.thirdPlace : ''}`} aria-label={product.rank ? `Rank ${product.rank}` : 'Unranked'}>{product.rank ?? '—'}</span><span>{product.name}</span></span></th>
+          <td>{product.sugar ?? "—"}</td><td>{product.protein ?? "—"}</td>
         </tr>)}</tbody>
       </table>
-      <p className={styles.comparisonHint}>Less sugar or more protein? You choose.</p>
+      <p className={styles.comparisonHint}>Higher fit = more protein, less sugar.</p>
       <button type="button" className={styles.sampleDetails} onClick={onDetails}>Explore sample details</button>
     </figure>
   );

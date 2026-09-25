@@ -761,10 +761,16 @@ test("first visit shows a useful result before offering the full sample or camer
   await expectOfficialSugarNoLogo(page);
   await expect(page.getByText("See the differences before you choose. Here’s a four-bar example.")).toBeVisible();
   await expect(page.getByTestId("onboarding-preview")).toBeVisible();
-  await expect(page.getByAltText("Sample shelf with the four protein bars compared below, from left to right.")).toBeVisible();
-  await expect(page.getByText("Barebells Salty Peanut")).toBeVisible();
+  await expect(page.getByAltText("Barebells Salty Peanut package")).toBeVisible();
+  await expect(page.getByRole("row", { name: /Barebells Salty Peanut/ })).toBeVisible();
   await expect(page.getByRole("table", { name: "Sample sugar and protein comparison" }).getByRole("row")).toHaveCount(5);
   await expect(page.getByRole("row", { name: /Barebells Salty Peanut/i })).toContainText("2.3");
+  const comparisonRows = page.getByRole("table", { name: "Sample sugar and protein comparison" }).getByRole("row");
+  await expect(comparisonRows.nth(1)).toContainText("Barebells Salty Peanut");
+  await expect(comparisonRows.nth(2)).toContainText("ICONFIT Cookie Bliss");
+  await expect(comparisonRows.nth(3)).toContainText("Barebells Coco Choco");
+  await expect(comparisonRows.nth(4)).toContainText("Barebells Lemon Cheesecake");
+  for (let rank = 1; rank <= 4; rank++) await expect(comparisonRows.nth(rank).getByLabel(`Rank ${rank}`, { exact: true })).toBeVisible();
   await expect(page.getByText("3 successful scans free", { exact: false })).toBeVisible();
   await expect(page.getByText("then €2.99 once for 7 days", { exact: false })).toBeVisible();
   const sampleBox = await page.getByRole("button", { name: "Explore sample details" }).boundingBox();

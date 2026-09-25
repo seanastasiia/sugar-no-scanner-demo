@@ -8,6 +8,8 @@ This file tracks open limitations and only recent resolved regressions. Older hi
 
 - **Fixed in unpublished v11 candidate: unmeasured no-match outcome.** `not_sure` displayed a recovery prompt without an outcome event. `scan_no_match` now records that outcome separately from success and technical failure, with a request ID retained only in internal Supabase metadata.
 
+- **Fixed in unpublished v11 candidate: comparison required reading every nutrient value.** Visible places and a leader card use the existing catalog Fit scores. Equal scores share a place, and unknown scores remain unranked.
+
 ## Open
 
 - **2026-09-21: paid visitors rarely choose an onboarding action.** In a read-only production Supabase check, 336 distinct sessions carrying `shelf_lv_pilot_02` attribution had 332 onboarding starts but only 11 path selections. These are not a strict Meta click-to-action rate because attribution persists in browser storage and includes repeat or QA visits. Version 10 clarifies the away-from-shop choice and makes Save more visible; whether it improves real scans remains open and must be measured separately from sample views.

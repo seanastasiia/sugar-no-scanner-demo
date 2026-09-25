@@ -10,7 +10,7 @@ The comparison values come from the deterministic sample's catalog records, pass
 
 ## Proposed ad pair — drafts only
 
-Use the existing `/samples/latvia-shelf.jpg` photo of the same four bars, in the same left-to-right order. Show the same sugar/protein values and the per-100-g unit. Do not suggest the scanner reads nutrients directly from an unreadable shelf label. Do not promise every product will be recognized.
+Match the candidate's ranked comparison: Salty Peanut first, ICONFIT Cookie Bliss second, Coco Choco third, Lemon Cheesecake fourth according to their existing Sugar + Protein Fit scores. Use catalog packshots and the same sugar/protein values and per-100-g unit. The first screen now uses the leader's catalog packshot rather than the shelf photograph; any future ad must match the final approved visual. Do not suggest the scanner reads nutrients directly from an unreadable shelf label. Do not promise every product will be recognized.
 
 English primary text: **Photograph a shelf. Compare sugar and protein across the products we can identify. Try 3 successful scans free.**
 
@@ -36,7 +36,7 @@ Code inspection confirmed an independent measurement gap: no-match responses dis
 
 ## Owner product checks
 
-1. Candidate preview: inspect 4 products, sugar/protein units and the dominant free-compare button. Check the full sample details and clean-link save flow.
+1. Candidate preview: inspect places 1–4, the leading package/score, sugar/protein units and the dominant free-compare button. Places use the existing Sugar + Protein Fit, not Personal Shelf Rank; ties share a place. Check the full sample details and clean-link save flow.
 2. After an approved HTTPS deployment, open `/?onboarding=1&qa=1` from **both Instagram and Facebook on a real phone**. Tap Compare → allow camera → point at a shelf → wait for recognition → open a result. Repeat using a saved JPEG. Record approximate Riga time, app/OS and outcome, without private images.
 3. Also try a view with no visible packages: expect a retry prompt, `scan_no_match`, no `scan_completed` and no free-success allowance consumed. Deny camera, then try saved photo. If the in-app browser blocks camera, open the same page in Safari/Chrome and repeat. A Mobile Safari emulator does not validate these native embedded browsers.
 4. Reopen the completed visit: onboarding should be skipped; forcing it displays the comparison again. Verify QA events remain labelled and no sample appears as a real scan.

@@ -6,6 +6,8 @@ Mobile-first Latvia proof of concept for identifying packaged groceries from a l
 - Repository: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
 - Status: public investor concept with same-origin API safeguards, not a medical device or production-wide grocery catalog.
 
+The unpublished v11 comparison now shows explicit places derived from the existing Sugar + Protein Fit score, with ties sharing a place. A catalog packshot and score highlight the leading product; the list is ordered best fit first. This is a ranking among the four example products, not a general health claim or the separate Personal Shelf score. Recognition and nutrient calculations are unchanged.
+
 ## Selling onboarding and paid launch
 
 On 9 September 2026 the owner approved onboarding version 7 and the willingness-to-pay experiment for the existing Railway production service. On 17 September, after the ad funnel showed that too few first-time visitors reached a scan, the owner approved publishing version 8 to production with `ПУБЛИКУЙ`. On 18 September the owner approved and published the English-only version 9 sample-first entry screen.
