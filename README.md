@@ -28,6 +28,8 @@ The visual language comes from the Sugar.no Figma paywall and shared design syst
 
 The v12 first screen uses the official Sugar.no wordmark and begins directly with `One photo. Compare sugar and protein.`; the redundant `Sugar.no Shelf Scanner` eyebrow is intentionally omitted.
 
+Onboarding v13 is the owner-approved short-copy release: `Compare sugar and protein.`, a concise home/shop context, one example caption and compact offer/privacy text. It preserves the four ranked products, Sugar + Protein Fit score, sample and save actions. Its events use version `13`; verify the deployed commit via `/api/health`. Acceptance on local commit `1c5fb36`: touched-file lint and typecheck passed, and six Mobile Safari scenarios passed across seven layout sizes.
+
 The original launch plan is recorded in [`docs/launch-selling-onboarding.md`](docs/launch-selling-onboarding.md). Version 9 implementation and production evidence are recorded in [`docs/test-runs/2026-09-18-onboarding-v9-sample-first.md`](docs/test-runs/2026-09-18-onboarding-v9-sample-first.md); version 8 recovery evidence remains in [`docs/test-runs/2026-09-17-gemini-recovery-onboarding-v8.md`](docs/test-runs/2026-09-17-gemini-recovery-onboarding-v8.md).
 
 ## Approved Pen release

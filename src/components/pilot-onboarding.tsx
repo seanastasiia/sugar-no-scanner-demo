@@ -65,8 +65,8 @@ export function PilotOnboarding({
 
       <section className={`${styles.screen} ${styles.firstScreen}`}>
         <div className={styles.copyBlock}>
-          <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>One photo. Compare sugar and protein.</h1>
-          <p>Packaged products from your fridge, table or a shop. Keep the names visible.</p>
+          <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>Compare sugar and protein.</h1>
+          <p>Packaged products. At home or in a shop.</p>
         </div>
         <ShelfPreview products={products} onDetails={() => {
           onPathSelected("at_home");
@@ -77,15 +77,15 @@ export function PilotOnboarding({
           <button className={styles.primary} type="button" onClick={() => {
             onPathSelected("in_store");
             onComplete();
-          }}><ScanLine aria-hidden="true" size={20} />Compare my products — free<ArrowRight aria-hidden="true" size={18} /></button>
+          }}><ScanLine aria-hidden="true" size={20} />Compare my products<ArrowRight aria-hidden="true" size={18} /></button>
+          <p className={styles.offerSummary}>3 successful scans free. Then €2.99 for 7 days, no subscription.</p>
           {!standalone ? (
             <button ref={saveTriggerRef} className={styles.textButton} type="button" onClick={() => {
               onPathSelected("at_home");
               openSave();
             }}><Bookmark aria-hidden="true" size={18} />Save for later</button>
           ) : null}
-          <p className={styles.offerSummary}><strong>3 successful scans free</strong> · then €2.99 once for 7 days · no subscription.</p>
-          <p className={styles.privacy}>Camera starts only when you tap Compare. Photos are not saved.</p>
+          <p className={styles.privacy}>Photos are not saved.</p>
         </div>
       </section>
 
@@ -213,7 +213,7 @@ function ShelfPreview({ products, onDetails }: { products: OnboardingProduct[]; 
     <figure className={`${styles.preview} ${styles.comparisonPreview}`} data-testid="onboarding-preview">
       {leader ? <div className={styles.rankedHero}>
         <div className={styles.heroCopy}>
-          <span className={styles.winnerLabel}>#1 IN THIS COMPARISON</span>
+          <span className={styles.winnerLabel}>#1 in this example</span>
           <strong>{leader.name}</strong>
           <span className={styles.heroScore}>{leader.score}<small>/100</small></span>
           <span className={styles.heroBasis}>Sugar + Protein Fit</span>
@@ -221,8 +221,7 @@ function ShelfPreview({ products, onDetails }: { products: OnboardingProduct[]; 
         {leader.imageUrl ? <Image className={styles.winnerPack} src={leader.imageUrl} alt={`${leader.name} package`} width={180} height={180} priority /> : null}
       </div> : null}
       <figcaption className={styles.comparisonCaption}>
-        <strong>Four products. Your ranking.</strong>
-        <span>Sugar + Protein Fit · nutrients per 100 g</span>
+        <strong>Example · per 100 g</strong>
       </figcaption>
       <table className={styles.comparisonTable} aria-label="Sample sugar and protein comparison">
         <thead><tr><th scope="col">Product</th><th scope="col">Sugar</th><th scope="col">Protein</th></tr></thead>
@@ -231,8 +230,7 @@ function ShelfPreview({ products, onDetails }: { products: OnboardingProduct[]; 
           <td>{product.sugar ?? "—"}</td><td>{product.protein ?? "—"}</td>
         </tr>)}</tbody>
       </table>
-      <p className={styles.comparisonHint}>Higher fit = more protein, less sugar.</p>
-      <button type="button" className={styles.sampleDetails} onClick={onDetails}>Explore sample details</button>
+      <button type="button" className={styles.sampleDetails} onClick={onDetails}>View example</button>
     </figure>
   );
 }
