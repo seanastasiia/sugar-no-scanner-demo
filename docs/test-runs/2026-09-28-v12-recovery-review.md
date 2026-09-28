@@ -1,6 +1,6 @@
 # v12 packaged-product and recovery review — 28 September 2026
 
-Status: review candidate, not published. Production remains v11. Tested implementation commit: `5a47882d008e6744c7249016cd52e9219042f39f`, based on `b6d0a2b46439cba38e62ffc7a15818887b4d7e20`.
+Status: owner explicitly approved production publication on 28 September. Deployment and live health must be verified separately. Tested implementation commit: `5a47882d008e6744c7249016cd52e9219042f39f`, based on `b6d0a2b46439cba38e62ffc7a15818887b4d7e20`.
 
 ## Behavior
 
@@ -31,3 +31,10 @@ Local logs are retained under `test-results/2026-09-28-recovery/` (ignored). An 
 3. Photograph packaged products with visible names. If no match is found, follow the guidance and select a clearer image; verify a genuine result appears without spending an allowance on the failed attempt.
 
 Physical iPhone Instagram/Facebook checks and real-provider recognition of new fridge photographs are not established by these deterministic browser tests. No conversion improvement is claimed. Full production deployment verification must follow separate owner publication approval.
+
+## Publication acceptance
+
+- Owner explicitly said `ПУБЛИКУЙ` after reviewing this batch.
+- Full release browser suite: `CI=1 WTP_PAYWALL_ENABLED=true E2E_PORT=3114 npm run test:e2e -- --workers=2`: **77 passed, 12 feature-gated skipped (2.3 minutes)**. Local log `/tmp/scanner-v12-release-e2e-final.log`. Runtime code is identical to tested `5a47882`; subsequent edits only update release documentation.
+- Earlier attempts were stopped because production Secure cookies do not work for the local HTTP WebKit harness, and a separate invocation omitted the existing paywall test flag. The final run used the documented development-server test configuration with the paywall enabled. Neither required a product change.
+- Publication smoke must verify exact GitHub main SHA, session/auth boundary, deterministic sample recognition, first-screen copy, direct saved-photo recovery and a real uploaded image. Physical embedded-browser checks remain an owner acceptance step.
