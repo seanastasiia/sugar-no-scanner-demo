@@ -65,8 +65,8 @@ export function PilotOnboarding({
 
       <section className={`${styles.screen} ${styles.firstScreen}`}>
         <div className={styles.copyBlock}>
-          <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>One shelf photo. Compare sugar and protein.</h1>
-          <p>See the differences before you choose. Here’s a four-bar example.</p>
+          <h1 id="selling-onboarding-title" ref={headingRef} tabIndex={-1}>One photo. Compare sugar and protein.</h1>
+          <p>Packaged products from your fridge, table or a shop. Keep the names visible.</p>
         </div>
         <ShelfPreview products={products} onDetails={() => {
           onPathSelected("at_home");
@@ -82,7 +82,7 @@ export function PilotOnboarding({
             <button ref={saveTriggerRef} className={styles.textButton} type="button" onClick={() => {
               onPathSelected("at_home");
               openSave();
-            }}><Bookmark aria-hidden="true" size={18} />Save for my next shop</button>
+            }}><Bookmark aria-hidden="true" size={18} />Save for later</button>
           ) : null}
           <p className={styles.offerSummary}><strong>3 successful scans free</strong> · then €2.99 once for 7 days · no subscription.</p>
           <p className={styles.privacy}>Camera starts only when you tap Compare. Photos are not saved.</p>

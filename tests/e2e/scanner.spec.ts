@@ -719,7 +719,7 @@ test("first live recognition waits for camera positioning before capturing", asy
   });
   expect(initialDelay).toBeGreaterThanOrEqual(1_450);
 
-  const retryButton = page.getByRole("button", { name: "Not sure — try again", exact: true });
+  const retryButton = page.getByRole("button", { name: "Retake photo", exact: true });
   await expect(retryButton).toBeVisible();
   await page.evaluate(() => {
     (window as Window & { __cameraRetryAt?: number }).__cameraRetryAt = performance.now();
@@ -756,10 +756,10 @@ test("first visit shows a useful result before offering the full sample or camer
   });
   await page.goto("/");
   await expect(page.getByLabel("Demo access code")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "One shelf photo. Compare sugar and protein." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "One photo. Compare sugar and protein." })).toBeVisible();
   await expect(page.getByText("Sugar.no Shelf Scanner", { exact: true })).toHaveCount(0);
   await expectOfficialSugarNoLogo(page);
-  await expect(page.getByText("See the differences before you choose. Here’s a four-bar example.")).toBeVisible();
+  await expect(page.getByText("Packaged products from your fridge, table or a shop. Keep the names visible.")).toBeVisible();
   await expect(page.getByTestId("onboarding-preview")).toBeVisible();
   await expect(page.getByAltText("Barebells Salty Peanut package")).toBeVisible();
   await expect(page.getByRole("row", { name: /Barebells Salty Peanut/ })).toBeVisible();
@@ -774,7 +774,7 @@ test("first visit shows a useful result before offering the full sample or camer
   await expect(page.getByText("3 successful scans free", { exact: false })).toBeVisible();
   await expect(page.getByText("then €2.99 once for 7 days", { exact: false })).toBeVisible();
   const sampleBox = await page.getByRole("button", { name: "Explore sample details" }).boundingBox();
-  const saveBox = await page.getByRole("button", { name: "Save for my next shop" }).boundingBox();
+  const saveBox = await page.getByRole("button", { name: "Save for later" }).boundingBox();
   const openCameraBox = await page.getByRole("button", { name: "Compare my products — free" }).boundingBox();
   const viewportHeight = await page.evaluate(() => window.innerHeight);
   expect(sampleBox?.y).toBeGreaterThan(0);
@@ -845,10 +845,10 @@ test("completed onboarding stays hidden unless QA forces it", async ({ page }) =
     });
   });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "One shelf photo. Compare sugar and protein." })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "One photo. Compare sugar and protein." })).toHaveCount(0);
   await expect(page.getByLabel("Live camera scanner")).toBeVisible();
   await page.goto("/?onboarding=1");
-  await expect(page.getByRole("heading", { name: "One shelf photo. Compare sugar and protein." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "One photo. Compare sugar and protein." })).toBeVisible();
 });
 
 test("sample shelf dismisses onboarding without requesting camera permission", async ({ page }) => {
@@ -864,7 +864,7 @@ test("sample shelf dismisses onboarding without requesting camera permission", a
     });
   });
   await page.goto("/?onboarding=1");
-  await expect(page.getByRole("heading", { name: "One shelf photo. Compare sugar and protein." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "One photo. Compare sugar and protein." })).toBeVisible();
   expect(await page.evaluate(() => (window as Window & { __cameraRequests?: number }).__cameraRequests)).toBe(0);
   await openOnboardingSample(page);
   await expect(page.getByLabel("Shelf photo scanner")).toBeVisible();
@@ -917,7 +917,7 @@ test("at-home onboarding can be saved without requesting camera or exposing sess
     });
   });
   await page.goto("/?onboarding=1&utm_source=meta-secret");
-  await page.getByRole("button", { name: "Save for my next shop", exact: true }).click();
+  await page.getByRole("button", { name: "Save for later", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Save it for your next shop", exact: true });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Want one-tap access?")).toBeVisible();
@@ -958,7 +958,7 @@ test("save for later falls back to a clean copied link and restores focus on clo
     });
   });
   await page.goto("/?onboarding=1");
-  const saveButton = page.getByRole("button", { name: "Save for my next shop", exact: true });
+  const saveButton = page.getByRole("button", { name: "Save for later", exact: true });
   await saveButton.click();
   const dialog = page.getByRole("dialog", { name: "Save it for your next shop", exact: true });
   await dialog.getByRole("button", { name: "Copy the link", exact: true }).click();
@@ -1865,14 +1865,65 @@ test("camera permission denial offers a clear retry state", async ({ page }) => 
   });
   await unlock(page);
   await expect(page.getByText("Camera permission is off")).toBeVisible();
+  await expect(page.getByText("Choose saved photo", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Enable camera" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
+});
+
+test("camera permission denial can recover directly through a saved photo", async ({ page }) => {
+  const sources: string[] = [];
+  await page.route("**/api/recognize", async (route) => {
+    const request = route.request().postDataJSON() as { source: string };
+    sources.push(request.source);
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify({
+      requestId: "permission-upload", status: "matched", latencyMs: 1, model: "qa-mock", imageStored: false,
+      detections: [{ productId: "barbora:permission-upload", confidence: .99, box: { x: .1, y: .1, width: .7, height: .7 }, observedText: "Permission recovery", inlineProduct: ratedInlineProduct({ id: "barbora:permission-upload", brand: "Example", name: "Permission recovery", score: 80, protein: 20, sugar: 2 }) }]
+    }) });
+  });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: () => Promise.reject(new DOMException("Denied in test", "NotAllowedError")) }
+    });
+  });
+  await unlock(page);
+  const directUpload = page.locator("label").filter({ hasText: "Choose saved photo" }).locator('input[type="file"]');
+  await directUpload.setInputFiles([]);
+  await expect(page.getByText("Camera permission is off")).toBeVisible();
+  await directUpload.setInputFiles({ name: "permission-recovery.png", mimeType: "image/png", buffer: onePixelPng });
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
+  expect(sources).toEqual(["upload"]);
+});
+
+test("no-match saved photo can be replaced, including with the same file after cancellation", async ({ page }) => {
+  let attempts = 0;
+  await page.route("**/api/recognize", async (route) => {
+    attempts += 1;
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify({
+      requestId: `replace-${attempts}`,
+      status: attempts === 1 ? "not_sure" : "matched",
+      latencyMs: 1,
+      model: "qa-mock",
+      imageStored: false,
+      detections: attempts === 1 ? [] : [{ productId: "barbora:replacement", confidence: .99, box: { x: .1, y: .1, width: .7, height: .7 }, observedText: "Replacement", inlineProduct: ratedInlineProduct({ id: "barbora:replacement", brand: "Example", name: "Replacement", score: 80, protein: 20, sugar: 2 }) }]
+    }) });
+  });
+  await unlock(page);
+  await chooseSavedPhoto(page, "replacement.png");
+  await expect(page.getByRole("status")).toContainText("No matching products found");
+  await expect(page.getByText("clear packaging and visible product names")).toBeVisible();
+  const replacement = page.locator("label").filter({ hasText: "Choose another photo" }).locator('input[type="file"]');
+  await replacement.setInputFiles([]);
+  await expect(page.getByRole("status")).toContainText("No matching products found");
+  await replacement.setInputFiles({ name: "replacement.png", mimeType: "image/png", buffer: onePixelPng });
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
+  expect(attempts).toBe(2);
 });
 
 test("saved images are resized client-side and fail closed without a provider key", async ({ page }) => {
   await unlock(page);
   await chooseSavedPhoto(page, "unknown.png");
-  await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
+  await expect(page.getByRole("status")).toContainText("Recognition couldn’t finish");
   await expect(page.getByRole("dialog", { name: "Products from this scan" })).toHaveCount(0);
   await expect(page.getByLabel("Saved shelf or checkout photo scanner")).toBeVisible();
   await expect(page.getByText("Saved shelf or checkout photo", { exact: true })).toHaveCount(0);
@@ -2488,7 +2539,7 @@ test("a visual-only live result holds the frame but hides the unverified card", 
   expect(focusModes).toEqual([false]);
   await page.waitForTimeout(2_000);
   expect(recognitionRequests).toBe(1);
-  await expect(page.getByRole("button", { name: "Not sure — try again" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Retake photo" })).toBeVisible();
   await expect(page.getByRole("button", { name: "View all", exact: true })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "First Product" })).toHaveCount(0);
   await expect(page.getByText("Nutrition not verified", { exact: true })).toHaveCount(0);
@@ -2516,9 +2567,9 @@ test("provider quota exhaustion is explicit and offers manual recovery", async (
   });
 
   await unlock(page);
-  const retryButton = page.getByRole("button", { name: "Not sure — try again", exact: true });
+  const retryButton = page.getByRole("button", { name: "Retake photo", exact: true });
   await expect(retryButton).toBeVisible({ timeout: 6_000 });
-  await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
+  await expect(page.getByRole("status")).toContainText("Recognition couldn’t finish");
   await expect(page.getByRole("status")).toContainText("Today’s scanning limit has been reached");
   await expectInsideViewport(page, retryButton);
   const showDemoButton = page.getByRole("button", { name: "Show demo" });
@@ -2531,7 +2582,7 @@ test("provider quota exhaustion is explicit and offers manual recovery", async (
     return { backgroundImage: style.backgroundImage, minHeight: style.minHeight };
   });
   expect(retryStyle.minHeight).toBe("56px");
-  expect(retryStyle.backgroundImage).toContain("rgb(10, 132, 255)");
+  expect(retryStyle.backgroundImage).toContain("rgb(26, 26, 26)");
   expect(retryStyle.backgroundImage).not.toContain("rgb(241, 78, 88)");
   await page.screenshot({ path: "test-results/pen-service-unavailable.png" });
   for (const viewport of [{ width: 375, height: 667 }, { width: 667, height: 375 }]) {
@@ -2562,7 +2613,7 @@ test("HTTP 429 pauses automatic recognition and offers manual recovery", async (
   });
 
   await unlock(page);
-  await expect(page.getByRole("button", { name: "Not sure — try again", exact: true })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("button", { name: "Retake photo", exact: true })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("button", { name: "Show demo" })).toBeVisible();
   await page.waitForTimeout(2_500);
   expect(recognitionRequests).toBe(1);
@@ -2989,8 +3040,8 @@ test("saved-photo recovery retries the same prepared image without reopening the
   await expect.poll(() => Boolean(finishFirstRead)).toBe(true);
   await page.screenshot({ path: test.info().outputPath("saved-photo-without-footer.png"), animations: "disabled" });
   finishFirstRead!();
-  await expect(page.getByRole("status")).toContainText("We couldn’t finish this scan");
-  await page.getByRole("button", { name: "Not sure — try again", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Recognition couldn’t finish");
+  await page.getByRole("button", { name: "Try scan again", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
   expect(submittedImages).toHaveLength(2);
   expect(submittedImages[1]).toBe(submittedImages[0]);
@@ -3027,4 +3078,79 @@ test("onboarding exposure and camera failure are measured without counting a res
   await expect.poll(() => events.some(e => e.name === "app_opened")).toBe(true);
   await expect(page.getByRole("table", { name: "Sample sugar and protein comparison" })).toHaveCount(0);
   expect(events.some(e => e.name === "onboarding_step_viewed")).toBe(false);
+});
+
+
+for (const failure of ["NotAllowedError", "NotFoundError"]) {
+  test(`camera recovery ${failure} opens a photo directly and survives cancellation`, async ({ page }) => {
+    const events: Array<{ name: string; source: string }> = [];
+    await page.route("**/api/events", async route => {
+      events.push(route.request().postDataJSON());
+      await route.fulfill({ json: { ok: true } });
+    });
+    await page.addInitScript((name) => {
+      Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: {
+        getUserMedia: () => Promise.reject(new DOMException("Test camera failure", name))
+      } });
+    }, failure);
+    await page.route("**/api/recognize", async route => {
+      expect(route.request().postDataJSON().source).toBe("upload");
+      await route.fulfill({ json: { requestId: "recovery-direct", status: "matched", latencyMs: 1, model: "qa-mock", imageStored: false,
+        detections: [{ productId: "barbora:recovery", confidence: .99, box: { x: .1, y: .1, width: .7, height: .7 },
+          inlineProduct: ratedInlineProduct({ id: "barbora:recovery", brand: "Example", name: "Fridge product", score: 80, protein: 20, sugar: 2 }) }] } });
+    });
+    await page.goto("/?onboarding=1&qa=1");
+    await page.getByRole("button", { name: "Compare my products — free", exact: true }).click();
+    const choose = page.locator("label").filter({ hasText: "Choose saved photo" });
+    await expect(choose).toBeVisible();
+    await expectInsideViewport(page, choose);
+    const cancelled = page.waitForEvent("filechooser");
+    await choose.click();
+    await (await cancelled).setFiles([]);
+    await expect(choose).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "See how it works" })).toHaveCount(0);
+    const selection = page.waitForEvent("filechooser");
+    await choose.click();
+    await (await selection).setFiles({ name: "fridge.png", mimeType: "image/png", buffer: onePixelPng });
+    await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
+    await expect.poll(() => events.some(e => e.name === "scan_completed" && e.source === "upload")).toBe(true);
+    expect(events.some(e => e.name === "scan_completed" && e.source.startsWith("sample"))).toBe(false);
+    expect(events.some(e => e.name === "camera_permission_granted")).toBe(false);
+    await page.screenshot({ path: test.info().outputPath("direct-upload-result.png"), animations: "disabled" });
+  });
+}
+
+test("no-match recovery can select the same photo again and only success uses a free scan", async ({ page }) => {
+  let attempts = 0;
+  const events: Array<{ name: string; source: string }> = [];
+  await page.route("**/api/events", async route => {
+    events.push(route.request().postDataJSON());
+    await route.fulfill({ json: { ok: true } });
+  });
+  await page.route("**/api/recognize", async route => {
+    attempts++;
+    expect(route.request().postDataJSON().source).toBe("upload");
+    await route.fulfill({ json: { requestId: `replace-${attempts}`, status: attempts === 1 ? "not_sure" : "matched", latencyMs: 1, model: "qa-mock", imageStored: false,
+      detections: attempts === 1 ? [] : [{ productId: "barbora:recovery", confidence: .99, box: { x: .1, y: .1, width: .7, height: .7 },
+        inlineProduct: ratedInlineProduct({ id: "barbora:recovery", brand: "Example", name: "Fridge product", score: 80, protein: 20, sugar: 2 }) }] } });
+  });
+  await unlock(page);
+  await chooseSavedPhoto(page, "same.png");
+  await expect(page.getByRole("status")).toContainText("No matching products found");
+  await expect(page.getByRole("status")).toContainText("clear packaging and visible product names");
+  if (process.env.WTP_PAYWALL_ENABLED === "true") {
+    expect(await page.evaluate(() => Number(localStorage.getItem("sugar_scanner_free_scans_v1") || 0))).toBe(0);
+  }
+  const choose = page.locator("label").filter({ hasText: "Choose another photo" });
+  await expectInsideViewport(page, choose);
+  await page.screenshot({ path: test.info().outputPath("no-match-recovery.png"), animations: "disabled" });
+  const selection = page.waitForEvent("filechooser");
+  await choose.click();
+  await (await selection).setFiles({ name: "same.png", mimeType: "image/png", buffer: onePixelPng });
+  await expect(page.getByRole("status")).toContainText("1 product · 1 with Sugar.no fit");
+  expect(attempts).toBe(2);
+  await expect.poll(() => events.some(e => e.name === "scan_no_match" && e.source === "upload")).toBe(true);
+  if (process.env.WTP_PAYWALL_ENABLED === "true") {
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("sugar_scanner_free_scans_v1"))).toBe("1");
+  }
 });

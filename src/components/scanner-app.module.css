@@ -260,6 +260,23 @@
   cursor: pointer;
   text-decoration: none;
 }
+.primaryButton:has(input[type="file"]),
+.secondaryButton:has(input[type="file"]) {
+  position: relative;
+}
+.primaryButton input[type="file"],
+.secondaryButton input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.primaryButton:has(input[type="file"]:focus-visible),
+.secondaryButton:has(input[type="file"]:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
 .header {
   position: fixed;
   z-index: 40;
@@ -1951,6 +1968,10 @@
   flex: none;
   gap: 8px;
   width: min(100%, 354px);
+}
+.recoveryActions > button,
+.recoveryActions > label {
+  min-height: 56px;
 }
 @media (max-height: 700px) and (orientation: portrait) {
   .onboardingPreviewImage {
