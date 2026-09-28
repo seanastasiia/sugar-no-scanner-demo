@@ -152,7 +152,7 @@ const CAMERA_FORCE_CAPTURE_MS = 1_250;
 const CAMERA_MIN_EDGE_SCORE = 4.1;
 const CAMERA_SAMPLE_WIDTH = 96;
 const CAMERA_SAMPLE_HEIGHT = 72;
-const ONBOARDING_VERSION = 11;
+const ONBOARDING_VERSION = 12;
 
 interface NativeBarcodeDetector {
   detect(source: ImageBitmapSource): Promise<Array<{ rawValue?: string }>>;
@@ -569,10 +569,10 @@ export function ScannerApp({
           trackingActiveRef.current = true;
           setResultLocked(true);
           setRecognitionState("not_sure");
-          setStatusMessage("Not sure — scan a new view to try again");
+          setStatusMessage("No matching packaged products found in this photo.");
         } else {
           setRecognitionState("not_sure");
-          setStatusMessage("Not sure — use a clearer package photo");
+          setStatusMessage("No matching packaged products found in this photo.");
         }
         setDetections([]);
         setTray([]);
@@ -682,7 +682,7 @@ export function ScannerApp({
         pauseRecognitionLoop();
         setResultLocked(false);
         setRecognitionState("error");
-        setStatusMessage("The scan paused. Try again.");
+        setStatusMessage("Recognition could not finish. Check your connection and try the scan again.");
         track("recognition_failed", payload.source, undefined, {
           message: error instanceof Error ? error.message : "unknown"
         });
@@ -747,7 +747,7 @@ export function ScannerApp({
           setStatusMessage(
             limited
               ? `Scanning paused. Try again in ${limited.retrySeconds}s or open the demo.`
-              : "The scan paused. Try again."
+              : "Recognition could not finish. Check your connection and try the scan again."
           );
           track("recognition_failed", "upload", undefined, {
             message: limited ? "rate_limited" : "upload_multi_pass_failed",
@@ -1778,11 +1778,16 @@ export function ScannerApp({
                   <span>{statusMessage}</span>
                 </div>
                 <div className={styles.recoveryActions}>
-                  <button className={styles.primaryButton} type="button" onClick={startCamera}>
+                  <label className={styles.primaryButton}>
+                    <FileImage aria-hidden="true" size={17} />
+                    Choose saved photo
+                    <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} />
+                  </label>
+                  <button className={styles.secondaryButton} type="button" onClick={startCamera}>
                     <Camera aria-hidden="true" size={17} />
                     {cameraState === "denied" ? "Enable camera" : "Try again"}
                   </button>
-                  <button ref={demoTriggerRef} className={styles.primaryButton} type="button" onClick={openDemo}>
+                  <button ref={demoTriggerRef} className={styles.secondaryButton} type="button" onClick={openDemo}>
                     Show demo
                   </button>
                 </div>
@@ -1908,42 +1913,38 @@ export function ScannerApp({
                     {!networkOnline
                       ? "You’re offline"
                       : recognitionState === "unavailable"
-                        ? "We couldn’t finish this scan"
-                        : "Let’s try another view"}
+                        ? "Recognition couldn’t finish"
+                        : recognitionState === "error" || recognitionState === "rate_limited"
+                          ? "Recognition couldn’t finish"
+                          : "No matching products found"}
                   </strong>
                   <span>
                     {!networkOnline
                       ? "Check your connection, then try again."
                       : recognitionState === "unavailable"
                         ? statusMessage
-                        : recognitionState === "error"
+                        : recognitionState === "error" || recognitionState === "rate_limited"
                           ? statusMessage
-                          : "Move a little closer and keep the product names in focus."}
+                          : "Try another photo with clear packaging and visible product names. We can’t assess unlabelled dishes."}
                   </span>
                 </div>
                 <div className={styles.recoveryActions}>
-                  <button
-                    className={
-                      showRecognitionRetry || recognitionState === "unavailable"
-                        ? styles.recognitionRetry
-                        : styles.primaryButton
-                    }
-                    type="button"
-                    onClick={retryCurrentScan}
-                  >
-                    {showRecognitionRetry || recognitionState === "unavailable" ? "Not sure — try again" : "Try again"}
-                  </button>
+                  {source === "camera" || recognitionState !== "not_sure" ? (
+                    <button className={styles.primaryButton} type="button" onClick={retryCurrentScan}>
+                      {source === "camera" ? "Retake photo" : "Try scan again"}
+                    </button>
+                  ) : null}
+                  <label className={styles.secondaryButton}>
+                    <FileImage aria-hidden="true" size={17} />
+                    {source === "upload" ? "Choose another photo" : "Choose saved photo"}
+                    <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} />
+                  </label>
                   {source !== "camera" ? (
-                    <button
-                      className={styles.secondaryButton}
-                      type="button"
-                      onClick={startCamera}
-                      aria-label="Back to live camera"
-                    >
-                      Back to live camera
+                    <button className={styles.secondaryButton} type="button" onClick={startCamera} aria-label="Back to live camera">
+                      Retake photo
                     </button>
                   ) : networkOnline ? (
-                    <button ref={demoTriggerRef} className={styles.primaryButton} type="button" onClick={openDemo}>
+                    <button ref={demoTriggerRef} className={styles.secondaryButton} type="button" onClick={openDemo}>
                       Show demo
                     </button>
                   ) : null}

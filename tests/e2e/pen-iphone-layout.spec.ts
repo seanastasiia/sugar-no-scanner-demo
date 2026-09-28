@@ -55,12 +55,12 @@ test("Pen screens remain readable and actionable across iPhone sizes and rotatio
       await page.goto("about:blank");
       await page.setViewportSize(viewport);
       await page.goto("/?onboarding=1");
-      await expect(page.getByRole("heading", { name: "One shelf photo. Compare sugar and protein." })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "One photo. Compare sugar and protein." })).toBeVisible();
       // A new landscape srcset can require a cold image-optimizer request.
       // Every displayed image must finish loading, not merely have an img node.
       await expect.poll(() => page.locator("img:visible").evaluateAll((images) => images.every((image) => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0)), { timeout: 10_000 }).toBe(true);
       await unobstructed(page.getByRole("button", { name: "Explore sample details", exact: true }));
-      await unobstructed(page.getByRole("button", { name: "Save for my next shop", exact: true }));
+      await unobstructed(page.getByRole("button", { name: "Save for later", exact: true }));
       await unobstructed(page.getByRole("button", { name: "Compare my products — free", exact: true }));
       await noOverflow(page);
       await page.screenshot({ scale: "css", path: `test-results/pen-welcome-${viewport.width}x${viewport.height}.png` });
