@@ -2,11 +2,21 @@
 
 Mobile-first Latvia proof of concept for identifying packaged groceries from a live camera or saved photo, comparing visible products with a transparent Sugar.no fit, and linking an exact product to a connected retailer when available.
 
-- Production: [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
+- Former production (offline): [sugar-no-scanner-demo-production.up.railway.app](https://sugar-no-scanner-demo-production.up.railway.app)
 - Repository: [github.com/seanastasiia/sugar-no-scanner-demo](https://github.com/seanastasiia/sugar-no-scanner-demo)
-- Status: public investor concept with same-origin API safeguards, not a medical device or production-wide grocery catalog.
+- Status: retired and offline by owner request on 19 October 2026. Code and Supabase data are retained.
 
 The v11 comparison now shows explicit places derived from the existing Sugar + Protein Fit score, with ties sharing a place. A catalog packshot and score highlight the leading product; the list is ordered best fit first. This is a ranking among the four example products, not a general health claim or the separate Personal Shelf score. Recognition and nutrient calculations are unchanged.
+
+## Hosting retired, 19 October 2026
+
+The owner confirmed that the scanner is no longer needed. All four Railway deployments in `sugar-no-scanner-demo` have been removed/stopped: `production`, `pilot`, `staging`, and `personal-rank-preview`. The project, service configuration, domains, GitHub source and Supabase data were not deleted.
+
+GitHub automatic deployment is disabled for production (`main`), pilot (`codex/wtp-live-pilot`), and staging (`stage/onboarding-feedback`). Personal-rank-preview has no connected GitHub/image source. Do not redeploy this retired project without a new explicit owner request. The deployment instructions below are retained only for a future authorized restoration, not as the current desired state.
+
+Verification on 19 October: Railway reports no active deployment for all four services, and each former `/api/health` URL returns Railway HTTP 404 `Application not found`. Unrelated B2B and AI visibility health endpoints, and `https://anastasiiadedova.com`, still return HTTP 200. The separate B2B/visibility services and Railway subscription remain active. Previously accrued hosting usage can still appear in the next invoice.
+
+Owner check: scanner URLs should be unavailable; the B2B cabinet, visibility service and personal site should remain accessible. Private operational evidence is in `test-results/shutdown-2026-10-19/` in the operator checkout. No application code, database schema or data changed; no build/deployment is appropriate for this documentation update because the requested outcome is to remain offline.
 
 ## Selling onboarding and paid launch
 
