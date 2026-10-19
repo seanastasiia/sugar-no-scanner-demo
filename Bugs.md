@@ -1,5 +1,7 @@
 # Bugs
 
+- **Resolved 19 October 2026: scanner hosting continued after the advertising experiment ended.** On the owner's explicit retirement request, all four scanner Railway deployments were stopped and automatic GitHub deployment disabled where configured. Code, service configuration and Supabase data remain. Four offline HTTP checks and three unaffected-service HTTP checks passed.
+
 This file tracks open limitations and only recent resolved regressions. Older history remains recoverable in Git.
 
 - **Open: September 24's single real-scan start has no measured result.** Aggregate Amplitude evidence does not establish whether this was an error, abandonment or QA. Read-only Supabase now confirms a campaign-labelled visit granted camera access and started a scan. A Railway no-match response closely matches its time; the old analytics lacks a shared request ID, so the match is temporal. No historical server failure has been confirmed and the photographed scene is unknown. Read-only timeline query: `scripts/analytics/incomplete-scan-timeline.sql`. Physical Instagram/Facebook browser reproduction is still pending.
